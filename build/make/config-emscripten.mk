@@ -69,14 +69,23 @@ LDFLAGS  += -s WASM=1 -s WASM_ASYNC_COMPILATION=0 -s MODULARIZE=1 -s EXPORT_ES6=
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
-else ifeq ($(EMSCRIPTEN_TARGET),wasm)
+else ifeq ($(EMSCRIPTEN_TARGET),wasmgro)
 # emits native wasm.
 CPPFLAGS += -DMPT_BUILD_WASM
-CXXFLAGS += 
+CXXFLAGS +=  -O3 
 CFLAGS   += 
-LDFLAGS  += -s WASM=1
+LDFLAGS  += -s WASM=1 -s ENVIRONMENT=web -s MALLOC="emmalloc" -s FILESYSTEM=0
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
+
+else ifeq ($(EMSCRIPTEN_TARGET),wasmnogro)
+# emits native wasm.
+CPPFLAGS += -DMPT_BUILD_WASM
+CXXFLAGS +=  -O3 
+CFLAGS   += 
+LDFLAGS  += -s WASM=1 -s ENVIRONMENT=web -s INITIAL_MEMORY=700mb -s MALLOC="emmalloc" -s FILESYSTEM=0
+
+LDFLAGS += -s ALLOW_MEMORY_GROWTH=0
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
 # emits only plain javascript with plain javascript focused optimizations.
