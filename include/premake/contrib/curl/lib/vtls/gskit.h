@@ -28,7 +28,6 @@
  */
 
 #include "urldata.h"
-
 #ifdef USE_GSKIT
 int Curl_gskit_init(void);
 void Curl_gskit_cleanup(void);
@@ -70,5 +69,4 @@ int Curl_gskit_check_cxn(struct connectdata *cxn);
 #define curlssl_random(x,y,z) (x=x, y=y, z=z, CURLE_NOT_BUILT_IN)
 
 #endif /* USE_GSKIT */
-
 #endif /* HEADER_CURL_GSKIT_H */

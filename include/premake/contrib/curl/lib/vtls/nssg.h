@@ -22,7 +22,6 @@
  *
  ***************************************************************************/
 #include "curl_setup.h"
-
 #ifdef USE_NSS
 /*
  * This header should only be needed to get included by vtls.c and nss.c

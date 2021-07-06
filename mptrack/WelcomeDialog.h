@@ -9,31 +9,25 @@
 
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
 #include "../common/mptPathString.h"
-
 OPENMPT_NAMESPACE_BEGIN
 
-class WelcomeDlg : public CDialog
-{
+class WelcomeDlg : public CDialog {
 protected:
-	mpt::PathString m_vstPath;
-
+mpt::PathString m_vstPath;
 public:
-	WelcomeDlg(CWnd *parent);
-
+WelcomeDlg(CWnd *parent);
 protected:
-	BOOL OnInitDialog() override;
-	void OnOK() override;
-	void OnCancel() override;
-	void PostNcDestroy() override { CDialog::PostNcDestroy(); delete this; }
-
-	afx_msg void OnOptions();
-	afx_msg void OnScanPlugins();
-
-	DECLARE_MESSAGE_MAP()
+BOOL OnInitDialog() override;
+void OnOK() override;
+void OnCancel() override;
+void PostNcDestroy() override {
+CDialog::PostNcDestroy();
+delete this;
+}
+afx_msg void OnOptions();
+afx_msg void OnScanPlugins();
+DECLARE_MESSAGE_MAP()
 };
-
 OPENMPT_NAMESPACE_END

@@ -44,10 +44,7 @@
 extern "C"
 {
 #endif /* __cplusplus */
-
-
-
-void PaUtil_DebugPrint( const char *format, ... );
+void PaUtil_DebugPrint(const char *format, ...);
 
 
 /*
@@ -98,8 +95,6 @@ void PaUtil_DebugPrint( const char *format, ... );
 #else
 #define PA_DEBUG(x)
 #endif
-
-
 #ifdef PA_LOG_API_CALLS
 #define PA_LOGAPI(x) PaUtil_DebugPrint x
 
@@ -128,21 +123,15 @@ void PaUtil_DebugPrint( const char *format, ... );
 #define PA_LOGAPI_ENTER(functionName)
 #define PA_LOGAPI_ENTER_PARAMS(functionName)
 #define PA_LOGAPI_EXIT(functionName)
-#define PA_LOGAPI_EXIT_PAERROR( functionName, result )
-#define PA_LOGAPI_EXIT_T( functionName, resultFormatString, result )
-#define PA_LOGAPI_EXIT_PAERROR_OR_T_RESULT( functionName, positiveResultFormatString, result )
+#define PA_LOGAPI_EXIT_PAERROR(functionName, result)
+#define PA_LOGAPI_EXIT_T(functionName, resultFormatString, result)
+#define PA_LOGAPI_EXIT_PAERROR_OR_T_RESULT(functionName, positiveResultFormatString, result)
 #endif
-
-
-typedef void (*PaUtilLogCallback ) (const char *log);
-
+typedef void (*PaUtilLogCallback )(const char *log);
 /**
     Install user provided log function
 */
-void PaUtil_SetDebugPrintFunction(PaUtilLogCallback  cb);
-
-
-
+void PaUtil_SetDebugPrintFunction(PaUtilLogCallback cb);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -24,7 +24,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_DEBUG_C)
 
 #include "mbedtls/debug.h"

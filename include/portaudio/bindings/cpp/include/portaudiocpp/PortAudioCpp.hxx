@@ -84,7 +84,6 @@
 // ---------------------------------------------------------------------------------------
 
 #include "portaudio.h"
-
 #include "portaudiocpp/AutoSystem.hxx"
 #include "portaudiocpp/BlockingStream.hxx"
 #include "portaudiocpp/CallbackInterface.hxx"

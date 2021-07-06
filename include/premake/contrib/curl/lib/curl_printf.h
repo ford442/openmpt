@@ -28,7 +28,6 @@
  */
 
 #include <curl/mprintf.h>
-
 # undef printf
 # undef fprintf
 # undef snprintf
@@ -52,5 +51,4 @@
 # undef vsprintf
 # define sprintf sprintf_was_used
 # define vsprintf vsprintf_was_used
-
 #endif /* HEADER_CURL_PRINTF_H */

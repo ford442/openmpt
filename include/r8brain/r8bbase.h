@@ -56,17 +56,15 @@
 
 #ifndef R8BBASE_INCLUDED
 #define R8BBASE_INCLUDED
-
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
 #include "r8bconf.h"
-
 #if defined( R8B_WIN )
-	#include <windows.h>
+#include <windows.h>
 #else // R8B_WIN
-	#include <pthread.h>
+#include <pthread.h>
 #endif // R8B_WIN
 
 /**
@@ -82,49 +80,44 @@ namespace r8b {
  */
 
 #define R8B_VERSION "5.2"
-
 #if !defined( M_PI )
-	/**
-	 * The macro equals to "pi" constant, fits 53-bit floating point mantissa.
-	 */
+/**
+ * The macro equals to "pi" constant, fits 53-bit floating point mantissa.
+ */
 
-	#define M_PI 3.14159265358979324
+#define M_PI 3.14159265358979324
 #endif // M_PI
-
 #if !defined( M_2PI )
-	/**
-	 * The M_2PI macro equals to "2 * pi" constant, fits 53-bit floating point
-	 * mantissa.
-	 */
+/**
+ * The M_2PI macro equals to "2 * pi" constant, fits 53-bit floating point
+ * mantissa.
+ */
 
-	#define M_2PI 6.28318530717958648
+#define M_2PI 6.28318530717958648
 #endif // M_2PI
-
 #if !defined( M_3PI )
-	/**
-	 * The M_3PI macro equals to "3 * pi" constant, fits 53-bit floating point
-	 * mantissa.
-	 */
+/**
+ * The M_3PI macro equals to "3 * pi" constant, fits 53-bit floating point
+ * mantissa.
+ */
 
-	#define M_3PI 9.42477796076937972
+#define M_3PI 9.42477796076937972
 #endif // M_3PI
-
 #if !defined( M_4PI )
-	/**
-	 * The M_4PI macro equals to "4 * pi" constant, fits 53-bit floating point
-	 * mantissa.
-	 */
+/**
+ * The M_4PI macro equals to "4 * pi" constant, fits 53-bit floating point
+ * mantissa.
+ */
 
-	#define M_4PI 12.56637061435917295
+#define M_4PI 12.56637061435917295
 #endif // M_4PI
-
 #if !defined( M_PId2 )
-	/**
-	 * The macro equals to "pi divided by 2" constant, fits 53-bit floating
-	 * point mantissa.
-	 */
+/**
+ * The macro equals to "pi divided by 2" constant, fits 53-bit floating
+ * point mantissa.
+ */
 
-	#define M_PId2 1.57079632679489662
+#define M_PId2 1.57079632679489662
 #endif // M_PId2
 
 /**
@@ -138,11 +131,10 @@ namespace r8b {
  * @param ClassName The name of the class which uses this macro.
  */
 
-#define R8BNOCTOR( ClassName ) \
-	private: \
-		ClassName( const ClassName& ) { } \
-		ClassName& operator = ( const ClassName& ) { return( *this ); }
-
+#define R8BNOCTOR(ClassName) \
+    private: \
+        ClassName( const ClassName& ) { } \
+        ClassName& operator = ( const ClassName& ) { return( *this ); }
 /**
  * @brief The default base class for objects created on heap.
  *
@@ -150,109 +142,91 @@ namespace r8b {
  * malloc() and free() functions.
  */
 
-class CStdClassAllocator
-{
+class CStdClassAllocator {
 public:
-	/**
-	 * @param n The size of the object, in bytes.
-	 * @param p Pointer to object's pre-allocated memory block.
-	 * @return Pointer to object.
-	 */
+/**
+ * @param n The size of the object, in bytes.
+ * @param p Pointer to object's pre-allocated memory block.
+ * @return Pointer to object.
+ */
 
-	void* operator new( size_t, void* p )
-	{
-		return( p );
-	}
+void *operator new(size_t, void *p) {
+return (p);
+}
+/**
+ * @param n The size of the object, in bytes.
+ * @return Pointer to the allocated memory block for the object.
+ */
 
-	/**
-	 * @param n The size of the object, in bytes.
-	 * @return Pointer to the allocated memory block for the object.
-	 */
+void *operator new(size_t n) {
+return (::malloc(n));
+}
+/**
+ * @param n The size of the object, in bytes.
+ * @return Pointer to the allocated memory block for the object.
+ */
 
-	void* operator new( size_t n )
-	{
-		return( :: malloc( n ));
-	}
+void *operator new[](size_t n) {
+return (::malloc(n));
+}
+/**
+ * Operator frees a previously allocated memory block for the object.
+ *
+ * @param p Pointer to the allocated memory block for the object.
+ */
 
-	/**
-	 * @param n The size of the object, in bytes.
-	 * @return Pointer to the allocated memory block for the object.
-	 */
+void operator delete(void *p) {
+::free(p);
+}
+/**
+ * Operator frees a previously allocated memory block for the object.
+ *
+ * @param p Pointer to the allocated memory block for the object.
+ */
 
-	void* operator new[]( size_t n )
-	{
-		return( :: malloc( n ));
-	}
-
-	/**
-	 * Operator frees a previously allocated memory block for the object.
-	 *
-	 * @param p Pointer to the allocated memory block for the object.
-	 */
-
-	void operator delete( void* p )
-	{
-		:: free( p );
-	}
-
-	/**
-	 * Operator frees a previously allocated memory block for the object.
-	 *
-	 * @param p Pointer to the allocated memory block for the object.
-	 */
-
-	void operator delete[]( void* p )
-	{
-		:: free( p );
-	}
+void operator delete[](void *p) {
+::free(p);
+}
 };
-
 /**
  * @brief The default base class for objects that allocate blocks of memory.
  *
  * Memory buffer allocator that uses "stdlib" standard memory functions.
  */
 
-class CStdMemAllocator : public CStdClassAllocator
-{
+class CStdMemAllocator : public CStdClassAllocator {
 public:
-	/**
-	 * Function allocates memory block.
-	 *
-	 * @param Size The size of the block, in bytes.
-	 * @result The pointer to the allocated block.
-	 */
+/**
+ * Function allocates memory block.
+ *
+ * @param Size The size of the block, in bytes.
+ * @result The pointer to the allocated block.
+ */
 
-	static void* allocmem( const size_t Size )
-	{
-		return( :: malloc( Size ));
-	}
+static void *allocmem(const size_t Size) {
+return (::malloc(Size));
+}
+/**
+ * Function reallocates a previously allocated memory block.
+ *
+ * @param p Pointer to the allocated block, can be NULL.
+ * @param Size The new size of the block, in bytes.
+ * @result The pointer to the (re)allocated block.
+ */
 
-	/**
-	 * Function reallocates a previously allocated memory block.
-	 *
-	 * @param p Pointer to the allocated block, can be NULL.
-	 * @param Size The new size of the block, in bytes.
-	 * @result The pointer to the (re)allocated block.
-	 */
+static void *reallocmem(void *p, const size_t Size) {
+return (::realloc(p, Size));
+}
+/**
+ * Function frees a previously allocated memory block.
+ *
+ * @param p Pointer to the allocated block, can be NULL.
+ */
 
-	static void* reallocmem( void* p, const size_t Size )
-	{
-		return( :: realloc( p, Size ));
-	}
-
-	/**
-	 * Function frees a previously allocated memory block.
-	 *
-	 * @param p Pointer to the allocated block, can be NULL.
-	 */
-
-	static void freemem( void* p )
-	{
-		:: free( p );
-	}
+static void freemem(void *p) {
+::free(p);
+}
 };
-
 /**
  * @brief Templated memory buffer class for element buffers of fixed capacity.
  *
@@ -271,146 +245,118 @@ public:
  * @param T The class of the stored elements (e.g. "double").
  */
 
-template< class T >
-class CFixedBuffer : public R8B_MEMALLOCCLASS
-{
-	R8BNOCTOR( CFixedBuffer );
-
+template<class T>
+class CFixedBuffer : public R8B_MEMALLOCCLASS {
+R8BNOCTOR(CFixedBuffer);
 public:
-	CFixedBuffer()
-		: Data0( NULL )
-		, Data( NULL )
-	{
-	}
+CFixedBuffer()
+        : Data0(NULL), Data(NULL) {
+}
+/**
+ * Constructor allocates memory so that the specified number of elements
+ * of type T can be stored in *this buffer object.
+ *
+ * @param Capacity Storage for this number of elements to allocate.
+ */
 
-	/**
-	 * Constructor allocates memory so that the specified number of elements
-	 * of type T can be stored in *this buffer object.
-	 *
-	 * @param Capacity Storage for this number of elements to allocate.
-	 */
+CFixedBuffer(const int Capacity) {
+R8BASSERT(Capacity > 0 || Capacity == 0);
+Data0 = allocmem(Capacity * sizeof(T) + Alignment);
+Data = (T *) alignptr(Data0, Alignment);
 
-	CFixedBuffer( const int Capacity )
-	{
-		R8BASSERT( Capacity > 0 || Capacity == 0 );
+R8BASSERT(Data0 != NULL || Capacity == 0);
+}
+~CFixedBuffer() {
+freemem(Data0);
+}
+/**
+ * Function allocates memory so that the specified number of elements of
+ * type T can be stored in *this buffer object.
+ *
+ * @param Capacity Storage for this number of elements to allocate.
+ */
 
-		Data0 = allocmem( Capacity * sizeof( T ) + Alignment );
-		Data = (T*) alignptr( Data0, Alignment );
+void alloc(const int Capacity) {
+R8BASSERT(Capacity > 0 || Capacity == 0);
+freemem(Data0);
+Data0 = allocmem(Capacity * sizeof(T) + Alignment);
+Data = (T *) alignptr(Data0, Alignment);
 
-		R8BASSERT( Data0 != NULL || Capacity == 0 );
-	}
+R8BASSERT(Data0 != NULL || Capacity == 0);
+}
+/**
+ * Function reallocates memory so that the specified number of elements of
+ * type T can be stored in *this buffer object. Previously allocated data
+ * is copied to the new memory buffer.
+ *
+ * @param PrevCapacity Previous capacity of *this buffer.
+ * @param NewCapacity Storage for this number of elements to allocate.
+ */
 
-	~CFixedBuffer()
-	{
-		freemem( Data0 );
-	}
+void realloc(const int PrevCapacity, const int NewCapacity) {
+R8BASSERT(PrevCapacity >= 0);
+R8BASSERT(NewCapacity >= 0);
+void *const NewData0 = allocmem(NewCapacity * sizeof(T) +
+                                Alignment);
+T *const NewData = (T *) alignptr(NewData0, Alignment);
+const size_t CopySize = (PrevCapacity > NewCapacity ?
+                         NewCapacity : PrevCapacity) * sizeof(T);
+if(CopySize > 0) {
+memcpy(NewData, Data, CopySize);
+}
+freemem(Data0);
+Data0 = NewData0;
+Data = NewData;
 
-	/**
-	 * Function allocates memory so that the specified number of elements of
-	 * type T can be stored in *this buffer object.
-	 *
-	 * @param Capacity Storage for this number of elements to allocate.
-	 */
+R8BASSERT(Data0 != NULL || NewCapacity == 0);
+}
+/**
+ * Function deallocates a previously allocated buffer.
+ */
 
-	void alloc( const int Capacity )
-	{
-		R8BASSERT( Capacity > 0 || Capacity == 0 );
+void free() {
+freemem(Data0);
+Data0 = NULL;
+Data = NULL;
+}
+/**
+ * @return Pointer to the first element of the allocated buffer, NULL if
+ * not allocated.
+ */
 
-		freemem( Data0 );
-		Data0 = allocmem( Capacity * sizeof( T ) + Alignment );
-		Data = (T*) alignptr( Data0, Alignment );
+T *getPtr() const {
+return (Data);
+}
+/**
+ * @return Pointer to the first element of the allocated buffer, NULL if
+ * not allocated.
+ */
 
-		R8BASSERT( Data0 != NULL || Capacity == 0 );
-	}
-
-	/**
-	 * Function reallocates memory so that the specified number of elements of
-	 * type T can be stored in *this buffer object. Previously allocated data
-	 * is copied to the new memory buffer.
-	 *
-	 * @param PrevCapacity Previous capacity of *this buffer.
-	 * @param NewCapacity Storage for this number of elements to allocate.
-	 */
-
-	void realloc( const int PrevCapacity, const int NewCapacity )
-	{
-		R8BASSERT( PrevCapacity >= 0 );
-		R8BASSERT( NewCapacity >= 0 );
-
-		void* const NewData0 = allocmem( NewCapacity * sizeof( T ) +
-			Alignment );
-
-		T* const NewData = (T*) alignptr( NewData0, Alignment );
-		const size_t CopySize = ( PrevCapacity > NewCapacity ?
-			NewCapacity : PrevCapacity ) * sizeof( T );
-
-		if( CopySize > 0 )
-		{
-			memcpy( NewData, Data, CopySize );
-		}
-
-		freemem( Data0 );
-		Data0 = NewData0;
-		Data = NewData;
-
-		R8BASSERT( Data0 != NULL || NewCapacity == 0 );
-	}
-
-	/**
-	 * Function deallocates a previously allocated buffer.
-	 */
-
-	void free()
-	{
-		freemem( Data0 );
-		Data0 = NULL;
-		Data = NULL;
-	}
-
-	/**
-	 * @return Pointer to the first element of the allocated buffer, NULL if
-	 * not allocated.
-	 */
-
-	T* getPtr() const
-	{
-		return( Data );
-	}
-
-	/**
-	 * @return Pointer to the first element of the allocated buffer, NULL if
-	 * not allocated.
-	 */
-
-	operator T* () const
-	{
-		return( Data );
-	}
-
+operator T *() const {
+return (Data);
+}
 private:
-	static const size_t Alignment = 64; ///< Data buffer alignment, in bytes.
-		///<
-	void* Data0; ///< Buffer pointer, original unaligned.
-		///<
-	T* Data; ///< Element buffer pointer, aligned.
-		///<
+static const size_t Alignment = 64; ///< Data buffer alignment, in bytes.
+///<
+void *Data0; ///< Buffer pointer, original unaligned.
+///<
+T *Data; ///< Element buffer pointer, aligned.
+///<
 
-	/**
-	 * This macro forces provided pointer ptr to be aligned to align bytes.
-	 * Works with power-of-2 alignments only. If no alignment is necessary,
-	 * "align" bytes will be added to the pointer value.
-	 *
-	 * @tparam Tp Pointer type.
-	 */
+/**
+ * This macro forces provided pointer ptr to be aligned to align bytes.
+ * Works with power-of-2 alignments only. If no alignment is necessary,
+ * "align" bytes will be added to the pointer value.
+ *
+ * @tparam Tp Pointer type.
+ */
 
-	template< class Tp >
-	inline Tp alignptr( const Tp ptr, const uintptr_t align )
-	{
-		return( (Tp) ( (uintptr_t) ptr + align -
-			( (uintptr_t) ptr & ( align - 1 ))) );
-	}
+template<class Tp>
+inline Tp alignptr(const Tp ptr, const uintptr_t align) {
+return ((Tp) ((uintptr_t) ptr + align -
+              ((uintptr_t) ptr & (align - 1))));
+}
 };
-
 /**
  * @brief Pointer-to-object "keeper" class with automatic deletion.
  *
@@ -422,94 +368,75 @@ private:
  * "CDSPFIRFilter*").
  */
 
-template< class T >
-class CPtrKeeper
-{
-	R8BNOCTOR( CPtrKeeper );
-
+template<class T>
+class CPtrKeeper {
+R8BNOCTOR(CPtrKeeper);
 public:
-	CPtrKeeper()
-		: Object( NULL )
-	{
-	}
+CPtrKeeper()
+        : Object(NULL) {
+}
+/**
+ * Constructor assigns a pointer to object to *this keeper.
+ *
+ * @param aObject Pointer to object to keep, can be NULL.
+ */
 
-	/**
-	 * Constructor assigns a pointer to object to *this keeper.
-	 *
-	 * @param aObject Pointer to object to keep, can be NULL.
-	 */
+template<class T2>
+CPtrKeeper(T2 const aObject)
+        : Object(aObject) {
+}
+~CPtrKeeper() {
+delete Object;
+}
+/**
+ * Function assigns a pointer to object to *this keeper. A previously
+ * keeped pointer will be reset and object deleted.
+ *
+ * @param aObject Pointer to object to keep, can be NULL.
+ */
 
-	template< class T2 >
-	CPtrKeeper( T2 const aObject )
-		: Object( aObject )
-	{
-	}
+template<class T2>
+void operator=(T2 const aObject) {
+reset();
+Object = aObject;
+}
+/**
+ * @return Pointer to keeped object, NULL if no object is being kept.
+ */
 
-	~CPtrKeeper()
-	{
-		delete Object;
-	}
+T operator->() const {
+return (Object);
+}
+/**
+ * @return Pointer to keeped object, NULL if no object is being kept.
+ */
 
-	/**
-	 * Function assigns a pointer to object to *this keeper. A previously
-	 * keeped pointer will be reset and object deleted.
-	 *
-	 * @param aObject Pointer to object to keep, can be NULL.
-	 */
+operator T() const {
+return (Object);
+}
+/**
+ * Function resets the keeped pointer and deletes the keeped object.
+ */
 
-	template< class T2 >
-	void operator = ( T2 const aObject )
-	{
-		reset();
-		Object = aObject;
-	}
+void reset() {
+T DelObj = Object;
+Object = NULL;
+delete DelObj;
+}
+/**
+ * @return Function returns the keeped pointer and resets it in *this
+ * keeper without object deletion.
+ */
 
-	/**
-	 * @return Pointer to keeped object, NULL if no object is being kept.
-	 */
-
-	T operator -> () const
-	{
-		return( Object );
-	}
-
-	/**
-	 * @return Pointer to keeped object, NULL if no object is being kept.
-	 */
-
-	operator T () const
-	{
-		return( Object );
-	}
-
-	/**
-	 * Function resets the keeped pointer and deletes the keeped object.
-	 */
-
-	void reset()
-	{
-		T DelObj = Object;
-		Object = NULL;
-		delete DelObj;
-	}
-
-	/**
-	 * @return Function returns the keeped pointer and resets it in *this
-	 * keeper without object deletion.
-	 */
-
-	T unkeep()
-	{
-		T ResObject = Object;
-		Object = NULL;
-		return( ResObject );
-	}
-
+T unkeep() {
+T ResObject = Object;
+Object = NULL;
+return (ResObject);
+}
 private:
-	T Object; ///< Pointer to keeped object.
-		///<
+T Object; ///< Pointer to keeped object.
+///<
 };
-
 /**
  * @brief Multi-threaded synchronization object class.
  *
@@ -520,72 +447,61 @@ private:
  * this kind of thread-locking mechanism. This will not produce a dead-lock.
  */
 
-class CSyncObject
-{
-	R8BNOCTOR( CSyncObject );
-
+class CSyncObject {
+R8BNOCTOR(CSyncObject);
 public:
-	CSyncObject()
-	{
-		#if defined( R8B_WIN )
-			InitializeCriticalSectionAndSpinCount( &CritSec, 4000 );
-		#else // R8B_WIN
-			pthread_mutexattr_t MutexAttrs;
-			pthread_mutexattr_init( &MutexAttrs );
-			pthread_mutexattr_settype( &MutexAttrs, PTHREAD_MUTEX_RECURSIVE );
-			pthread_mutex_init( &Mutex, &MutexAttrs );
-			pthread_mutexattr_destroy( &MutexAttrs );
-		#endif // R8B_WIN
-	}
+CSyncObject() {
+#if defined( R8B_WIN )
+InitializeCriticalSectionAndSpinCount( &CritSec, 4000 );
+#else // R8B_WIN
+pthread_mutexattr_t MutexAttrs;
+pthread_mutexattr_init(&MutexAttrs);
+pthread_mutexattr_settype(&MutexAttrs, PTHREAD_MUTEX_RECURSIVE);
+pthread_mutex_init(&Mutex, &MutexAttrs);
+pthread_mutexattr_destroy(&MutexAttrs);
+#endif // R8B_WIN
+}
+~CSyncObject() {
+#if defined( R8B_WIN )
+DeleteCriticalSection( &CritSec );
+#else // R8B_WIN
+pthread_mutex_destroy(&Mutex);
+#endif // R8B_WIN
+}
+/**
+ * Function "acquires" *this thread synchronizer object immediately or
+ * waits until another thread releases it.
+ */
 
-	~CSyncObject()
-	{
-		#if defined( R8B_WIN )
-			DeleteCriticalSection( &CritSec );
-		#else // R8B_WIN
-			pthread_mutex_destroy( &Mutex );
-		#endif // R8B_WIN
-	}
+void acquire() {
+#if defined( R8B_WIN )
+EnterCriticalSection( &CritSec );
+#else // R8B_WIN
+pthread_mutex_lock(&Mutex);
+#endif // R8B_WIN
+}
+/**
+ * Function "releases" *this previously acquired thread synchronizer
+ * object.
+ */
 
-	/**
-	 * Function "acquires" *this thread synchronizer object immediately or
-	 * waits until another thread releases it.
-	 */
-
-	void acquire()
-	{
-		#if defined( R8B_WIN )
-			EnterCriticalSection( &CritSec );
-		#else // R8B_WIN
-			pthread_mutex_lock( &Mutex );
-		#endif // R8B_WIN
-	}
-
-	/**
-	 * Function "releases" *this previously acquired thread synchronizer
-	 * object.
-	 */
-
-	void release()
-	{
-		#if defined( R8B_WIN )
-			LeaveCriticalSection( &CritSec );
-		#else // R8B_WIN
-			pthread_mutex_unlock( &Mutex );
-		#endif // R8B_WIN
-	}
-
+void release() {
+#if defined( R8B_WIN )
+LeaveCriticalSection( &CritSec );
+#else // R8B_WIN
+pthread_mutex_unlock(&Mutex);
+#endif // R8B_WIN
+}
 private:
-	#if defined( R8B_WIN )
-		CRITICAL_SECTION CritSec; ///< Standard Windows critical section
-			///< structure.
-			///<
-	#else // R8B_WIN
-		pthread_mutex_t Mutex; ///< pthread.h mutex object.
-			///<
-	#endif // R8B_WIN
+#if defined( R8B_WIN )
+CRITICAL_SECTION CritSec; ///< Standard Windows critical section
+    ///< structure.
+    ///<
+#else // R8B_WIN
+pthread_mutex_t Mutex; ///< pthread.h mutex object.
+///<
+#endif // R8B_WIN
 };
-
 /**
  * @brief A "keeper" class for CSyncObject-based synchronization.
  *
@@ -596,52 +512,40 @@ private:
  * R8BSYNC() macro.
  */
 
-class CSyncKeeper
-{
-	R8BNOCTOR( CSyncKeeper );
-
+class CSyncKeeper {
+R8BNOCTOR(CSyncKeeper);
 public:
-	CSyncKeeper()
-		: SyncObj( NULL )
-	{
-	}
+CSyncKeeper()
+        : SyncObj(NULL) {
+}
+/**
+ * @param aSyncObj Pointer to the sync object which should be used for
+ * sync'ing, can be NULL.
+ */
 
-	/**
-	 * @param aSyncObj Pointer to the sync object which should be used for
-	 * sync'ing, can be NULL.
-	 */
+CSyncKeeper(CSyncObject *const aSyncObj)
+        : SyncObj(aSyncObj) {
+if(SyncObj != NULL) {
+SyncObj->acquire();
+}
+}
+/**
+ * @param aSyncObj Reference to the sync object which should be used for
+ * sync'ing.
+ */
 
-	CSyncKeeper( CSyncObject* const aSyncObj )
-		: SyncObj( aSyncObj )
-	{
-		if( SyncObj != NULL )
-		{
-			SyncObj -> acquire();
-		}
-	}
-
-	/**
-	 * @param aSyncObj Reference to the sync object which should be used for
-	 * sync'ing.
-	 */
-
-	CSyncKeeper( CSyncObject& aSyncObj )
-		: SyncObj( &aSyncObj )
-	{
-		SyncObj -> acquire();
-	}
-
-	~CSyncKeeper()
-	{
-		if( SyncObj != NULL )
-		{
-			SyncObj -> release();
-		}
-	}
-
+CSyncKeeper(CSyncObject &aSyncObj)
+        : SyncObj(&aSyncObj) {
+SyncObj->acquire();
+}
+~CSyncKeeper() {
+if(SyncObj != NULL) {
+SyncObj->release();
+}
+}
 protected:
-	CSyncObject* SyncObj; ///< Sync object in use (can be NULL).
-		///<
+CSyncObject *SyncObj; ///< Sync object in use (can be NULL).
+///<
 };
 
 /**
@@ -658,110 +562,89 @@ protected:
  * synchronization.
  */
 
-#define R8BSYNC( SyncObject ) R8BSYNC_( SyncObject, __LINE__ )
-#define R8BSYNC_( SyncObject, id ) R8BSYNC__( SyncObject, id )
-#define R8BSYNC__( SyncObject, id ) CSyncKeeper SyncKeeper##id( SyncObject )
-
+#define R8BSYNC(SyncObject) R8BSYNC_( SyncObject, __LINE__ )
+#define R8BSYNC_(SyncObject, id) R8BSYNC__( SyncObject, id )
+#define R8BSYNC__(SyncObject, id) CSyncKeeper SyncKeeper##id( SyncObject )
 /**
  * @brief Sine signal generator class.
  *
  * Class implements sine signal generator without biasing.
  */
 
-class CSineGen
-{
+class CSineGen {
 public:
-	CSineGen()
-	{
-	}
+CSineGen() {
+}
+/**
+ * Constructor initializes *this sine signal generator.
+ *
+ * @param si Sine function increment, in radians.
+ * @param ph Starting phase, in radians. Add 0.5 * M_PI for cosine
+ * function.
+ */
 
-	/**
-	 * Constructor initializes *this sine signal generator.
-	 *
-	 * @param si Sine function increment, in radians.
-	 * @param ph Starting phase, in radians. Add 0.5 * M_PI for cosine
-	 * function.
-	 */
+CSineGen(const double si, const double ph)
+        : svalue1(sin(ph)), svalue2(sin(ph - si)), sincr(2.0 * cos(si)) {
+}
+/**
+ * Constructor initializes *this sine signal generator.
+ *
+ * @param si Sine function increment, in radians.
+ * @param ph Starting phase, in radians. Add 0.5 * M_PI for cosine
+ * function.
+ * @param g The overall gain factor, 1.0 for unity gain (-1.0 to 1.0
+ * amplitude).
+ */
 
-	CSineGen( const double si, const double ph )
-		: svalue1( sin( ph ))
-		, svalue2( sin( ph - si ))
-		, sincr( 2.0 * cos( si ))
-	{
-	}
+CSineGen(const double si, const double ph, const double g)
+        : svalue1(sin(ph) * g), svalue2(sin(ph - si) * g), sincr(2.0 * cos(si)) {
+}
+/**
+ * Function initializes *this sine signal generator.
+ *
+ * @param si Sine function increment, in radians.
+ * @param ph Starting phase, in radians. Add 0.5 * M_PI for cosine
+ * function.
+ */
 
-	/**
-	 * Constructor initializes *this sine signal generator.
-	 *
-	 * @param si Sine function increment, in radians.
-	 * @param ph Starting phase, in radians. Add 0.5 * M_PI for cosine
-	 * function.
-	 * @param g The overall gain factor, 1.0 for unity gain (-1.0 to 1.0
-	 * amplitude).
-	 */
+void init(const double si, const double ph) {
+svalue1 = sin(ph);
+svalue2 = sin(ph - si);
+sincr = 2.0 * cos(si);
+}
+/**
+ * Function initializes *this sine signal generator.
+ *
+ * @param si Sine function increment, in radians.
+ * @param ph Starting phase, in radians. Add 0.5 * M_PI for cosine
+ * function.
+ * @param g The overall gain factor, 1.0 for unity gain (-1.0 to 1.0
+ * amplitude).
+ */
 
-	CSineGen( const double si, const double ph, const double g )
-		: svalue1( sin( ph ) * g )
-		, svalue2( sin( ph - si ) * g )
-		, sincr( 2.0 * cos( si ))
-	{
-	}
+void init(const double si, const double ph, const double g) {
+svalue1 = sin(ph) * g;
+svalue2 = sin(ph - si) * g;
+sincr = 2.0 * cos(si);
+}
+/**
+ * @return Next value of the sine function, without biasing.
+ */
 
-	/**
-	 * Function initializes *this sine signal generator.
-	 *
-	 * @param si Sine function increment, in radians.
-	 * @param ph Starting phase, in radians. Add 0.5 * M_PI for cosine
-	 * function.
-	 */
-
-	void init( const double si, const double ph )
-	{
-		svalue1 = sin( ph );
-		svalue2 = sin( ph - si );
-		sincr = 2.0 * cos( si );
-	}
-
-	/**
-	 * Function initializes *this sine signal generator.
-	 *
-	 * @param si Sine function increment, in radians.
-	 * @param ph Starting phase, in radians. Add 0.5 * M_PI for cosine
-	 * function.
-	 * @param g The overall gain factor, 1.0 for unity gain (-1.0 to 1.0
-	 * amplitude).
-	 */
-
-	void init( const double si, const double ph, const double g )
-	{
-		svalue1 = sin( ph ) * g;
-		svalue2 = sin( ph - si ) * g;
-		sincr = 2.0 * cos( si );
-	}
-
-	/**
-	 * @return Next value of the sine function, without biasing.
-	 */
-
-	double generate()
-	{
-		const double res = svalue1;
-
-		svalue1 = sincr * res - svalue2;
-		svalue2 = res;
-
-		return( res );
-	}
-
+double generate() {
+const double res = svalue1;
+svalue1 = sincr * res - svalue2;
+svalue2 = res;
+return (res);
+}
 private:
-	double svalue1; ///< Current sine value.
-		///<
-	double svalue2; ///< Previous sine value.
-		///<
-	double sincr; ///< Sine value increment.
-		///<
+double svalue1; ///< Current sine value.
+///<
+double svalue2; ///< Previous sine value.
+///<
+double sincr; ///< Sine value increment.
+///<
 };
-
 /**
  * @param v Input value.
  * @return Calculated bit occupancy of the specified input value. Bit
@@ -769,43 +652,36 @@ private:
  * specified value. Function treats the input value as unsigned.
  */
 
-inline int getBitOccupancy( const int v )
-{
-	static const char OccupancyTable[] =
-	{
-		1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
-		5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-		6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-		6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-		7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-		7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-		7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-		7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-		8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-		8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-		8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-		8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-		8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-		8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-		8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-		8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
-	};
-
-	const int tt = v >> 16;
-
-	if( tt != 0 )
-	{
-		const int t = v >> 24;
-		return( t != 0 ? 24 + OccupancyTable[ t & 0xFF ] :
-			16 + OccupancyTable[ tt ]);
-	}
-	else
-	{
-		const int t = v >> 8;
-		return( t != 0 ? 8 + OccupancyTable[ t ] : OccupancyTable[ v ]);
-	}
+inline int getBitOccupancy(const int v) {
+static const char OccupancyTable[] =
+        {
+                1, 1, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4,
+                5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+                6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+                6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
+                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+                8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+                8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+                8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+                8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+                8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+                8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+                8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8
+        };
+const int tt = v >> 16;
+if(tt != 0) {
+const int t = v >> 24;
+return (t != 0 ? 24 + OccupancyTable[t & 0xFF] :
+        16 + OccupancyTable[tt]);
+} else {
+const int t = v >> 8;
+return (t != 0 ? 8 + OccupancyTable[t] : OccupancyTable[v]);
 }
-
+}
 /**
  * Function calculates frequency response of the specified FIR filter at the
  * specified circular frequency. Phase can be calculated as atan2( im, re ).
@@ -818,50 +694,37 @@ inline int getBitOccupancy( const int v )
  * @param fltlat Filter's latency in samples.
  */
 
-inline void calcFIRFilterResponse( const double* flt, int fltlen,
-	const double th, double& re0, double& im0, const int fltlat = 0 )
-{
-	const double sincr = 2.0 * cos( th );
-	double cvalue1;
-	double svalue1;
-
-	if( fltlat == 0 )
-	{
-		cvalue1 = 1.0;
-		svalue1 = 0.0;
-	}
-	else
-	{
-		cvalue1 = cos( -fltlat * th );
-		svalue1 = sin( -fltlat * th );
-	}
-
-	double cvalue2 = cos( -( fltlat + 1 ) * th );
-	double svalue2 = sin( -( fltlat + 1 ) * th );
-
-	double re = 0.0;
-	double im = 0.0;
-
-	while( fltlen > 0 )
-	{
-		re += cvalue1 * flt[ 0 ];
-		im += svalue1 * flt[ 0 ];
-		flt++;
-		fltlen--;
-
-		double tmp = cvalue1;
-		cvalue1 = sincr * cvalue1 - cvalue2;
-		cvalue2 = tmp;
-
-		tmp = svalue1;
-		svalue1 = sincr * svalue1 - svalue2;
-		svalue2 = tmp;
-	}
-
-	re0 = re;
-	im0 = im;
+inline void calcFIRFilterResponse(const double *flt, int fltlen,
+                                  const double th, double &re0, double &im0, const int fltlat = 0) {
+const double sincr = 2.0 * cos(th);
+double cvalue1;
+double svalue1;
+if(fltlat == 0) {
+cvalue1 = 1.0;
+svalue1 = 0.0;
+} else {
+cvalue1 = cos(-fltlat * th);
+svalue1 = sin(-fltlat * th);
 }
-
+double cvalue2 = cos(-(fltlat + 1) * th);
+double svalue2 = sin(-(fltlat + 1) * th);
+double re = 0.0;
+double im = 0.0;
+while (fltlen > 0) {
+re += cvalue1 * flt[0];
+im += svalue1 * flt[0];
+flt++;
+fltlen--;
+double tmp = cvalue1;
+cvalue1 = sincr * cvalue1 - cvalue2;
+cvalue2 = tmp;
+tmp = svalue1;
+svalue1 = sincr * svalue1 - svalue2;
+svalue2 = tmp;
+}
+re0 = re;
+im0 = im;
+}
 /**
  * Function calculates frequency response and group delay of the specified FIR
  * filter at the specified circular frequency. The group delay is calculated
@@ -876,57 +739,41 @@ inline void calcFIRFilterResponse( const double* flt, int fltlen,
  * samples.
  */
 
-inline void calcFIRFilterResponseAndGroupDelay( const double* const flt,
-	const int fltlen, const double th, double& re, double& im, double& gd )
-{
-	// Calculate response at "th".
+inline void calcFIRFilterResponseAndGroupDelay(const double *const flt,
+                                               const int fltlen, const double th, double &re, double &im, double &gd) {
+// Calculate response at "th".
 
-	calcFIRFilterResponse( flt, fltlen, th, re, im );
+calcFIRFilterResponse(flt, fltlen, th, re, im);
 
-	// Calculate response at close sideband frequencies.
+// Calculate response at close sideband frequencies.
 
-	const int Count = 2;
-	const double thd2 = 1e-9;
-	double ths[ Count ] = { th - thd2, th + thd2 };
-
-	if( ths[ 0 ] < 0.0 )
-	{
-		ths[ 0 ] = 0.0;
-	}
-
-	if( ths[ 1 ] > M_PI )
-	{
-		ths[ 1 ] = M_PI;
-	}
-
-	double ph1[ Count ];
-	int i;
-
-	for( i = 0; i < Count; i++ )
-	{
-		double re1;
-		double im1;
-
-		calcFIRFilterResponse( flt, fltlen, ths[ i ], re1, im1 );
-		ph1[ i ] = atan2( im1, re1 );
-	}
-
-	if( fabs( ph1[ 1 ] - ph1[ 0 ]) > M_PI )
-	{
-		if( ph1[ 1 ] > ph1[ 0 ])
-		{
-			ph1[ 1 ] -= M_2PI;
-		}
-		else
-		{
-			ph1[ 1 ] += M_2PI;
-		}
-	}
-
-	const double thd = ths[ 1 ] - ths[ 0 ];
-	gd = ( ph1[ 1 ] - ph1[ 0 ]) / thd;
+const int Count = 2;
+const double thd2 = 1e-9;
+double ths[Count] = {th - thd2, th + thd2};
+if(ths[0] < 0.0) {
+ths[0] = 0.0;
 }
-
+if(ths[1] > M_PI) {
+ths[1] = M_PI;
+}
+double ph1[Count];
+int i;
+for(i = 0; i < Count; i++) {
+double re1;
+double im1;
+calcFIRFilterResponse(flt, fltlen, ths[i], re1, im1);
+ph1[i] = atan2(im1, re1);
+}
+if(fabs(ph1[1] - ph1[0]) > M_PI) {
+if(ph1[1] > ph1[0]) {
+ph1[1] -= M_2PI;
+} else {
+ph1[1] += M_2PI;
+}
+}
+const double thd = ths[1] - ths[0];
+gd = (ph1[1] - ph1[0]) / thd;
+}
 /**
  * Function normalizes FIR filter so that its frequency response at DC is
  * equal to DCGain.
@@ -937,35 +784,27 @@ inline void calcFIRFilterResponseAndGroupDelay( const double* const flt,
  * @param pstep "p" array step.
  */
 
-inline void normalizeFIRFilter( double* const p, const int l,
-	const double DCGain, const int pstep = 1 )
-{
-	R8BASSERT( l > 0 );
-	R8BASSERT( pstep != 0 );
-
-	double s = 0.0;
-	double* pp = p;
-	int i = l;
-
-	while( i > 0 )
-	{
-		s += *pp;
-		pp += pstep;
-		i--;
-	}
-
-	s = DCGain / s;
-	pp = p;
-	i = l;
-
-	while( i > 0 )
-	{
-		*pp *= s;
-		pp += pstep;
-		i--;
-	}
+inline void normalizeFIRFilter(double *const p, const int l,
+                               const double DCGain, const int pstep = 1) {
+R8BASSERT(l > 0);
+R8BASSERT(pstep != 0);
+double s = 0.0;
+double *pp = p;
+int i = l;
+while (i > 0) {
+s += *pp;
+pp += pstep;
+i--;
 }
-
+s = DCGain / s;
+pp = p;
+i = l;
+while (i > 0) {
+*pp *= s;
+pp += pstep;
+i--;
+}
+}
 /**
  * Function calculates coefficients used to calculate 3rd order spline
  * (polynomial) on the equidistant lattice, using 8 points.
@@ -981,21 +820,17 @@ inline void normalizeFIRFilter( double* const p, const int l,
  * @param x4 Point at x+4 position.
  */
 
-inline void calcSpline3p8Coeffs( double* c, const double xm3,
-	const double xm2, const double xm1, const double x0, const double x1,
-	const double x2, const double x3, const double x4 )
-{
-	c[ 0 ] = x0;
-	c[ 1 ] = ( 61.0 * ( x1 - xm1 ) + 16.0 * ( xm2 - x2 ) +
-		3.0 * ( x3 - xm3 )) / 76.0;
-
-	c[ 2 ] = ( 106.0 * ( xm1 + x1 ) + 10.0 * x3 + 6.0 * xm3 - 3.0 * x4 -
-		29.0 * ( xm2 + x2 ) - 167.0 * x0 ) / 76.0;
-
-	c[ 3 ] = ( 91.0 * ( x0 - x1 ) + 45.0 * ( x2 - xm1 ) +
-		13.0 * ( xm2 - x3 ) + 3.0 * ( x4 - xm3 )) / 76.0;
+inline void calcSpline3p8Coeffs(double *c, const double xm3,
+                                const double xm2, const double xm1, const double x0, const double x1,
+                                const double x2, const double x3, const double x4) {
+c[0] = x0;
+c[1] = (61.0 * (x1 - xm1) + 16.0 * (xm2 - x2) +
+        3.0 * (x3 - xm3)) / 76.0;
+c[2] = (106.0 * (xm1 + x1) + 10.0 * x3 + 6.0 * xm3 - 3.0 * x4 -
+        29.0 * (xm2 + x2) - 167.0 * x0) / 76.0;
+c[3] = (91.0 * (x0 - x1) + 45.0 * (x2 - xm1) +
+        13.0 * (xm2 - x3) + 3.0 * (x4 - xm3)) / 76.0;
 }
-
 /**
  * Function calculates coefficients used to calculate 2rd order spline
  * (polynomial) on the equidistant lattice, using 8 points. This function is
@@ -1013,18 +848,15 @@ inline void calcSpline3p8Coeffs( double* c, const double xm3,
  * @param x4 Point at x+4 position.
  */
 
-inline void calcSpline2p8Coeffs( double* c, const double xm3,
-	const double xm2, const double xm1, const double x0, const double x1,
-	const double x2, const double x3, const double x4 )
-{
-	c[ 0 ] = x0;
-	c[ 1 ] = ( 61.0 * ( x1 - xm1 ) + 16.0 * ( xm2 - x2 ) +
-		3.0 * ( x3 - xm3 )) / 76.0;
-
-	c[ 2 ] = ( 106.0 * ( xm1 + x1 ) + 10.0 * x3 + 6.0 * xm3 - 3.0 * x4 -
-		29.0 * ( xm2 + x2 ) - 167.0 * x0 ) / 76.0;
+inline void calcSpline2p8Coeffs(double *c, const double xm3,
+                                const double xm2, const double xm1, const double x0, const double x1,
+                                const double x2, const double x3, const double x4) {
+c[0] = x0;
+c[1] = (61.0 * (x1 - xm1) + 16.0 * (xm2 - x2) +
+        3.0 * (x3 - xm3)) / 76.0;
+c[2] = (106.0 * (xm1 + x1) + 10.0 * x3 + 6.0 * xm3 - 3.0 * x4 -
+        29.0 * (xm2 + x2) - 167.0 * x0) / 76.0;
 }
-
 /**
  * Function calculates coefficients used to calculate 3rd order segment
  * interpolation polynomial on the equidistant lattice, using 4 points.
@@ -1034,14 +866,12 @@ inline void calcSpline2p8Coeffs( double* c, const double xm3,
  * x=0 point.
  */
 
-inline void calcInterpCoeffs3p4( double* const c, const double* const y )
-{
-	c[ 0 ] = y[ 1 ];
-	c[ 1 ] = 0.5 * ( y[ 2 ] - y[ 0 ]);
-	c[ 2 ] = y[ 0 ] - 2.5 * y[ 1 ] + y[ 2 ] + y[ 2 ] - 0.5 * y[ 3 ];
-	c[ 3 ] = 0.5 * ( y[ 3 ] - y[ 0 ] ) + 1.5 * ( y[ 1 ] - y[ 2 ]);
+inline void calcInterpCoeffs3p4(double *const c, const double *const y) {
+c[0] = y[1];
+c[1] = 0.5 * (y[2] - y[0]);
+c[2] = y[0] - 2.5 * y[1] + y[2] + y[2] - 0.5 * y[3];
+c[3] = 0.5 * (y[3] - y[0]) + 1.5 * (y[1] - y[2]);
 }
-
 /**
  * Function calculates coefficients used to calculate 3rd order segment
  * interpolation polynomial on the equidistant lattice, using 6 points.
@@ -1051,17 +881,14 @@ inline void calcInterpCoeffs3p4( double* const c, const double* const y )
  * x=0 point.
  */
 
-inline void calcInterpCoeffs3p6( double* const c, const double* const y )
-{
-	c[ 0 ] = y[ 2 ];
-	c[ 1 ] = ( 11.0 * ( y[ 3 ] - y[ 1 ]) + 2.0 * ( y[ 0 ] - y[ 4 ])) / 14.0;
-	c[ 2 ] = ( 20.0 * ( y[ 1 ] + y[ 3 ]) + 2.0 * y[ 5 ] - 4.0 * y[ 0 ] -
-		7.0 * y[ 4 ] - 31.0 * y[ 2 ]) / 14.0;
-
-	c[ 3 ] = ( 17.0 * ( y[ 2 ] - y[ 3 ]) + 9.0 * ( y[ 4 ] - y[ 1 ]) +
-		2.0 * ( y[ 0 ] - y[ 5 ])) / 14.0;
+inline void calcInterpCoeffs3p6(double *const c, const double *const y) {
+c[0] = y[2];
+c[1] = (11.0 * (y[3] - y[1]) + 2.0 * (y[0] - y[4])) / 14.0;
+c[2] = (20.0 * (y[1] + y[3]) + 2.0 * y[5] - 4.0 * y[0] -
+        7.0 * y[4] - 31.0 * y[2]) / 14.0;
+c[3] = (17.0 * (y[2] - y[3]) + 9.0 * (y[4] - y[1]) +
+        2.0 * (y[0] - y[5])) / 14.0;
 }
-
 /**
  * Function calculates coefficients used to calculate 3rd order segment
  * interpolation polynomial on the equidistant lattice, using 8 points.
@@ -1071,19 +898,15 @@ inline void calcInterpCoeffs3p6( double* const c, const double* const y )
  * x=0 point.
  */
 
-inline void calcInterpCoeffs3p8( double* const c, const double* const y )
-{
-	c[ 0 ] = y[ 3 ];
-	c[ 1 ] = ( 61.0 * ( y[ 4 ] - y[ 2 ]) + 16.0 * ( y[ 1 ] - y[ 5 ]) +
-		3.0 * ( y[ 6 ] - y[ 0 ])) / 76.0;
-
-	c[ 2 ] = ( 106.0 * ( y[ 2 ] + y[ 4 ]) + 10.0 * y[ 6 ] + 6.0 * y[ 0 ] -
-		3.0 * y[ 7 ] - 29.0 * ( y[ 1 ] + y[ 5 ]) - 167.0 * y[ 3 ]) / 76.0;
-
-	c[ 3 ] = ( 91.0 * ( y[ 3 ] - y[ 4 ]) + 45.0 * ( y[ 5 ] - y[ 2 ]) +
-		13.0 * ( y[ 1 ] - y[ 6 ]) + 3.0 * ( y[ 7 ] - y[ 0 ])) / 76.0;
+inline void calcInterpCoeffs3p8(double *const c, const double *const y) {
+c[0] = y[3];
+c[1] = (61.0 * (y[4] - y[2]) + 16.0 * (y[1] - y[5]) +
+        3.0 * (y[6] - y[0])) / 76.0;
+c[2] = (106.0 * (y[2] + y[4]) + 10.0 * y[6] + 6.0 * y[0] -
+        3.0 * y[7] - 29.0 * (y[1] + y[5]) - 167.0 * y[3]) / 76.0;
+c[3] = (91.0 * (y[3] - y[4]) + 45.0 * (y[5] - y[2]) +
+        13.0 * (y[1] - y[6]) + 3.0 * (y[7] - y[0])) / 76.0;
 }
-
 /**
  * Function calculates coefficients used to calculate 3rd order segment
  * interpolation polynomial on the equidistant lattice, using 8 points.
@@ -1093,48 +916,37 @@ inline void calcInterpCoeffs3p8( double* const c, const double* const y )
  * x=0 point.
  */
 
-inline void calcInterpCoeffs2p8( double* const c, const double* const y )
-{
-	c[ 0 ] = y[ 3 ];
-	c[ 1 ] = ( 61.0 * ( y[ 4 ] - y[ 2 ]) + 16.0 * ( y[ 1 ] - y[ 5 ]) +
-		3.0 * ( y[ 6 ] - y[ 0 ])) / 76.0;
-
-	c[ 2 ] = ( 106.0 * ( y[ 2 ] + y[ 4 ]) + 10.0 * y[ 6 ] + 6.0 * y[ 0 ] -
-		3.0 * y[ 7 ] - 29.0 * ( y[ 1 ] + y[ 5 ]) - 167.0 * y[ 3 ]) / 76.0;
+inline void calcInterpCoeffs2p8(double *const c, const double *const y) {
+c[0] = y[3];
+c[1] = (61.0 * (y[4] - y[2]) + 16.0 * (y[1] - y[5]) +
+        3.0 * (y[6] - y[0])) / 76.0;
+c[2] = (106.0 * (y[2] + y[4]) + 10.0 * y[6] + 6.0 * y[0] -
+        3.0 * y[7] - 29.0 * (y[1] + y[5]) - 167.0 * y[3]) / 76.0;
 }
-
 #if !defined( min )
-
 /**
  * @param v1 Value 1.
  * @param v2 Value 2.
  * @return The minimum of 2 values.
  */
 
-template< class T >
-inline T min( const T& v1, const T& v2 )
-{
-	return( v1 < v2 ? v1 : v2 );
+template<class T>
+inline T min(const T &v1, const T &v2) {
+return (v1 < v2 ? v1 : v2);
 }
-
 #endif // min
-
 #if !defined( max )
-
 /**
  * @param v1 Value 1.
  * @param v2 Value 2.
  * @return The maximum of 2 values.
  */
 
-template< class T >
-inline T max( const T& v1, const T& v2 )
-{
-	return( v1 > v2 ? v1 : v2 );
+template<class T>
+inline T max(const T &v1, const T &v2) {
+return (v1 > v2 ? v1 : v2);
 }
-
 #endif // max
-
 /**
  * Function "clamps" (clips) the specified value so that it is not lesser than
  * "minv", and not greater than "maxv".
@@ -1145,93 +957,74 @@ inline T max( const T& v1, const T& v2 )
  * @return "Clamped" value.
  */
 
-inline double clampr( const double Value, const double minv,
-	const double maxv )
-{
-	if( Value < minv )
-	{
-		return( minv );
-	}
-	else
-	if( Value > maxv )
-	{
-		return( maxv );
-	}
-	else
-	{
-		return( Value );
-	}
+inline double clampr(const double Value, const double minv,
+                     const double maxv) {
+if(Value < minv) {
+return (minv);
+} else if(Value > maxv) {
+return (maxv);
+} else {
+return (Value);
 }
-
+}
 /**
  * @param x Value to square.
  * @return Squared value of the argument.
  */
 
-inline double sqr( const double x )
-{
-	return( x * x );
+inline double sqr(const double x) {
+return (x * x);
 }
-
 /**
  * @param v Input value.
  * @param p Power factor.
  * @return Returns pow() function's value with input value's sign check.
  */
 
-inline double pows( const double v, const double p )
-{
-	return( v < 0.0 ? -pow( -v, p ) : pow( v, p ));
+inline double pows(const double v, const double p) {
+return (v < 0.0 ? -pow(-v, p) : pow(v, p));
 }
-
 /**
  * @param v Input value.
  * @return Calculated single-argument Gaussian function of the input value.
  */
 
-inline double gauss( const double v )
-{
-	return( exp( -( v * v )));
+inline double gauss(const double v) {
+return (exp(-(v * v)));
 }
-
 /**
  * @param v Input value.
  * @return Calculated inverse hyperbolic sine of the input value.
  */
 
-inline double asinh( const double v )
-{
-	return( log( v + sqrt( v * v + 1.0 )));
+inline double asinh(const double v) {
+return (log(v + sqrt(v * v + 1.0)));
 }
-
 /**
  * @param x Input value.
  * @return Calculated zero-th order modified Bessel function of the first kind
  * of the input value. Approximate value.
  */
 
-inline double besselI0( const double x )
-{
-	const double ax = fabs( x );
-	double y;
-
-	if( ax < 3.75 )
-	{
-		y = x / 3.75;
-		y *= y;
-
-		return( 1.0 + y * ( 3.5156229 + y * ( 3.0899424 + y * ( 1.2067492 +
-			y * ( 0.2659732 + y * ( 0.360768e-1 + y * 0.45813e-2 ))))));
-	}
-
-	y = 3.75 / ax;
-
-	return( exp( ax ) / sqrt( ax ) * ( 0.39894228 + y * ( 0.1328592e-1 +
-		y * ( 0.225319e-2 + y * ( -0.157565e-2 + y * ( 0.916281e-2 +
-		y * ( -0.2057706e-1 + y * ( 0.2635537e-1 + y * ( -0.1647633e-1 +
-		y * 0.392377e-2 )))))))));
+inline double besselI0(const double x) {
+const double ax = fabs(x);
+double y;
+if(ax < 3.75) {
+y = x / 3.75;
+y *= y;
+return (1.0 + y * (3.5156229 + y * (3.0899424 + y * (1.2067492 +
+                                                     y * (0.2659732 + y * (0.360768e-1 + y * 0.45813e-2))))));
 }
-
+y = 3.75 / ax;
+return (exp(ax) / sqrt(ax) * (0.39894228 + y * (0.1328592e-1 +
+                                                y * (0.225319e-2 + y * (-0.157565e-2 + y * (0.916281e-2 +
+                                                                                            y * (-0.2057706e-1 + y *
+                                                                                                                 (0.2635537e-1 +
+                                                                                                                  y *
+                                                                                                                  (-0.1647633e-1 +
+                                                                                                                   y *
+                                                                                                                   0.392377e-2)))))))));
+}
 } // namespace r8b
 
 #endif // R8BBASE_INCLUDED

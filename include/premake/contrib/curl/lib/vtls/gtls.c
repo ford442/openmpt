@@ -29,7 +29,6 @@
  */
 
 #include "curl_setup.h"
-
 #ifdef USE_GNUTLS
 
 #include <gnutls/abstract.h>
@@ -1133,9 +1132,9 @@ gtls_connect_step3(struct connectdata *conn,
      addresses. */
   if(!rc) {
 #ifdef ENABLE_IPV6
-    #define use_addr in6_addr
+#define use_addr in6_addr
 #else
-    #define use_addr in_addr
+#define use_addr in_addr
 #endif
     unsigned char addrbuf[sizeof(struct use_addr)];
     unsigned char certaddr[sizeof(struct use_addr)];

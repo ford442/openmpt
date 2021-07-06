@@ -30,7 +30,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PKCS12_C)
 
 #include "mbedtls/pkcs12.h"

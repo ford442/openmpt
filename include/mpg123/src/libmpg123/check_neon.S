@@ -7,29 +7,28 @@
 */
 
 #include "mangle.h"
-
 #ifndef __aarch64__
 #ifndef _M_ARM
-	.code 32
+.code 32
 #endif
 #ifndef __APPLE__
-	.fpu neon
+.
+fpu neon
 #endif
 #endif
-
-	.text
-	GLOBAL_SYMBOL ASM_NAME(check_neon)
+.text
+GLOBAL_SYMBOL ASM_NAME(check_neon)
 #ifdef __ELF__
-	.type ASM_NAME(check_neon), %function
+.type ASM_NAME(check_neon), %function
 #endif
-	ALIGN4
-ASM_NAME(check_neon):
+ALIGN4
+        ASM_NAME(check_neon)
+:
 #ifdef __aarch64__
-	orr		v0.16b, v0.16b, v0.16b
-	ret
+orr		v0.16b, v0.16b, v0.16b
+ret
 #else
-	vorr	d0, d0, d0
-	bx		lr
+vorr d0, d0, d0
+bx lr
 #endif
-
 NONEXEC_STACK

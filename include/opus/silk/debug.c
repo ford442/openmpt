@@ -28,10 +28,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include "debug.h"
 #include "SigProc_FIX.h"
-
 #if SILK_TIC_TOC
 
 #ifdef _WIN32
@@ -162,7 +160,6 @@ void silk_TimerSave(char *file_name)
 #endif
 
 #endif /* SILK_TIC_TOC */
-
 #if SILK_DEBUG
 FILE *silk_debug_store_fp[ silk_NUM_STORES_MAX ];
 int silk_debug_store_count = 0;

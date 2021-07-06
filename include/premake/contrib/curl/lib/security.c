@@ -7,7 +7,7 @@
  * rewrite to work around the paragraph 2 in the BSD licenses as explained
  * below.
  *
- * Copyright (c) 1998, 1999 Kungliga Tekniska Högskolan
+ * Copyright (c) 1998, 1999 Kungliga Tekniska Hï¿½gskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  *
  * Copyright (C) 2001 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
@@ -42,7 +42,6 @@
  * SUCH DAMAGE.  */
 
 #include "curl_setup.h"
-
 #ifndef CURL_DISABLE_FTP
 #ifdef HAVE_GSSAPI
 
@@ -584,5 +583,4 @@ Curl_sec_end(struct connectdata *conn)
 }
 
 #endif /* HAVE_GSSAPI */
-
 #endif /* CURL_DISABLE_FTP */

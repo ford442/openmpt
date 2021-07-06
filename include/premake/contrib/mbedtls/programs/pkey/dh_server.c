@@ -24,14 +24,12 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
 #define mbedtls_printf     printf
 #endif
-
 #if defined(MBEDTLS_AES_C) && defined(MBEDTLS_DHM_C) && \
     defined(MBEDTLS_ENTROPY_C) && defined(MBEDTLS_NET_C) && \
     defined(MBEDTLS_RSA_C) && defined(MBEDTLS_SHA256_C) && \
@@ -47,21 +45,18 @@
 #include <stdio.h>
 #include <string.h>
 #endif
-
 #define SERVER_PORT "11999"
 #define PLAINTEXT "==Hello there!=="
-
-#if !defined(MBEDTLS_AES_C) || !defined(MBEDTLS_DHM_C) ||     \
-    !defined(MBEDTLS_ENTROPY_C) || !defined(MBEDTLS_NET_C) ||  \
-    !defined(MBEDTLS_RSA_C) || !defined(MBEDTLS_SHA256_C) ||    \
+#if !defined(MBEDTLS_AES_C) || !defined(MBEDTLS_DHM_C) || \
+    !defined(MBEDTLS_ENTROPY_C) || !defined(MBEDTLS_NET_C) || \
+    !defined(MBEDTLS_RSA_C) || !defined(MBEDTLS_SHA256_C) || \
     !defined(MBEDTLS_FS_IO) || !defined(MBEDTLS_CTR_DRBG_C)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_AES_C and/or MBEDTLS_DHM_C and/or MBEDTLS_ENTROPY_C "
-           "and/or MBEDTLS_NET_C and/or MBEDTLS_RSA_C and/or "
-           "MBEDTLS_SHA256_C and/or MBEDTLS_FS_IO and/or "
-           "MBEDTLS_CTR_DRBG_C not defined.\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_AES_C and/or MBEDTLS_DHM_C and/or MBEDTLS_ENTROPY_C "
+               "and/or MBEDTLS_NET_C and/or MBEDTLS_RSA_C and/or "
+               "MBEDTLS_SHA256_C and/or MBEDTLS_FS_IO and/or "
+               "MBEDTLS_CTR_DRBG_C not defined.\n");
+return (0);
 }
 #else
 int main( void )

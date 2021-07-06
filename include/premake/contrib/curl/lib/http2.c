@@ -21,7 +21,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef USE_NGHTTP2
 #include <nghttp2/nghttp2.h>
 #include "urldata.h"
@@ -2209,19 +2208,14 @@ void Curl_http2_cleanup_dependencies(struct Curl_easy *data)
 
 #define CURL_DISABLE_TYPECHECK
 #include <curl/curl.h>
-
-char *curl_pushheader_bynum(struct curl_pushheaders *h, size_t num)
-{
-  (void) h;
-  (void) num;
-  return NULL;
+char *curl_pushheader_bynum(struct curl_pushheaders *h, size_t num) {
+(void) h;
+(void) num;
+return NULL;
 }
-
-char *curl_pushheader_byname(struct curl_pushheaders *h, const char *header)
-{
-  (void) h;
-  (void) header;
-  return NULL;
+char *curl_pushheader_byname(struct curl_pushheaders *h, const char *header) {
+(void) h;
+(void) header;
+return NULL;
 }
-
 #endif /* USE_NGHTTP2 */

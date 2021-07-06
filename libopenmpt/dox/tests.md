@@ -1,13 +1,10 @@
-
 Tests {#tests}
 =====
 
 
-libopenmpt provides some basic unit tests that check the platform for general
-sanity and do some basic internal functionality testing. The test suite
-requires a special libopenmpt build that includes file saving functionality
-which is not included in normal builds. This is handled by all provided build
-systems automatically.
+libopenmpt provides some basic unit tests that check the platform for general sanity and do some basic internal
+functionality testing. The test suite requires a special libopenmpt build that includes file saving functionality which
+is not included in normal builds. This is handled by all provided build systems automatically.
 
 ### Running Tests
 
@@ -22,8 +19,8 @@ and run
 
     make $YOURMAKEOPTIONS check
 
-As the build system retains no state between make invocations, you have to
-provide your make options on every make invocation.
+As the build system retains no state between make invocations, you have to provide your make options on every make
+invocation.
 
 #### Autotools-based build system
 

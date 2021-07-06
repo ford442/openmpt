@@ -114,11 +114,9 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include <stdlib.h>
 #include <string.h>
-
 #include "lha_decoder.h"
 #include "lha_endian.h"
 #include "lha_file_header.h"
-
 #define OUTPUT_BUFFER_SIZE 4096 /* bytes */
 
 // Classic Mac OS represents time in seconds since 1904, instead of
@@ -147,127 +145,117 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 // Check that the given block of data contains only zero bytes.
 
-static int block_is_zero(uint8_t *data, size_t data_len)
-{
-	unsigned int i;
-
-	for (i = 0; i < data_len; ++i) {
-		if (data[i] != 0) {
-			return 0;
-		}
-	}
-
-	return 1;
+static int block_is_zero(uint8_t *data, size_t data_len) {
+unsigned int i;
+for(i = 0; i < data_len; ++i) {
+if(data[i] != 0) {
+return 0;
+}
+}
+return 1;
 }
 
 // Check that the specified modification time matches the modification
 // time from the file header.
 
 static int check_modification_time(unsigned int mod_time,
-                                   LHAFileHeader *header)
-{
-	unsigned int time_diff;
+                                   LHAFileHeader *header) {
+unsigned int time_diff;
 
-	// In an ideal world, mod_time should match header->timestamp
-	// exactly. However, there's an additional complication
-	// because mod_time is local time, not UTC time, so there is
-	// a timezone difference.
+// In an ideal world, mod_time should match header->timestamp
+// exactly. However, there's an additional complication
+// because mod_time is local time, not UTC time, so there is
+// a timezone difference.
 
-	if (header->timestamp > mod_time) {
-		time_diff = header->timestamp - mod_time;
-	} else {
-		time_diff = mod_time - header->timestamp;
-	}
+if(header->timestamp > mod_time) {
+time_diff = header->timestamp - mod_time;
+} else {
+time_diff = mod_time - header->timestamp;
+}
 
-	// The maximum UTC timezone difference is UTC+14, used in
-	// New Zealand and some	other islands in the Pacific.
+// The maximum UTC timezone difference is UTC+14, used in
+// New Zealand and some	other islands in the Pacific.
 
-	if (time_diff > 14 * 60 * 60) {
-		return 0;
-	}
+if(time_diff > 14 * 60 * 60) {
+return 0;
+}
 
-	// If the world was simpler, all time zones would be exact
-	// hour offsets, but in fact, some regions use half or
-	// quarter hour offsets. So the difference should be a
-	// multiple of 15 minutes. Actually, the control panel in
-	// Mac OS allows any minute offset to be configured, but if
-	// people are crazy enough to do that, they deserve the
-	// brokenness they get as a result. It's preferable to use
-	// a 15 minute check rather than a 1 minute check, because
-	// this allows MacLHA-added MacBinary headers to be
-	// distinguished from archived MacBinary files more reliably.
+// If the world was simpler, all time zones would be exact
+// hour offsets, but in fact, some regions use half or
+// quarter hour offsets. So the difference should be a
+// multiple of 15 minutes. Actually, the control panel in
+// Mac OS allows any minute offset to be configured, but if
+// people are crazy enough to do that, they deserve the
+// brokenness they get as a result. It's preferable to use
+// a 15 minute check rather than a 1 minute check, because
+// this allows MacLHA-added MacBinary headers to be
+// distinguished from archived MacBinary files more reliably.
 
-	//return (time_diff % (15 * 60)) == 0;
+//return (time_diff % (15 * 60)) == 0;
 
-	// It turns out the assumption above doesn't hold, and MacLHA
-	// does generate archives where the timestamps don't always
-	// exactly match. Oh well.
+// It turns out the assumption above doesn't hold, and MacLHA
+// does generate archives where the timestamps don't always
+// exactly match. Oh well.
 
-	return 1;
+return 1;
 }
 
 // Given the specified data buffer, check whether it has a MacBinary
 // header with contents that match the specified .lzh header.
 
-static int is_macbinary_header(uint8_t *data, LHAFileHeader *header)
-{
-	unsigned int filename_len;
-	unsigned int data_fork_len, res_fork_len, expected_len;
-	unsigned int mod_time;
+static int is_macbinary_header(uint8_t *data, LHAFileHeader *header) {
+unsigned int filename_len;
+unsigned int data_fork_len, res_fork_len, expected_len;
+unsigned int mod_time;
 
-	// Check fields in the header that should be zero.
+// Check fields in the header that should be zero.
 
-	if (data[MBHDR_OFF_VERSION] != 0
-	 || data[MBHDR_OFF_ZERO_COMPAT1] != 0
-	 || data[MBHDR_OFF_ZERO_COMPAT2] != 0
-	 || !block_is_zero(&data[MBHDR_OFF_COMMENT_LEN], 2)
-	 || !block_is_zero(&data[MBHDR_OFF_MACBINARY2_DATA],
-	                   MBHDR_LEN_MACBINARY2_DATA)) {
-		return 0;
-	}
+if(data[MBHDR_OFF_VERSION] != 0
+   || data[MBHDR_OFF_ZERO_COMPAT1] != 0
+   || data[MBHDR_OFF_ZERO_COMPAT2] != 0
+   || !block_is_zero(&data[MBHDR_OFF_COMMENT_LEN], 2)
+   || !block_is_zero(&data[MBHDR_OFF_MACBINARY2_DATA],
+                     MBHDR_LEN_MACBINARY2_DATA)) {
+return 0;
+}
 
-	// Check that the filename matches the filename from the
-	// lzh header.
+// Check that the filename matches the filename from the
+// lzh header.
 
-	filename_len = data[MBHDR_OFF_FILENAME_LEN];
+filename_len = data[MBHDR_OFF_FILENAME_LEN];
+if(filename_len > MBHDR_LEN_FILENAME
+   || filename_len != strlen(header->filename)
+   || memcmp(&data[MBHDR_OFF_FILENAME],
+             header->filename, filename_len) != 0) {
+return 0;
+}
 
-	if (filename_len > MBHDR_LEN_FILENAME
-	 || filename_len != strlen(header->filename)
-	 || memcmp(&data[MBHDR_OFF_FILENAME],
-	           header->filename, filename_len) != 0) {
-		return 0;
-	}
+// Data following the filename must be zero as well.
 
-	// Data following the filename must be zero as well.
+if(!block_is_zero(data + MBHDR_OFF_FILENAME + filename_len,
+                  MBHDR_LEN_FILENAME - filename_len)) {
+return 0;
+}
 
-	if (!block_is_zero(data + MBHDR_OFF_FILENAME + filename_len,
-	                   MBHDR_LEN_FILENAME - filename_len)) {
-		return 0;
-	}
+// Decode data fork / resource fork lengths. Their combined
+// lengths, plus the MacBinary header, should match the
+// compressed data length (rounded up to the nearest 128).
 
-	// Decode data fork / resource fork lengths. Their combined
-	// lengths, plus the MacBinary header, should match the
-	// compressed data length (rounded up to the nearest 128).
+data_fork_len = lha_decode_be_uint32(&data[MBHDR_OFF_DATA_FORK_LEN]);
+res_fork_len = lha_decode_be_uint32(&data[MBHDR_OFF_RES_FORK_LEN]);
+expected_len = (data_fork_len + res_fork_len + MBHDR_SIZE);
+if(header->length != ((expected_len + 0x7f) & ~0x7f)) {
+return 0;
+}
 
-	data_fork_len = lha_decode_be_uint32(&data[MBHDR_OFF_DATA_FORK_LEN]);
-	res_fork_len = lha_decode_be_uint32(&data[MBHDR_OFF_RES_FORK_LEN]);
+// Check modification time.
 
-	expected_len = (data_fork_len + res_fork_len + MBHDR_SIZE);
-
-	if (header->length != ((expected_len + 0x7f) & ~0x7f)) {
-		return 0;
-	}
-
-	// Check modification time.
-
-	mod_time = lha_decode_be_uint32(&data[MBHDR_OFF_FILE_MOD_DATE]);
-
-	if (mod_time < MAC_TIME_OFFSET
-	 || !check_modification_time(mod_time - MAC_TIME_OFFSET, header)) {
-		return 0;
-	}
-
-	return 1;
+mod_time = lha_decode_be_uint32(&data[MBHDR_OFF_FILE_MOD_DATE]);
+if(mod_time < MAC_TIME_OFFSET
+   || !check_modification_time(mod_time - MAC_TIME_OFFSET, header)) {
+return 0;
+}
+return 1;
 }
 
 //
@@ -277,175 +265,146 @@ static int is_macbinary_header(uint8_t *data, LHAFileHeader *header)
 
 typedef struct {
 
-	// When the decoder is initialized, the first 128 bytes of
-	// data are read into this buffer and analysed. If it is
-	// not a MacBinary header, the data must be kept so that it
-	// can be returned in the first call to .read().
-	// mb_header_bytes contains the number of bytes still to read.
+// When the decoder is initialized, the first 128 bytes of
+// data are read into this buffer and analysed. If it is
+// not a MacBinary header, the data must be kept so that it
+// can be returned in the first call to .read().
+// mb_header_bytes contains the number of bytes still to read.
 
-	uint8_t mb_header[MBHDR_SIZE];
-	size_t mb_header_bytes;
+uint8_t mb_header[MBHDR_SIZE];
+size_t mb_header_bytes;
 
-	// The "inner" decoder used to read the compressed data.
+// The "inner" decoder used to read the compressed data.
 
-	LHADecoder *decoder;
+LHADecoder *decoder;
 
-	// Number of bytes still to read before decode should be
-	// terminated.
+// Number of bytes still to read before decode should be
+// terminated.
 
-	size_t stream_remaining;
+size_t stream_remaining;
 } MacBinaryDecoder;
 
 // Structure used when initializing a MacBinaryDecoder.
 
 typedef struct {
-	LHADecoder *decoder;
-	LHAFileHeader *header;
+LHADecoder *decoder;
+LHAFileHeader *header;
 } MacBinaryDecoderClosure;
-
 static int read_macbinary_header(MacBinaryDecoder *decoder,
-                                 LHAFileHeader *header)
-{
-	unsigned int data_fork_len, res_fork_len;
-	size_t n, bytes;
+                                 LHAFileHeader *header) {
+unsigned int data_fork_len, res_fork_len;
+size_t n, bytes;
+bytes = 0;
+while (bytes < MBHDR_SIZE) {
+n = lha_decoder_read(decoder->decoder,
+                     decoder->mb_header + bytes,
+                     MBHDR_SIZE - bytes);
 
-	bytes = 0;
+// Unexpected EOF?
 
-	while (bytes < MBHDR_SIZE) {
-		n = lha_decoder_read(decoder->decoder,
-		                     decoder->mb_header + bytes,
-		                     MBHDR_SIZE - bytes);
-
-		// Unexpected EOF?
-
-		if (n == 0) {
-			return 0;
-		}
-
-		bytes += n;
-	}
-
-	// Check if the data that was read corresponds to a MacBinary
-	// header that matches the .lzh header. If not, just decode it
-	// as a normal stream.
-
-	if (!is_macbinary_header(decoder->mb_header, header)) {
-		decoder->mb_header_bytes = bytes;
-		return 1;
-	}
-
-	// We have a MacBinary header, so skip over it. Decide how
-	// long the data stream is (see policy in comment at start
-	// of file).
-
-	decoder->mb_header_bytes = 0;
-
-	data_fork_len = lha_decode_be_uint32(
-	                   &decoder->mb_header[MBHDR_OFF_DATA_FORK_LEN]);
-	res_fork_len = lha_decode_be_uint32(
-	                   &decoder->mb_header[MBHDR_OFF_RES_FORK_LEN]);
-
-	if (data_fork_len > 0) {
-		decoder->stream_remaining = data_fork_len;
-	} else {
-		decoder->stream_remaining = res_fork_len;
-	}
-
-	return 1;
+if(n == 0) {
+return 0;
+}
+bytes += n;
 }
 
+// Check if the data that was read corresponds to a MacBinary
+// header that matches the .lzh header. If not, just decode it
+// as a normal stream.
+
+if(!is_macbinary_header(decoder->mb_header, header)) {
+decoder->mb_header_bytes = bytes;
+return 1;
+}
+
+// We have a MacBinary header, so skip over it. Decide how
+// long the data stream is (see policy in comment at start
+// of file).
+
+decoder->mb_header_bytes = 0;
+data_fork_len = lha_decode_be_uint32(
+        &decoder->mb_header[MBHDR_OFF_DATA_FORK_LEN]);
+res_fork_len = lha_decode_be_uint32(
+        &decoder->mb_header[MBHDR_OFF_RES_FORK_LEN]);
+if(data_fork_len > 0) {
+decoder->stream_remaining = data_fork_len;
+} else {
+decoder->stream_remaining = res_fork_len;
+}
+return 1;
+}
 static int macbinary_decoder_init(void *_decoder,
                                   LHADecoderCallback callback,
-                                  void *_closure)
-{
-	MacBinaryDecoder *decoder = _decoder;
-	MacBinaryDecoderClosure *closure = _closure;
+                                  void *_closure) {
+MacBinaryDecoder *decoder = _decoder;
+MacBinaryDecoderClosure *closure = _closure;
+decoder->decoder = closure->decoder;
+decoder->mb_header_bytes = 0;
+decoder->stream_remaining = closure->header->length;
+if(closure->header->length >= MBHDR_SIZE
+   && !read_macbinary_header(decoder, closure->header)) {
+return 0;
+}
+return 1;
+}
+static void decode_to_end(LHADecoder *decoder) {
+uint8_t buf[128];
+size_t n;
+do {
+n = lha_decoder_read(decoder, buf, sizeof(buf));
+} while (n > 0);
+}
+static size_t macbinary_decoder_read(void *_decoder, uint8_t *buf) {
+MacBinaryDecoder *decoder = _decoder;
+size_t result;
+size_t to_read;
+size_t n;
+result = 0;
 
-	decoder->decoder = closure->decoder;
-	decoder->mb_header_bytes = 0;
-	decoder->stream_remaining = closure->header->length;
+// If there is data from the mb_header buffer waiting to be
+// read, add it first.
 
-	if (closure->header->length >= MBHDR_SIZE
-	 && !read_macbinary_header(decoder, closure->header)) {
-		return 0;
-	}
-
-	return 1;
+if(decoder->mb_header_bytes > 0) {
+memcpy(buf, decoder->mb_header, decoder->mb_header_bytes);
+result = decoder->mb_header_bytes;
+decoder->mb_header_bytes = 0;
 }
 
-static void decode_to_end(LHADecoder *decoder)
-{
-	uint8_t buf[128];
-	size_t n;
+// Read further data, if there is some in the stream still to read.
 
-	do {
-		n = lha_decoder_read(decoder, buf, sizeof(buf));
-	} while (n > 0);
+to_read = OUTPUT_BUFFER_SIZE - result;
+if(to_read > decoder->stream_remaining) {
+to_read = decoder->stream_remaining;
 }
+n = lha_decoder_read(decoder->decoder, buf + result, to_read);
+decoder->stream_remaining -= n;
+result += n;
 
-static size_t macbinary_decoder_read(void *_decoder, uint8_t *buf)
-{
-	MacBinaryDecoder *decoder = _decoder;
-	size_t result;
-	size_t to_read;
-	size_t n;
+// Once the end of the stream is reached, there may still be
+// data from the inner decoder to decompress. When this happens,
+// run the decoder until the end.
 
-	result = 0;
-
-	// If there is data from the mb_header buffer waiting to be
-	// read, add it first.
-
-	if (decoder->mb_header_bytes > 0) {
-		memcpy(buf, decoder->mb_header, decoder->mb_header_bytes);
-		result = decoder->mb_header_bytes;
-		decoder->mb_header_bytes = 0;
-	}
-
-	// Read further data, if there is some in the stream still to read.
-
-	to_read = OUTPUT_BUFFER_SIZE - result;
-
-	if (to_read > decoder->stream_remaining) {
-		to_read = decoder->stream_remaining;
-	}
-
-	n = lha_decoder_read(decoder->decoder, buf + result, to_read);
-
-	decoder->stream_remaining -= n;
-	result += n;
-
-	// Once the end of the stream is reached, there may still be
-	// data from the inner decoder to decompress. When this happens,
-	// run the decoder until the end.
-
-	if (decoder->stream_remaining == 0) {
-		decode_to_end(decoder->decoder);
-	}
-
-	return result;
+if(decoder->stream_remaining == 0) {
+decode_to_end(decoder->decoder);
 }
-
+return result;
+}
 static LHADecoderType macbinary_decoder_type = {
-	macbinary_decoder_init,
-	NULL,
-	macbinary_decoder_read,
-	sizeof(MacBinaryDecoder),
-	OUTPUT_BUFFER_SIZE,
-	0,
+        macbinary_decoder_init,
+        NULL,
+        macbinary_decoder_read,
+        sizeof(MacBinaryDecoder),
+        OUTPUT_BUFFER_SIZE,
+        0,
 };
-
 LHADecoder *lha_macbinary_passthrough(LHADecoder *decoder,
-                                      LHAFileHeader *header)
-{
-	MacBinaryDecoderClosure closure;
-	LHADecoder *result;
-
-	closure.decoder = decoder;
-	closure.header = header;
-
-	result = lha_decoder_new(&macbinary_decoder_type, NULL,
-	                         &closure, header->length);
-
-	return result;
+                                      LHAFileHeader *header) {
+MacBinaryDecoderClosure closure;
+LHADecoder *result;
+closure.decoder = decoder;
+closure.header = header;
+result = lha_decoder_new(&macbinary_decoder_type, NULL,
+                         &closure, header->length);
+return result;
 }
 

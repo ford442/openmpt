@@ -19,9 +19,7 @@
  */
 
 #include "curl_setup.h"
-
 #ifndef HAVE_INET_NTOP
-
 #ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
@@ -31,14 +29,11 @@
 #ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif
-
 #include "inet_ntop.h"
 #include "curl_printf.h"
-
 #define IN6ADDRSZ       16
 #define INADDRSZ         4
 #define INT16SZ          2
-
 /*
  * Format an IPv4 address, more or less like inet_ntoa().
  *
@@ -47,29 +42,24 @@
  *  - uses no statics
  *  - takes a unsigned char* not an in_addr as input
  */
-static char *inet_ntop4 (const unsigned char *src, char *dst, size_t size)
-{
-  char tmp[sizeof "255.255.255.255"];
-  size_t len;
-
-  DEBUGASSERT(size >= 16);
-
-  tmp[0] = '\0';
-  (void)snprintf(tmp, sizeof(tmp), "%d.%d.%d.%d",
-                 ((int)((unsigned char)src[0])) & 0xff,
-                 ((int)((unsigned char)src[1])) & 0xff,
-                 ((int)((unsigned char)src[2])) & 0xff,
-                 ((int)((unsigned char)src[3])) & 0xff);
-
-  len = strlen(tmp);
-  if(len == 0 || len >= size) {
-    SET_ERRNO(ENOSPC);
-    return (NULL);
-  }
-  strcpy(dst, tmp);
-  return dst;
+static char *inet_ntop4(const unsigned char *src, char *dst, size_t size) {
+char tmp[sizeof "255.255.255.255"];
+size_t len;
+DEBUGASSERT(size >= 16);
+tmp[0] = '\0';
+(void) snprintf(tmp, sizeof(tmp), "%d.%d.%d.%d",
+                ((int) ((unsigned char) src[0])) & 0xff,
+                ((int) ((unsigned char) src[1])) & 0xff,
+                ((int) ((unsigned char) src[2])) & 0xff,
+                ((int) ((unsigned char) src[3])) & 0xff);
+len = strlen(tmp);
+if(len == 0 || len >= size) {
+SET_ERRNO(ENOSPC);
+return (NULL);
 }
-
+strcpy(dst, tmp);
+return dst;
+}
 #ifdef ENABLE_IPV6
 /*
  * Convert IPv6 binary address into presentation (printable) format.
@@ -167,7 +157,6 @@ static char *inet_ntop6 (const unsigned char *src, char *dst, size_t size)
   return dst;
 }
 #endif  /* ENABLE_IPV6 */
-
 /*
  * Convert a network format address to presentation format.
  *
@@ -180,18 +169,17 @@ static char *inet_ntop6 (const unsigned char *src, char *dst, size_t size)
  * actual last winsock error. So use macro ERRNO to fetch the
  * errno this function sets when returning NULL, not SOCKERRNO.
  */
-char *Curl_inet_ntop(int af, const void *src, char *buf, size_t size)
-{
-  switch(af) {
-  case AF_INET:
-    return inet_ntop4((const unsigned char *)src, buf, size);
+char *Curl_inet_ntop(int af, const void *src, char *buf, size_t size) {
+switch (af) {
+case AF_INET:
+return inet_ntop4((const unsigned char *) src, buf, size);
 #ifdef ENABLE_IPV6
-  case AF_INET6:
-    return inet_ntop6((const unsigned char *)src, buf, size);
+case AF_INET6:
+  return inet_ntop6((const unsigned char *)src, buf, size);
 #endif
-  default:
-    SET_ERRNO(EAFNOSUPPORT);
-    return NULL;
-  }
+default:
+SET_ERRNO(EAFNOSUPPORT);
+return NULL;
+}
 }
 #endif  /* HAVE_INET_NTOP */

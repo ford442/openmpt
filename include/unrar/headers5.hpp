@@ -1,6 +1,5 @@
 #ifndef _RAR_HEADERS5_
 #define _RAR_HEADERS5_
-
 #define  SIZEOF_MARKHEAD5        8  // RAR 5.0 signature length.
 #define  SIZEOF_SHORTBLOCKHEAD5  7  // Smallest RAR 5.0 block size.
 
@@ -96,5 +95,4 @@
 #define FHEXTRA_UOWNER_GNAME   0x02 // Group name string is present.
 #define FHEXTRA_UOWNER_NUMUID  0x04 // Numeric user ID is present.
 #define FHEXTRA_UOWNER_NUMGID  0x08 // Numeric group ID is present.
-
 #endif

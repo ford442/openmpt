@@ -25,7 +25,6 @@
 #define CURL_FNMATCH_MATCH    0
 #define CURL_FNMATCH_NOMATCH  1
 #define CURL_FNMATCH_FAIL     2
-
 /* default pattern matching function
  * =================================
  * Implemented with recursive backtracking, if you want to use Curl_fnmatch,
@@ -40,5 +39,4 @@
  *           and upper (use as "[[:alnum:]]")
  */
 int Curl_fnmatch(void *ptr, const char *pattern, const char *string);
-
 #endif /* HEADER_CURL_FNMATCH_H */

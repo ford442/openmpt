@@ -23,57 +23,45 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #include <stddef.h>
-
 #include "llist.h"
-
 /* Hash function prototype */
-typedef size_t (*hash_function) (void *key,
-                                 size_t key_length,
-                                 size_t slots_num);
-
+typedef size_t (*hash_function)(void *key,
+                                size_t key_length,
+                                size_t slots_num);
 /*
    Comparator function prototype. Compares two keys.
 */
-typedef size_t (*comp_function) (void *key1,
-                                 size_t key1_len,
-                                 void *key2,
-                                 size_t key2_len);
-
+typedef size_t (*comp_function)(void *key1,
+                                size_t key1_len,
+                                void *key2,
+                                size_t key2_len);
 typedef void (*curl_hash_dtor)(void *);
-
 struct curl_hash {
-  struct curl_llist **table;
-
-  /* Hash function to be used for this hash table */
-  hash_function hash_func;
-
-  /* Comparator function to compare keys */
-  comp_function comp_func;
-  curl_hash_dtor   dtor;
-  int slots;
-  size_t size;
+struct curl_llist **table;
+/* Hash function to be used for this hash table */
+hash_function hash_func;
+/* Comparator function to compare keys */
+comp_function comp_func;
+curl_hash_dtor dtor;
+int slots;
+size_t size;
 };
-
 struct curl_hash_element {
-  void   *ptr;
-  char   *key;
-  size_t key_len;
+void *ptr;
+char *key;
+size_t key_len;
 };
-
 struct curl_hash_iterator {
-  struct curl_hash *hash;
-  int slot_index;
-  struct curl_llist_element *current_element;
+struct curl_hash *hash;
+int slot_index;
+struct curl_llist_element *current_element;
 };
-
 int Curl_hash_init(struct curl_hash *h,
                    int slots,
                    hash_function hfunc,
                    comp_function comparator,
                    curl_hash_dtor dtor);
-
 void *Curl_hash_add(struct curl_hash *h, void *key, size_t key_len, void *p);
 int Curl_hash_delete(struct curl_hash *h, void *key, size_t key_len);
 void *Curl_hash_pick(struct curl_hash *, void *key, size_t key_len);
@@ -91,9 +79,6 @@ void Curl_hash_start_iterate(struct curl_hash *hash,
                              struct curl_hash_iterator *iter);
 struct curl_hash_element *
 Curl_hash_next_element(struct curl_hash_iterator *iter);
-
 void Curl_hash_print(struct curl_hash *h,
                      void (*func)(void *));
-
-
 #endif /* HEADER_CURL_HASH_H */

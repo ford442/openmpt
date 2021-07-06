@@ -24,18 +24,15 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_ERROR_C) || defined(MBEDTLS_ERROR_STRERROR_DUMMY)
 #include "mbedtls/error.h"
 #include <string.h>
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #define mbedtls_snprintf snprintf
 #endif
-
 #if defined(MBEDTLS_ERROR_C)
 
 #include <stdio.h>
@@ -681,7 +678,6 @@ void mbedtls_strerror( int ret, char *buf, size_t buflen )
 }
 
 #else /* MBEDTLS_ERROR_C */
-
 #if defined(MBEDTLS_ERROR_STRERROR_DUMMY)
 
 /*
@@ -696,5 +692,4 @@ void mbedtls_strerror( int ret, char *buf, size_t buflen )
 }
 
 #endif /* MBEDTLS_ERROR_STRERROR_DUMMY */
-
 #endif /* MBEDTLS_ERROR_C */

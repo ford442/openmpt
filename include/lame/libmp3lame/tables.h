@@ -21,7 +21,6 @@
 
 #ifndef LAME_TABLES_H
 #define LAME_TABLES_H
-
 #if 0
 typedef struct {
     unsigned char no;
@@ -64,32 +63,25 @@ typedef struct {
 extern const type5_t table5[6];
 
 #endif
-
-#define HTN	34
-
+#define HTN    34
 struct huffcodetab {
-    const unsigned int xlen;          /* max. x-index+   */
-    const unsigned int linmax;        /* max number to be stored in linbits */
-    const uint16_t *table;      /* pointer to array[xlen][ylen]  */
-    const uint8_t *hlen;        /* pointer to array[xlen][ylen]  */
+const unsigned int xlen;          /* max. x-index+   */
+const unsigned int linmax;        /* max number to be stored in linbits */
+const uint16_t *table;      /* pointer to array[xlen][ylen]  */
+const uint8_t *hlen;        /* pointer to array[xlen][ylen]  */
 };
-
 extern const struct huffcodetab ht[HTN];
-    /* global memory block   */
-    /* array of all huffcodtable headers */
-    /* 0..31 Huffman code table 0..31  */
-    /* 32,33 count1-tables   */
+/* global memory block   */
+/* array of all huffcodtable headers */
+/* 0..31 Huffman code table 0..31  */
+/* 32,33 count1-tables   */
 
 extern const uint8_t t32l[];
 extern const uint8_t t33l[];
-
 extern const uint32_t largetbl[16 * 16];
 extern const uint32_t table23[3 * 3];
 extern const uint32_t table56[4 * 4];
-
 extern const int scfsi_band[5];
-
-extern const int bitrate_table    [3][16];
-extern const int samplerate_table [3][ 4];
-
+extern const int bitrate_table[3][16];
+extern const int samplerate_table[3][4];
 #endif /* LAME_TABLES_H */

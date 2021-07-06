@@ -12,13 +12,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include "internal.h"
 #include <ctype.h>
 #include <errno.h>
 #include <limits.h>
 #include <string.h>
-
 /*RFCs referenced in this file:
   RFC  761: DOD Standard Transmission Control Protocol
   RFC 1535: A Security Problem and Proposed Correction With Widely Deployed DNS
@@ -47,39 +45,36 @@
    Certificates in the Context of Transport Layer Security (TLS)
   RFC 6555: Happy Eyeballs: Success with Dual-Stack Hosts*/
 
-typedef struct OpusParsedURL   OpusParsedURL;
-typedef struct OpusStringBuf   OpusStringBuf;
-typedef struct OpusHTTPConn    OpusHTTPConn;
-typedef struct OpusHTTPStream  OpusHTTPStream;
-
-static char *op_string_range_dup(const char *_start,const char *_end){
-  size_t  len;
-  char   *ret;
-  OP_ASSERT(_start<=_end);
-  len=_end-_start;
-  /*This is to help avoid overflow elsewhere, later.*/
-  if(OP_UNLIKELY(len>=INT_MAX))return NULL;
-  ret=(char *)_ogg_malloc(sizeof(*ret)*(len+1));
-  if(OP_LIKELY(ret!=NULL)){
-    ret=(char *)memcpy(ret,_start,sizeof(*ret)*(len));
-    ret[len]='\0';
-  }
-  return ret;
+typedef struct OpusParsedURL OpusParsedURL;
+typedef struct OpusStringBuf OpusStringBuf;
+typedef struct OpusHTTPConn OpusHTTPConn;
+typedef struct OpusHTTPStream OpusHTTPStream;
+static char *op_string_range_dup(const char *_start, const char *_end) {
+size_t len;
+char *ret;
+OP_ASSERT(_start <= _end);
+len = _end - _start;
+/*This is to help avoid overflow elsewhere, later.*/
+if(OP_UNLIKELY(len >= INT_MAX))return NULL;
+ret = (char *) _ogg_malloc(sizeof(*ret) * (len + 1));
+if(OP_LIKELY(ret != NULL)) {
+ret = (char *) memcpy(ret, _start, sizeof(*ret) * (len));
+ret[len] = '\0';
 }
-
-static char *op_string_dup(const char *_s){
-  return op_string_range_dup(_s,_s+strlen(_s));
+return ret;
 }
-
-static char *op_string_tolower(char *_s){
-  int i;
-  for(i=0;_s[i]!='\0';i++){
-    int c;
-    c=_s[i];
-    if(c>='A'&&c<='Z')c+='a'-'A';
-    _s[i]=(char)c;
-  }
-  return _s;
+static char *op_string_dup(const char *_s) {
+return op_string_range_dup(_s, _s + strlen(_s));
+}
+static char *op_string_tolower(char *_s) {
+int i;
+for(i = 0; _s[i] != '\0'; i++) {
+int c;
+c = _s[i];
+if(c >= 'A' && c <= 'Z')c += 'a' - 'A';
+_s[i] = (char) c;
+}
+return _s;
 }
 
 /*URI character classes (from RFC 3986).*/
@@ -108,107 +103,101 @@ static char *op_string_tolower(char *_s){
 #define OP_URL_PATH        OP_URL_PCHAR "/"
 /*Not a character class, but the characters allowed in <query> / <fragment>.*/
 #define OP_URL_QUERY_FRAG  OP_URL_PCHAR "/?"
-
 /*Check the <% HEXDIG HEXDIG> escapes of a URL for validity.
   Return: 0 if valid, or a negative value on failure.*/
-static int op_validate_url_escapes(const char *_s){
-  int i;
-  for(i=0;_s[i];i++){
-    if(_s[i]=='%'){
-      if(OP_UNLIKELY(!isxdigit(_s[i+1]))
-       ||OP_UNLIKELY(!isxdigit(_s[i+2]))
-       /*RFC 3986 says %00 "should be rejected if the application is not
-          expecting to receive raw data within a component."*/
-       ||OP_UNLIKELY(_s[i+1]=='0'&&_s[i+2]=='0')){
-        return OP_FALSE;
-      }
-      i+=2;
-    }
-  }
-  return 0;
+static int op_validate_url_escapes(const char *_s) {
+int i;
+for(i = 0; _s[i]; i++) {
+if(_s[i] == '%') {
+if(OP_UNLIKELY(!isxdigit(_s[i + 1]))
+   || OP_UNLIKELY(!isxdigit(_s[i + 2]))
+   /*RFC 3986 says %00 "should be rejected if the application is not
+      expecting to receive raw data within a component."*/
+   || OP_UNLIKELY(_s[i + 1] == '0' && _s[i + 2] == '0')) {
+return OP_FALSE;
 }
-
+i += 2;
+}
+}
+return 0;
+}
 /*Convert a hex digit to its actual value.
   _c: The hex digit to convert.
       Presumed to be valid ('0'...'9', 'A'...'F', or 'a'...'f').
   Return: The value of the digit, in the range [0,15].*/
-static int op_hex_value(int _c){
-  return _c>='a'?_c-'a'+10:_c>='A'?_c-'A'+10:_c-'0';
+static int op_hex_value(int _c) {
+return _c >= 'a' ? _c - 'a' + 10 : _c >= 'A' ? _c - 'A' + 10 : _c - '0';
 }
-
 /*Unescape all the <% HEXDIG HEXDIG> sequences in a string in-place.
   This does no validity checking.*/
-static char *op_unescape_url_component(char *_s){
-  int i;
-  int j;
-  for(i=j=0;_s[i];i++,j++){
-    if(_s[i]=='%'){
-      _s[i]=(char)(op_hex_value(_s[i+1])<<4|op_hex_value(_s[i+2]));
-      i+=2;
-    }
-  }
-  return _s;
+static char *op_unescape_url_component(char *_s) {
+int i;
+int j;
+for(i = j = 0; _s[i]; i++, j++) {
+if(_s[i] == '%') {
+_s[i] = (char) (op_hex_value(_s[i + 1]) << 4 | op_hex_value(_s[i + 2]));
+i += 2;
 }
-
+}
+return _s;
+}
 /*Parse a file: URL.
   This code is not meant to be fast: strspn() with large sets is likely to be
    slow, but it is very convenient.
   It is meant to be RFC 1738-compliant (as updated by RFC 3986).*/
-static const char *op_parse_file_url(const char *_src){
-  const char *scheme_end;
-  const char *path;
-  const char *path_end;
-  scheme_end=_src+strspn(_src,OP_URL_SCHEME);
-  if(OP_UNLIKELY(*scheme_end!=':')
-   ||scheme_end-_src!=4||op_strncasecmp(_src,"file",4)!=0){
-    /*Unsupported protocol.*/
-    return NULL;
-  }
-  /*Make sure all escape sequences are valid to simplify unescaping later.*/
-  if(OP_UNLIKELY(op_validate_url_escapes(scheme_end+1)<0))return NULL;
-  if(scheme_end[1]=='/'&&scheme_end[2]=='/'){
-    const char *host;
-    /*file: URLs can have a host!
-      Yeah, I was surprised, too, but that's what RFC 1738 says.
-      It also says, "The file URL scheme is unusual in that it does not specify
-       an Internet protocol or access method for such files; as such, its
-       utility in network protocols between hosts is limited," which is a mild
-       understatement.*/
-    host=scheme_end+3;
-    /*The empty host is what we expect.*/
-    if(OP_LIKELY(*host=='/'))path=host;
-    else{
-      const char *host_end;
-      char        host_buf[28];
-      /*RFC 1738 says localhost "is interpreted as `the machine from which the
-         URL is being interpreted,'" so let's check for it.*/
-      host_end=host+strspn(host,OP_URL_PCHAR_BASE);
-      /*No <port> allowed.
-        This also rejects IP-Literals.*/
-      if(*host_end!='/')return NULL;
-      /*An escaped "localhost" can take at most 27 characters.*/
-      if(OP_UNLIKELY(host_end-host>27))return NULL;
-      memcpy(host_buf,host,sizeof(*host_buf)*(host_end-host));
-      host_buf[host_end-host]='\0';
-      op_unescape_url_component(host_buf);
-      op_string_tolower(host_buf);
-      /*Some other host: give up.*/
-      if(OP_UNLIKELY(strcmp(host_buf,"localhost")!=0))return NULL;
-      path=host_end;
-    }
-  }
-  else path=scheme_end+1;
-  path_end=path+strspn(path,OP_URL_PATH);
-  /*This will reject a <query> or <fragment> component, too.
-    I don't know what to do with queries, but a temporal fragment would at
-     least make sense.
-    RFC 1738 pretty clearly defines a <searchpart> that's equivalent to the
-     RFC 3986 <query> component for other schemes, but not the file: scheme,
-     so I'm going to just reject it.*/
-  if(*path_end!='\0')return NULL;
-  return path;
+static const char *op_parse_file_url(const char *_src) {
+const char *scheme_end;
+const char *path;
+const char *path_end;
+scheme_end = _src + strspn(_src, OP_URL_SCHEME);
+if(OP_UNLIKELY(*scheme_end != ':')
+   || scheme_end - _src != 4 || op_strncasecmp(_src, "file", 4) != 0) {
+/*Unsupported protocol.*/
+return NULL;
 }
-
+/*Make sure all escape sequences are valid to simplify unescaping later.*/
+if(OP_UNLIKELY(op_validate_url_escapes(scheme_end + 1) < 0))return NULL;
+if(scheme_end[1] == '/' && scheme_end[2] == '/') {
+const char *host;
+/*file: URLs can have a host!
+  Yeah, I was surprised, too, but that's what RFC 1738 says.
+  It also says, "The file URL scheme is unusual in that it does not specify
+   an Internet protocol or access method for such files; as such, its
+   utility in network protocols between hosts is limited," which is a mild
+   understatement.*/
+host = scheme_end + 3;
+/*The empty host is what we expect.*/
+if(OP_LIKELY(*host == '/'))path = host;
+else {
+const char *host_end;
+char host_buf[28];
+/*RFC 1738 says localhost "is interpreted as `the machine from which the
+   URL is being interpreted,'" so let's check for it.*/
+host_end = host + strspn(host, OP_URL_PCHAR_BASE);
+/*No <port> allowed.
+  This also rejects IP-Literals.*/
+if(*host_end != '/')return NULL;
+/*An escaped "localhost" can take at most 27 characters.*/
+if(OP_UNLIKELY(host_end - host > 27))return NULL;
+memcpy(host_buf, host, sizeof(*host_buf) * (host_end - host));
+host_buf[host_end - host] = '\0';
+op_unescape_url_component(host_buf);
+op_string_tolower(host_buf);
+/*Some other host: give up.*/
+if(OP_UNLIKELY(strcmp(host_buf, "localhost") != 0))return NULL;
+path = host_end;
+}
+} else path = scheme_end + 1;
+path_end = path + strspn(path, OP_URL_PATH);
+/*This will reject a <query> or <fragment> component, too.
+  I don't know what to do with queries, but a temporal fragment would at
+   least make sense.
+  RFC 1738 pretty clearly defines a <searchpart> that's equivalent to the
+   RFC 3986 <query> component for other schemes, but not the file: scheme,
+   so I'm going to just reject it.*/
+if(*path_end != '\0')return NULL;
+return path;
+}
 #if defined(OP_ENABLE_HTTP)
 # if defined(_WIN32)
 #  include <winsock2.h>
@@ -3367,75 +3356,71 @@ static const OpusFileCallbacks OP_HTTP_CALLBACKS={
   op_http_stream_close
 };
 #endif
-
-void opus_server_info_init(OpusServerInfo *_info){
-  _info->name=NULL;
-  _info->description=NULL;
-  _info->genre=NULL;
-  _info->url=NULL;
-  _info->server=NULL;
-  _info->content_type=NULL;
-  _info->bitrate_kbps=-1;
-  _info->is_public=-1;
-  _info->is_ssl=0;
+void opus_server_info_init(OpusServerInfo *_info) {
+_info->name = NULL;
+_info->description = NULL;
+_info->genre = NULL;
+_info->url = NULL;
+_info->server = NULL;
+_info->content_type = NULL;
+_info->bitrate_kbps = -1;
+_info->is_public = -1;
+_info->is_ssl = 0;
 }
-
-void opus_server_info_clear(OpusServerInfo *_info){
-  _ogg_free(_info->content_type);
-  _ogg_free(_info->server);
-  _ogg_free(_info->url);
-  _ogg_free(_info->genre);
-  _ogg_free(_info->description);
-  _ogg_free(_info->name);
+void opus_server_info_clear(OpusServerInfo *_info) {
+_ogg_free(_info->content_type);
+_ogg_free(_info->server);
+_ogg_free(_info->url);
+_ogg_free(_info->genre);
+_ogg_free(_info->description);
+_ogg_free(_info->name);
 }
-
 /*The actual URL stream creation function.
   This one isn't extensible like the application-level interface, but because
    it isn't public, we're free to change it in the future.*/
-static void *op_url_stream_create_impl(OpusFileCallbacks *_cb,const char *_url,
- int _skip_certificate_check,const char *_proxy_host,unsigned _proxy_port,
- const char *_proxy_user,const char *_proxy_pass,OpusServerInfo *_info){
-  const char *path;
-  /*Check to see if this is a valid file: URL.*/
-  path=op_parse_file_url(_url);
-  if(path!=NULL){
-    char *unescaped_path;
-    void *ret;
-    unescaped_path=op_string_dup(path);
-    if(OP_UNLIKELY(unescaped_path==NULL))return NULL;
-    ret=op_fopen(_cb,op_unescape_url_component(unescaped_path),"rb");
-    _ogg_free(unescaped_path);
-    return ret;
-  }
+static void *op_url_stream_create_impl(OpusFileCallbacks *_cb, const char *_url,
+                                       int _skip_certificate_check, const char *_proxy_host, unsigned _proxy_port,
+                                       const char *_proxy_user, const char *_proxy_pass, OpusServerInfo *_info) {
+const char *path;
+/*Check to see if this is a valid file: URL.*/
+path = op_parse_file_url(_url);
+if(path != NULL) {
+char *unescaped_path;
+void *ret;
+unescaped_path = op_string_dup(path);
+if(OP_UNLIKELY(unescaped_path == NULL))return NULL;
+ret = op_fopen(_cb, op_unescape_url_component(unescaped_path), "rb");
+_ogg_free(unescaped_path);
+return ret;
+}
 #if defined(OP_ENABLE_HTTP)
-  /*If not, try http/https.*/
-  else{
-    OpusHTTPStream *stream;
-    int             ret;
-    stream=(OpusHTTPStream *)_ogg_malloc(sizeof(*stream));
-    if(OP_UNLIKELY(stream==NULL))return NULL;
-    op_http_stream_init(stream);
-    ret=op_http_stream_open(stream,_url,_skip_certificate_check,
-     _proxy_host,_proxy_port,_proxy_user,_proxy_pass,_info);
-    if(OP_UNLIKELY(ret<0)){
-      op_http_stream_clear(stream);
-      _ogg_free(stream);
-      return NULL;
-    }
-    *_cb=*&OP_HTTP_CALLBACKS;
-    return stream;
+/*If not, try http/https.*/
+else{
+  OpusHTTPStream *stream;
+  int             ret;
+  stream=(OpusHTTPStream *)_ogg_malloc(sizeof(*stream));
+  if(OP_UNLIKELY(stream==NULL))return NULL;
+  op_http_stream_init(stream);
+  ret=op_http_stream_open(stream,_url,_skip_certificate_check,
+   _proxy_host,_proxy_port,_proxy_user,_proxy_pass,_info);
+  if(OP_UNLIKELY(ret<0)){
+    op_http_stream_clear(stream);
+    _ogg_free(stream);
+    return NULL;
   }
+  *_cb=*&OP_HTTP_CALLBACKS;
+  return stream;
+}
 #else
-  (void)_skip_certificate_check;
-  (void)_proxy_host;
-  (void)_proxy_port;
-  (void)_proxy_user;
-  (void)_proxy_pass;
-  (void)_info;
-  return NULL;
+(void) _skip_certificate_check;
+(void) _proxy_host;
+(void) _proxy_port;
+(void) _proxy_user;
+(void) _proxy_pass;
+(void) _info;
+return NULL;
 #endif
 }
-
 /*The actual implementation of op_url_stream_vcreate().
   We have to do a careful dance here to avoid potential memory leaks if
    OpusServerInfo is requested, since this function is also used by
@@ -3451,142 +3436,145 @@ static void *op_url_stream_create_impl(OpusFileCallbacks *_cb,const char *_url,
   Our caller is responsible for copying *_info to **_pinfo if it ultimately
    succeeds, or for clearing *_info if it ultimately fails.*/
 static void *op_url_stream_vcreate_impl(OpusFileCallbacks *_cb,
- const char *_url,OpusServerInfo *_info,OpusServerInfo **_pinfo,va_list _ap){
-  int             skip_certificate_check;
-  const char     *proxy_host;
-  opus_int32      proxy_port;
-  const char     *proxy_user;
-  const char     *proxy_pass;
-  OpusServerInfo *pinfo;
-  skip_certificate_check=0;
-  proxy_host=NULL;
-  proxy_port=8080;
-  proxy_user=NULL;
-  proxy_pass=NULL;
-  pinfo=NULL;
-  *_pinfo=NULL;
-  for(;;){
-    ptrdiff_t request;
-    request=va_arg(_ap,char *)-(char *)NULL;
-    /*If we hit NULL, we're done processing options.*/
-    if(!request)break;
-    switch(request){
-      case OP_SSL_SKIP_CERTIFICATE_CHECK_REQUEST:{
-        skip_certificate_check=!!va_arg(_ap,opus_int32);
-      }break;
-      case OP_HTTP_PROXY_HOST_REQUEST:{
-        proxy_host=va_arg(_ap,const char *);
-      }break;
-      case OP_HTTP_PROXY_PORT_REQUEST:{
-        proxy_port=va_arg(_ap,opus_int32);
-        if(proxy_port<0||proxy_port>(opus_int32)65535)return NULL;
-      }break;
-      case OP_HTTP_PROXY_USER_REQUEST:{
-        proxy_user=va_arg(_ap,const char *);
-      }break;
-      case OP_HTTP_PROXY_PASS_REQUEST:{
-        proxy_pass=va_arg(_ap,const char *);
-      }break;
-      case OP_GET_SERVER_INFO_REQUEST:{
-        pinfo=va_arg(_ap,OpusServerInfo *);
-      }break;
-      /*Some unknown option.*/
-      default:return NULL;
-    }
-  }
-  /*If the caller has requested server information, proxy it to a local copy to
-     simplify error handling.*/
-  if(pinfo!=NULL){
-    void *ret;
-    opus_server_info_init(_info);
-    ret=op_url_stream_create_impl(_cb,_url,skip_certificate_check,
-     proxy_host,proxy_port,proxy_user,proxy_pass,_info);
-    if(ret!=NULL)*_pinfo=pinfo;
-    else opus_server_info_clear(_info);
-    return ret;
-  }
-  return op_url_stream_create_impl(_cb,_url,skip_certificate_check,
-   proxy_host,proxy_port,proxy_user,proxy_pass,NULL);
+                                        const char *_url, OpusServerInfo *_info, OpusServerInfo **_pinfo, va_list _ap) {
+int skip_certificate_check;
+const char *proxy_host;
+opus_int32 proxy_port;
+const char *proxy_user;
+const char *proxy_pass;
+OpusServerInfo *pinfo;
+skip_certificate_check = 0;
+proxy_host = NULL;
+proxy_port = 8080;
+proxy_user = NULL;
+proxy_pass = NULL;
+pinfo = NULL;
+*_pinfo = NULL;
+for(;;) {
+ptrdiff_t request;
+request = va_arg(_ap,
+char *)-(char *) NULL;
+/*If we hit NULL, we're done processing options.*/
+if(!request)break;
+switch (request) {
+case OP_SSL_SKIP_CERTIFICATE_CHECK_REQUEST: {
+skip_certificate_check = !!va_arg(_ap, opus_int32);
 }
-
+break;
+case OP_HTTP_PROXY_HOST_REQUEST: {
+proxy_host = va_arg(_ap,
+const char *);
+}
+break;
+case OP_HTTP_PROXY_PORT_REQUEST: {
+proxy_port = va_arg(_ap, opus_int32);
+if(proxy_port < 0 || proxy_port > (opus_int32) 65535)return NULL;
+}
+break;
+case OP_HTTP_PROXY_USER_REQUEST: {
+proxy_user = va_arg(_ap,
+const char *);
+}
+break;
+case OP_HTTP_PROXY_PASS_REQUEST: {
+proxy_pass = va_arg(_ap,
+const char *);
+}
+break;
+case OP_GET_SERVER_INFO_REQUEST: {
+pinfo = va_arg(_ap, OpusServerInfo * );
+}
+break;
+/*Some unknown option.*/
+default:
+return NULL;
+}
+}
+/*If the caller has requested server information, proxy it to a local copy to
+   simplify error handling.*/
+if(pinfo != NULL) {
+void *ret;
+opus_server_info_init(_info);
+ret = op_url_stream_create_impl(_cb, _url, skip_certificate_check,
+                                proxy_host, proxy_port, proxy_user, proxy_pass, _info);
+if(ret != NULL)*_pinfo = pinfo;
+else opus_server_info_clear(_info);
+return ret;
+}
+return op_url_stream_create_impl(_cb, _url, skip_certificate_check,
+                                 proxy_host, proxy_port, proxy_user, proxy_pass, NULL);
+}
 void *op_url_stream_vcreate(OpusFileCallbacks *_cb,
- const char *_url,va_list _ap){
-  OpusServerInfo   info;
-  OpusServerInfo *pinfo;
-  void *ret;
-  ret=op_url_stream_vcreate_impl(_cb,_url,&info,&pinfo,_ap);
-  if(pinfo!=NULL)*pinfo=*&info;
-  return ret;
+                            const char *_url, va_list _ap) {
+OpusServerInfo info;
+OpusServerInfo *pinfo;
+void *ret;
+ret = op_url_stream_vcreate_impl(_cb, _url, &info, &pinfo, _ap);
+if(pinfo != NULL)*pinfo = *&info;
+return ret;
 }
-
 void *op_url_stream_create(OpusFileCallbacks *_cb,
- const char *_url,...){
-  va_list  ap;
-  void    *ret;
-  va_start(ap,_url);
-  ret=op_url_stream_vcreate(_cb,_url,ap);
-  va_end(ap);
-  return ret;
+                           const char *_url, ...) {
+va_list ap;
+void *ret;
+va_start(ap, _url);
+ret = op_url_stream_vcreate(_cb, _url, ap);
+va_end(ap);
+return ret;
 }
-
 /*Convenience routines to open/test URLs in a single step.*/
 
-OggOpusFile *op_vopen_url(const char *_url,int *_error,va_list _ap){
-  OpusFileCallbacks  cb;
-  OggOpusFile       *of;
-  OpusServerInfo     info;
-  OpusServerInfo    *pinfo;
-  void              *source;
-  source=op_url_stream_vcreate_impl(&cb,_url,&info,&pinfo,_ap);
-  if(OP_UNLIKELY(source==NULL)){
-    OP_ASSERT(pinfo==NULL);
-    if(_error!=NULL)*_error=OP_EFAULT;
-    return NULL;
-  }
-  of=op_open_callbacks(source,&cb,NULL,0,_error);
-  if(OP_UNLIKELY(of==NULL)){
-    if(pinfo!=NULL)opus_server_info_clear(&info);
-    (*cb.close)(source);
-  }
-  else if(pinfo!=NULL)*pinfo=*&info;
-  return of;
+OggOpusFile *op_vopen_url(const char *_url, int *_error, va_list _ap) {
+OpusFileCallbacks cb;
+OggOpusFile *of;
+OpusServerInfo info;
+OpusServerInfo *pinfo;
+void *source;
+source = op_url_stream_vcreate_impl(&cb, _url, &info, &pinfo, _ap);
+if(OP_UNLIKELY(source == NULL)) {
+OP_ASSERT(pinfo == NULL);
+if(_error != NULL)*_error = OP_EFAULT;
+return NULL;
 }
-
-OggOpusFile *op_open_url(const char *_url,int *_error,...){
-  OggOpusFile *ret;
-  va_list      ap;
-  va_start(ap,_error);
-  ret=op_vopen_url(_url,_error,ap);
-  va_end(ap);
-  return ret;
+of = op_open_callbacks(source, &cb, NULL, 0, _error);
+if(OP_UNLIKELY(of == NULL)) {
+if(pinfo != NULL)opus_server_info_clear(&info);
+(*cb.close)(source);
+} else if(pinfo != NULL)*pinfo = *&info;
+return of;
 }
-
-OggOpusFile *op_vtest_url(const char *_url,int *_error,va_list _ap){
-  OpusFileCallbacks  cb;
-  OggOpusFile       *of;
-  OpusServerInfo     info;
-  OpusServerInfo    *pinfo;
-  void              *source;
-  source=op_url_stream_vcreate_impl(&cb,_url,&info,&pinfo,_ap);
-  if(OP_UNLIKELY(source==NULL)){
-    OP_ASSERT(pinfo==NULL);
-    if(_error!=NULL)*_error=OP_EFAULT;
-    return NULL;
-  }
-  of=op_test_callbacks(source,&cb,NULL,0,_error);
-  if(OP_UNLIKELY(of==NULL)){
-    if(pinfo!=NULL)opus_server_info_clear(&info);
-    (*cb.close)(source);
-  }
-  else if(pinfo!=NULL)*pinfo=*&info;
-  return of;
+OggOpusFile *op_open_url(const char *_url, int *_error, ...) {
+OggOpusFile *ret;
+va_list ap;
+va_start(ap, _error);
+ret = op_vopen_url(_url, _error, ap);
+va_end(ap);
+return ret;
 }
-
-OggOpusFile *op_test_url(const char *_url,int *_error,...){
-  OggOpusFile *ret;
-  va_list      ap;
-  va_start(ap,_error);
-  ret=op_vtest_url(_url,_error,ap);
-  va_end(ap);
-  return ret;
+OggOpusFile *op_vtest_url(const char *_url, int *_error, va_list _ap) {
+OpusFileCallbacks cb;
+OggOpusFile *of;
+OpusServerInfo info;
+OpusServerInfo *pinfo;
+void *source;
+source = op_url_stream_vcreate_impl(&cb, _url, &info, &pinfo, _ap);
+if(OP_UNLIKELY(source == NULL)) {
+OP_ASSERT(pinfo == NULL);
+if(_error != NULL)*_error = OP_EFAULT;
+return NULL;
+}
+of = op_test_callbacks(source, &cb, NULL, 0, _error);
+if(OP_UNLIKELY(of == NULL)) {
+if(pinfo != NULL)opus_server_info_clear(&info);
+(*cb.close)(source);
+} else if(pinfo != NULL)*pinfo = *&info;
+return of;
+}
+OggOpusFile *op_test_url(const char *_url, int *_error, ...) {
+OggOpusFile *ret;
+va_list ap;
+va_start(ap, _error);
+ret = op_vtest_url(_url, _error, ap);
+va_end(ap);
+return ret;
 }

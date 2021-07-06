@@ -25,41 +25,23 @@
 #ifdef USE_WINSOCK
 #include <curl/curl.h> /* for curl_socket_t */
 #endif
-
 unsigned short curlx_ultous(unsigned long ulnum);
-
 unsigned char curlx_ultouc(unsigned long ulnum);
-
 int curlx_ultosi(unsigned long ulnum);
-
 int curlx_uztosi(size_t uznum);
-
 curl_off_t curlx_uztoso(size_t uznum);
-
 unsigned long curlx_uztoul(size_t uznum);
-
 unsigned int curlx_uztoui(size_t uznum);
-
 int curlx_sltosi(long slnum);
-
 unsigned int curlx_sltoui(long slnum);
-
 unsigned short curlx_sltous(long slnum);
-
 ssize_t curlx_uztosz(size_t uznum);
-
 size_t curlx_sotouz(curl_off_t sonum);
-
 int curlx_sztosi(ssize_t sznum);
-
 unsigned short curlx_uitous(unsigned int uinum);
-
 unsigned char curlx_uitouc(unsigned int uinum);
-
 int curlx_uitosi(unsigned int uinum);
-
 size_t curlx_sitouz(int sinum);
-
 #ifdef USE_WINSOCK
 
 int curlx_sktosi(curl_socket_t s);
@@ -67,7 +49,6 @@ int curlx_sktosi(curl_socket_t s);
 curl_socket_t curlx_sitosk(int i);
 
 #endif /* USE_WINSOCK */
-
 #if defined(WIN32) || defined(_WIN32)
 
 ssize_t curlx_read(int fd, void *buf, size_t count);
@@ -82,7 +63,6 @@ ssize_t curlx_write(int fd, const void *buf, size_t count);
 #endif
 
 #endif /* WIN32 || _WIN32 */
-
 #if defined(__INTEL_COMPILER) && defined(__unix__)
 
 int curlx_FD_ISSET(int fd, fd_set *fdset);
@@ -109,5 +89,4 @@ unsigned short curlx_ntohs(unsigned short usnum);
 #endif
 
 #endif /* __INTEL_COMPILER && __unix__ */
-
 #endif /* HEADER_CURL_WARNLESS_H */

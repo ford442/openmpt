@@ -24,14 +24,12 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
 #define mbedtls_printf     printf
 #endif
-
 #if defined(MBEDTLS_PK_WRITE_C) && defined(MBEDTLS_FS_IO)
 #include "mbedtls/error.h"
 #include "mbedtls/pk.h"
@@ -40,7 +38,6 @@
 #include <stdio.h>
 #include <string.h>
 #endif
-
 #if defined(MBEDTLS_PEM_WRITE_C)
 #define USAGE_OUT \
     "    output_file=%%s      default: keyfile.pem\n"   \
@@ -50,7 +47,6 @@
     "    output_file=%%s      default: keyfile.der\n"   \
     "    output_format=der     default: der\n"
 #endif
-
 #if defined(MBEDTLS_PEM_WRITE_C)
 #define DFL_OUTPUT_FILENAME     "keyfile.pem"
 #define DFL_OUTPUT_FORMAT       OUTPUT_FORMAT_PEM
@@ -58,23 +54,18 @@
 #define DFL_OUTPUT_FILENAME     "keyfile.der"
 #define DFL_OUTPUT_FORMAT       OUTPUT_FORMAT_DER
 #endif
-
 #define DFL_MODE                MODE_NONE
 #define DFL_FILENAME            "keyfile.key"
 #define DFL_DEBUG_LEVEL         0
 #define DFL_OUTPUT_MODE         OUTPUT_MODE_NONE
-
 #define MODE_NONE               0
 #define MODE_PRIVATE            1
 #define MODE_PUBLIC             2
-
 #define OUTPUT_MODE_NONE               0
 #define OUTPUT_MODE_PRIVATE            1
 #define OUTPUT_MODE_PUBLIC             2
-
 #define OUTPUT_FORMAT_PEM              0
 #define OUTPUT_FORMAT_DER              1
-
 #define USAGE \
     "\n usage: key_app param=<>...\n"                   \
     "\n acceptable parameters:\n"                       \
@@ -83,12 +74,10 @@
     "    output_mode=private|public default: none\n"    \
     USAGE_OUT                                           \
     "\n"
-
 #if !defined(MBEDTLS_PK_WRITE_C) || !defined(MBEDTLS_FS_IO)
-int main( void )
-{
-    mbedtls_printf( "MBEDTLS_PK_WRITE_C and/or MBEDTLS_FS_IO not defined.\n" );
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_PK_WRITE_C and/or MBEDTLS_FS_IO not defined.\n");
+return (0);
 }
 #else
 /*

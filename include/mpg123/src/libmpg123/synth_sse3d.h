@@ -30,239 +30,576 @@
 */
 
 #include "mangle.h"
-
-	.data
-	ALIGN8
+.
+data
+        ALIGN8
 one_null:
-	.long	-65536
-	.long	-65536
-	ALIGN8
-null_one:
-	.long	65535
-	.long	65535
+.long    -65536
+.long    -65536
+ALIGN8
+        null_one
+:
+.long    65535
+.long    65535
 
-	.text
-	ALIGN16
-	/* void SYNTH_NAME(real *bandPtr, int channel, short *samples, short *buffs, int *bo, float *decwins) */
-.globl SYNTH_NAME
+.
+text
+        ALIGN16
+/* void SYNTH_NAME(real *bandPtr, int channel, short *samples, short *buffs, int *bo, float *decwins) */
+.
+globl SYNTH_NAME
 SYNTH_NAME:
-	pushl	%ebp
+pushl    %
+ebp
 /* stack:0=ebp 4=back 8=bandptr 12=channel 16=samples 20=buffs 24=bo 28=decwins */
-	movl	%esp, %ebp
+movl
+%esp, %
+ebp
 
 /* Now the old stack addresses are preserved via %epb. */
 #ifdef PIC
-	subl  $8,%esp /* What has been called temp before. */
+subl  $8,%esp /* What has been called temp before. */
 #else
-	subl  $4,%esp /* What has been called temp before. */
+        subl
+$4,%
+esp /* What has been called temp before. */
 #endif
-	pushl	%edi
-	pushl	%esi
-	pushl	%ebx
-
+        pushl
+%
+edi
+        pushl
+%
+esi
+        pushl
+%
+ebx
 #ifdef PIC
-	#undef _EBX_
-	#define _EBX_ %eax
-	GET_GOT
+#undef _EBX_
+#define _EBX_ %eax
+GET_GOT
 #define EBXSAVE -4(%ebp)
-	movl _EBX_, EBXSAVE /* save PIC register */
+movl _EBX_, EBXSAVE /* save PIC register */
 #endif
-
 #define TEMP 12(%esp)
 /* APP */
-	movl 12(%ebp),%ecx
-	movl 16(%ebp),%edi
-	movl $15,%ebx
-	movl 24(%ebp),%edx
-	leal (%edi,%ecx,2),%edi
-	decl %ecx
-	movl 20(%ebp),%esi
-	movl (%edx),%eax
-	jecxz 1f
-	decl %eax
-	andl %ebx,%eax
-	leal 1088(%esi),%esi
-	movl %eax,(%edx)
+movl
+12(%ebp),%
+ecx
+        movl
+16(%ebp),%
+edi
+        movl
+$15,%
+ebx
+        movl
+24(%ebp),%
+edx
+        leal(
+%edi,%ecx,2),%
+edi
+        decl
+%
+ecx
+        movl
+20(%ebp),%
+esi
+        movl(
+%edx),%
+eax
+        jecxz
+1f
+decl %
+eax
+        andl
+%ebx,%
+eax
+        leal
+1088(%esi),%
+esi
+        movl
+%eax,(%edx)
 1:
-	leal (%esi,%eax,2),%edx
-	movl %eax,TEMP
-	incl %eax
-	andl %ebx,%eax
-	leal 544(%esi,%eax,2),%ecx
-	incl %ebx
-	testl $1, %eax
-	jnz 2f
-	xchgl %edx,%ecx
-	incl TEMP
-	leal 544(%esi),%esi
+leal (%esi,%eax,2),%
+edx
+        movl
+%eax,TEMP
+incl %
+eax
+        andl
+%ebx,%
+eax
+        leal
+544(%esi,%eax,2),%
+ecx
+        incl
+%
+ebx
+        testl
+$1, %
+eax
+        jnz
+2f
+xchgl %edx,%
+ecx
+        incl TEMP
+leal 544(%esi),%esi
 2:
-	pushl 8(%ebp)
-	pushl %edx
-	pushl %ecx
-	call MPL_DCT64
-	addl $12, %esp
-	leal 1(%ebx), %ecx
-	subl TEMP,%ebx
-	pushl %ecx
-	/* leal ASM_NAME(decwins)(%ebx,%ebx,1), %edx */
-	movl 28(%ebp),%ecx
-	leal (%ecx,%ebx,2), %edx
-	movl (%esp),%ecx /* restore, but leave value on stack */
-	shrl $1, %ecx
+pushl 8(%ebp)
+pushl %
+edx
+        pushl
+%
+ecx
+        call
+MPL_DCT64
+        addl
+$12, %
+esp
+        leal
+1(%ebx), %
+ecx
+        subl TEMP,%
+ebx
+        pushl
+%
+ecx
+/* leal ASM_NAME(decwins)(%ebx,%ebx,1), %edx */
+movl
+28(%ebp),%
+ecx
+        leal(
+%ecx,%ebx,2), %
+edx
+        movl(
+%esp),%
+ecx /* restore, but leave value on stack */
+shrl
+$1, %
+ecx
 #ifdef PIC
-	movl EBXSAVE, _EBX_
+movl EBXSAVE, _EBX_
 #endif
-	ALIGN16
+        ALIGN16
 3:
-	movq  (%edx),%mm0
-	movq  64(%edx),%mm4
-	pmaddwd (%esi),%mm0
-	pmaddwd 32(%esi),%mm4
-	movq  8(%edx),%mm1
-	movq  72(%edx),%mm5
-	pmaddwd 8(%esi),%mm1
-	pmaddwd 40(%esi),%mm5
-	movq  16(%edx),%mm2
-	movq  80(%edx),%mm6
-	pmaddwd 16(%esi),%mm2
-	pmaddwd 48(%esi),%mm6
-	movq  24(%edx),%mm3
-	movq  88(%edx),%mm7
-	pmaddwd 24(%esi),%mm3
-	pmaddwd 56(%esi),%mm7
-	paddd %mm1,%mm0
-	paddd %mm5,%mm4
-	paddd %mm2,%mm0
-	paddd %mm6,%mm4
-	paddd %mm3,%mm0
-	paddd %mm7,%mm4
-	movq  %mm0,%mm1
-	movq  %mm4,%mm5
-	psrlq $32,%mm1
-	psrlq $32,%mm5
-	paddd %mm1,%mm0
-	paddd %mm5,%mm4
-	psrad $13,%mm0
-	psrad $13,%mm4
-	packssdw %mm0,%mm0
-	packssdw %mm4,%mm4
-	movq	(%edi), %mm1
-	punpckldq %mm4, %mm0
-	pand   LOCAL_VAR(one_null), %mm1
-	pand   LOCAL_VAR(null_one), %mm0
-	por    %mm0, %mm1
-	movq   %mm1,(%edi)
-	leal 64(%esi),%esi
-	leal 128(%edx),%edx
-	leal 8(%edi),%edi
-	decl %ecx
-	jnz  3b
-	popl %ecx
-	andl $1, %ecx
-	jecxz 4f
-	movq  (%edx),%mm0
-	pmaddwd (%esi),%mm0
-	movq  8(%edx),%mm1
-	pmaddwd 8(%esi),%mm1
-	movq  16(%edx),%mm2
-	pmaddwd 16(%esi),%mm2
-	movq  24(%edx),%mm3
-	pmaddwd 24(%esi),%mm3
-	paddd %mm1,%mm0
-	paddd %mm2,%mm0
-	paddd %mm3,%mm0
-	movq  %mm0,%mm1
-	psrlq $32,%mm1
-	paddd %mm1,%mm0
-	psrad $13,%mm0
-	packssdw %mm0,%mm0
-	movd %mm0,%eax
-	movw %ax, (%edi)
-	leal 32(%esi),%esi
-	leal 64(%edx),%edx
-	leal 4(%edi),%edi
+movq  (%edx),%
+mm0
+        movq
+64(%edx),%
+mm4
+        pmaddwd(
+%esi),%
+mm0
+        pmaddwd
+32(%esi),%
+mm4
+        movq
+8(%edx),%
+mm1
+        movq
+72(%edx),%
+mm5
+        pmaddwd
+8(%esi),%
+mm1
+        pmaddwd
+40(%esi),%
+mm5
+        movq
+16(%edx),%
+mm2
+        movq
+80(%edx),%
+mm6
+        pmaddwd
+16(%esi),%
+mm2
+        pmaddwd
+48(%esi),%
+mm6
+        movq
+24(%edx),%
+mm3
+        movq
+88(%edx),%
+mm7
+        pmaddwd
+24(%esi),%
+mm3
+        pmaddwd
+56(%esi),%
+mm7
+        paddd
+%mm1,%
+mm0
+        paddd
+%mm5,%
+mm4
+        paddd
+%mm2,%
+mm0
+        paddd
+%mm6,%
+mm4
+        paddd
+%mm3,%
+mm0
+        paddd
+%mm7,%
+mm4
+        movq
+%mm0,%
+mm1
+        movq
+%mm4,%
+mm5
+        psrlq
+$32,%
+mm1
+        psrlq
+$32,%
+mm5
+        paddd
+%mm1,%
+mm0
+        paddd
+%mm5,%
+mm4
+        psrad
+$13,%
+mm0
+        psrad
+$13,%
+mm4
+        packssdw
+%mm0,%
+mm0
+        packssdw
+%mm4,%
+mm4
+        movq(
+%edi), %
+mm1
+        punpckldq
+%mm4, %
+mm0
+        pand
+LOCAL_VAR(one_null),
+%
+mm1
+        pand
+LOCAL_VAR(null_one),
+%
+mm0
+        por
+%mm0, %
+mm1
+        movq
+%mm1,(%edi)
+leal 64(%esi),%
+esi
+        leal
+128(%edx),%
+edx
+        leal
+8(%edi),%
+edi
+        decl
+%
+ecx
+        jnz
+3b
+popl %
+ecx
+        andl
+$1, %
+ecx
+        jecxz
+4f
+movq  (%edx),%
+mm0
+        pmaddwd(
+%esi),%
+mm0
+        movq
+8(%edx),%
+mm1
+        pmaddwd
+8(%esi),%
+mm1
+        movq
+16(%edx),%
+mm2
+        pmaddwd
+16(%esi),%
+mm2
+        movq
+24(%edx),%
+mm3
+        pmaddwd
+24(%esi),%
+mm3
+        paddd
+%mm1,%
+mm0
+        paddd
+%mm2,%
+mm0
+        paddd
+%mm3,%
+mm0
+        movq
+%mm0,%
+mm1
+        psrlq
+$32,%
+mm1
+        paddd
+%mm1,%
+mm0
+        psrad
+$13,%
+mm0
+        packssdw
+%mm0,%
+mm0
+        movd
+%mm0,%
+eax
+        movw
+%ax, (%edi)
+leal 32(%esi),%
+esi
+        leal
+64(%edx),%
+edx
+        leal
+4(%edi),%edi
 4:
-	subl $64,%esi
-	movl $7,%ecx
-
+subl $64,
+%
+esi
+        movl
+$7,%
+ecx
 #ifdef PIC
-	movl EBXSAVE, _EBX_
+movl EBXSAVE, _EBX_
 #endif
-	ALIGN16
+        ALIGN16
 5:
-	movq  (%edx),%mm0
-	movq  64(%edx),%mm4
-	pmaddwd (%esi),%mm0
-	pmaddwd -32(%esi),%mm4
-	movq  8(%edx),%mm1
-	movq  72(%edx),%mm5
-	pmaddwd 8(%esi),%mm1
-	pmaddwd -24(%esi),%mm5
-	movq  16(%edx),%mm2
-	movq  80(%edx),%mm6
-	pmaddwd 16(%esi),%mm2
-	pmaddwd -16(%esi),%mm6
-	movq  24(%edx),%mm3
-	movq  88(%edx),%mm7
-	pmaddwd 24(%esi),%mm3
-	pmaddwd -8(%esi),%mm7
-	paddd %mm1,%mm0
-	paddd %mm5,%mm4
-	paddd %mm2,%mm0
-	paddd %mm6,%mm4
-	paddd %mm3,%mm0
-	paddd %mm7,%mm4
-	movq  %mm0,%mm1
-	movq  %mm4,%mm5
-	psrlq $32,%mm1
-	psrlq $32,%mm5
-	paddd %mm0,%mm1
-	paddd %mm4,%mm5
-	psrad $13,%mm1
-	psrad $13,%mm5
-	packssdw %mm1,%mm1
-	packssdw %mm5,%mm5
-	psubd %mm0,%mm0
-	psubd %mm4,%mm4
-	psubsw %mm1,%mm0
-	psubsw %mm5,%mm4
-	movq	(%edi), %mm1
-	punpckldq %mm4, %mm0
-	pand   LOCAL_VAR(one_null), %mm1
-	pand   LOCAL_VAR(null_one), %mm0
-	por    %mm0, %mm1
-	movq   %mm1,(%edi)
-	subl $64,%esi
-	addl $128,%edx
-	leal 8(%edi),%edi
-	decl %ecx
-	jnz  5b
-	movq  (%edx),%mm0
-	pmaddwd (%esi),%mm0
-	movq  8(%edx),%mm1
-	pmaddwd 8(%esi),%mm1
-	movq  16(%edx),%mm2
-	pmaddwd 16(%esi),%mm2
-	movq  24(%edx),%mm3
-	pmaddwd 24(%esi),%mm3
-	paddd %mm1,%mm0
-	paddd %mm2,%mm0
-	paddd %mm3,%mm0
-	movq  %mm0,%mm1
-	psrlq $32,%mm1
-	paddd %mm0,%mm1
-	psrad $13,%mm1
-	packssdw %mm1,%mm1
-	psubd %mm0,%mm0
-	psubsw %mm1,%mm0
-	movd %mm0,%eax
-	movw %ax,(%edi)
-	emms
+movq  (%edx),%
+mm0
+        movq
+64(%edx),%
+mm4
+        pmaddwd(
+%esi),%
+mm0
+        pmaddwd
+-32(%esi),%
+mm4
+        movq
+8(%edx),%
+mm1
+        movq
+72(%edx),%
+mm5
+        pmaddwd
+8(%esi),%
+mm1
+        pmaddwd
+-24(%esi),%
+mm5
+        movq
+16(%edx),%
+mm2
+        movq
+80(%edx),%
+mm6
+        pmaddwd
+16(%esi),%
+mm2
+        pmaddwd
+-16(%esi),%
+mm6
+        movq
+24(%edx),%
+mm3
+        movq
+88(%edx),%
+mm7
+        pmaddwd
+24(%esi),%
+mm3
+        pmaddwd
+-8(%esi),%
+mm7
+        paddd
+%mm1,%
+mm0
+        paddd
+%mm5,%
+mm4
+        paddd
+%mm2,%
+mm0
+        paddd
+%mm6,%
+mm4
+        paddd
+%mm3,%
+mm0
+        paddd
+%mm7,%
+mm4
+        movq
+%mm0,%
+mm1
+        movq
+%mm4,%
+mm5
+        psrlq
+$32,%
+mm1
+        psrlq
+$32,%
+mm5
+        paddd
+%mm0,%
+mm1
+        paddd
+%mm4,%
+mm5
+        psrad
+$13,%
+mm1
+        psrad
+$13,%
+mm5
+        packssdw
+%mm1,%
+mm1
+        packssdw
+%mm5,%
+mm5
+        psubd
+%mm0,%
+mm0
+        psubd
+%mm4,%
+mm4
+        psubsw
+%mm1,%
+mm0
+        psubsw
+%mm5,%
+mm4
+        movq(
+%edi), %
+mm1
+        punpckldq
+%mm4, %
+mm0
+        pand
+LOCAL_VAR(one_null),
+%
+mm1
+        pand
+LOCAL_VAR(null_one),
+%
+mm0
+        por
+%mm0, %
+mm1
+        movq
+%mm1,(%edi)
+subl $64,
+%
+esi
+        addl
+$128,%
+edx
+        leal
+8(%edi),%
+edi
+        decl
+%
+ecx
+        jnz
+5b
+movq  (%edx),%
+mm0
+        pmaddwd(
+%esi),%
+mm0
+        movq
+8(%edx),%
+mm1
+        pmaddwd
+8(%esi),%
+mm1
+        movq
+16(%edx),%
+mm2
+        pmaddwd
+16(%esi),%
+mm2
+        movq
+24(%edx),%
+mm3
+        pmaddwd
+24(%esi),%
+mm3
+        paddd
+%mm1,%
+mm0
+        paddd
+%mm2,%
+mm0
+        paddd
+%mm3,%
+mm0
+        movq
+%mm0,%
+mm1
+        psrlq
+$32,%
+mm1
+        paddd
+%mm0,%
+mm1
+        psrad
+$13,%
+mm1
+        packssdw
+%mm1,%
+mm1
+        psubd
+%mm0,%
+mm0
+        psubsw
+%mm1,%
+mm0
+        movd
+%mm0,%
+eax
+        movw
+%ax,(%edi)
+emms
 
 /* NO_APP */
-	popl	%ebx
-	popl	%esi
-	popl	%edi
-	mov		%ebp, %esp
-	popl	%ebp
-	ret
+popl
+%
+ebx
+        popl
+%
+esi
+        popl
+%
+edi
+        mov
+%ebp, %
+esp
+        popl
+%
+ebp
+        ret

@@ -29,7 +29,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_X509_CSR_WRITE_C)
 
 #include "mbedtls/x509_csr.h"

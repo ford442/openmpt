@@ -1,37 +1,31 @@
 #define SYMLINK_FLAG_RELATIVE 1
-
 typedef struct _REPARSE_DATA_BUFFER {
-  ULONG  ReparseTag;
-  USHORT ReparseDataLength;
-  USHORT Reserved;
-  union {
-    struct {
-      USHORT SubstituteNameOffset;
-      USHORT SubstituteNameLength;
-      USHORT PrintNameOffset;
-      USHORT PrintNameLength;
-      ULONG  Flags;
-      WCHAR  PathBuffer[1];
-    } SymbolicLinkReparseBuffer;
-    struct {
-      USHORT SubstituteNameOffset;
-      USHORT SubstituteNameLength;
-      USHORT PrintNameOffset;
-      USHORT PrintNameLength;
-      WCHAR  PathBuffer[1];
-    } MountPointReparseBuffer;
-    struct {
-      UCHAR DataBuffer[1];
-    } GenericReparseBuffer;
-  };
+ULONG ReparseTag;
+USHORT ReparseDataLength;
+USHORT Reserved;
+union {
+struct {
+USHORT SubstituteNameOffset;
+USHORT SubstituteNameLength;
+USHORT PrintNameOffset;
+USHORT PrintNameLength;
+ULONG Flags;
+WCHAR PathBuffer[1];
+} SymbolicLinkReparseBuffer;
+struct {
+USHORT SubstituteNameOffset;
+USHORT SubstituteNameLength;
+USHORT PrintNameOffset;
+USHORT PrintNameLength;
+WCHAR PathBuffer[1];
+} MountPointReparseBuffer;
+struct {
+UCHAR DataBuffer[1];
+} GenericReparseBuffer;
+};
 } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
-
-
-
-
-bool CreateReparsePoint(CommandData *Cmd,const wchar *Name,FileHeader *hd)
-{
-  return false;	/* // OPENMPT ADDITION
+bool CreateReparsePoint(CommandData *Cmd, const wchar *Name, FileHeader *hd) {
+return false;    /* // OPENMPT ADDITION
   static bool PrivSet=false;
   if (!PrivSet)
   {
@@ -192,5 +186,5 @@ bool CreateReparsePoint(CommandData *Cmd,const wchar *Name,FileHeader *hd)
   if (!Cmd->IgnoreGeneralAttr)
     SetFileAttr(Name,hd->FileAttr);
   return true;
-  */	// OPENMPT ADDITION
+  */    // OPENMPT ADDITION
 }

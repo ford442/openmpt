@@ -20,118 +20,97 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include <stdlib.h>
 #include <string.h>
-
 #include "filter.h"
-
 void lha_filter_init(LHAFilter *filter, LHAReader *reader,
-                     char **filters, unsigned int num_filters)
-{
-	filter->reader = reader;
-	filter->filters = filters;
-	filter->num_filters = num_filters;
+                     char **filters, unsigned int num_filters) {
+filter->reader = reader;
+filter->filters = filters;
+filter->num_filters = num_filters;
+}
+static int match_glob(char *glob, char *str) {
+// Iterate through the string, matching each character against the
+// equivalent character from the glob.
+
+while (*str != '\0') {
+
+// When we reach a '*', cut off the remainder of the glob
+// and shift forward through the string trying to find
+// a point that matches it.
+
+if(*glob == '*') {
+if(match_glob(glob + 1, str)) {
+return 1;
+}
+} else if(*glob == '?' || *glob == *str) {
+++glob;
+} else {
+return 0;
+}
+++str;
 }
 
-static int match_glob(char *glob, char *str)
-{
-	// Iterate through the string, matching each character against the
-	// equivalent character from the glob.
+// We have reached the end of the string to match against.
+// Any '*'s left at the end of the string are superfluous and
+// can be ignored.
 
-	while (*str != '\0') {
-
-		// When we reach a '*', cut off the remainder of the glob
-		// and shift forward through the string trying to find
-		// a point that matches it.
-
-		if (*glob == '*') {
-			if (match_glob(glob + 1, str)) {
-				return 1;
-			}
-		} else if (*glob == '?' || *glob == *str) {
-			++glob;
-		} else {
-			return 0;
-		}
-
-		++str;
-	}
-
-	// We have reached the end of the string to match against.
-	// Any '*'s left at the end of the string are superfluous and
-	// can be ignored.
-
-	while (*glob == '*') {
-		++glob;
-	}
-
-	// We now have a successful match only if we have simultaneously
-	// matched the end of the glob.
-
-	return *glob == '\0';
+while (*glob == '*') {
+++glob;
 }
 
-static int matches_filter(LHAFilter *filter, LHAFileHeader *header)
-{
-	size_t path_len;
-	char *path;
-	unsigned int i;
+// We now have a successful match only if we have simultaneously
+// matched the end of the glob.
 
-	// Special case: no filters means match all.
+return *glob == '\0';
+}
+static int matches_filter(LHAFilter *filter, LHAFileHeader *header) {
+size_t path_len;
+char *path;
+unsigned int i;
 
-	if (filter->num_filters == 0) {
-		return 1;
-	}
+// Special case: no filters means match all.
 
-	path_len = 0;
-
-	if (header->path != NULL) {
-		path_len += strlen(header->path);
-	}
-
-	if (header->filename != NULL) {
-		path_len += strlen(header->filename);
-	}
-
-	path = malloc(path_len + 1);
-
-	if (path == NULL) {
-		// TODO?
-		return 0;
-	}
-
-	path[0] = '\0';
-
-	if (header->path != NULL) {
-		strcat(path, header->path);
-	}
-
-	if (header->filename != NULL) {
-		strcat(path, header->filename);
-	}
-
-	// Check this path with the list of filters. If one matches,
-	// we must return true.
-
-	for (i = 0; i < filter->num_filters; ++i) {
-		if (match_glob(filter->filters[i], path)) {
-			break;
-		}
-	}
-
-	free(path);
-
-	return i < filter->num_filters;
+if(filter->num_filters == 0) {
+return 1;
+}
+path_len = 0;
+if(header->path != NULL) {
+path_len += strlen(header->path);
+}
+if(header->filename != NULL) {
+path_len += strlen(header->filename);
+}
+path = malloc(path_len + 1);
+if(path == NULL) {
+// TODO?
+return 0;
+}
+path[0] = '\0';
+if(header->path != NULL) {
+strcat(path, header->path);
+}
+if(header->filename != NULL) {
+strcat(path, header->filename);
 }
 
-LHAFileHeader *lha_filter_next_file(LHAFilter *filter)
-{
-	LHAFileHeader *header;
+// Check this path with the list of filters. If one matches,
+// we must return true.
 
-	// Read through headers until we find one that matches.
+for(i = 0; i < filter->num_filters; ++i) {
+if(match_glob(filter->filters[i], path)) {
+break;
+}
+}
+free(path);
+return i < filter->num_filters;
+}
+LHAFileHeader *lha_filter_next_file(LHAFilter *filter) {
+LHAFileHeader *header;
 
-	do {
-		header = lha_reader_next_file(filter->reader);
-	} while (header != NULL && !matches_filter(filter, header));
+// Read through headers until we find one that matches.
 
-	return header;
+do {
+header = lha_reader_next_file(filter->reader);
+} while (header != NULL && !matches_filter(filter, header));
+return header;
 }
 

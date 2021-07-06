@@ -31,7 +31,6 @@
  */
 
 #include "curl_setup.h"
-
 #ifdef USE_OPENSSL
 
 #ifdef HAVE_LIMITS_H
@@ -1579,7 +1578,6 @@ static void ssl_tls_trace(int direction, int ssl_ver, int content_type,
   (void) ssl;
 }
 #endif
-
 #ifdef USE_OPENSSL
 /* ====================================================== */
 

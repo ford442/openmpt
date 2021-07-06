@@ -21,9 +21,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
-
 #include "lha_decoder.h"
-
 #include "bit_stream_reader.c"
 
 // Parameters for ring buffer, used for storing history.  This acts
@@ -50,34 +48,28 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // command signals which command it is.
 
 typedef struct {
-	BitStreamReader bit_stream_reader;
-	uint8_t ringbuf[RING_BUFFER_SIZE];
-	unsigned int ringbuf_pos;
+BitStreamReader bit_stream_reader;
+uint8_t ringbuf[RING_BUFFER_SIZE];
+unsigned int ringbuf_pos;
 } LHALZSDecoder;
-
 static int lha_lzs_init(void *data, LHADecoderCallback callback,
-                        void *callback_data)
-{
-	LHALZSDecoder *decoder = data;
-
-	memset(decoder->ringbuf, ' ', RING_BUFFER_SIZE);
-	decoder->ringbuf_pos = RING_BUFFER_SIZE - START_OFFSET;
-	bit_stream_reader_init(&decoder->bit_stream_reader, callback,
-	                       callback_data);
-
-	return 1;
+                        void *callback_data) {
+LHALZSDecoder *decoder = data;
+memset(decoder->ringbuf, ' ', RING_BUFFER_SIZE);
+decoder->ringbuf_pos = RING_BUFFER_SIZE - START_OFFSET;
+bit_stream_reader_init(&decoder->bit_stream_reader, callback,
+                       callback_data);
+return 1;
 }
 
 // Add a single byte to the output buffer.
 
 static void output_byte(LHALZSDecoder *decoder, uint8_t *buf,
-                        size_t *buf_len, uint8_t b)
-{
-	buf[*buf_len] = b;
-	++*buf_len;
-
-	decoder->ringbuf[decoder->ringbuf_pos] = b;
-	decoder->ringbuf_pos = (decoder->ringbuf_pos + 1) % RING_BUFFER_SIZE;
+                        size_t *buf_len, uint8_t b) {
+buf[*buf_len] = b;
+++*buf_len;
+decoder->ringbuf[decoder->ringbuf_pos] = b;
+decoder->ringbuf_pos = (decoder->ringbuf_pos + 1) % RING_BUFFER_SIZE;
 }
 
 // Output a "block" of data from the specified range in the ring buffer.
@@ -86,71 +78,59 @@ static void output_block(LHALZSDecoder *decoder,
                          uint8_t *buf,
                          size_t *buf_len,
                          unsigned int start,
-                         unsigned int len)
-{
-	unsigned int i;
-
-	for (i = 0; i < len; ++i) {
-		output_byte(decoder, buf, buf_len,
-		            decoder->ringbuf[(start + i) % RING_BUFFER_SIZE]);
-	}
+                         unsigned int len) {
+unsigned int i;
+for(i = 0; i < len; ++i) {
+output_byte(decoder, buf, buf_len,
+            decoder->ringbuf[(start + i) % RING_BUFFER_SIZE]);
+}
 }
 
 // Process a single command from the LZS input stream.
 
-static size_t lha_lzs_read(void *data, uint8_t *buf)
-{
-	LHALZSDecoder *decoder = data;
-	int bit;
-	size_t result;
+static size_t lha_lzs_read(void *data, uint8_t *buf) {
+LHALZSDecoder *decoder = data;
+int bit;
+size_t result;
 
-	// Start from an empty buffer.
+// Start from an empty buffer.
 
-	result = 0;
+result = 0;
 
-	// Each command starts with a bit that signals the type:
+// Each command starts with a bit that signals the type:
 
-	bit = read_bit(&decoder->bit_stream_reader);
-
-	if (bit < 0) {
-		return 0;
-	}
-
-	// What type of command is this?
-
-	if (bit) {
-		int b;
-
-		b = read_bits(&decoder->bit_stream_reader, 8);
-
-		if (b < 0) {
-			return 0;
-		}
-
-		output_byte(decoder, buf, &result, (uint8_t) b);
-	} else {
-		int pos, len;
-
-		pos = read_bits(&decoder->bit_stream_reader, 11);
-		len = read_bits(&decoder->bit_stream_reader, 4);
-
-		if (pos < 0 || len < 0) {
-			return 0;
-		}
-
-		output_block(decoder, buf, &result, (unsigned int) pos,
-		             (unsigned int) len + THRESHOLD);
-	}
-
-	return result;
+bit = read_bit(&decoder->bit_stream_reader);
+if(bit < 0) {
+return 0;
 }
 
+// What type of command is this?
+
+if(bit) {
+int b;
+b = read_bits(&decoder->bit_stream_reader, 8);
+if(b < 0) {
+return 0;
+}
+output_byte(decoder, buf, &result, (uint8_t) b);
+} else {
+int pos, len;
+pos = read_bits(&decoder->bit_stream_reader, 11);
+len = read_bits(&decoder->bit_stream_reader, 4);
+if(pos < 0 || len < 0) {
+return 0;
+}
+output_block(decoder, buf, &result, (unsigned int) pos,
+             (unsigned int) len + THRESHOLD);
+}
+return result;
+}
 LHADecoderType lha_lzs_decoder = {
-	lha_lzs_init,
-	NULL,
-	lha_lzs_read,
-	sizeof(LHALZSDecoder),
-	OUTPUT_BUFFER_SIZE,
-	RING_BUFFER_SIZE
+        lha_lzs_init,
+        NULL,
+        lha_lzs_read,
+        sizeof(LHALZSDecoder),
+        OUTPUT_BUFFER_SIZE,
+        RING_BUFFER_SIZE
 };
 

@@ -32,7 +32,6 @@
 #include "lua.h"
 #include "lauxlib.h"
 #include "compat.h"
-
 int auxiliar_open(lua_State *L);
 void auxiliar_newclass(lua_State *L, const char *classname, luaL_Reg *func);
 void auxiliar_add2group(lua_State *L, const char *classname, const char *group);
@@ -44,5 +43,4 @@ void *auxiliar_getgroupudata(lua_State *L, const char *groupname, int objidx);
 int auxiliar_checkboolean(lua_State *L, int objidx);
 int auxiliar_tostring(lua_State *L);
 int auxiliar_typeerror(lua_State *L, int narg, const char *tname);
-
 #endif /* AUXILIAR_H */

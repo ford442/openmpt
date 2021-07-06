@@ -34,5 +34,4 @@ CURLcode Curl_output_negotiate(struct connectdata *conn, bool proxy);
 void Curl_cleanup_negotiate(struct Curl_easy *data);
 
 #endif /* USE_SPNEGO */
-
 #endif /* HEADER_CURL_HTTP_NEGOTIATE_H */

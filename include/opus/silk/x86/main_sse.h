@@ -27,11 +27,9 @@
 
 #ifndef MAIN_SSE_H
 #define MAIN_SSE_H
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 # if defined(OPUS_X86_MAY_HAVE_SSE4_1)
 
 #if 0 /* FIXME: SSE disabled until silk_VQ_WMat_EC_sse4_1() gets updated. */

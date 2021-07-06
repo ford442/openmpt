@@ -71,7 +71,6 @@
 
 #else
 #define FLAC_API
-
 #endif
 
 /** These #defines will mirror the libtool-based library version number, see
@@ -80,14 +79,11 @@
 #define FLAC_API_VERSION_CURRENT 11
 #define FLAC_API_VERSION_REVISION 0 /**< see above */
 #define FLAC_API_VERSION_AGE 3 /**< see above */
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /** \c 1 if the library has been compiled with support for Ogg FLAC, else \c 0. */
 extern FLAC_API int FLAC_API_SUPPORTS_OGG_FLAC;
-
 #ifdef __cplusplus
 }
 #endif

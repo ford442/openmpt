@@ -28,21 +28,16 @@
 #define IPV6_SCOPE_LINKLOCAL    1       /* Link-local scope. */
 #define IPV6_SCOPE_SITELOCAL    2       /* Site-local scope (deprecated). */
 #define IPV6_SCOPE_NODELOCAL    3       /* Loopback. */
-
 unsigned int Curl_ipv6_scope(const struct sockaddr *sa);
-
 bool Curl_if_is_interface_name(const char *interf);
-
 typedef enum {
-  IF2IP_NOT_FOUND = 0, /* Interface not found */
-  IF2IP_AF_NOT_SUPPORTED = 1, /* Int. exists but has no address for this af */
-  IF2IP_FOUND = 2 /* The address has been stored in "buf" */
+IF2IP_NOT_FOUND = 0, /* Interface not found */
+IF2IP_AF_NOT_SUPPORTED = 1, /* Int. exists but has no address for this af */
+IF2IP_FOUND = 2 /* The address has been stored in "buf" */
 } if2ip_result_t;
-
 if2ip_result_t Curl_if2ip(int af, unsigned int remote_scope,
                           unsigned int remote_scope_id, const char *interf,
                           char *buf, int buf_size);
-
 #ifdef __INTERIX
 
 /* Nedelcho Stanev's work-around for SFU 3.0 */
@@ -79,5 +74,4 @@ struct ifreq {
 #define SIOCGIFADDR _IOW('s', 102, struct ifreq) /* Get if addr */
 
 #endif /* __INTERIX */
-
 #endif /* HEADER_CURL_IF2IP_H */

@@ -20,11 +20,8 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_LHA_CRC16_H
 #define LHASA_LHA_CRC16_H
-
 #include <inttypes.h>
 #include <stdlib.h>
-
 void lha_crc16_buf(uint16_t *crc, uint8_t *buf, size_t buf_len);
-
 #endif /* #ifndef LHASA_LHA_CRC16_H */
 

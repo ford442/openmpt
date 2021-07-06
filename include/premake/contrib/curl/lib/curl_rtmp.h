@@ -29,5 +29,4 @@ extern const struct Curl_handler Curl_handler_rtmpte;
 extern const struct Curl_handler Curl_handler_rtmps;
 extern const struct Curl_handler Curl_handler_rtmpts;
 #endif
-
 #endif /* HEADER_CURL_RTMP_H */

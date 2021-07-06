@@ -24,14 +24,12 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
 #define mbedtls_printf     printf
 #endif
-
 #if defined(MBEDTLS_BIGNUM_C) && defined(MBEDTLS_ENTROPY_C) && \
     defined(MBEDTLS_RSA_C) && defined(MBEDTLS_GENPRIME) && \
     defined(MBEDTLS_FS_IO) && defined(MBEDTLS_CTR_DRBG_C)
@@ -44,19 +42,16 @@
 #include <stdio.h>
 #include <string.h>
 #endif
-
 #define KEY_SIZE 2048
 #define EXPONENT 65537
-
-#if !defined(MBEDTLS_BIGNUM_C) || !defined(MBEDTLS_ENTROPY_C) ||   \
-    !defined(MBEDTLS_RSA_C) || !defined(MBEDTLS_GENPRIME) ||      \
+#if !defined(MBEDTLS_BIGNUM_C) || !defined(MBEDTLS_ENTROPY_C) || \
+    !defined(MBEDTLS_RSA_C) || !defined(MBEDTLS_GENPRIME) || \
     !defined(MBEDTLS_FS_IO) || !defined(MBEDTLS_CTR_DRBG_C)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_BIGNUM_C and/or MBEDTLS_ENTROPY_C and/or "
-           "MBEDTLS_RSA_C and/or MBEDTLS_GENPRIME and/or "
-           "MBEDTLS_FS_IO and/or MBEDTLS_CTR_DRBG_C not defined.\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_BIGNUM_C and/or MBEDTLS_ENTROPY_C and/or "
+               "MBEDTLS_RSA_C and/or MBEDTLS_GENPRIME and/or "
+               "MBEDTLS_FS_IO and/or MBEDTLS_CTR_DRBG_C not defined.\n");
+return (0);
 }
 #else
 int main( void )

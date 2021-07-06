@@ -29,7 +29,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include <xmmintrin.h>
 #include <emmintrin.h>
 #include "celt_lpc.h"
@@ -37,7 +36,6 @@
 #include "mathops.h"
 #include "vq.h"
 #include "x86cpu.h"
-
 #if defined(OPUS_X86_MAY_HAVE_SSE2) /* OpenMPT */
 #ifndef FIXED_POINT
 

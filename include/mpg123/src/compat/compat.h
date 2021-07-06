@@ -13,7 +13,6 @@
 
 #ifndef MPG123_COMPAT_H
 #define MPG123_COMPAT_H
-
 #include "config.h"
 #include "intsym.h"
 
@@ -23,17 +22,13 @@
 #define inline
 #endif
 #endif
-
 #include <errno.h>
-
 #ifdef HAVE_STDLIB_H
 /* realloc, size_t */
 #include <stdlib.h>
 #endif
-
 #include        <stdio.h>
 #include        <math.h>
-
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
 #else
@@ -41,7 +36,6 @@
 #include <sys/signal.h>
 #endif
 #endif
-
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -61,7 +55,6 @@
 #ifdef HAVE_LIMITS_H
 #include <limits.h>
 #endif
- 
 #ifndef SIZE_MAX
 #define SIZE_MAX ((size_t)-1)
 #endif
@@ -71,18 +64,15 @@
 #ifndef ULONG_MAX
 #define ULONG_MAX ((unsigned long)-1)
 #endif
-
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
-
 #ifdef OS2
 #include <float.h>
 #endif
-
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
@@ -100,9 +90,7 @@
 #else
 #define atobigint atol
 #endif
-
 typedef unsigned char byte;
-
 #if defined(_MSC_VER)
 
 // For _setmode(), at least.
@@ -115,7 +103,6 @@ typedef ptrdiff_t ssize_t;
 #endif
 
 #endif
-
 /* A safe realloc also for very old systems where realloc(NULL, size) returns NULL. */
 void *safe_realloc(void *ptr, size_t size);
 // Also freeing ptr if result is NULL. You can do
@@ -125,10 +112,9 @@ void *safer_realloc(void *ptr, size_t size);
 #ifndef HAVE_STRERROR
 const char *strerror(int errnum);
 #endif
-
 /* Roll our own strdup() that does not depend on libc feature test macros
    and returns NULL on NULL input instead of crashing. */
-char* compat_strdup(const char *s);
+char *compat_strdup(const char *s);
 
 /* If we have the size checks enabled, try to derive some sane printfs.
    Simple start: Use max integer type and format if long is not big enough.
@@ -140,7 +126,6 @@ typedef intmax_t off_p;
 # define OFF_P "li"
 typedef long off_p;
 #endif
-
 #if (defined SIZEOF_SIZE_T) && (SIZEOF_SIZE_T > SIZEOF_LONG) && (defined PRIuMAX)
 # define SIZE_P PRIuMAX
 typedef uintmax_t size_p;
@@ -148,7 +133,6 @@ typedef uintmax_t size_p;
 # define SIZE_P "lu"
 typedef unsigned long size_p;
 #endif
-
 #if (defined SIZEOF_SSIZE_T) && (SIZEOF_SSIZE_T > SIZEOF_LONG) && (defined PRIiMAX)
 # define SSIZE_P PRIuMAX
 typedef intmax_t ssize_p;
@@ -156,11 +140,9 @@ typedef intmax_t ssize_p;
 # define SSIZE_P "li"
 typedef long ssize_p;
 #endif
-
 /* Get an environment variable, possibly converted to UTF-8 from wide string.
    The return value is a copy that you shall free. */
-char *compat_getenv(const char* name);
-
+char *compat_getenv(const char *name);
 /**
  * Opening a file handle can be different.
  * This function here is defined to take a path in native encoding (ISO8859 / UTF-8 / ...), or, when MS Windows Unicode support is enabled, an UTF-8 string that will be converted back to native UCS-2 (wide character) before calling the system's open function.
@@ -169,12 +151,11 @@ char *compat_getenv(const char* name);
  * @return file descriptor (>=0) or error code.
  */
 int compat_open(const char *filename, int flags);
-FILE* compat_fopen(const char *filename, const char *mode);
+FILE *compat_fopen(const char *filename, const char *mode);
 /**
  * Also fdopen to avoid having to define POSIX macros in various source files.
  */
-FILE* compat_fdopen(int fd, const char *mode);
-
+FILE *compat_fdopen(int fd, const char *mode);
 /**
  * Closing a file handle can be platform specific.
  * This function takes a file descriptor that is to be closed.
@@ -182,7 +163,7 @@ FILE* compat_fdopen(int fd, const char *mode);
  * @return 0 if the file was successfully closed. A return value of -1 indicates an error.
  */
 int compat_close(int infd);
-int compat_fclose(FILE* stream);
+int compat_fclose(FILE *stream);
 
 /* Those do make sense in a separate file, but I chose to include them in compat.c because that's the one source whose object is shared between mpg123 and libmpg123 -- and both need the functionality internally. */
 
@@ -238,12 +219,10 @@ int win32_utf8_wide(const char *const mbptr, wchar_t **wptr, size_t *buflen);
 	(meaning: for Windows), else they are preserved (on POSIX, actual
 	file system access would be needed because of symlinks).
 */
-char* compat_catpath(const char *prefix, const char* path);
-
+char *compat_catpath(const char *prefix, const char *path);
 /* Return 1 if the given path indicates an existing directory,
    0 otherwise. */
 int compat_isdir(const char *path);
-
 /*
 	Directory traversal. This talks ASCII/UTF-8 paths externally, converts
 	to/from wchar_t internally if the platform wants that. Returning NULL
@@ -254,33 +233,31 @@ struct compat_dir;
 /* Returns NULL if either directory failed to open or listing is empty.
    Listing can still be empty even if non-NULL, so always rely on the
    nextfile/nextdir functions. */
-struct compat_dir* compat_diropen(char *path);
-void               compat_dirclose(struct compat_dir*);
+struct compat_dir *compat_diropen(char *path);
+void compat_dirclose(struct compat_dir *);
 /* Get the next entry that is a file (or symlink to one).
    The returned string is a copy that needs to be freed after use. */
-char* compat_nextfile(struct compat_dir*);
+char *compat_nextfile(struct compat_dir *);
 /* Get the next entry that is a directory (or symlink to one).
    The returned string is a copy that needs to be freed after use. */
-char* compat_nextdir (struct compat_dir*);
-
+char *compat_nextdir(struct compat_dir *);
 #ifdef USE_MODULES
 /*
-	For keeping the path mess local, a system-specific dlopen() variant
-	is contained in here, too. This is very thin wrapping, even sparing
-	definition of a handle type, just using void pointers.
-	Use of absolute paths is a good idea if you want to be sure which
-	file is openend, as default search paths vary.
+    For keeping the path mess local, a system-specific dlopen() variant
+    is contained in here, too. This is very thin wrapping, even sparing
+    definition of a handle type, just using void pointers.
+    Use of absolute paths is a good idea if you want to be sure which
+    file is openend, as default search paths vary.
 */
 void *compat_dlopen (const char *path);
 void *compat_dlsym  (void *handle, const char* name);
 void  compat_dlclose(void *handle);
 #endif
-
 /* Blocking write/read of data with signal resilience.
    They continue after being interrupted by signals and always return the
    amount of processed data (shortage indicating actual problem or EOF). */
 size_t unintr_write(int fd, void const *buffer, size_t bytes);
-size_t unintr_read (int fd, void *buffer, size_t bytes);
+size_t unintr_read(int fd, void *buffer, size_t bytes);
 size_t unintr_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 /* That one comes from Tellie on OS/2, needed in resolver. */
@@ -293,11 +270,8 @@ typedef int socklen_t;
 #ifdef __APPLE__
 #define normal mpg123_normal
 #endif
-
 #include "true.h"
-
 #if (!defined(WIN32) || defined (__CYGWIN__)) && defined(HAVE_SIGNAL_H)
 void (*catchsignal(int signum, void(*handler)()))();
 #endif
-
 #endif

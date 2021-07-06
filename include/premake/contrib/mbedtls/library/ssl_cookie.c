@@ -28,7 +28,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_SSL_COOKIE_C)
 
 #include "mbedtls/ssl_cookie.h"

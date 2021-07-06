@@ -23,7 +23,6 @@
  *
  ***************************************************************************/
 #include "curl_setup.h"
-
 #ifdef USE_POLARSSL
 
 #include <polarssl/sha256.h>

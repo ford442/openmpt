@@ -30,19 +30,16 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #define mbedtls_printf     printf
 #endif
-
 #if !defined(MBEDTLS_NET_C)
 #include <stdio.h>
-int main( void )
-{
-    mbedtls_printf( "MBEDTLS_NET_C not defined.\n" );
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_NET_C not defined.\n");
+return (0);
 }
 #else
 

@@ -8,15 +8,11 @@
  */
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
 #if defined(MODPLUG_TRACKER)
 #include "../misc/mptMutex.h"
 #endif
-
 OPENMPT_NAMESPACE_BEGIN
-
 #if defined(MODPLUG_TRACKER)
 
 namespace mpt {
@@ -36,65 +32,61 @@ class CriticalSection
 {
 
 private:
-	
-	mpt::recursive_mutex_with_lock_count & m_refGlobalMutex;
+
+    mpt::recursive_mutex_with_lock_count & m_refGlobalMutex;
 
 protected:
 
-	bool inSection;
+    bool inSection;
 
 public:
 
-	enum class InitialState
-	{
-		Locked = 0,
-		Unlocked = 1,
-	};
+    enum class InitialState
+    {
+        Locked = 0,
+        Unlocked = 1,
+    };
 
 public:
 
 #if MPT_COMPILER_MSVC
-	_Acquires_lock_(m_refGlobalMutex.mutex)
+    _Acquires_lock_(m_refGlobalMutex.mutex)
 #endif // MPT_COMPILER_MSVC
-	CriticalSection();
+    CriticalSection();
 
-	CriticalSection(CriticalSection &&other) noexcept;
+    CriticalSection(CriticalSection &&other) noexcept;
 
-	explicit CriticalSection(InitialState state);
+    explicit CriticalSection(InitialState state);
 
 #if MPT_COMPILER_MSVC
-	_Acquires_lock_(m_refGlobalMutex.mutex)
+    _Acquires_lock_(m_refGlobalMutex.mutex)
 #endif // MPT_COMPILER_MSVC
-	void Enter();
+    void Enter();
 
 #if MPT_COMPILER_MSVC
-	_Requires_lock_held_(m_refGlobalMutex.mutex) _Releases_lock_(m_refGlobalMutex.mutex)
+    _Requires_lock_held_(m_refGlobalMutex.mutex) _Releases_lock_(m_refGlobalMutex.mutex)
 #endif // MPT_COMPILER_MSVC
-	void Leave();
+    void Leave();
 
-	~CriticalSection();
+    ~CriticalSection();
 
 };
 
 #else // !MODPLUG_TRACKER
-
-class CriticalSection
-{
+class CriticalSection {
 public:
-	enum class InitialState
-	{
-		Locked = 0,
-		Unlocked = 1,
-	};
-public:
-	CriticalSection() {}
-	CriticalSection(CriticalSection &&) noexcept {}
-	explicit CriticalSection(InitialState) {}
-	void Enter() {}
-	void Leave() {}
-	~CriticalSection() {}
+enum class InitialState {
+Locked = 0,
+Unlocked = 1,
 };
-
+public:
+CriticalSection() {}
+CriticalSection(CriticalSection &&)
+noexcept {}
+explicit CriticalSection(InitialState) {}
+void Enter() {}
+void Leave() {}
+~CriticalSection() {}
+};
 #endif // MODPLUG_TRACKER
-
 OPENMPT_NAMESPACE_END

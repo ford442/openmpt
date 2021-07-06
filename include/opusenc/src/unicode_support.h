@@ -29,11 +29,7 @@
 */
 #ifndef UNICODE_SUPPORT_H_INCLUDED
 #define UNICODE_SUPPORT_H_INCLUDED
-
 #include <stdio.h>
-
 #define WIN_UNICODE 1
-
 FILE *opeint_fopen(const char *filename_utf8, const char *mode_utf8);
-
 #endif

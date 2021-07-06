@@ -20,11 +20,9 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_LHA_BASIC_READER_H
 #define LHASA_LHA_BASIC_READER_H
-
 #include "lha_input_stream.h"
 #include "lha_file_header.h"
 #include "lha_decoder.h"
-
 /**
  * Basic LHA stream reader.
  *
@@ -34,7 +32,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 typedef struct _LHABasicReader LHABasicReader;
-
 /**
  * Create a new LHA reader to read data from an input stream.
  *
@@ -43,7 +40,6 @@ typedef struct _LHABasicReader LHABasicReader;
  */
 
 LHABasicReader *lha_basic_reader_new(LHAInputStream *stream);
-
 /**
  * Free an LHA reader.
  *
@@ -51,7 +47,6 @@ LHABasicReader *lha_basic_reader_new(LHAInputStream *stream);
  */
 
 void lha_basic_reader_free(LHABasicReader *reader);
-
 /**
  * Return the last file read by @ref lha_basic_reader_next_file.
  *
@@ -61,7 +56,6 @@ void lha_basic_reader_free(LHABasicReader *reader);
  */
 
 LHAFileHeader *lha_basic_reader_curr_file(LHABasicReader *reader);
-
 /**
  * Read the header of the next archived file from the input stream.
  *
@@ -72,7 +66,6 @@ LHAFileHeader *lha_basic_reader_curr_file(LHABasicReader *reader);
  */
 
 LHAFileHeader *lha_basic_reader_next_file(LHABasicReader *reader);
-
 /**
  * Read some of the compressed data for the current archived file.
  *
@@ -82,8 +75,7 @@ LHAFileHeader *lha_basic_reader_next_file(LHABasicReader *reader);
  */
 
 size_t lha_basic_reader_read_compressed(LHABasicReader *reader, void *buf,
-                                       size_t buf_len);
-
+                                        size_t buf_len);
 /**
  * Create a decoder object to decompress the compressed data in the
  * current file.
@@ -94,6 +86,5 @@ size_t lha_basic_reader_read_compressed(LHABasicReader *reader, void *buf,
  */
 
 LHADecoder *lha_basic_reader_decode(LHABasicReader *reader);
-
 #endif /* #ifndef LHASA_LHA_BASIC_READER_H */
 

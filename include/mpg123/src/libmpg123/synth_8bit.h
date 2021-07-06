@@ -10,77 +10,60 @@
 	(p.ex. opt_synth_1to1(fr), synth_1to1_8bit, synth_1to1_8bit_mono, ...).
 */
 
-int SYNTH_NAME(real *bandPtr, int channel, mpg123_handle *fr, int final)
-{
-	short samples_tmp[BLOCK];
-	short *tmp1 = samples_tmp + channel;
-	int i,ret;
-
-	unsigned char *samples = fr->buffer.data;
-	int pnt = fr->buffer.fill;
-	fr->buffer.data = (unsigned char*) samples_tmp;
-	fr->buffer.fill = 0;
-	ret = BASE_SYNTH_NAME(bandPtr, channel, fr , 0);
-	fr->buffer.data = samples;
-
-	samples += channel + pnt;
-	for(i=0;i<(BLOCK/2);i++)
-	{
-		*samples = fr->conv16to8[*tmp1>>AUSHIFT];
-		samples += 2;
-		tmp1 += 2;
-	}
-	fr->buffer.fill = pnt + (final ? BLOCK : 0 );
-
-	return ret;
+int SYNTH_NAME(real *bandPtr, int channel, mpg123_handle *fr, int final) {
+short samples_tmp[BLOCK];
+short *tmp1 = samples_tmp + channel;
+int i, ret;
+unsigned char *samples = fr->buffer.data;
+int pnt = fr->buffer.fill;
+fr->buffer.data = (unsigned char *) samples_tmp;
+fr->buffer.fill = 0;
+ret = BASE_SYNTH_NAME(bandPtr, channel, fr, 0);
+fr->buffer.data = samples;
+samples += channel + pnt;
+for(i = 0; i < (BLOCK / 2); i++) {
+*samples = fr->conv16to8[*tmp1 >> AUSHIFT];
+samples += 2;
+tmp1 += 2;
 }
-
-int MONO_NAME(real *bandPtr, mpg123_handle *fr)
-{
-	short samples_tmp[BLOCK];
-	short *tmp1 = samples_tmp;
-	int i,ret;
- 
-	unsigned char *samples = fr->buffer.data;
-	int pnt = fr->buffer.fill;
-	fr->buffer.data = (unsigned char*) samples_tmp;
-	fr->buffer.fill = 0;
-	ret = BASE_SYNTH_NAME(bandPtr, 0, fr, 0);
-	fr->buffer.data = samples;
-
-	samples += pnt;
-	for(i=0;i<(BLOCK/2);i++)
-	{
-		*samples++ = fr->conv16to8[*tmp1>>AUSHIFT];
-		tmp1+=2;
-	}
-	fr->buffer.fill = pnt + BLOCK/2;
-
-	return ret;
+fr->buffer.fill = pnt + (final ? BLOCK : 0);
+return ret;
 }
-
-int MONO2STEREO_NAME(real *bandPtr, mpg123_handle *fr)
-{
-	short samples_tmp[BLOCK];
-	short *tmp1 = samples_tmp;
-	int i,ret;
-
-	unsigned char *samples = fr->buffer.data;
-	int pnt = fr->buffer.fill;
-	fr->buffer.data = (unsigned char*) samples_tmp;
-	fr->buffer.fill = 0;
-	ret = BASE_SYNTH_NAME(bandPtr, 0, fr, 0);
-	fr->buffer.data = samples;
-
-	samples += pnt;
-	for(i=0;i<(BLOCK/2);i++)
-	{
-		*samples++ = fr->conv16to8[*tmp1>>AUSHIFT];
-		*samples++ = fr->conv16to8[*tmp1>>AUSHIFT];
-		tmp1 += 2;
-	}
-	fr->buffer.fill = pnt + BLOCK;
-
-	return ret;
+int MONO_NAME(real *bandPtr, mpg123_handle *fr) {
+short samples_tmp[BLOCK];
+short *tmp1 = samples_tmp;
+int i, ret;
+unsigned char *samples = fr->buffer.data;
+int pnt = fr->buffer.fill;
+fr->buffer.data = (unsigned char *) samples_tmp;
+fr->buffer.fill = 0;
+ret = BASE_SYNTH_NAME(bandPtr, 0, fr, 0);
+fr->buffer.data = samples;
+samples += pnt;
+for(i = 0; i < (BLOCK / 2); i++) {
+*samples++ = fr->conv16to8[*tmp1 >> AUSHIFT];
+tmp1 += 2;
+}
+fr->buffer.fill = pnt + BLOCK / 2;
+return ret;
+}
+int MONO2STEREO_NAME(real *bandPtr, mpg123_handle *fr) {
+short samples_tmp[BLOCK];
+short *tmp1 = samples_tmp;
+int i, ret;
+unsigned char *samples = fr->buffer.data;
+int pnt = fr->buffer.fill;
+fr->buffer.data = (unsigned char *) samples_tmp;
+fr->buffer.fill = 0;
+ret = BASE_SYNTH_NAME(bandPtr, 0, fr, 0);
+fr->buffer.data = samples;
+samples += pnt;
+for(i = 0; i < (BLOCK / 2); i++) {
+*samples++ = fr->conv16to8[*tmp1 >> AUSHIFT];
+*samples++ = fr->conv16to8[*tmp1 >> AUSHIFT];
+tmp1 += 2;
+}
+fr->buffer.fill = pnt + BLOCK;
+return ret;
 }
 

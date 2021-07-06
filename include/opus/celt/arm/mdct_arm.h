@@ -32,9 +32,7 @@
 
 #if !defined(MDCT_ARM_H)
 #define MDCT_ARM_H
-
 #include "mdct.h"
-
 #if defined(HAVE_ARM_NE10)
 /** Compute a forward MDCT and scale by 4/N, trashes the input array */
 void clt_mdct_forward_neon(const mdct_lookup *l, kiss_fft_scalar *in,
@@ -55,5 +53,4 @@ void clt_mdct_backward_neon(const mdct_lookup *l, kiss_fft_scalar *in,
       clt_mdct_backward_neon(_l, _in, _out, _window, _int, _shift, _stride, _arch)
 #endif /* OPUS_HAVE_RTCD */
 #endif /* HAVE_ARM_NE10 */
-
 #endif

@@ -28,11 +28,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include "pitch.h"
 #include "kiss_fft.h"
 #include "mdct.h"
-
 #if defined(OPUS_HAVE_RTCD)
 
 # if defined(OPUS_ARM_MAY_HAVE_NEON_INTR) && !defined(OPUS_ARM_PRESUME_NEON_INTR)

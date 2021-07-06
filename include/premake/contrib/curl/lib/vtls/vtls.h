@@ -22,7 +22,6 @@
  *
  ***************************************************************************/
 #include "curl_setup.h"
-
 #include "openssl.h"        /* OpenSSL versions */
 #include "gtls.h"           /* GnuTLS versions */
 #include "nssg.h"           /* NSS versions */
@@ -33,15 +32,12 @@
 #include "schannel.h"       /* Schannel SSPI version */
 #include "darwinssl.h"      /* SecureTransport (Darwin) version */
 #include "mbedtls.h"        /* mbedTLS versions */
-
 #ifndef MAX_PINNED_PUBKEY_SIZE
 #define MAX_PINNED_PUBKEY_SIZE 1048576 /* 1MB */
 #endif
-
 #ifndef MD5_DIGEST_LENGTH
 #define MD5_DIGEST_LENGTH 16 /* fixed size */
 #endif
-
 #ifndef SHA256_DIGEST_LENGTH
 #define SHA256_DIGEST_LENGTH 32 /* fixed size */
 #endif
@@ -60,17 +56,14 @@
                              data->set.ssl.var)
 #define SSL_CONN_CONFIG(var) (SSL_IS_PROXY() ?          \
   conn->proxy_ssl_config.var : conn->ssl_config.var)
-
-bool Curl_ssl_config_matches(struct ssl_primary_config* data,
-                             struct ssl_primary_config* needle);
+bool Curl_ssl_config_matches(struct ssl_primary_config *data,
+                             struct ssl_primary_config *needle);
 bool Curl_clone_primary_ssl_config(struct ssl_primary_config *source,
                                    struct ssl_primary_config *dest);
-void Curl_free_primary_ssl_config(struct ssl_primary_config* sslc);
+void Curl_free_primary_ssl_config(struct ssl_primary_config *sslc);
 int Curl_ssl_getsock(struct connectdata *conn, curl_socket_t *socks,
                      int numsocks);
-
 int Curl_ssl_backend(void);
-
 #ifdef USE_SSL
 int Curl_ssl_init(void);
 void Curl_ssl_cleanup(void);
@@ -178,25 +171,24 @@ bool Curl_ssl_false_start(void);
 /* When SSL support is not present, just define away these function calls */
 #define Curl_ssl_init() 1
 #define Curl_ssl_cleanup() Curl_nop_stmt
-#define Curl_ssl_connect(x,y) CURLE_NOT_BUILT_IN
+#define Curl_ssl_connect(x, y) CURLE_NOT_BUILT_IN
 #define Curl_ssl_close_all(x) Curl_nop_stmt
-#define Curl_ssl_close(x,y) Curl_nop_stmt
-#define Curl_ssl_shutdown(x,y) CURLE_NOT_BUILT_IN
-#define Curl_ssl_set_engine(x,y) CURLE_NOT_BUILT_IN
+#define Curl_ssl_close(x, y) Curl_nop_stmt
+#define Curl_ssl_shutdown(x, y) CURLE_NOT_BUILT_IN
+#define Curl_ssl_set_engine(x, y) CURLE_NOT_BUILT_IN
 #define Curl_ssl_set_engine_default(x) CURLE_NOT_BUILT_IN
 #define Curl_ssl_engines_list(x) NULL
-#define Curl_ssl_send(a,b,c,d,e) -1
-#define Curl_ssl_recv(a,b,c,d,e) -1
-#define Curl_ssl_initsessions(x,y) CURLE_OK
-#define Curl_ssl_version(x,y) 0
-#define Curl_ssl_data_pending(x,y) 0
+#define Curl_ssl_send(a, b, c, d, e) -1
+#define Curl_ssl_recv(a, b, c, d, e) -1
+#define Curl_ssl_initsessions(x, y) CURLE_OK
+#define Curl_ssl_version(x, y) 0
+#define Curl_ssl_data_pending(x, y) 0
 #define Curl_ssl_check_cxn(x) 0
 #define Curl_ssl_free_certinfo(x) Curl_nop_stmt
-#define Curl_ssl_connect_nonblocking(x,y,z) CURLE_NOT_BUILT_IN
+#define Curl_ssl_connect_nonblocking(x, y, z) CURLE_NOT_BUILT_IN
 #define Curl_ssl_kill_session(x) Curl_nop_stmt
-#define Curl_ssl_random(x,y,z) ((void)x, CURLE_NOT_BUILT_IN)
+#define Curl_ssl_random(x, y, z) ((void)x, CURLE_NOT_BUILT_IN)
 #define Curl_ssl_cert_status_request() FALSE
 #define Curl_ssl_false_start() FALSE
 #endif
-
 #endif /* HEADER_CURL_VTLS_H */

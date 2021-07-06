@@ -2,10 +2,8 @@
 
 #ifndef MPT_CHECK_WINDOWS_HPP
 #define MPT_CHECK_WINDOWS_HPP
-
 #include "mpt/base/detect_os.hpp"
 #include "mpt/base/compiletime_warning.hpp"
-
 #if MPT_OS_WINDOWS
 
 #ifndef UNICODE
@@ -21,5 +19,4 @@ MPT_WARNING("windows.h defines min and max which conflicts with C++. Please #def
 #endif
 
 #endif // MPT_OS_WINDOWS
-
 #endif // MPT_CHECK_WINDOWS_HPP

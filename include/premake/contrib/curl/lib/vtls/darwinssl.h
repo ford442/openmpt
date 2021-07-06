@@ -23,7 +23,6 @@
  *
  ***************************************************************************/
 #include "curl_setup.h"
-
 #ifdef USE_DARWINSSL
 
 CURLcode Curl_darwinssl_connect(struct connectdata *conn, int sockindex);

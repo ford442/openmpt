@@ -27,7 +27,6 @@
 #define INT_LIBZIP 4
 #define LONG_LIBZIP 4
 #define LONG_LONG_LIBZIP 8
-
 #if defined(HAVE_STDINT_H_LIBZIP)
 #include <stdint.h>
 #elif defined(HAVE_INTTYPES_H_LIBZIP)
@@ -35,7 +34,6 @@
 #elif defined(HAVE_SYS_TYPES_H_LIBZIP)
 #include <sys/types.h>
 #endif
-
 #if defined(HAVE_INT8_T_LIBZIP)
 typedef int8_t zip_int8_t;
 #elif defined(HAVE___INT8_LIBZIP)
@@ -100,21 +98,16 @@ typedef unsigned long zip_uint64_t;
 #elif defined(LONG_LONG_LIBZIP) && LONG_LONG_LIBZIP == 8
 typedef unsigned long long zip_uint64_t;
 #endif
-
-#define ZIP_INT8_MIN	-0x80
-#define ZIP_INT8_MAX	 0x7f
-#define ZIP_UINT8_MAX	 0xff
-
-#define ZIP_INT16_MIN	-0x8000
-#define ZIP_INT16_MAX	 0x7fff
-#define ZIP_UINT16_MAX	 0xffff
-
-#define ZIP_INT32_MIN	-0x80000000L
-#define ZIP_INT32_MAX	 0x7fffffffL
-#define ZIP_UINT32_MAX	 0xffffffffLU
-
-#define ZIP_INT64_MIN	-0x8000000000000000LL
-#define ZIP_INT64_MAX	 0x7fffffffffffffffLL
-#define ZIP_UINT64_MAX	 0xffffffffffffffffULL
-
+#define ZIP_INT8_MIN    -0x80
+#define ZIP_INT8_MAX     0x7f
+#define ZIP_UINT8_MAX     0xff
+#define ZIP_INT16_MIN    -0x8000
+#define ZIP_INT16_MAX     0x7fff
+#define ZIP_UINT16_MAX     0xffff
+#define ZIP_INT32_MIN    -0x80000000L
+#define ZIP_INT32_MAX     0x7fffffffL
+#define ZIP_UINT32_MAX     0xffffffffLU
+#define ZIP_INT64_MIN    -0x8000000000000000LL
+#define ZIP_INT64_MAX     0x7fffffffffffffffLL
+#define ZIP_UINT64_MAX     0xffffffffffffffffULL
 #endif /* zipconf.h */

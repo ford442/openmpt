@@ -29,7 +29,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_SHA1_C)
 
 #include "mbedtls/sha1.h"

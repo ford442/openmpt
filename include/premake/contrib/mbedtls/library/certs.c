@@ -24,9 +24,7 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #include "mbedtls/certs.h"
-
 #if defined(MBEDTLS_CERTS_C)
 
 #if defined(MBEDTLS_ECDSA_C)

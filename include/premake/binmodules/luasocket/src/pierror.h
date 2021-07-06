@@ -24,5 +24,4 @@
 #define PIE_PROTOCOL       "resolved protocol is unknown"
 #define PIE_SERVICE        "service not supported for socket type"
 #define PIE_SOCKTYPE       "ai_socktype not supported"
-
 #endif

@@ -31,5 +31,4 @@
 void Curl_md4it(unsigned char *output, const unsigned char *input, size_t len);
 
 #endif /* defined(USE_NSS) || defined(USE_OS400CRYPTO) */
-
 #endif /* HEADER_CURL_MD4_H */

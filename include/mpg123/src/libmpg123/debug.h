@@ -13,15 +13,12 @@
 */
 
 #include "config.h"
-
 #ifdef ME
 #define DBGPRFX ME": "
 #else
 #define DBGPRFX ""
 #endif
-
 #define noop ((void)0)
-
 #ifdef XDEBUG
 #define mxdebug(s, ...) mdebug(s, __VA_ARGS__)
 #define xdebug(s) debug(s)
@@ -33,7 +30,6 @@
 // Used for debugging and warning messages.
 #include <stdio.h>
 #define debug_print(t, s, ...) fprintf(stderr, DBGPRFX "[" __FILE__ ":%s():%i] " t ": " s "\n", __func__, __LINE__, __VA_ARGS__)
-
 #ifdef DEBUG
 #define mdebug(s, ...) debug_print("debug", s, __VA_ARGS__)
 #else
@@ -82,7 +78,6 @@
 #define debug13(s, a, b, c, d, e, f, g, h, i, j, k, l, m) mdebug(s, a, b, c, d, e, f, g, h, i, j, k, l, m)
 #define debug14(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n) mdebug(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
 #define debug15(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) mdebug(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
-
 #define warning1(s, a) mwarning(s, a)
 #define warning2(s, a, b) mwarning(s, a, b)
 #define warning3(s, a, b, c) mwarning(s, a, b, c)
@@ -98,7 +93,6 @@
 #define warning13(s, a, b, c, d, e, f, g, h, i, j, k, l, m) mwarning(s, a, b, c, d, e, f, g, h, i, j, k, l, m)
 #define warning14(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n) mwarning(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
 #define warning15(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) mwarning(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
-
 #define error1(s, a) merror(s, a)
 #define error2(s, a, b) merror(s, a, b)
 #define error3(s, a, b, c) merror(s, a, b, c)
@@ -114,7 +108,6 @@
 #define error13(s, a, b, c, d, e, f, g, h, i, j, k, l, m) merror(s, a, b, c, d, e, f, g, h, i, j, k, l, m)
 #define error14(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n) merror(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
 #define error15(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) merror(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
-
 #define ereturn1(rv, s, a) mereturn(rv, s, a)
 #define ereturn2(rv, s, a, b) mereturn(rv, s, a, b)
 #define ereturn3(rv, s, a, b, c) mereturn(rv, s, a, b, c)

@@ -10,24 +10,18 @@
 
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
 OPENMPT_NAMESPACE_BEGIN
 
-class ResizableDialog : public CDialog
-{
+class ResizableDialog : public CDialog {
 private:
-	CPoint m_minSize;
-
+CPoint m_minSize;
 public:
-	ResizableDialog() = default;
-	explicit ResizableDialog(UINT nIDTemplate, CWnd *pParentWnd = nullptr);
-
+ResizableDialog() = default;
+explicit ResizableDialog(UINT nIDTemplate, CWnd *pParentWnd = nullptr);
 protected:
-	BOOL OnInitDialog() override;
-	afx_msg void OnGetMinMaxInfo(MINMAXINFO *mmi);
-	DECLARE_MESSAGE_MAP()
+BOOL OnInitDialog() override;
+afx_msg void OnGetMinMaxInfo(MINMAXINFO *mmi);
+DECLARE_MESSAGE_MAP()
 };
-
 OPENMPT_NAMESPACE_END

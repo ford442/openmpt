@@ -28,14 +28,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include <xmmintrin.h>
 #include <emmintrin.h>
 #include <smmintrin.h>
-
 #include "main.h"
 #include "stack_alloc.h"
-
 #if defined(OPUS_X86_MAY_HAVE_SSE4_1) /* OpenMPT */
 
 /* Weighting factors for tilt measure */

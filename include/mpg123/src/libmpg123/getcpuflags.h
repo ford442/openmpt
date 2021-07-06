@@ -9,7 +9,6 @@
 
 #ifndef MPG123_H_GETCPUFLAGS
 #define MPG123_H_GETCPUFLAGS
-
 #include "config.h"
 
 /* standard level flags part 1 (ECX)*/
@@ -27,34 +26,28 @@
 #define XFLAG_3DNOWEXT 0x40000000
 /* eXtended Control Register 0 */
 #define XCR0FLAG_AVX   0x00000006
-
-
-struct cpuflags
-{
+struct cpuflags {
 #if defined(OPT_ARM) || defined(OPT_NEON) || defined(OPT_NEON64)
-	unsigned int has_neon;
+unsigned int has_neon;
 #else
-	unsigned int id;
-	unsigned int std;
-	unsigned int std2;
-	unsigned int ext;
-	unsigned int xcr0_lo;
+unsigned int id;
+unsigned int std;
+unsigned int std2;
+unsigned int ext;
+unsigned int xcr0_lo;
 #endif
 };
-
-unsigned int getcpuflags(struct cpuflags* cf);
-
+unsigned int getcpuflags(struct cpuflags *cf);
 #ifdef WANT_GETCPUFLAGS
 #include <string.h>
 // Wrapper needed for ignorant clang memory sanitizer that chokes
 // because it does not know the assembly code intialized the vlaues.
 static unsigned int wrap_getcpuflags(struct cpuflags* cf)
 {
-	memset(cf, 0, sizeof(*cf));
-	return getcpuflags(cf);
+    memset(cf, 0, sizeof(*cf));
+    return getcpuflags(cf);
 }
 #endif
-
 #if ((defined OPT_X86) || (defined OPT_X86_64) || (defined OPT_NEON) || (defined OPT_NEON64)) && (defined OPT_MULTI)
 
 // We really evaluate the CPU flags.
@@ -72,7 +65,7 @@ static unsigned int wrap_getcpuflags(struct cpuflags* cf)
 #define cpu_sse3(s) (FLAG_SSE3 & s.std)
 #define cpu_avx(s) ((FLAG_AVX & s.std) == FLAG_AVX && (XCR0FLAG_AVX & s.xcr0_lo) == XCR0FLAG_AVX)
 #define cpu_fast_sse(s) ((((s.id & 0xf00)>>8) == 6 && FLAG_SSSE3 & s.std) /* for Intel/VIA; family 6 CPUs with SSSE3 */ || \
-						   (((s.id & 0xf00)>>8) == 0xf && (((s.id & 0x0ff00000)>>20) > 0 && ((s.id & 0x0ff00000)>>20) != 5))) /* for AMD; family > 0xF CPUs except Bobcat */
+                           (((s.id & 0xf00)>>8) == 0xf && (((s.id & 0x0ff00000)>>20) > 0 && ((s.id & 0x0ff00000)>>20) != 5))) /* for AMD; family > 0xF CPUs except Bobcat */
 #define cpu_neon(s) (s.has_neon)
 
 #else
@@ -90,8 +83,5 @@ static unsigned int wrap_getcpuflags(struct cpuflags* cf)
 #define cpu_sse3(s)     1
 #define cpu_avx(s)      1
 #define cpu_neon(s)     1
-
 #endif
-
-
 #endif

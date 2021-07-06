@@ -22,7 +22,6 @@
  *
  ***************************************************************************/
 #include "curl_setup.h"
-
 #if defined(HAVE_SIGNAL_H) && defined(HAVE_SIGACTION) && defined(USE_OPENSSL)
 #include <signal.h>
 
@@ -70,9 +69,8 @@ static void sigpipe_restore(struct sigpipe_ignore *ig)
 
 #else
 /* for systems without sigaction */
-#define sigpipe_ignore(x,y) Curl_nop_stmt
+#define sigpipe_ignore(x, y) Curl_nop_stmt
 #define sigpipe_restore(x)  Curl_nop_stmt
 #define SIGPIPE_VARIABLE(x)
 #endif
-
 #endif /* HEADER_CURL_SIGPIPE_H */

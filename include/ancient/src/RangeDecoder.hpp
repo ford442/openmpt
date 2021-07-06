@@ -2,39 +2,26 @@
 
 #ifndef RANGEDECODER_HPP
 #define RANGEDECODER_HPP
-
 #include <cstdint>
-
-namespace ancient::internal
-{
-
+namespace ancient::internal {
 // used by too many compressors...
-class RangeDecoder
-{
+class RangeDecoder {
 public:
-	class BitReader
-	{
-	public:
-		BitReader();
-		virtual ~BitReader();
-		
-		virtual uint32_t readBit()=0;
-	};
-
-	RangeDecoder(BitReader &bitReader,uint16_t initialValue);
-	~RangeDecoder();
-
-	uint16_t decode(uint16_t length);
-	void scale(uint16_t newLow,uint16_t newHigh,uint16_t newRange);
-
-private:
-	BitReader			&_bitReader;
-
-	uint16_t			_low=0;
-	uint16_t			_high=0xffffU;
-	uint16_t			_stream;
+class BitReader {
+public:
+BitReader();
+virtual ~BitReader();
+virtual uint32_t readBit() = 0;
 };
-
+RangeDecoder(BitReader &bitReader, uint16_t initialValue);
+~RangeDecoder();
+uint16_t decode(uint16_t length);
+void scale(uint16_t newLow, uint16_t newHigh, uint16_t newRange);
+private:
+BitReader &_bitReader;
+uint16_t _low = 0;
+uint16_t _high = 0xffffU;
+uint16_t _stream;
+};
 }
-
 #endif

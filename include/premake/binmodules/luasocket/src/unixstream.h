@@ -15,7 +15,5 @@
 * method of a server object.
 \*=========================================================================*/
 #include "unix.h"
-
 int unixstream_open(lua_State *L);
-
 #endif /* UNIXSTREAM_H */

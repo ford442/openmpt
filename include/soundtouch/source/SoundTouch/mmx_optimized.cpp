@@ -42,7 +42,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "STTypes.h"
-
 #ifdef SOUNDTOUCH_ALLOW_MMX
 // MMX routines available only with integer sample type
 
@@ -119,7 +118,7 @@ double TDStretchMMX::calcCrossCorr(const short *pV1, const short *pV2, double &d
     if (norm > (long)maxnorm)
     {
         // modify 'maxnorm' inside critical section to avoid multi-access conflict if in OpenMP mode
-        #pragma omp critical
+#pragma omp critical
         if (norm > (long)maxnorm)
         {
             maxnorm = norm;
@@ -389,8 +388,6 @@ uint FIRFilterMMX::evaluateFilterStereo(short *dest, const short *src, uint numS
 }
 
 #else
-
 // workaround to not complain about empty module
 bool _dontcomplain_mmx_empty;
-
 #endif  // SOUNDTOUCH_ALLOW_MMX

@@ -32,16 +32,13 @@
 
 #ifndef FLAC__PRIVATE__BITWRITER_H
 #define FLAC__PRIVATE__BITWRITER_H
-
 #include <stdio.h> /* for FILE */
 #include "FLAC/ordinals.h"
-
 /*
  * opaque structure definition
  */
 struct FLAC__BitWriter;
 typedef struct FLAC__BitWriter FLAC__BitWriter;
-
 /*
  * construction, deletion, initialization, etc functions
  */
@@ -51,7 +48,6 @@ FLAC__bool FLAC__bitwriter_init(FLAC__BitWriter *bw);
 void FLAC__bitwriter_free(FLAC__BitWriter *bw); /* does not 'free(buffer)' */
 void FLAC__bitwriter_clear(FLAC__BitWriter *bw);
 void FLAC__bitwriter_dump(const FLAC__BitWriter *bw, FILE *out);
-
 /*
  * CRC functions
  *
@@ -59,12 +55,12 @@ void FLAC__bitwriter_dump(const FLAC__BitWriter *bw, FILE *out);
  */
 FLAC__bool FLAC__bitwriter_get_write_crc16(FLAC__BitWriter *bw, FLAC__uint16 *crc);
 FLAC__bool FLAC__bitwriter_get_write_crc8(FLAC__BitWriter *bw, FLAC__byte *crc);
-
 /*
  * info functions
  */
 FLAC__bool FLAC__bitwriter_is_byte_aligned(const FLAC__BitWriter *bw);
-uint32_t FLAC__bitwriter_get_input_bits_unconsumed(const FLAC__BitWriter *bw); /* can be called anytime, returns total # of bits unconsumed */
+uint32_t FLAC__bitwriter_get_input_bits_unconsumed(
+        const FLAC__BitWriter *bw); /* can be called anytime, returns total # of bits unconsumed */
 
 /*
  * direct buffer access
@@ -75,7 +71,6 @@ uint32_t FLAC__bitwriter_get_input_bits_unconsumed(const FLAC__BitWriter *bw); /
  */
 FLAC__bool FLAC__bitwriter_get_buffer(FLAC__BitWriter *bw, const FLAC__byte **buffer, size_t *bytes);
 void FLAC__bitwriter_release_buffer(FLAC__BitWriter *bw);
-
 /*
  * write functions
  */
@@ -92,7 +87,8 @@ uint32_t FLAC__bitwriter_golomb_bits_signed(int val, uint32_t parameter);
 uint32_t FLAC__bitwriter_golomb_bits_unsigned(uint32_t val, uint32_t parameter);
 #endif
 FLAC__bool FLAC__bitwriter_write_rice_signed(FLAC__BitWriter *bw, FLAC__int32 val, uint32_t parameter);
-FLAC__bool FLAC__bitwriter_write_rice_signed_block(FLAC__BitWriter *bw, const FLAC__int32 *vals, uint32_t nvals, uint32_t parameter);
+FLAC__bool FLAC__bitwriter_write_rice_signed_block(FLAC__BitWriter *bw, const FLAC__int32 *vals, uint32_t nvals,
+                                                   uint32_t parameter);
 #if 0 /* UNUSED */
 FLAC__bool FLAC__bitwriter_write_golomb_signed(FLAC__BitWriter *bw, int val, uint32_t parameter);
 FLAC__bool FLAC__bitwriter_write_golomb_unsigned(FLAC__BitWriter *bw, uint32_t val, uint32_t parameter);
@@ -100,5 +96,4 @@ FLAC__bool FLAC__bitwriter_write_golomb_unsigned(FLAC__BitWriter *bw, uint32_t v
 FLAC__bool FLAC__bitwriter_write_utf8_uint32(FLAC__BitWriter *bw, FLAC__uint32 val);
 FLAC__bool FLAC__bitwriter_write_utf8_uint64(FLAC__BitWriter *bw, FLAC__uint64 val);
 FLAC__bool FLAC__bitwriter_zero_pad_to_byte_boundary(FLAC__BitWriter *bw);
-
 #endif

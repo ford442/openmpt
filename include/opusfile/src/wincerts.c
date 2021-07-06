@@ -19,9 +19,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include "internal.h"
-#if defined(OP_ENABLE_HTTP)&&defined(_WIN32)
+#if defined(OP_ENABLE_HTTP) && defined(_WIN32)
 /*You must include windows.h before wincrypt.h and x509.h.*/
 # define WIN32_LEAN_AND_MEAN
 # define WIN32_EXTRA_LEAN

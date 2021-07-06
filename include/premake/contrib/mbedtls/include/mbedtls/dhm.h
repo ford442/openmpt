@@ -22,7 +22,6 @@
  */
 #ifndef MBEDTLS_DHM_H
 #define MBEDTLS_DHM_H
-
 #include "bignum.h"
 
 /*
@@ -64,9 +63,7 @@
     "E39E772C180E86039B2783A2EC07A28FB5C55DF06F4C52C9" \
     "DE2BCBF6955817183995497CEA956AE515D2261898FA0510" \
     "15728E5A8AACAA68FFFFFFFFFFFFFFFF"
-
 #define MBEDTLS_DHM_RFC3526_MODP_2048_G          "02"
-
 #define MBEDTLS_DHM_RFC3526_MODP_3072_P               \
     "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1" \
     "29024E088A67CC74020BBEA63B139B22514A08798E3404DD" \
@@ -84,9 +81,7 @@
     "F12FFA06D98A0864D87602733EC86A64521F2B18177B200C" \
     "BBE117577A615D6C770988C0BAD946E208E24FA074E5AB31" \
     "43DB5BFCE0FD108E4B82D120A93AD2CAFFFFFFFFFFFFFFFF"
-
 #define MBEDTLS_DHM_RFC3526_MODP_3072_G          "02"
-
 #define MBEDTLS_DHM_RFC3526_MODP_4096_P                \
     "FFFFFFFFFFFFFFFFC90FDAA22168C234C4C6628B80DC1CD1" \
     "29024E088A67CC74020BBEA63B139B22514A08798E3404DD" \
@@ -110,9 +105,7 @@
     "1F612970CEE2D7AFB81BDD762170481CD0069127D5B05AA9" \
     "93B4EA988D8FDDC186FFB7DC90A6C08F4DF435C934063199" \
     "FFFFFFFFFFFFFFFF"
-
 #define MBEDTLS_DHM_RFC3526_MODP_4096_G          "02"
-
 #define MBEDTLS_DHM_RFC5114_MODP_2048_P               \
     "AD107E1E9123A9D0D660FAA79559C51FA20D64E5683B9FD1" \
     "B54B1597B61D0A75E6FA141DF95A56DBAF9A3C407BA1DF15" \
@@ -125,7 +118,6 @@
     "BE60E69CC928B2B9C52172E413042E9B23F10B0E16E79763" \
     "C9B53DCF4BA80A29E3FB73C16B8E75B97EF363E2FFA31F71" \
     "CF9DE5384E71B81C0AC4DFFE0C10E64F"
-
 #define MBEDTLS_DHM_RFC5114_MODP_2048_G              \
     "AC4032EF4F2D9AE39DF30B5C8FFDAC506CDEBE7B89998CAF"\
     "74866A08CFE4FFE3A6824A4E10B9A6F0DD921F01A70C4AFA"\
@@ -138,37 +130,32 @@
     "B539CCE3409D13CD566AFBB48D6C019181E1BCFE94B30269"\
     "EDFE72FE9B6AA4BD7B5A0F1C71CFFF4C19C418E1F6EC0179"\
     "81BC087F2A7065B384B890D3191F2BFA"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /**
  * \brief          DHM context structure
  */
-typedef struct
-{
-    size_t len; /*!<  size(P) in chars  */
-    mbedtls_mpi P;      /*!<  prime modulus     */
-    mbedtls_mpi G;      /*!<  generator         */
-    mbedtls_mpi X;      /*!<  secret value      */
-    mbedtls_mpi GX;     /*!<  self = G^X mod P  */
-    mbedtls_mpi GY;     /*!<  peer = G^Y mod P  */
-    mbedtls_mpi K;      /*!<  key = GY^X mod P  */
-    mbedtls_mpi RP;     /*!<  cached R^2 mod P  */
-    mbedtls_mpi Vi;     /*!<  blinding value    */
-    mbedtls_mpi Vf;     /*!<  un-blinding value */
-    mbedtls_mpi pX;     /*!<  previous X        */
+typedef struct {
+size_t len; /*!<  size(P) in chars  */
+mbedtls_mpi P;      /*!<  prime modulus     */
+mbedtls_mpi G;      /*!<  generator         */
+mbedtls_mpi X;      /*!<  secret value      */
+mbedtls_mpi GX;     /*!<  self = G^X mod P  */
+mbedtls_mpi GY;     /*!<  peer = G^Y mod P  */
+mbedtls_mpi K;      /*!<  key = GY^X mod P  */
+mbedtls_mpi RP;     /*!<  cached R^2 mod P  */
+mbedtls_mpi Vi;     /*!<  blinding value    */
+mbedtls_mpi Vf;     /*!<  un-blinding value */
+mbedtls_mpi pX;     /*!<  previous X        */
 }
-mbedtls_dhm_context;
-
+        mbedtls_dhm_context;
 /**
  * \brief          Initialize DHM context
  *
  * \param ctx      DHM context to be initialized
  */
-void mbedtls_dhm_init( mbedtls_dhm_context *ctx );
-
+void mbedtls_dhm_init(mbedtls_dhm_context *ctx);
 /**
  * \brief          Parse the ServerKeyExchange parameters
  *
@@ -178,10 +165,9 @@ void mbedtls_dhm_init( mbedtls_dhm_context *ctx );
  *
  * \return         0 if successful, or an MBEDTLS_ERR_DHM_XXX error code
  */
-int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
-                     unsigned char **p,
-                     const unsigned char *end );
-
+int mbedtls_dhm_read_params(mbedtls_dhm_context *ctx,
+                            unsigned char **p,
+                            const unsigned char *end);
 /**
  * \brief          Setup and write the ServerKeyExchange parameters
  *
@@ -198,11 +184,10 @@ int mbedtls_dhm_read_params( mbedtls_dhm_context *ctx,
  *
  * \return         0 if successful, or an MBEDTLS_ERR_DHM_XXX error code
  */
-int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
-                     unsigned char *output, size_t *olen,
-                     int (*f_rng)(void *, unsigned char *, size_t),
-                     void *p_rng );
-
+int mbedtls_dhm_make_params(mbedtls_dhm_context *ctx, int x_size,
+                            unsigned char *output, size_t *olen,
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng);
 /**
  * \brief          Import the peer's public value G^Y
  *
@@ -212,9 +197,8 @@ int mbedtls_dhm_make_params( mbedtls_dhm_context *ctx, int x_size,
  *
  * \return         0 if successful, or an MBEDTLS_ERR_DHM_XXX error code
  */
-int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
-                     const unsigned char *input, size_t ilen );
-
+int mbedtls_dhm_read_public(mbedtls_dhm_context *ctx,
+                            const unsigned char *input, size_t ilen);
 /**
  * \brief          Create own private value X and export G^X
  *
@@ -227,11 +211,10 @@ int mbedtls_dhm_read_public( mbedtls_dhm_context *ctx,
  *
  * \return         0 if successful, or an MBEDTLS_ERR_DHM_XXX error code
  */
-int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
-                     unsigned char *output, size_t olen,
-                     int (*f_rng)(void *, unsigned char *, size_t),
-                     void *p_rng );
-
+int mbedtls_dhm_make_public(mbedtls_dhm_context *ctx, int x_size,
+                            unsigned char *output, size_t olen,
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng);
 /**
  * \brief          Derive and export the shared secret (G^Y)^X mod P
  *
@@ -250,18 +233,16 @@ int mbedtls_dhm_make_public( mbedtls_dhm_context *ctx, int x_size,
  *                 re-used and costs nothing otherwise, so it is recommended
  *                 to always pass a non-NULL f_rng argument.
  */
-int mbedtls_dhm_calc_secret( mbedtls_dhm_context *ctx,
-                     unsigned char *output, size_t output_size, size_t *olen,
-                     int (*f_rng)(void *, unsigned char *, size_t),
-                     void *p_rng );
-
+int mbedtls_dhm_calc_secret(mbedtls_dhm_context *ctx,
+                            unsigned char *output, size_t output_size, size_t *olen,
+                            int (*f_rng)(void *, unsigned char *, size_t),
+                            void *p_rng);
 /**
  * \brief          Free and clear the components of a DHM key
  *
  * \param ctx      DHM context to free and clear
  */
-void mbedtls_dhm_free( mbedtls_dhm_context *ctx );
-
+void mbedtls_dhm_free(mbedtls_dhm_context *ctx);
 #if defined(MBEDTLS_ASN1_PARSE_C)
 /** \ingroup x509_module */
 /**
@@ -274,9 +255,8 @@ void mbedtls_dhm_free( mbedtls_dhm_context *ctx );
  *
  * \return         0 if successful, or a specific DHM or PEM error code
  */
-int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
-                   size_t dhminlen );
-
+int mbedtls_dhm_parse_dhm(mbedtls_dhm_context *dhm, const unsigned char *dhmin,
+                          size_t dhminlen);
 #if defined(MBEDTLS_FS_IO)
 /** \ingroup x509_module */
 /**
@@ -287,19 +267,16 @@ int mbedtls_dhm_parse_dhm( mbedtls_dhm_context *dhm, const unsigned char *dhmin,
  *
  * \return         0 if successful, or a specific DHM or PEM error code
  */
-int mbedtls_dhm_parse_dhmfile( mbedtls_dhm_context *dhm, const char *path );
+int mbedtls_dhm_parse_dhmfile(mbedtls_dhm_context *dhm, const char *path);
 #endif /* MBEDTLS_FS_IO */
 #endif /* MBEDTLS_ASN1_PARSE_C */
-
 /**
  * \brief          Checkup routine
  *
  * \return         0 if successful, or 1 if the test failed
  */
-int mbedtls_dhm_self_test( int verbose );
-
+int mbedtls_dhm_self_test(int verbose);
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* dhm.h */

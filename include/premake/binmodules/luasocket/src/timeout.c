@@ -5,14 +5,11 @@
 #include <stdio.h>
 #include <limits.h>
 #include <float.h>
-
 #include "lua.h"
 #include "lauxlib.h"
 #include "compat.h"
-
 #include "auxiliar.h"
 #include "timeout.h"
-
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -27,17 +24,15 @@
 #ifndef MAX
 #define MAX(x, y) ((x) > (y) ? x : y)
 #endif
-
 /*=========================================================================*\
 * Internal function prototypes
 \*=========================================================================*/
 static int timeout_lua_gettime(lua_State *L);
 static int timeout_lua_sleep(lua_State *L);
-
 static luaL_Reg func[] = {
-    { "gettime", timeout_lua_gettime },
-    { "sleep", timeout_lua_sleep },
-    { NULL, NULL }
+        {"gettime", timeout_lua_gettime},
+        {"sleep",   timeout_lua_sleep},
+        {NULL,      NULL}
 };
 
 /*=========================================================================*\
@@ -47,10 +42,9 @@ static luaL_Reg func[] = {
 * Initialize structure
 \*-------------------------------------------------------------------------*/
 void timeout_init(p_timeout tm, double block, double total) {
-    tm->block = block;
-    tm->total = total;
+tm->block = block;
+tm->total = total;
 }
-
 /*-------------------------------------------------------------------------*\
 * Determines how much time we have left for the next system call,
 * if the previous call was successful
@@ -60,19 +54,18 @@ void timeout_init(p_timeout tm, double block, double total) {
 *   the number of ms left or -1 if there is no time limit
 \*-------------------------------------------------------------------------*/
 double timeout_get(p_timeout tm) {
-    if (tm->block < 0.0 && tm->total < 0.0) {
-        return -1;
-    } else if (tm->block < 0.0) {
-        double t = tm->total - timeout_gettime() + tm->start;
-        return MAX(t, 0.0);
-    } else if (tm->total < 0.0) {
-        return tm->block;
-    } else {
-        double t = tm->total - timeout_gettime() + tm->start;
-        return MIN(tm->block, MAX(t, 0.0));
-    }
+if(tm->block < 0.0 && tm->total < 0.0) {
+return -1;
+} else if(tm->block < 0.0) {
+double t = tm->total - timeout_gettime() + tm->start;
+return MAX(t, 0.0);
+} else if(tm->total < 0.0) {
+return tm->block;
+} else {
+double t = tm->total - timeout_gettime() + tm->start;
+return MIN(tm->block, MAX(t, 0.0));
 }
-
+}
 /*-------------------------------------------------------------------------*\
 * Returns time since start of operation
 * Input
@@ -81,9 +74,8 @@ double timeout_get(p_timeout tm) {
 *   start field of structure
 \*-------------------------------------------------------------------------*/
 double timeout_getstart(p_timeout tm) {
-    return tm->start;
+return tm->start;
 }
-
 /*-------------------------------------------------------------------------*\
 * Determines how much time we have left for the next system call,
 * if the previous call was a failure
@@ -93,28 +85,27 @@ double timeout_getstart(p_timeout tm) {
 *   the number of ms left or -1 if there is no time limit
 \*-------------------------------------------------------------------------*/
 double timeout_getretry(p_timeout tm) {
-    if (tm->block < 0.0 && tm->total < 0.0) {
-        return -1;
-    } else if (tm->block < 0.0) {
-        double t = tm->total - timeout_gettime() + tm->start;
-        return MAX(t, 0.0);
-    } else if (tm->total < 0.0) {
-        double t = tm->block - timeout_gettime() + tm->start;
-        return MAX(t, 0.0);
-    } else {
-        double t = tm->total - timeout_gettime() + tm->start;
-        return MIN(tm->block, MAX(t, 0.0));
-    }
+if(tm->block < 0.0 && tm->total < 0.0) {
+return -1;
+} else if(tm->block < 0.0) {
+double t = tm->total - timeout_gettime() + tm->start;
+return MAX(t, 0.0);
+} else if(tm->total < 0.0) {
+double t = tm->block - timeout_gettime() + tm->start;
+return MAX(t, 0.0);
+} else {
+double t = tm->total - timeout_gettime() + tm->start;
+return MIN(tm->block, MAX(t, 0.0));
 }
-
+}
 /*-------------------------------------------------------------------------*\
 * Marks the operation start time in structure
 * Input
 *   tm: timeout control structure
 \*-------------------------------------------------------------------------*/
 p_timeout timeout_markstart(p_timeout tm) {
-    tm->start = timeout_gettime();
-    return tm;
+tm->start = timeout_gettime();
+return tm;
 }
 
 /*-------------------------------------------------------------------------*\
@@ -134,21 +125,19 @@ double timeout_gettime(void) {
 }
 #else
 double timeout_gettime(void) {
-    struct timeval v;
-    gettimeofday(&v, (struct timezone *) NULL);
-    /* Unix Epoch time (time since January 1, 1970 (UTC)) */
-    return v.tv_sec + v.tv_usec/1.0e6;
+struct timeval v;
+gettimeofday(&v, (struct timezone *) NULL);
+/* Unix Epoch time (time since January 1, 1970 (UTC)) */
+return v.tv_sec + v.tv_usec / 1.0e6;
 }
 #endif
-
 /*-------------------------------------------------------------------------*\
 * Initializes module
 \*-------------------------------------------------------------------------*/
 int timeout_open(lua_State *L) {
-    luaL_setfuncs(L, func, 0);
-    return 0;
+luaL_setfuncs(L, func, 0);
+return 0;
 }
-
 /*-------------------------------------------------------------------------*\
 * Sets timeout values for IO operations
 * Lua Input: base, time [, mode]
@@ -156,31 +145,31 @@ int timeout_open(lua_State *L) {
 *   mode: "b" for block timeout, "t" for total timeout. (default: b)
 \*-------------------------------------------------------------------------*/
 int timeout_meth_settimeout(lua_State *L, p_timeout tm) {
-    double t = luaL_optnumber(L, 2, -1);
-    const char *mode = luaL_optstring(L, 3, "b");
-    switch (*mode) {
-        case 'b':
-            tm->block = t;
-            break;
-        case 'r': case 't':
-            tm->total = t;
-            break;
-        default:
-            luaL_argcheck(L, 0, 3, "invalid timeout mode");
-            break;
-    }
-    lua_pushnumber(L, 1);
-    return 1;
+double t = luaL_optnumber(L, 2, -1);
+const char *mode = luaL_optstring(L, 3, "b");
+switch (*mode) {
+case 'b':
+tm->block = t;
+break;
+case 'r':
+case 't':
+tm->total = t;
+break;
+default:
+luaL_argcheck(L, 0, 3, "invalid timeout mode");
+break;
 }
-
+lua_pushnumber(L, 1);
+return 1;
+}
 /*-------------------------------------------------------------------------*\
 * Gets timeout values for IO operations
 * Lua Output: block, total
 \*-------------------------------------------------------------------------*/
 int timeout_meth_gettimeout(lua_State *L, p_timeout tm) {
-    lua_pushnumber(L, tm->block);
-    lua_pushnumber(L, tm->total);
-    return 2;
+lua_pushnumber(L, tm->block);
+lua_pushnumber(L, tm->total);
+return 2;
 }
 
 /*=========================================================================*\
@@ -189,10 +178,9 @@ int timeout_meth_gettimeout(lua_State *L, p_timeout tm) {
 /*-------------------------------------------------------------------------*\
 * Returns the time the system has been up, in secconds.
 \*-------------------------------------------------------------------------*/
-static int timeout_lua_gettime(lua_State *L)
-{
-    lua_pushnumber(L, timeout_gettime());
-    return 1;
+static int timeout_lua_gettime(lua_State *L) {
+lua_pushnumber(L, timeout_gettime());
+return 1;
 }
 
 /*-------------------------------------------------------------------------*\
@@ -209,20 +197,19 @@ int timeout_lua_sleep(lua_State *L)
     return 0;
 }
 #else
-int timeout_lua_sleep(lua_State *L)
-{
-    double n = luaL_checknumber(L, 1);
-    struct timespec t, r;
-    if (n < 0.0) n = 0.0;
-    if (n > INT_MAX) n = INT_MAX;
-    t.tv_sec = (int) n;
-    n -= t.tv_sec;
-    t.tv_nsec = (int) (n * 1000000000);
-    if (t.tv_nsec >= 1000000000) t.tv_nsec = 999999999;
-    while (nanosleep(&t, &r) != 0) {
-        t.tv_sec = r.tv_sec;
-        t.tv_nsec = r.tv_nsec;
-    }
-    return 0;
+int timeout_lua_sleep(lua_State *L) {
+double n = luaL_checknumber(L, 1);
+struct timespec t, r;
+if(n < 0.0) n = 0.0;
+if(n > INT_MAX) n = INT_MAX;
+t.tv_sec = (int) n;
+n -= t.tv_sec;
+t.tv_nsec = (int) (n * 1000000000);
+if(t.tv_nsec >= 1000000000) t.tv_nsec = 999999999;
+while (nanosleep(&t, &r) != 0) {
+t.tv_sec = r.tv_sec;
+t.tv_nsec = r.tv_nsec;
+}
+return 0;
 }
 #endif

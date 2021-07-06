@@ -24,7 +24,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
@@ -34,12 +33,10 @@
 #define mbedtls_snprintf   snprintf
 #define mbedtls_free       free
 #endif
-
 #if !defined(MBEDTLS_TIMING_C)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_TIMING_C not defined.\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_TIMING_C not defined.\n");
+return (0);
 }
 #else
 

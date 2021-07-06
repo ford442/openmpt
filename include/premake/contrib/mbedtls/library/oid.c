@@ -26,7 +26,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_OID_C)
 
 #include "mbedtls/oid.h"

@@ -41,63 +41,53 @@
 */
 
 #include "pa_hostapi.h"
-
-PaError PaJack_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
-PaError PaAlsa_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
-PaError PaOSS_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
+PaError PaJack_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
+PaError PaAlsa_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
+PaError PaOSS_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
 /* Added for IRIX, Pieter, oct 2, 2003: */
-PaError PaSGI_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
+PaError PaSGI_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
 /* Linux AudioScience HPI */
-PaError PaAsiHpi_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
-PaError PaMacCore_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
-PaError PaSkeleton_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
-
+PaError PaAsiHpi_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
+PaError PaMacCore_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
+PaError PaSkeleton_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
 /** Note that on Linux, ALSA is placed before OSS so that the former is preferred over the latter.
  */
 
 PaUtilHostApiInitializer *paHostApiInitializers[] =
-    {
+        {
 #ifdef __linux__
 
 #if PA_USE_ALSA
-        PaAlsa_Initialize,
+                PaAlsa_Initialize,
 #endif
 
 #if PA_USE_OSS
-        PaOSS_Initialize,
+                PaOSS_Initialize,
 #endif
 
 #else   /* __linux__ */
-
 #if PA_USE_OSS
-        PaOSS_Initialize,
+                PaOSS_Initialize,
 #endif
-
 #if PA_USE_ALSA
-        PaAlsa_Initialize,
+                PaAlsa_Initialize,
 #endif
-
 #endif  /* __linux__ */
-
 #if PA_USE_JACK
-        PaJack_Initialize,
+                PaJack_Initialize,
 #endif
-                    /* Added for IRIX, Pieter, oct 2, 2003: */
+                /* Added for IRIX, Pieter, oct 2, 2003: */
 #if PA_USE_SGI
-        PaSGI_Initialize,
+                PaSGI_Initialize,
 #endif
-
 #if PA_USE_ASIHPI
-        PaAsiHpi_Initialize,
+                PaAsiHpi_Initialize,
 #endif
-
 #if PA_USE_COREAUDIO
-        PaMacCore_Initialize,
+                PaMacCore_Initialize,
 #endif
-
 #if PA_USE_SKELETON
-        PaSkeleton_Initialize,
+                PaSkeleton_Initialize,
 #endif
-
-        0   /* NULL terminated array */
-    };
+                0   /* NULL terminated array */
+        };

@@ -21,12 +21,9 @@
 
 #ifndef LAME_MACHINE_H
 #define LAME_MACHINE_H
-
 #include "version.h"
-
 #include <stdio.h>
 #include <assert.h>
-
 #ifdef STDC_HEADERS
 # include <stdlib.h>
 # include <string.h>
@@ -35,29 +32,25 @@
 #  define strchr index
 #  define strrchr rindex
 # endif
-char   *strchr(), *strrchr();
+char *strchr(), *strrchr();
 # ifndef HAVE_MEMCPY
 #  define memcpy(d, s, n) bcopy ((s), (d), (n))
 #  define memmove(d, s, n) bcopy ((s), (d), (n))
 # endif
 #endif
-
-#if  defined(__riscos__)  &&  defined(FPA10)
+#if  defined(__riscos__) && defined(FPA10)
 # include "ymath.h"
 #else
 # include <math.h>
 #endif
 #include <limits.h>
-
 #include <ctype.h>
-
 #ifdef HAVE_ERRNO_H
 # include <errno.h>
 #endif
 #ifdef HAVE_FCNTL_H
 # include <fcntl.h>
 #endif
-
 #if defined(macintosh)
 # include <types.h>
 # include <stat.h>
@@ -65,7 +58,6 @@ char   *strchr(), *strrchr();
 # include <sys/types.h>
 # include <sys/stat.h>
 #endif
-
 #ifdef HAVE_INTTYPES_H
 # include <inttypes.h>
 #else
@@ -73,7 +65,6 @@ char   *strchr(), *strrchr();
 #  include <stdint.h>
 # endif
 #endif
-
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
@@ -97,7 +88,6 @@ char   *strchr(), *strrchr();
 #ifndef inline
 # define inline
 #endif
-
 #if defined(_MSC_VER)
 # undef inline
 # define inline _inline
@@ -106,7 +96,6 @@ char   *strchr(), *strrchr();
 # undef inline
 # define inline __inline
 #endif
-
 #if    defined(_MSC_VER)
 # pragma warning( disable : 4244 )
 /*# pragma warning( disable : 4305 ) */
@@ -121,7 +110,7 @@ char   *strchr(), *strrchr();
  * lot of conversions.
  */
 
-#if ( defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MINGW32__) )
+#if (defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MINGW32__))
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 # include <float.h>
@@ -136,7 +125,6 @@ typedef float FLOAT;
 #  endif
 # endif
 #endif
-
 #ifndef FLOAT8
 typedef double FLOAT8;
 # ifdef DBL_MAX
@@ -151,10 +139,8 @@ typedef double FLOAT8;
 #  define FLOAT8_MAX 1e37 /* approx */
 # endif
 #endif
-
 /* sample_t must be floating point, at least 32 bits */
 typedef FLOAT sample_t;
-
 #define dimension_of(array) (sizeof(array)/sizeof(array[0]))
 #define beyond(array) (array+dimension_of(array))
 #define compiletime_assert(expression) enum{static_assert_##FILE##_##LINE = 1/((expression)?1:0)}
@@ -164,18 +150,15 @@ typedef FLOAT sample_t;
   ? (COUNT) \
   : ((COUNT) + (CHUNK) - (COUNT) % (CHUNK)) \
   )
-
 #if 1
-#define EQ(a,b) (\
+#define EQ(a, b) (\
 (fabs(a) > fabs(b)) \
  ? (fabs((a)-(b)) <= (fabs(a) * 1e-6f)) \
  : (fabs((a)-(b)) <= (fabs(b) * 1e-6f)))
 #else
 #define EQ(a,b) (fabs((a)-(b))<1E-37)
 #endif
-
-#define NEQ(a,b) (!EQ(a,b))
-
+#define NEQ(a, b) (!EQ(a,b))
 #ifdef _MSC_VER
 #  if _MSC_VER < 1400
 #  define fabsf fabs
@@ -183,7 +166,6 @@ typedef FLOAT sample_t;
 #  define log10f log10
 #  endif
 #endif
-
 #endif
 
 /* end of machine.h */

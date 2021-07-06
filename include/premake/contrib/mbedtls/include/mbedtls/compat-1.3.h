@@ -24,12 +24,10 @@
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
-#if ! defined(MBEDTLS_DEPRECATED_REMOVED)
-
+#if !defined(MBEDTLS_DEPRECATED_REMOVED)
 #if defined(MBEDTLS_DEPRECATED_WARNING)
 #warning "Including compat-1.3.h is deprecated"
 #endif
-
 #ifndef MBEDTLS_COMPAT13_H
 #define MBEDTLS_COMPAT13_H
 
@@ -2629,6 +2627,5 @@
 #define xtea_init mbedtls_xtea_init
 #define xtea_self_test mbedtls_xtea_self_test
 #define xtea_setup mbedtls_xtea_setup
-
 #endif /* compat-1.3.h */
 #endif /* MBEDTLS_DEPRECATED_REMOVED */

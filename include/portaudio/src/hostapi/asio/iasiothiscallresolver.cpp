@@ -562,7 +562,7 @@ ASIOError IASIOThiscallResolver::ASIOInit(ASIODriverInfo *info)
     // real driver because theAsioDriver is reset to zero in ASIOExit().
 
     // Delegate to the real ASIOInit
-	return ::ASIOInit(info);
+    return ::ASIOInit(info);
 }
 
 

@@ -34,7 +34,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_X509_USE_C)
 
 #include "mbedtls/x509.h"

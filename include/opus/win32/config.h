@@ -27,14 +27,12 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef CONFIG_H
 #define CONFIG_H
-
 #define USE_ALLOCA            1
 
 /* Comment out the next line for floating-point code */
 /*#define FIXED_POINT           1 */
 
 #define OPUS_BUILD            1
-
 #if defined(_MSC_VER) /* OpenMPT */
 #if defined(_M_IX86) || defined(_M_X64)
 /* Can always compile SSE intrinsics (no special compiler flags necessary) */
@@ -62,7 +60,5 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #endif
 #endif /* OpenMPT */
-
 #include "version.h"
-
 #endif /* CONFIG_H */

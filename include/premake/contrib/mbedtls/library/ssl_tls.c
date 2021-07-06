@@ -32,7 +32,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_SSL_TLS_C)
 
 #include "mbedtls/debug.h"

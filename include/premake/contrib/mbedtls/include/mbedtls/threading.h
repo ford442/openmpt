@@ -22,23 +22,18 @@
  */
 #ifndef MBEDTLS_THREADING_H
 #define MBEDTLS_THREADING_H
-
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #include <stdlib.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 #define MBEDTLS_ERR_THREADING_FEATURE_UNAVAILABLE         -0x001A  /**< The selected feature is not available. */
 #define MBEDTLS_ERR_THREADING_BAD_INPUT_DATA              -0x001C  /**< Bad input parameters to function. */
 #define MBEDTLS_ERR_THREADING_MUTEX_ERROR                 -0x001E  /**< Locking / unlocking / free failed with error code. */
-
 #if defined(MBEDTLS_THREADING_PTHREAD)
 #include <pthread.h>
 typedef struct
@@ -47,7 +42,6 @@ typedef struct
     char is_valid;
 } mbedtls_threading_mutex_t;
 #endif
-
 #if defined(MBEDTLS_THREADING_ALT)
 /* You should define the mbedtls_threading_mutex_t type in your header */
 #include "threading_alt.h"
@@ -80,25 +74,21 @@ void mbedtls_threading_set_alt( void (*mutex_init)( mbedtls_threading_mutex_t * 
  */
 void mbedtls_threading_free_alt( void );
 #endif /* MBEDTLS_THREADING_ALT */
-
 /*
  * The function pointers for mutex_init, mutex_free, mutex_ and mutex_unlock
  *
  * All these functions are expected to work or the result will be undefined.
  */
-extern void (*mbedtls_mutex_init)( mbedtls_threading_mutex_t *mutex );
-extern void (*mbedtls_mutex_free)( mbedtls_threading_mutex_t *mutex );
-extern int (*mbedtls_mutex_lock)( mbedtls_threading_mutex_t *mutex );
-extern int (*mbedtls_mutex_unlock)( mbedtls_threading_mutex_t *mutex );
-
+extern void (*mbedtls_mutex_init)(mbedtls_threading_mutex_t *mutex);
+extern void (*mbedtls_mutex_free)(mbedtls_threading_mutex_t *mutex);
+extern int (*mbedtls_mutex_lock)(mbedtls_threading_mutex_t *mutex);
+extern int (*mbedtls_mutex_unlock)(mbedtls_threading_mutex_t *mutex);
 /*
  * Global mutexes
  */
 extern mbedtls_threading_mutex_t mbedtls_threading_readdir_mutex;
 extern mbedtls_threading_mutex_t mbedtls_threading_gmtime_mutex;
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* threading.h */

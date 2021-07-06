@@ -24,7 +24,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_VERSION_C)
 
 #include "mbedtls/version.h"

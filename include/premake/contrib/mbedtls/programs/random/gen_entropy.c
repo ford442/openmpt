@@ -24,7 +24,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
@@ -32,18 +31,15 @@
 #define mbedtls_fprintf    fprintf
 #define mbedtls_printf     printf
 #endif
-
 #if defined(MBEDTLS_ENTROPY_C) && defined(MBEDTLS_FS_IO)
 #include "mbedtls/entropy.h"
 
 #include <stdio.h>
 #endif
-
 #if !defined(MBEDTLS_ENTROPY_C) || !defined(MBEDTLS_FS_IO)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_ENTROPY_C and/or MBEDTLS_FS_IO not defined.\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_ENTROPY_C and/or MBEDTLS_FS_IO not defined.\n");
+return (0);
 }
 #else
 int main( int argc, char *argv[] )

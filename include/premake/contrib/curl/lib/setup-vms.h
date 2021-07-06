@@ -43,10 +43,8 @@
 #include <stdlib.h>
 char *decc$getenv(const char *__name);
 #include <pwd.h>
-
 #include <string.h>
 #include <unixlib.h>
-
 #undef getenv
 #undef getpwuid
 #define getenv vms_getenv
@@ -56,13 +54,11 @@ char *decc$getenv(const char *__name);
 #define sys$assign SYS$ASSIGN
 #define sys$dassgn SYS$DASSGN
 #define sys$qiow SYS$QIOW
-
 #ifdef __DECC
 #   if __INITIAL_POINTER_SIZE
 #       pragma __pointer_size __save
 #   endif
 #endif
-
 #if __USE_LONG_GID_T
 #   define decc_getpwuid DECC$__LONG_GID_GETPWUID
 #else
@@ -72,9 +68,7 @@ char *decc$getenv(const char *__name);
 #       define decc_getpwuid decc$getpwuid
 #   endif
 #endif
-
-    struct passwd * decc_getpwuid(uid_t uid);
-
+struct passwd *decc_getpwuid(uid_t uid);
 #ifdef __DECC
 #   if __INITIAL_POINTER_SIZE == 32
 /* Translate the path, but only if the path is a VMS file specification */
@@ -105,83 +99,70 @@ static char *vms_translate_path(const char *path)
 #   define vms_translate_path(__path) __path
 #   endif
 #endif
-
 #ifdef __DECC
 #   if __INITIAL_POINTER_SIZE
 #       pragma __pointer_size __restore
 #   endif
 #endif
+static char *vms_getenv(const char *envvar) {
+char *result;
+char *vms_path;
 
-static char *vms_getenv(const char *envvar)
-{
-  char *result;
-  char *vms_path;
-
-  /* first use the DECC getenv() function */
-  result = decc$getenv(envvar);
-  if(result == NULL) {
-    return result;
-  }
-
-  vms_path = result;
-  result = vms_translate_path(vms_path);
-
-  /* note that if you backport this to use VAX C RTL, that the VAX C RTL */
-  /* may do a malloc(2048) for each call to getenv(), so you will need   */
-  /* to add a free(vms_path) */
-  /* Do not do a free() for DEC C RTL builds, which should be used for */
-  /* VMS 5.5-2 and later, even if using GCC */
-
-  return result;
+/* first use the DECC getenv() function */
+result = decc$getenv(envvar);
+if(result == NULL) {
+return result;
 }
+vms_path = result;
+result = vms_translate_path(vms_path);
 
+/* note that if you backport this to use VAX C RTL, that the VAX C RTL */
+/* may do a malloc(2048) for each call to getenv(), so you will need   */
+/* to add a free(vms_path) */
+/* Do not do a free() for DEC C RTL builds, which should be used for */
+/* VMS 5.5-2 and later, even if using GCC */
 
+return result;
+}
 static struct passwd vms_passwd_cache;
-
-static struct passwd * vms_getpwuid(uid_t uid)
-{
-  struct passwd * my_passwd;
+static struct passwd *vms_getpwuid(uid_t uid) {
+struct passwd *my_passwd;
 
 /* Hack needed to support 64 bit builds, decc_getpwnam is 32 bit only */
 #ifdef __DECC
 #   if __INITIAL_POINTER_SIZE
-  __char_ptr32 unix_path;
+__char_ptr32 unix_path;
 #   else
-  char *unix_path;
+char *unix_path;
 #   endif
 #else
-  char *unix_path;
+char *unix_path;
 #endif
-
-  my_passwd = decc_getpwuid(uid);
-  if(my_passwd == NULL) {
-    return my_passwd;
-  }
-
-  unix_path = vms_translate_path(my_passwd->pw_dir);
-
-  if((long)unix_path <= 0) {
-    /* We can not translate it, so return the original string */
-    return my_passwd;
-  }
-
-  /* If no changes needed just return it */
-  if(unix_path == my_passwd->pw_dir) {
-    return my_passwd;
-  }
-
-  /* Need to copy the structure returned */
-  /* Since curl is only using pw_dir, no need to fix up */
-  /* the pw_shell when running under Bash */
-  vms_passwd_cache.pw_name = my_passwd->pw_name;
-  vms_passwd_cache.pw_uid = my_passwd->pw_uid;
-  vms_passwd_cache.pw_gid = my_passwd->pw_uid;
-  vms_passwd_cache.pw_dir = unix_path;
-  vms_passwd_cache.pw_shell = my_passwd->pw_shell;
-
-  return &vms_passwd_cache;
+my_passwd = decc_getpwuid(uid);
+if(my_passwd == NULL) {
+return my_passwd;
+}
+unix_path = vms_translate_path(my_passwd->pw_dir);
+if((long) unix_path <= 0) {
+/* We can not translate it, so return the original string */
+return my_passwd;
 }
 
+/* If no changes needed just return it */
+if(unix_path == my_passwd->pw_dir) {
+return my_passwd;
+}
+
+/* Need to copy the structure returned */
+/* Since curl is only using pw_dir, no need to fix up */
+/* the pw_shell when running under Bash */
+vms_passwd_cache.pw_name = my_passwd->pw_name;
+vms_passwd_cache.pw_uid = my_passwd->pw_uid;
+vms_passwd_cache.pw_gid = my_passwd->pw_uid;
+vms_passwd_cache.pw_dir = unix_path;
+vms_passwd_cache.pw_shell = my_passwd->pw_shell;
+return &vms_passwd_cache;
+}
 #ifdef __DECC
 #pragma message restore
 #endif
@@ -207,14 +188,14 @@ static struct passwd * vms_getpwuid(uid_t uid)
 #define CONF_modules_load_file CONF_MODULES_LOAD_FILE
 #ifdef __VAX
 #  ifdef VMS_OLD_SSL
-  /* Ancient OpenSSL on VAX/VMS missing this constant */
+/* Ancient OpenSSL on VAX/VMS missing this constant */
 #    define CONF_MFLAGS_IGNORE_MISSING_FILE 0x10
 #    undef CONF_modules_load_file
-     static int CONF_modules_load_file(const char *filename,
-                                       const char *appname,
-                                       unsigned long flags) {
-             return 1;
-     }
+   static int CONF_modules_load_file(const char *filename,
+                                     const char *appname,
+                                     unsigned long flags) {
+           return 1;
+   }
 #  endif
 #endif
 #define DES_ecb_encrypt DES_ECB_ENCRYPT
@@ -362,11 +343,9 @@ static struct passwd * vms_getpwuid(uid_t uid)
 #define SHA256_Final SHA256_FINAL
 #define SHA256_Init SHA256_INIT
 #define SHA256_Update SHA256_UPDATE
-
 #define USE_UPPERCASE_GSSAPI 1
 #define gss_seal GSS_SEAL
 #define gss_unseal GSS_UNSEAL
-
 #define USE_UPPERCASE_KRBAPI 1
 
 /* AI_NUMERICHOST needed for IP V6 support in Curl */
@@ -402,11 +381,11 @@ static struct passwd * vms_getpwuid(uid_t uid)
 #   include <openssl/evp.h>
 #   ifndef OpenSSL_add_all_algorithms
 #       define OpenSSL_add_all_algorithms OPENSSL_ADD_ALL_ALGORITHMS
-        void OPENSSL_ADD_ALL_ALGORITHMS(void);
+void OPENSSL_ADD_ALL_ALGORITHMS(void);
 #   endif
 
-    /* Curl defines these to lower case and VAX needs them in upper case */
-    /* So we need static routines */
+/* Curl defines these to lower case and VAX needs them in upper case */
+/* So we need static routines */
 #   if (OPENSSL_VERSION_NUMBER < 0x00907001L)
 
 #       undef des_set_odd_parity
@@ -416,20 +395,20 @@ static struct passwd * vms_getpwuid(uid_t uid)
 #       undef des_ecb_encrypt
 #       undef DES_ecb_encrypt
 
-        static void des_set_odd_parity(des_cblock *key) {
-            DES_SET_ODD_PARITY(key);
-        }
+static void des_set_odd_parity(des_cblock *key) {
+    DES_SET_ODD_PARITY(key);
+}
 
-        static int des_set_key(const_des_cblock *key,
-                               des_key_schedule schedule) {
-            return DES_SET_KEY(key, schedule);
-        }
+static int des_set_key(const_des_cblock *key,
+                       des_key_schedule schedule) {
+    return DES_SET_KEY(key, schedule);
+}
 
-        static void des_ecb_encrypt(const_des_cblock *input,
-                                    des_cblock *output,
-                                    des_key_schedule ks, int enc) {
-            DES_ECB_ENCRYPT(input, output, ks, enc);
-        }
+static void des_ecb_encrypt(const_des_cblock *input,
+                            des_cblock *output,
+                            des_key_schedule ks, int enc) {
+    DES_ECB_ENCRYPT(input, output, ks, enc);
+}
 #endif
 /* Need this to stop a macro redefinition error */
 #if OPENSSL_VERSION_NUMBER < 0x00907000L
@@ -439,5 +418,4 @@ static struct passwd * vms_getpwuid(uid_t uid)
 #   endif
 #endif
 #endif
-
 #endif /* HEADER_CURL_SETUP_VMS_H */

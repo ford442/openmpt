@@ -46,9 +46,7 @@
 
 #include "cpu_detect.h"
 #include "STTypes.h"
-
 using namespace soundtouch;
-
 #ifdef SOUNDTOUCH_ALLOW_SSE
 
 // SSE routines available only with float sample type    
@@ -84,15 +82,15 @@ double TDStretchSSE::calcCrossCorr(const float *pV1, const float *pV2, double &a
     // Little cheating allowed, return valid correlation only for 
     // aligned locations, meaning every second round for stereo sound.
 
-    #define _MM_LOAD    _mm_load_ps
+#define _MM_LOAD    _mm_load_ps
 
     if (((ulongptr)pV1) & 15) return -1e50;    // skip unaligned locations
 
 #else
     // No cheating allowed, use unaligned load & take the resulting
     // performance hit.
-    #define _MM_LOAD    _mm_loadu_ps
-#endif 
+#define _MM_LOAD    _mm_loadu_ps
+#endif
 
     // ensure overlapLength is divisible by 8
     assert((overlapLength % 8) == 0);
@@ -105,7 +103,7 @@ double TDStretchSSE::calcCrossCorr(const float *pV1, const float *pV2, double &a
 
     // Unroll the loop by factor of 4 * 4 operations. Use same routine for
     // stereo & mono, for mono it just means twice the amount of unrolling.
-    for (i = 0; i < channels * overlapLength / 16; i ++) 
+    for (i = 0; i < channels * overlapLength / 16; i ++)
     {
         __m128 vTemp;
         // vSum += pV1[0..3] * pV2[0..3]
@@ -146,7 +144,7 @@ double TDStretchSSE::calcCrossCorr(const float *pV1, const float *pV2, double &a
 
     // Calculates the cross-correlation value between 'pV1' and 'pV2' vectors
     corr = norm = 0.0;
-    for (i = 0; i < channels * overlapLength / 16; i ++) 
+    for (i = 0; i < channels * overlapLength / 16; i ++)
     {
         corr += pV1[0] * pV2[0] +
                 pV1[1] * pV2[1] +
@@ -178,8 +176,8 @@ double TDStretchSSE::calcCrossCorr(const float *pV1, const float *pV2, double &a
 
 double TDStretchSSE::calcCrossCorrAccumulate(const float *pV1, const float *pV2, double &norm)
 {
-    // call usual calcCrossCorr function because SSE does not show big benefit of 
-    // accumulating "norm" value, and also the "norm" rolling algorithm would get 
+    // call usual calcCrossCorr function because SSE does not show big benefit of
+    // accumulating "norm" value, and also the "norm" rolling algorithm would get
     // complicated due to SSE-specific alignment-vs-nonexact correlation rules.
     return calcCrossCorr(pV1, pV2, norm);
 }
@@ -225,7 +223,7 @@ void FIRFilterSSE::setCoefficients(const float *coeffs, uint newLength, uint uRe
 
     fDivider = (float)resultDivider;
 
-    // rearrange the filter coefficients for mmx routines 
+    // rearrange the filter coefficients for mmx routines
     for (i = 0; i < newLength; i ++)
     {
         filterCoeffsAlign[2 * i + 0] =
@@ -252,7 +250,7 @@ uint FIRFilterSSE::evaluateFilterStereo(float *dest, const float *source, uint n
     assert(((ulongptr)filterCoeffsAlign) % 16 == 0);
 
     // filter is evaluated for two stereo samples with each iteration, thus use of 'j += 2'
-    #pragma omp parallel for
+#pragma omp parallel for
     for (j = 0; j < count; j += 2)
     {
         const float *pSrc;

@@ -24,7 +24,6 @@
  */
 
 #include "mbedtls/pkcs11.h"
-
 #if defined(MBEDTLS_PKCS11_C)
 
 #include "mbedtls/md.h"

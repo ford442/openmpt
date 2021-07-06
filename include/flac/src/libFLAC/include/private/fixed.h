@@ -32,11 +32,9 @@
 
 #ifndef FLAC__PRIVATE__FIXED_H
 #define FLAC__PRIVATE__FIXED_H
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
 #include "private/cpu.h"
 #include "private/float.h"
 #include "FLAC/format.h"
@@ -54,8 +52,10 @@
  *	OUT residual_bits_per_sample[0,FLAC__MAX_FIXED_ORDER]
  */
 #ifndef FLAC__INTEGER_ONLY_LIBRARY
-uint32_t FLAC__fixed_compute_best_predictor(const FLAC__int32 data[], uint32_t data_len, float residual_bits_per_sample[FLAC__MAX_FIXED_ORDER+1]);
-uint32_t FLAC__fixed_compute_best_predictor_wide(const FLAC__int32 data[], uint32_t data_len, float residual_bits_per_sample[FLAC__MAX_FIXED_ORDER+1]);
+uint32_t FLAC__fixed_compute_best_predictor(const FLAC__int32 data[], uint32_t data_len,
+                                            float residual_bits_per_sample[FLAC__MAX_FIXED_ORDER + 1]);
+uint32_t FLAC__fixed_compute_best_predictor_wide(const FLAC__int32 data[], uint32_t data_len,
+                                                 float residual_bits_per_sample[FLAC__MAX_FIXED_ORDER + 1]);
 # ifndef FLAC__NO_ASM
 #  if (defined FLAC__CPU_IA32 || defined FLAC__CPU_X86_64) && FLAC__HAS_X86INTRIN
 #   ifdef FLAC__SSE2_SUPPORTED
@@ -75,7 +75,6 @@ uint32_t FLAC__fixed_compute_best_predictor_asm_ia32_mmx_cmov(const FLAC__int32 
 uint32_t FLAC__fixed_compute_best_predictor(const FLAC__int32 data[], uint32_t data_len, FLAC__fixedpoint residual_bits_per_sample[FLAC__MAX_FIXED_ORDER+1]);
 uint32_t FLAC__fixed_compute_best_predictor_wide(const FLAC__int32 data[], uint32_t data_len, FLAC__fixedpoint residual_bits_per_sample[FLAC__MAX_FIXED_ORDER+1]);
 #endif
-
 /*
  *	FLAC__fixed_compute_residual()
  *	--------------------------------------------------------------------
@@ -88,7 +87,6 @@ uint32_t FLAC__fixed_compute_best_predictor_wide(const FLAC__int32 data[], uint3
  *	OUT residual[0,data_len-1]        residual signal
  */
 void FLAC__fixed_compute_residual(const FLAC__int32 data[], uint32_t data_len, uint32_t order, FLAC__int32 residual[]);
-
 /*
  *	FLAC__fixed_restore_signal()
  *	--------------------------------------------------------------------
@@ -103,5 +101,4 @@ void FLAC__fixed_compute_residual(const FLAC__int32 data[], uint32_t data_len, u
  *	OUT data[0,data_len-1]            original signal
  */
 void FLAC__fixed_restore_signal(const FLAC__int32 residual[], uint32_t data_len, uint32_t order, FLAC__int32 data[]);
-
 #endif

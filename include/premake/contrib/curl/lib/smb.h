@@ -23,25 +23,24 @@
  ***************************************************************************/
 
 enum smb_conn_state {
-  SMB_NOT_CONNECTED = 0,
-  SMB_CONNECTING,
-  SMB_NEGOTIATE,
-  SMB_SETUP,
-  SMB_CONNECTED
+SMB_NOT_CONNECTED = 0,
+SMB_CONNECTING,
+SMB_NEGOTIATE,
+SMB_SETUP,
+SMB_CONNECTED
 };
-
 struct smb_conn {
-  enum smb_conn_state state;
-  char *user;
-  char *domain;
-  unsigned char challenge[8];
-  unsigned int session_key;
-  unsigned short uid;
-  char *recv_buf;
-  size_t upload_size;
-  size_t send_size;
-  size_t sent;
-  size_t got;
+enum smb_conn_state state;
+char *user;
+char *domain;
+unsigned char challenge[8];
+unsigned int session_key;
+unsigned short uid;
+char *recv_buf;
+size_t upload_size;
+size_t send_size;
+size_t sent;
+size_t got;
 };
 
 /*
@@ -255,7 +254,6 @@ struct smb_tree_disconnect {
 #endif
 
 #endif /* BUILDING_CURL_SMB_C */
-
 #if !defined(CURL_DISABLE_SMB) && defined(USE_NTLM) && \
     (CURL_SIZEOF_CURL_OFF_T > 4)
 
@@ -267,5 +265,4 @@ extern const struct Curl_handler Curl_handler_smbs;
 #endif /* !USE_WINDOWS_SSPI || USE_WIN32_CRYPTO */
 
 #endif /* CURL_DISABLE_SMB && USE_NTLM && CURL_SIZEOF_CURL_OFF_T > 4 */
-
 #endif /* HEADER_CURL_SMB_H */

@@ -28,15 +28,12 @@
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
-
 #include "celt/x86/x86cpu.h"
 #include "structs.h"
 #include "SigProc_FIX.h"
 #include "pitch.h"
 #include "main.h"
-
 #if !defined(OPUS_X86_PRESUME_SSE4_1)
-
 #if defined(FIXED_POINT)
 
 #include "fixed/main_FIX.h"
@@ -54,18 +51,16 @@ opus_int64 (*const SILK_INNER_PROD16_ALIGNED_64_IMPL[ OPUS_ARCHMASK + 1 ] )(
 };
 
 #endif
-
-opus_int (*const SILK_VAD_GETSA_Q8_IMPL[ OPUS_ARCHMASK + 1 ] )(
-    silk_encoder_state *psEncC,
-    const opus_int16   pIn[]
+opus_int (*const SILK_VAD_GETSA_Q8_IMPL[OPUS_ARCHMASK + 1 ] )(
+        silk_encoder_state *psEncC,
+        const opus_int16 pIn[]
 ) = {
-  silk_VAD_GetSA_Q8_c,                  /* non-sse */
-  silk_VAD_GetSA_Q8_c,
-  silk_VAD_GetSA_Q8_c,
-  MAY_HAVE_SSE4_1( silk_VAD_GetSA_Q8 ), /* sse4.1 */
-  MAY_HAVE_SSE4_1( silk_VAD_GetSA_Q8 )  /* avx */
+        silk_VAD_GetSA_Q8_c,                  /* non-sse */
+        silk_VAD_GetSA_Q8_c,
+        silk_VAD_GetSA_Q8_c,
+        MAY_HAVE_SSE4_1(silk_VAD_GetSA_Q8), /* sse4.1 */
+        MAY_HAVE_SSE4_1(silk_VAD_GetSA_Q8)  /* avx */
 };
-
 #if 0 /* FIXME: SSE disabled until the NSQ code gets updated. */
 void (*const SILK_NSQ_IMPL[ OPUS_ARCHMASK + 1 ] )(
     const silk_encoder_state    *psEncC,                                    /* I    Encoder State                   */
@@ -91,7 +86,6 @@ void (*const SILK_NSQ_IMPL[ OPUS_ARCHMASK + 1 ] )(
   MAY_HAVE_SSE4_1( silk_NSQ )  /* avx */
 };
 #endif
-
 #if 0 /* FIXME: SSE disabled until silk_VQ_WMat_EC_sse4_1() gets updated. */
 void (*const SILK_VQ_WMAT_EC_IMPL[ OPUS_ARCHMASK + 1 ] )(
     opus_int8                   *ind,                           /* O    index of best codebook vector               */
@@ -113,7 +107,6 @@ void (*const SILK_VQ_WMAT_EC_IMPL[ OPUS_ARCHMASK + 1 ] )(
   MAY_HAVE_SSE4_1( silk_VQ_WMat_EC )  /* avx */
 };
 #endif
-
 #if 0 /* FIXME: SSE disabled until the NSQ code gets updated. */
 void (*const SILK_NSQ_DEL_DEC_IMPL[ OPUS_ARCHMASK + 1 ] )(
     const silk_encoder_state    *psEncC,                                    /* I    Encoder State                   */
@@ -139,7 +132,6 @@ void (*const SILK_NSQ_DEL_DEC_IMPL[ OPUS_ARCHMASK + 1 ] )(
   MAY_HAVE_SSE4_1( silk_NSQ_del_dec )  /* avx */
 };
 #endif
-
 #if defined(FIXED_POINT)
 
 void (*const SILK_BURG_MODIFIED_IMPL[ OPUS_ARCHMASK + 1 ] )(

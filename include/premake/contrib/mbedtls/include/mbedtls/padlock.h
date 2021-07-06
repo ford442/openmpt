@@ -23,11 +23,8 @@
  */
 #ifndef MBEDTLS_PADLOCK_H
 #define MBEDTLS_PADLOCK_H
-
 #include "aes.h"
-
 #define MBEDTLS_ERR_PADLOCK_DATA_MISALIGNED               -0x0030  /**< Input data should be aligned. */
-
 #if defined(__has_feature)
 #if __has_feature(address_sanitizer)
 #define MBEDTLS_HAVE_ASAN
@@ -103,5 +100,4 @@ int mbedtls_padlock_xcryptcbc( mbedtls_aes_context *ctx,
 #endif
 
 #endif /* HAVE_X86  */
-
 #endif /* padlock.h */

@@ -1,9 +1,6 @@
 
 #ifndef ASIO_ASIO_HPP
 #define ASIO_ASIO_HPP
-
-
-
 #include "ASIOVersion.hpp"
 #include "ASIOConfig.hpp"
 #include "ASIOCore.hpp"

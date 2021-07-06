@@ -33,9 +33,7 @@
 
 #if !defined(FFT_ARM_H)
 #define FFT_ARM_H
-
 #include "kiss_fft.h"
-
 #if defined(HAVE_ARM_NE10)
 
 int opus_fft_alloc_arm_neon(kiss_fft_state *st);
@@ -67,5 +65,4 @@ void opus_ifft_neon(const kiss_fft_state *st,
 #endif /* OPUS_HAVE_RTCD */
 
 #endif /* HAVE_ARM_NE10 */
-
 #endif

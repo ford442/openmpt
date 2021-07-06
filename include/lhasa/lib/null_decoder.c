@@ -22,40 +22,29 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include <stdlib.h>
 #include <inttypes.h>
-
 #include "lha_decoder.h"
-
 #define BLOCK_READ_SIZE 1024
-
 typedef struct {
-	LHADecoderCallback callback;
-	void *callback_data;
+LHADecoderCallback callback;
+void *callback_data;
 } LHANullDecoder;
-
 static int lha_null_init(void *data, LHADecoderCallback callback,
-                         void *callback_data)
-{
-	LHANullDecoder *decoder = data;
-
-	decoder->callback = callback;
-	decoder->callback_data = callback_data;
-
-	return 1;
+                         void *callback_data) {
+LHANullDecoder *decoder = data;
+decoder->callback = callback;
+decoder->callback_data = callback_data;
+return 1;
 }
-
-static size_t lha_null_read(void *data, uint8_t *buf)
-{
-	LHANullDecoder *decoder = data;
-
-	return decoder->callback(buf, BLOCK_READ_SIZE, decoder->callback_data);
+static size_t lha_null_read(void *data, uint8_t *buf) {
+LHANullDecoder *decoder = data;
+return decoder->callback(buf, BLOCK_READ_SIZE, decoder->callback_data);
 }
-
 LHADecoderType lha_null_decoder = {
-	lha_null_init,
-	NULL,
-	lha_null_read,
-	sizeof(LHANullDecoder),
-	BLOCK_READ_SIZE,
-	2048
+        lha_null_init,
+        NULL,
+        lha_null_read,
+        sizeof(LHANullDecoder),
+        BLOCK_READ_SIZE,
+        2048
 };
 

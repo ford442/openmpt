@@ -28,16 +28,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include <xmmintrin.h>
 #include <emmintrin.h>
-
 #include "macros.h"
 #include "celt_lpc.h"
 #include "stack_alloc.h"
 #include "mathops.h"
 #include "pitch.h"
-
 #if defined(OPUS_X86_MAY_HAVE_SSE2) && defined(FIXED_POINT)
 opus_val32 celt_inner_prod_sse2(const opus_val16 *x, const opus_val16 *y,
       int N)

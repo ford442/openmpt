@@ -21,9 +21,7 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #include <curl/curl.h>
-
 #include "vauth.h"
 #include "curl_multibyte.h"
 #include "curl_printf.h"
@@ -51,20 +49,19 @@
  */
 #if !defined(USE_WINDOWS_SSPI)
 char *Curl_auth_build_spn(const char *service, const char *host,
-                          const char *realm)
-{
-  char *spn = NULL;
+                          const char *realm) {
+char *spn = NULL;
 
-  /* Generate our SPN */
-  if(host && realm)
-    spn = aprintf("%s/%s@%s", service, host, realm);
-  else if(host)
-    spn = aprintf("%s/%s", service, host);
-  else if(realm)
-    spn = aprintf("%s@%s", service, realm);
+/* Generate our SPN */
+if(host && realm)
+spn = aprintf("%s/%s@%s", service, host, realm);
+else if(host)
+spn = aprintf("%s/%s", service, host);
+else if(realm)
+spn = aprintf("%s@%s", service, realm);
 
-  /* Return our newly allocated SPN */
-  return spn;
+/* Return our newly allocated SPN */
+return spn;
 }
 #else
 TCHAR *Curl_auth_build_spn(const char *service, const char *host,
@@ -103,7 +100,6 @@ TCHAR *Curl_auth_build_spn(const char *service, const char *host,
   return tchar_spn;
 }
 #endif /* USE_WINDOWS_SSPI */
-
 /*
 * Curl_auth_user_contains_domain()
 *
@@ -125,23 +121,19 @@ TCHAR *Curl_auth_build_spn(const char *service, const char *host,
 *
 * Returns TRUE on success; otherwise FALSE.
 */
-bool Curl_auth_user_contains_domain(const char *user)
-{
-  bool valid = FALSE;
-
-  if(user && *user) {
-    /* Check we have a domain name or UPN present */
-    char *p = strpbrk(user, "\\/@");
-
-    valid = (p != NULL && p > user && p < user + strlen(user) - 1 ? TRUE :
-                                                                    FALSE);
-  }
+bool Curl_auth_user_contains_domain(const char *user) {
+bool valid = FALSE;
+if(user && *user) {
+/* Check we have a domain name or UPN present */
+char *p = strpbrk(user, "\\/@");
+valid = (p != NULL && p > user && p < user + strlen(user) - 1 ? TRUE :
+         FALSE);
+}
 #if defined(HAVE_GSSAPI) || defined(USE_WINDOWS_SSPI)
-  else
-    /* User and domain are obtained from the GSS-API credientials cache or the
-       currently logged in user from Windows */
-    valid = TRUE;
+else
+  /* User and domain are obtained from the GSS-API credientials cache or the
+     currently logged in user from Windows */
+  valid = TRUE;
 #endif
-
-  return valid;
+return valid;
 }

@@ -21,10 +21,8 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_LHA_FILE_HEADER_H
 #define LHASA_LHA_FILE_HEADER_H
-
 #include "public/lha_file_header.h"
 #include "lha_input_stream.h"
-
 /**
  * Read a file header from the input stream.
  *
@@ -35,7 +33,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 LHAFileHeader *lha_file_header_read(LHAInputStream *stream);
-
 /**
  * Free a file header structure.
  *
@@ -43,7 +40,6 @@ LHAFileHeader *lha_file_header_read(LHAInputStream *stream);
  */
 
 void lha_file_header_free(LHAFileHeader *header);
-
 /**
  * Add a reference to the specified file header, to stop it from being
  * freed.
@@ -52,7 +48,6 @@ void lha_file_header_free(LHAFileHeader *header);
  */
 
 void lha_file_header_add_ref(LHAFileHeader *header);
-
 /**
  * Get the full path for the given file header.
  *
@@ -63,6 +58,5 @@ void lha_file_header_add_ref(LHAFileHeader *header);
  */
 
 char *lha_file_header_full_path(LHAFileHeader *header);
-
 #endif /* #ifndef LHASA_LHA_FILE_HEADER_H */
 

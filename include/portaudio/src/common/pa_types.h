@@ -56,16 +56,12 @@
 #ifndef SIZEOF_SHORT
 #define SIZEOF_SHORT 2
 #endif
-
 #ifndef SIZEOF_INT
 #define SIZEOF_INT 4
 #endif
-
 #ifndef SIZEOF_LONG
 #define SIZEOF_LONG 4
 #endif
-
-
 #if SIZEOF_SHORT == 2
 typedef signed short PaInt16;
 typedef unsigned short PaUint16;
@@ -75,7 +71,6 @@ typedef unsigned int PaUint16;
 #else
 #error pa_types.h was unable to determine which type to use for 16bit integers on the target platform
 #endif
-
 #if SIZEOF_SHORT == 4
 typedef signed short PaInt32;
 typedef unsigned short PaUint32;
@@ -102,6 +97,4 @@ typedef unsigned long PaUint32;
         assert( "PortAudio: type sizes are not correct in pa_types.h" && sizeof( PaUint32 ) == 4 ); \
         assert( "PortAudio: type sizes are not correct in pa_types.h" && sizeof( PaInt32 ) == 4 ); \
     }
-
-
 #endif /* PA_TYPES_H */

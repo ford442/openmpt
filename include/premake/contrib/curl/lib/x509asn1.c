@@ -21,7 +21,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #if defined(USE_GSKIT) || defined(USE_NSS) || defined(USE_GNUTLS) || \
     defined(USE_CYASSL) || defined(USE_SCHANNEL)
 
@@ -1036,7 +1035,6 @@ CURLcode Curl_extract_certinfo(struct connectdata *conn,
 }
 
 #endif /* USE_GSKIT or USE_NSS or USE_GNUTLS or USE_CYASSL or USE_SCHANNEL */
-
 #if defined(USE_GSKIT)
 
 static const char *checkOID(const char *beg, const char *end,

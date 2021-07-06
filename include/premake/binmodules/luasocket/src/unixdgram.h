@@ -14,7 +14,5 @@
 \*=========================================================================*/
 
 #include "unix.h"
-
 int unixdgram_open(lua_State *L);
-
 #endif /* UNIXDGRAM_H */

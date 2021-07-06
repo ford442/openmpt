@@ -45,7 +45,6 @@
 */
 
 #include "curl_setup.h"
-
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -55,9 +54,7 @@
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
-
 #include "urldata.h"
-
 #include "vtls.h" /* generic SSL protos etc */
 #include "slist.h"
 #include "sendf.h"
@@ -80,7 +77,6 @@
 #define SSLSESSION_SHARED(data) (data->share &&                        \
                                  (data->share->specifier &             \
                                   (1<<CURL_LOCK_DATA_SSL_SESSION)))
-
 #define CLONE_STRING(var)                    \
   if(source->var) {                          \
     dest->var = strdup(source->var);         \
@@ -89,55 +85,44 @@
   }                                          \
   else                                       \
     dest->var = NULL;
-
 bool
-Curl_ssl_config_matches(struct ssl_primary_config* data,
-                        struct ssl_primary_config* needle)
-{
-  if((data->version == needle->version) &&
-     (data->verifypeer == needle->verifypeer) &&
-     (data->verifyhost == needle->verifyhost) &&
-     Curl_safe_strcasecompare(data->CApath, needle->CApath) &&
-     Curl_safe_strcasecompare(data->CAfile, needle->CAfile) &&
-     Curl_safe_strcasecompare(data->clientcert, needle->clientcert) &&
-     Curl_safe_strcasecompare(data->cipher_list, needle->cipher_list))
-    return TRUE;
-
-  return FALSE;
+Curl_ssl_config_matches(struct ssl_primary_config *data,
+                        struct ssl_primary_config *needle) {
+if((data->version == needle->version) &&
+   (data->verifypeer == needle->verifypeer) &&
+   (data->verifyhost == needle->verifyhost) &&
+   Curl_safe_strcasecompare(data->CApath, needle->CApath) &&
+   Curl_safe_strcasecompare(data->CAfile, needle->CAfile) &&
+   Curl_safe_strcasecompare(data->clientcert, needle->clientcert) &&
+   Curl_safe_strcasecompare(data->cipher_list, needle->cipher_list))
+return TRUE;
+return FALSE;
 }
-
 bool
 Curl_clone_primary_ssl_config(struct ssl_primary_config *source,
-                              struct ssl_primary_config *dest)
-{
-  dest->verifyhost = source->verifyhost;
-  dest->verifypeer = source->verifypeer;
-  dest->version = source->version;
-
-  CLONE_STRING(CAfile);
-  CLONE_STRING(CApath);
-  CLONE_STRING(cipher_list);
-  CLONE_STRING(egdsocket);
-  CLONE_STRING(random_file);
-  CLONE_STRING(clientcert);
-  return TRUE;
+                              struct ssl_primary_config *dest) {
+dest->verifyhost = source->verifyhost;
+dest->verifypeer = source->verifypeer;
+dest->version = source->version;
+CLONE_STRING(CAfile);
+CLONE_STRING(CApath);
+CLONE_STRING(cipher_list);
+CLONE_STRING(egdsocket);
+CLONE_STRING(random_file);
+CLONE_STRING(clientcert);
+return TRUE;
 }
-
-void Curl_free_primary_ssl_config(struct ssl_primary_config* sslc)
-{
-  Curl_safefree(sslc->CAfile);
-  Curl_safefree(sslc->CApath);
-  Curl_safefree(sslc->cipher_list);
-  Curl_safefree(sslc->egdsocket);
-  Curl_safefree(sslc->random_file);
-  Curl_safefree(sslc->clientcert);
+void Curl_free_primary_ssl_config(struct ssl_primary_config *sslc) {
+Curl_safefree(sslc->CAfile);
+Curl_safefree(sslc->CApath);
+Curl_safefree(sslc->cipher_list);
+Curl_safefree(sslc->egdsocket);
+Curl_safefree(sslc->random_file);
+Curl_safefree(sslc->clientcert);
 }
-
-int Curl_ssl_backend(void)
-{
-  return (int)CURL_SSL_BACKEND;
+int Curl_ssl_backend(void) {
+return (int) CURL_SSL_BACKEND;
 }
-
 #ifdef USE_SSL
 
 /* "global" init done? */

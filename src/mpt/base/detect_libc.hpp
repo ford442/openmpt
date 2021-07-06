@@ -2,13 +2,9 @@
 
 #ifndef MPT_BASE_DETECT_LIBC_HPP
 #define MPT_BASE_DETECT_LIBC_HPP
-
-
-
 #include "mpt/base/detect_compiler.hpp"
 #include "mpt/base/detect_os.hpp"
 #include "mpt/base/detect_quirks.hpp"
-
 #include <cstddef>
 
 
@@ -27,7 +23,6 @@
 #else
 #define MPT_LIBC_GENERIC 1
 #endif
-
 #ifndef MPT_LIBC_GENERIC
 #define MPT_LIBC_GENERIC 0
 #endif
@@ -37,7 +32,4 @@
 #ifndef MPT_LIBC_MS
 #define MPT_LIBC_MS 0
 #endif
-
-
-
 #endif // MPT_BASE_DETECT_LIBC_HPP

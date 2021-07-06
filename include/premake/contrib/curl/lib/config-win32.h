@@ -443,22 +443,22 @@
 /* ---------------------------------------------------------------- */
 
 #ifdef USE_WATT32
-  #include <tcp.h>
-  #undef byte
-  #undef word
-  #undef USE_WINSOCK
-  #undef HAVE_WINSOCK_H
-  #undef HAVE_WINSOCK2_H
-  #undef HAVE_WS2TCPIP_H
-  #define HAVE_GETADDRINFO
-  #define HAVE_GETNAMEINFO
-  #define HAVE_SYS_IOCTL_H
-  #define HAVE_SYS_SOCKET_H
-  #define HAVE_NETINET_IN_H
-  #define HAVE_NETDB_H
-  #define HAVE_ARPA_INET_H
-  #define HAVE_FREEADDRINFO
-  #define SOCKET int
+#include <tcp.h>
+#undef byte
+#undef word
+#undef USE_WINSOCK
+#undef HAVE_WINSOCK_H
+#undef HAVE_WINSOCK2_H
+#undef HAVE_WS2TCPIP_H
+#define HAVE_GETADDRINFO
+#define HAVE_GETNAMEINFO
+#define HAVE_SYS_IOCTL_H
+#define HAVE_SYS_SOCKET_H
+#define HAVE_NETINET_IN_H
+#define HAVE_NETDB_H
+#define HAVE_ARPA_INET_H
+#define HAVE_FREEADDRINFO
+#define SOCKET int
 #endif
 
 
@@ -481,8 +481,8 @@
 #endif
 
 /* Define if the compiler supports the 'long long' data type. */
-#if defined(__MINGW32__) || defined(__WATCOMC__)      || \
-    (defined(_MSC_VER)     && (_MSC_VER     >= 1310)) || \
+#if defined(__MINGW32__) || defined(__WATCOMC__) || \
+    (defined(_MSC_VER) && (_MSC_VER >= 1310)) || \
     (defined(__BORLANDC__) && (__BORLANDC__ >= 0x561))
 #define HAVE_LONGLONG 1
 #endif
@@ -505,28 +505,28 @@
 
 /* Define some minimum and default build targets for Visual Studio */
 #if defined(_MSC_VER)
-   /* Officially, Microsoft's Windows SDK versions 6.X does not support Windows
-      2000 as a supported build target. VS2008 default installations provides
-      an embedded Windows SDK v6.0A along with the claim that Windows 2000 is a
-      valid build target for VS2008. Popular belief is that binaries built with
-      VS2008 using Windows SDK versions v6.X and Windows 2000 as a build target
-      are functional. */
+/* Officially, Microsoft's Windows SDK versions 6.X does not support Windows
+   2000 as a supported build target. VS2008 default installations provides
+   an embedded Windows SDK v6.0A along with the claim that Windows 2000 is a
+   valid build target for VS2008. Popular belief is that binaries built with
+   VS2008 using Windows SDK versions v6.X and Windows 2000 as a build target
+   are functional. */
 #  define VS2008_MIN_TARGET 0x0500
 
-   /* The minimum build target for VS2012 is Vista unless Update 1 is installed
-      and the v110_xp toolset is choosen. */
+/* The minimum build target for VS2012 is Vista unless Update 1 is installed
+   and the v110_xp toolset is choosen. */
 #  if defined(_USING_V110_SDK71_)
 #    define VS2012_MIN_TARGET 0x0501
 #  else
 #    define VS2012_MIN_TARGET 0x0600
 #  endif
 
-   /* VS2008 default build target is Windows Vista. We override default target
-      to be Windows XP. */
+/* VS2008 default build target is Windows Vista. We override default target
+   to be Windows XP. */
 #  define VS2008_DEF_TARGET 0x0501
 
-   /* VS2012 default build target is Windows Vista unless Update 1 is installed
-      and the v110_xp toolset is choosen. */
+/* VS2012 default build target is Windows Vista unless Update 1 is installed
+   and the v110_xp toolset is choosen. */
 #  if defined(_USING_V110_SDK71_)
 #    define VS2012_DEF_TARGET 0x0501
 #  else
@@ -596,7 +596,6 @@ Vista
 #    define HAVE_GETNAMEINFO            1
 #  endif
 #endif
-
 #if defined(__POCC__)
 #  ifndef _MSC_VER
 #    error Microsoft extensions /Ze compiler option is required
@@ -620,7 +619,6 @@ Vista
 
 /* Define if struct sockaddr_in6 has the sin6_scope_id member. */
 #define HAVE_SOCKADDR_IN6_SIN6_SCOPE_ID 1
-
 #if defined(HAVE_WINSOCK2_H) && defined(_WIN32_WINNT) && \
     (_WIN32_WINNT >= 0x0600)
 #define HAVE_STRUCT_POLLFD 1
@@ -637,19 +635,15 @@ Vista
 #    define USE_WIN32_SMALL_FILES
 #  endif
 #endif
-
 #if defined(__MINGW32__) && !defined(USE_WIN32_LARGE_FILES)
 #  define USE_WIN32_LARGE_FILES
 #endif
-
 #if defined(__WATCOMC__) && !defined(USE_WIN32_LARGE_FILES)
 #  define USE_WIN32_LARGE_FILES
 #endif
-
 #if defined(__POCC__)
 #  undef USE_WIN32_LARGE_FILES
 #endif
-
 #if !defined(USE_WIN32_LARGE_FILES) && !defined(USE_WIN32_SMALL_FILES)
 #  define USE_WIN32_SMALL_FILES
 #endif
@@ -670,7 +664,6 @@ Vista
     !defined(USE_THREADS_WIN32)
 #  define USE_THREADS_WIN32 1
 #endif
-
 #if defined(USE_ARES) && defined(USE_THREADS_WIN32)
 #  error "Only one DNS lookup specialty may be defined at most"
 #endif
@@ -690,14 +683,12 @@ Vista
 #undef HAVE_LDAP_URL_PARSE
 #define USE_WIN32_LDAP 1
 #endif
-
 #if defined(__WATCOMC__) && defined(USE_WIN32_LDAP)
 #if __WATCOMC__ < 1280
 #define WINBERAPI  __declspec(cdecl)
 #define WINLDAPAPI __declspec(cdecl)
 #endif
 #endif
-
 #if defined(__POCC__) && defined(USE_WIN32_LDAP)
 #  define CURL_DISABLE_LDAP 1
 #endif
@@ -728,9 +719,7 @@ Vista
 
 /* If you want to build curl with the built-in manual */
 #define USE_MANUAL 1
-
 #if defined(__POCC__) || defined(USE_IPV6)
 #  define ENABLE_IPV6 1
 #endif
-
 #endif /* HEADER_CURL_CONFIG_WIN32_H */

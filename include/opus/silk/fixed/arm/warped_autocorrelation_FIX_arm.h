@@ -27,9 +27,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef SILK_WARPED_AUTOCORRELATION_FIX_ARM_H
 # define SILK_WARPED_AUTOCORRELATION_FIX_ARM_H
-
 # include "celt/arm/armcpu.h"
-
 # if defined(FIXED_POINT)
 
 #  if defined(OPUS_ARM_MAY_HAVE_NEON_INTR)
@@ -64,5 +62,4 @@ extern void (*const SILK_WARPED_AUTOCORRELATION_FIX_IMPL[OPUS_ARCHMASK+1])(opus_
 #  endif
 
 # endif /* end FIXED_POINT */
-
 #endif /* end SILK_WARPED_AUTOCORRELATION_FIX_ARM_H */

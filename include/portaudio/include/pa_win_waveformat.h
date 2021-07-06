@@ -47,7 +47,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /*
     The following #defines for speaker channel masks are the same
     as those in ksmedia.h, except with PAWIN_ prepended, KSAUDIO_ removed
@@ -135,10 +134,9 @@ typedef unsigned long PaWinWaveFormatChannelMask;
 */
 #define PAWIN_SIZEOF_WAVEFORMATEX   18
 #define PAWIN_SIZEOF_WAVEFORMATEXTENSIBLE (PAWIN_SIZEOF_WAVEFORMATEX + 22)
-
-typedef struct{
-    unsigned char fields[ PAWIN_SIZEOF_WAVEFORMATEXTENSIBLE ];
-    unsigned long extraLongForAlignment; /* ensure that compiler aligns struct to DWORD */
+typedef struct {
+unsigned char fields[PAWIN_SIZEOF_WAVEFORMATEXTENSIBLE];
+unsigned long extraLongForAlignment; /* ensure that compiler aligns struct to DWORD */
 } PaWinWaveFormat;
 
 /*
@@ -167,33 +165,24 @@ typedef struct{
 #define PAWIN_WAVE_FORMAT_IEEE_FLOAT            (3)
 #define PAWIN_WAVE_FORMAT_DOLBY_AC3_SPDIF       (0x0092)
 #define PAWIN_WAVE_FORMAT_WMA_SPDIF             (0x0164)
-
-
 /*
     returns PAWIN_WAVE_FORMAT_PCM or PAWIN_WAVE_FORMAT_IEEE_FLOAT
     depending on the sampleFormat parameter.
 */
-int PaWin_SampleFormatToLinearWaveFormatTag( PaSampleFormat sampleFormat );
-
+int PaWin_SampleFormatToLinearWaveFormatTag(PaSampleFormat sampleFormat);
 /*
     Use the following two functions to initialize the waveformat structure.
 */
 
-void PaWin_InitializeWaveFormatEx( PaWinWaveFormat *waveFormat,
-        int numChannels, PaSampleFormat sampleFormat, int waveFormatTag, double sampleRate );
-
-
-void PaWin_InitializeWaveFormatExtensible( PaWinWaveFormat *waveFormat,
-        int numChannels, PaSampleFormat sampleFormat, int waveFormatTag, double sampleRate,
-        PaWinWaveFormatChannelMask channelMask );
-
-
+void PaWin_InitializeWaveFormatEx(PaWinWaveFormat *waveFormat,
+                                  int numChannels, PaSampleFormat sampleFormat, int waveFormatTag, double sampleRate);
+void PaWin_InitializeWaveFormatExtensible(PaWinWaveFormat *waveFormat,
+                                          int numChannels, PaSampleFormat sampleFormat, int waveFormatTag,
+                                          double sampleRate,
+                                          PaWinWaveFormatChannelMask channelMask);
 /* Map a channel count to a speaker channel mask */
-PaWinWaveFormatChannelMask PaWin_DefaultChannelMask( int numChannels );
-
-
+PaWinWaveFormatChannelMask PaWin_DefaultChannelMask(int numChannels);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
 #endif /* PA_WIN_WAVEFORMAT_H */

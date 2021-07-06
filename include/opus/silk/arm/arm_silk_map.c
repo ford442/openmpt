@@ -27,11 +27,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
-
 #include "main_FIX.h"
 #include "NSQ.h"
 #include "SigProc_FIX.h"
-
 #if defined(OPUS_HAVE_RTCD)
 
 # if (defined(OPUS_ARM_MAY_HAVE_NEON_INTR) && \

@@ -6,215 +6,170 @@
 // Also we are grateful to Artem Drobanov and Bulat Ziganshin
 // for samples and ideas allowed to make Reed-Solomon codec more efficient.
 
-RSCoder16::RSCoder16()
-{
-  Decoding=false;
-  ND=NR=NE=0;
-  ValidFlags=NULL;
-  MX=NULL;
-  DataLog=NULL;
-  DataLogSize=0;
-
-  gfInit();
+RSCoder16::RSCoder16() {
+Decoding = false;
+ND = NR = NE = 0;
+ValidFlags = NULL;
+MX = NULL;
+DataLog = NULL;
+DataLogSize = 0;
+gfInit();
 }
-
-
-RSCoder16::~RSCoder16()
-{
-  delete[] gfExp;
-  delete[] gfLog;
-  delete[] DataLog;
-  delete[] MX;
-  delete[] ValidFlags;
+RSCoder16::~RSCoder16() {
+delete[] gfExp;
+delete[] gfLog;
+delete[] DataLog;
+delete[] MX;
+delete[] ValidFlags;
 }
-
-
 // Initialize logarithms and exponents Galois field tables.
-void RSCoder16::gfInit()
-{
-  gfExp=new uint[4*gfSize+1];
-  gfLog=new uint[gfSize+1];
-
-  for (uint L=0,E=1;L<gfSize;L++)
-  {
-    gfLog[E]=L;
-    gfExp[L]=E;
-    gfExp[L+gfSize]=E;  // Duplicate the table to avoid gfExp overflow check.
-    E<<=1;
-    if (E>gfSize)
-      E^=0x1100B; // Irreducible field-generator polynomial.
-  }
-
-  // log(0)+log(x) must be outside of usual log table, so we can set it
-  // to 0 and avoid check for 0 in multiplication parameters.
-  gfLog[0]= 2*gfSize;
-  for (uint I=2*gfSize;I<=4*gfSize;I++) // Results for log(0)+log(x).
-    gfExp[I]=0;
+void RSCoder16::gfInit() {
+gfExp = new uint[4 * gfSize + 1];
+gfLog = new uint[gfSize + 1];
+for(uint L = 0, E = 1; L < gfSize; L++) {
+gfLog[E] = L;
+gfExp[L] = E;
+gfExp[L + gfSize] = E;  // Duplicate the table to avoid gfExp overflow check.
+E <<= 1;
+if(E > gfSize)
+E ^= 0x1100B; // Irreducible field-generator polynomial.
 }
 
-
-uint RSCoder16::gfAdd(uint a,uint b) // Addition in Galois field.
-{
-  return a^b;
+// log(0)+log(x) must be outside of usual log table, so we can set it
+// to 0 and avoid check for 0 in multiplication parameters.
+gfLog[0] = 2 * gfSize;
+for(uint I = 2 * gfSize; I <= 4 * gfSize; I++) // Results for log(0)+log(x).
+gfExp[I] = 0;
 }
-
-
-uint RSCoder16::gfMul(uint a,uint b) // Multiplication in Galois field.
+uint RSCoder16::gfAdd(uint a, uint b) // Addition in Galois field.
 {
-  return gfExp[gfLog[a]+gfLog[b]];
+return a ^ b;
 }
-
-
+uint RSCoder16::gfMul(uint a, uint b) // Multiplication in Galois field.
+{
+return gfExp[gfLog[a] + gfLog[b]];
+}
 uint RSCoder16::gfInv(uint a) // Inverse element in Galois field.
 {
-  return a==0 ? 0:gfExp[gfSize-gfLog[a]];
+return a == 0 ? 0 : gfExp[gfSize - gfLog[a]];
 }
-
-
-bool RSCoder16::Init(uint DataCount, uint RecCount, bool *ValidityFlags)
+bool RSCoder16::Init(uint DataCount, uint RecCount, bool *ValidityFlags) {
+ND = DataCount;
+NR = RecCount;
+NE = 0;
+Decoding = ValidityFlags != NULL;
+if(Decoding) {
+delete[] ValidFlags;
+ValidFlags = new bool[ND + NR];
+for(uint I = 0; I < ND + NR; I++)
+ValidFlags[I] = ValidityFlags[I];
+for(uint I = 0; I < ND; I++)
+if(!ValidFlags[I])
+NE++;
+uint ValidECC = 0;
+for(uint I = ND; I < ND + NR; I++)
+if(ValidFlags[I])
+ValidECC++;
+if(NE > ValidECC || NE == 0 || ValidECC == 0)
+return false;
+}
+if(ND + NR > gfSize || NR > ND || ND == 0 || NR == 0)
+return false;
+delete[] MX;
+if(Decoding) {
+MX = new uint[NE * ND];
+MakeDecoderMatrix();
+InvertDecoderMatrix();
+} else {
+MX = new uint[NR * ND];
+MakeEncoderMatrix();
+}
+return true;
+}
+void RSCoder16::MakeEncoderMatrix() {
+// Create Cauchy encoder generator matrix. Skip trivial "1" diagonal rows,
+// which would just copy source data to destination.
+for(uint I = 0; I < NR; I++)
+for(uint J = 0; J < ND; J++)
+MX[I * ND + J] = gfInv(gfAdd((I + ND), J));
+}
+void RSCoder16::MakeDecoderMatrix() {
+// Create Cauchy decoder matrix. Skip trivial rows matching valid data
+// units and containing "1" on main diagonal. Such rows would just copy
+// source data to destination and they have no real value for us.
+// Include rows only for broken data units and replace them by first
+// available valid recovery code rows.
+for(uint Flag = 0, R = ND, Dest = 0; Flag < ND; Flag++)
+if(!ValidFlags[Flag]) // For every broken data unit.
 {
-  ND = DataCount;
-  NR = RecCount;
-  NE = 0;
-
-  Decoding=ValidityFlags!=NULL;
-  if (Decoding)
-  {
-    delete[] ValidFlags;
-    ValidFlags=new bool[ND + NR];
-
-    for (uint I = 0; I < ND + NR; I++)
-      ValidFlags[I]=ValidityFlags[I];
-    for (uint I = 0; I < ND; I++)
-      if (!ValidFlags[I])
-        NE++;
-    uint ValidECC=0;
-    for (uint I = ND; I < ND + NR; I++)
-      if (ValidFlags[I])
-        ValidECC++;
-    if (NE > ValidECC || NE == 0 || ValidECC == 0)
-      return false;
-  }
-  if (ND + NR > gfSize || NR > ND || ND == 0 || NR == 0)
-    return false;
-
-  delete[] MX;
-  if (Decoding)
-  {
-    MX=new uint[NE * ND];
-    MakeDecoderMatrix();
-    InvertDecoderMatrix();
-  }
-  else
-  {
-    MX=new uint[NR * ND];
-    MakeEncoderMatrix();
-  }
-  return true;
+while (!ValidFlags[R]) // Find a valid recovery unit.
+R++;
+for(uint J = 0; J < ND; J++) // And place its row to matrix.
+MX[Dest * ND + J] = gfInv(gfAdd(R, J));
+Dest++;
+R++;
 }
-
-
-void RSCoder16::MakeEncoderMatrix()
-{
-  // Create Cauchy encoder generator matrix. Skip trivial "1" diagonal rows,
-  // which would just copy source data to destination.
-  for (uint I = 0; I < NR; I++)
-    for (uint J = 0; J < ND; J++)
-      MX[I * ND + J] = gfInv( gfAdd( (I+ND), J) );
 }
-
-
-void RSCoder16::MakeDecoderMatrix()
-{
-  // Create Cauchy decoder matrix. Skip trivial rows matching valid data
-  // units and containing "1" on main diagonal. Such rows would just copy
-  // source data to destination and they have no real value for us.
-  // Include rows only for broken data units and replace them by first
-  // available valid recovery code rows.
-  for (uint Flag=0, R=ND, Dest=0; Flag < ND; Flag++)
-    if (!ValidFlags[Flag]) // For every broken data unit.
-    {
-      while (!ValidFlags[R]) // Find a valid recovery unit.
-        R++;
-      for (uint J = 0; J < ND; J++) // And place its row to matrix.
-        MX[Dest*ND + J] = gfInv( gfAdd(R,J) );
-      Dest++;
-      R++;
-    }
-}
-
-
-// Apply Gauss–Jordan elimination to find inverse of decoder matrix.
+// Apply Gaussï¿½Jordan elimination to find inverse of decoder matrix.
 // We have the square NDxND matrix, but we do not store its trivial
 // diagonal "1" rows matching valid data, so we work with NExND matrix.
 // Our original Cauchy matrix does not contain 0, so we skip search
 // for non-zero pivot.
-void RSCoder16::InvertDecoderMatrix()
-{
-  uint *MI=new uint[NE * ND]; // We'll create inverse matrix here.
-  memset(MI, 0, ND * NE * sizeof(*MI)); // Initialize to identity matrix.
-  for (uint Kr = 0, Kf = 0; Kr < NE; Kr++, Kf++)
-  {
-    while (ValidFlags[Kf]) // Skip trivial rows.
-      Kf++;
-    MI[Kr * ND + Kf] = 1;  // Set diagonal 1.
-  }
-
-  // Kr is the number of row in our actual reduced NE x ND matrix,
-  // which does not contain trivial diagonal 1 rows.
-  // Kf is the number of row in full ND x ND matrix with all trivial rows
-  // included.
-  for (uint Kr = 0, Kf = 0; Kf < ND; Kr++, Kf++) // Select pivot row.
-  {
-    while (ValidFlags[Kf] && Kf < ND)
-    {
-      // Here we process trivial diagonal 1 rows matching valid data units.
-      // Their processing can be simplified comparing to usual rows.
-      // In full version of elimination we would set MX[I * ND + Kf] to zero
-      // after MI[..]^=, but we do not need it for matrix inversion.
-      for (uint I = 0; I < NE; I++)
-        MI[I * ND + Kf] ^= MX[I * ND + Kf];
-      Kf++;
-    }
-
-    if (Kf == ND)
-      break;
-
-    uint *MXk = MX + Kr * ND; // k-th row of main matrix.
-    uint *MIk = MI + Kr * ND; // k-th row of inversion matrix.
-
-    uint PInv = gfInv( MXk[Kf] ); // Pivot inverse.
-    // Divide the pivot row by pivot, so pivot cell contains 1.
-    for (uint I = 0; I < ND; I++)
-    {
-      MXk[I] = gfMul( MXk[I], PInv );
-      MIk[I] = gfMul( MIk[I], PInv );
-    }
-
-    for (uint I = 0; I < NE; I++)
-      if (I != Kr) // For all rows except containing the pivot cell.
-      {
-        // Apply Gaussian elimination Mij -= Mkj * Mik / pivot.
-        // Since pivot is already 1, it is reduced to Mij -= Mkj * Mik.
-        uint *MXi = MX + I * ND; // i-th row of main matrix.
-        uint *MIi = MI + I * ND; // i-th row of inversion matrix.
-        uint Mik = MXi[Kf]; // Cell in pivot position.
-        for (uint J = 0; J < ND; J++)
-        {
-          MXi[J] ^= gfMul(MXk[J] , Mik);
-          MIi[J] ^= gfMul(MIk[J] , Mik);
-        }
-      }
-  }
-
-  // Copy data to main matrix.
-  for (uint I = 0; I < NE * ND; I++)
-    MX[I] = MI[I];
-
-  delete[] MI;
+void RSCoder16::InvertDecoderMatrix() {
+uint *MI = new uint[NE * ND]; // We'll create inverse matrix here.
+memset(MI, 0, ND * NE * sizeof(*MI)); // Initialize to identity matrix.
+for(uint Kr = 0, Kf = 0; Kr < NE; Kr++, Kf++) {
+while (ValidFlags[Kf]) // Skip trivial rows.
+Kf++;
+MI[Kr * ND + Kf] = 1;  // Set diagonal 1.
 }
 
+// Kr is the number of row in our actual reduced NE x ND matrix,
+// which does not contain trivial diagonal 1 rows.
+// Kf is the number of row in full ND x ND matrix with all trivial rows
+// included.
+for(uint Kr = 0, Kf = 0; Kf < ND; Kr++, Kf++) // Select pivot row.
+{
+while (ValidFlags[Kf] && Kf < ND) {
+// Here we process trivial diagonal 1 rows matching valid data units.
+// Their processing can be simplified comparing to usual rows.
+// In full version of elimination we would set MX[I * ND + Kf] to zero
+// after MI[..]^=, but we do not need it for matrix inversion.
+for(uint I = 0; I < NE; I++)
+MI[I * ND + Kf] ^= MX[I * ND + Kf];
+Kf++;
+}
+if(Kf == ND)
+break;
+uint *MXk = MX + Kr * ND; // k-th row of main matrix.
+uint *MIk = MI + Kr * ND; // k-th row of inversion matrix.
 
+uint PInv = gfInv(MXk[Kf]); // Pivot inverse.
+// Divide the pivot row by pivot, so pivot cell contains 1.
+for(uint I = 0; I < ND; I++) {
+MXk[I] = gfMul(MXk[I], PInv);
+MIk[I] = gfMul(MIk[I], PInv);
+}
+for(uint I = 0; I < NE; I++)
+if(I != Kr) // For all rows except containing the pivot cell.
+{
+// Apply Gaussian elimination Mij -= Mkj * Mik / pivot.
+// Since pivot is already 1, it is reduced to Mij -= Mkj * Mik.
+uint *MXi = MX + I * ND; // i-th row of main matrix.
+uint *MIi = MI + I * ND; // i-th row of inversion matrix.
+uint Mik = MXi[Kf]; // Cell in pivot position.
+for(uint J = 0; J < ND; J++) {
+MXi[J] ^= gfMul(MXk[J], Mik);
+MIi[J] ^= gfMul(MIk[J], Mik);
+}
+}
+}
+
+// Copy data to main matrix.
+for(uint I = 0; I < NE * ND; I++)
+MX[I] = MI[I];
+delete[] MI;
+}
 #if 0
 // Multiply matrix to data vector. When encoding, it contains data in Data
 // and stores error correction codes in Out. When decoding it contains
@@ -254,63 +209,48 @@ void RSCoder16::Process(const uint *Data, uint *Out)
   }
 }
 #endif
-
-
 // We update ECC in blocks by applying every data block to all ECC blocks.
 // This function applies one data block to one ECC block.
-void RSCoder16::UpdateECC(uint DataNum, uint ECCNum, const byte *Data, byte *ECC, size_t BlockSize)
-{
-  if (DataNum==0) // Init ECC data.
-    memset(ECC, 0, BlockSize);
-
-  bool DirectAccess;
+void RSCoder16::UpdateECC(uint DataNum, uint ECCNum, const byte *Data, byte *ECC, size_t BlockSize) {
+if(DataNum == 0) // Init ECC data.
+memset(ECC, 0, BlockSize);
+bool DirectAccess;
 #ifdef LITTLE_ENDIAN
-  // We can access data and ECC directly if we have little endian 16 bit uint.
-  DirectAccess=sizeof(ushort)==2;
+// We can access data and ECC directly if we have little endian 16 bit uint.
+DirectAccess=sizeof(ushort)==2;
 #else
-  DirectAccess=false;
+DirectAccess = false;
 #endif
-
 #ifdef USE_SSE
-  if (DirectAccess && SSE_UpdateECC(DataNum,ECCNum,Data,ECC,BlockSize))
-    return;
+if (DirectAccess && SSE_UpdateECC(DataNum,ECCNum,Data,ECC,BlockSize))
+  return;
 #endif
-
-  if (ECCNum==0)
-  {
-    if (DataLogSize!=BlockSize)
-    {
-      delete[] DataLog;
-      DataLog=new uint[BlockSize];
-      DataLogSize=BlockSize;
-
-    }
-    if (DirectAccess)
-      for (size_t I=0; I<BlockSize; I+=2)
-        DataLog[I] = gfLog[ *(ushort*)(Data+I) ];
-    else
-      for (size_t I=0; I<BlockSize; I+=2)
-      {
-        uint D=Data[I]+Data[I+1]*256;
-        DataLog[I] = gfLog[ D ];
-      }
-  }
-
-  uint ML = gfLog[ MX[ECCNum * ND + DataNum] ];
-
-  if (DirectAccess)
-    for (size_t I=0; I<BlockSize; I+=2)
-      *(ushort*)(ECC+I) ^= gfExp[ ML + DataLog[I] ];
-  else
-    for (size_t I=0; I<BlockSize; I+=2)
-    {
-      uint R=gfExp[ ML + DataLog[I] ];
-      ECC[I]^=byte(R);
-      ECC[I+1]^=byte(R/256);
-    }
+if(ECCNum == 0) {
+if(DataLogSize != BlockSize) {
+delete[] DataLog;
+DataLog = new uint[BlockSize];
+DataLogSize = BlockSize;
 }
-
-
+if(DirectAccess)
+for(size_t I = 0; I < BlockSize; I += 2)
+DataLog[I] = gfLog[*(ushort *) (Data + I)];
+else
+for(size_t I = 0; I < BlockSize; I += 2) {
+uint D = Data[I] + Data[I + 1] * 256;
+DataLog[I] = gfLog[D];
+}
+}
+uint ML = gfLog[MX[ECCNum * ND + DataNum]];
+if(DirectAccess)
+for(size_t I = 0; I < BlockSize; I += 2)
+*(ushort *) (ECC + I) ^= gfExp[ML + DataLog[I]];
+else
+for(size_t I = 0; I < BlockSize; I += 2) {
+uint R = gfExp[ML + DataLog[I]];
+ECC[I] ^= byte(R);
+ECC[I + 1] ^= byte(R / 256);
+}
+}
 #ifdef USE_SSE
 // Data and ECC addresses must be properly aligned for SSE.
 // AVX2 did not provide a noticeable speed gain on i7-6700K here.

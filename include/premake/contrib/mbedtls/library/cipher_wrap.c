@@ -28,7 +28,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_CIPHER_C)
 
 #include "mbedtls/cipher_internal.h"

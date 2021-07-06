@@ -680,7 +680,6 @@
 #define RECV_TYPE_ARG3 size_t
 #define RECV_TYPE_ARG4 int
 #define RECV_TYPE_RETV ssize_t
-
 #define RECVFROM_TYPE_ARG1 int
 #define RECVFROM_TYPE_ARG2 void
 #define RECVFROM_TYPE_ARG3 size_t
@@ -689,7 +688,6 @@
 #define RECVFROM_TYPE_ARG6 size_t
 #define RECVFROM_TYPE_RETV ssize_t
 #define RECVFROM_TYPE_ARG2_IS_VOID 1
-
 #define SEND_TYPE_ARG1 int
 #define SEND_QUAL_ARG2 const
 #define SEND_TYPE_ARG2 void *
@@ -807,5 +805,4 @@
 #ifdef HAVE_LIBZ
 #define HAVE_ZLIB_H 1
 #endif
-
 #endif /* HEADER_CURL_CONFIG_SYMBIAN_H */

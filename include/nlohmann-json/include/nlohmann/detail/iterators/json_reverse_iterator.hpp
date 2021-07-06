@@ -1,13 +1,9 @@
 #pragma once
-
 #include <cstddef> // ptrdiff_t
 #include <iterator> // reverse_iterator
 #include <utility> // declval
-
-namespace nlohmann
-{
-namespace detail
-{
+namespace nlohmann {
+namespace detail {
 //////////////////////
 // reverse_iterator //
 //////////////////////
@@ -31,89 +27,71 @@ create @ref const_reverse_iterator).
 @since version 1.0.0
 */
 template<typename Base>
-class json_reverse_iterator : public std::reverse_iterator<Base>
-{
-  public:
-    using difference_type = std::ptrdiff_t;
-    /// shortcut to the reverse iterator adapter
-    using base_iterator = std::reverse_iterator<Base>;
-    /// the reference type for the pointed-to element
-    using reference = typename Base::reference;
-
-    /// create reverse iterator from iterator
-    explicit json_reverse_iterator(const typename base_iterator::iterator_type& it) noexcept
+class json_reverse_iterator : public std::reverse_iterator<Base> {
+public:
+using difference_type = std::ptrdiff_t;
+/// shortcut to the reverse iterator adapter
+using base_iterator = std::reverse_iterator<Base>;
+/// the reference type for the pointed-to element
+using reference = typename Base::reference;
+/// create reverse iterator from iterator
+explicit json_reverse_iterator(const typename base_iterator::iterator_type &it)
+noexcept
         : base_iterator(it) {}
-
-    /// create reverse iterator from base class
-    explicit json_reverse_iterator(const base_iterator& it) noexcept : base_iterator(it) {}
-
-    /// post-increment (it++)
-    json_reverse_iterator const operator++(int)
-    {
-        return static_cast<json_reverse_iterator>(base_iterator::operator++(1));
-    }
-
-    /// pre-increment (++it)
-    json_reverse_iterator& operator++()
-    {
-        return static_cast<json_reverse_iterator&>(base_iterator::operator++());
-    }
-
-    /// post-decrement (it--)
-    json_reverse_iterator const operator--(int)
-    {
-        return static_cast<json_reverse_iterator>(base_iterator::operator--(1));
-    }
-
-    /// pre-decrement (--it)
-    json_reverse_iterator& operator--()
-    {
-        return static_cast<json_reverse_iterator&>(base_iterator::operator--());
-    }
-
-    /// add to iterator
-    json_reverse_iterator& operator+=(difference_type i)
-    {
-        return static_cast<json_reverse_iterator&>(base_iterator::operator+=(i));
-    }
-
-    /// add to iterator
-    json_reverse_iterator operator+(difference_type i) const
-    {
-        return static_cast<json_reverse_iterator>(base_iterator::operator+(i));
-    }
-
-    /// subtract from iterator
-    json_reverse_iterator operator-(difference_type i) const
-    {
-        return static_cast<json_reverse_iterator>(base_iterator::operator-(i));
-    }
-
-    /// return difference
-    difference_type operator-(const json_reverse_iterator& other) const
-    {
-        return base_iterator(*this) - base_iterator(other);
-    }
-
-    /// access to successor
-    reference operator[](difference_type n) const
-    {
-        return *(this->operator+(n));
-    }
-
-    /// return the key of an object iterator
-    auto key() const -> decltype(std::declval<Base>().key())
-    {
-        auto it = --this->base();
-        return it.key();
-    }
-
-    /// return the value of an iterator
-    reference value() const
-    {
-        auto it = --this->base();
-        return it.operator * ();
-    }
+/// create reverse iterator from base class
+explicit json_reverse_iterator(const base_iterator &it)
+noexcept : base_iterator(it) {}
+/// post-increment (it++)
+json_reverse_iterator const operator++(int) {
+return static_cast<json_reverse_iterator>(base_iterator::operator++(1));
+}
+/// pre-increment (++it)
+json_reverse_iterator &operator++() {
+return static_cast<json_reverse_iterator &>(base_iterator::operator++());
+}
+/// post-decrement (it--)
+json_reverse_iterator const operator--(int) {
+return static_cast<json_reverse_iterator>(base_iterator::operator--(1));
+}
+/// pre-decrement (--it)
+json_reverse_iterator &operator--() {
+return static_cast<json_reverse_iterator &>(base_iterator::operator--());
+}
+/// add to iterator
+json_reverse_iterator &operator+=(difference_type i) {
+return static_cast<json_reverse_iterator &>(base_iterator::operator+=(i));
+}
+/// add to iterator
+json_reverse_iterator operator+(difference_type i) const {
+return static_cast<json_reverse_iterator>(base_iterator::operator+(i));
+}
+/// subtract from iterator
+json_reverse_iterator operator-(difference_type i) const {
+return static_cast<json_reverse_iterator>(base_iterator::operator-(i));
+}
+/// return difference
+difference_type operator-(const json_reverse_iterator &other) const {
+return base_iterator(*this) - base_iterator(other);
+}
+/// access to successor
+reference operator[](difference_type n) const {
+return *(this->operator+(n));
+}
+/// return the key of an object iterator
+auto key() const ->
+decltype (std::declval<Base>()
+.
+key()
+)
+{
+auto it = --this->base();
+return it.key();
+}
+/// return the value of an iterator
+reference value() const {
+auto it = --this->base();
+return it.operator*();
+}
 };
 }  // namespace detail
 }  // namespace nlohmann

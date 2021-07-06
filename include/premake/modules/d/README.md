@@ -9,40 +9,43 @@ Premake Extension to support the [D](http://dlang.org) language
 ### Usage ###
 
 Simply add:
+
 ```lua
 language "D"
 ```
+
 to your project definition and populate with .d files.  
-C and C++ projects that include .d files will also support some of the API below. Any API tagged with (D/C/C++) works in D and C/C++ projects. Any API tagged with (C/C++) only works for .d files in C/C++ projects.
+C and C++ projects that include .d files will also support some of the API below. Any API tagged with (D/C/C++) works in
+D and C/C++ projects. Any API tagged with (C/C++) only works for .d files in C/C++ projects.
 
 ### APIs ###
 
 * [flags](https://github.com/premake/premake-dlang/wiki/flags)
-  * AllInstantiate 
-  * CodeCoverage
-  * Color
-  * Documentation
-  * GenerateHeader
-  * GenerateJSON
-  * GenerateMap
-  * IgnorePragma
-  * LowMem
-  * Main
-  * PerformSyntaxCheckOnly
-  * Profile
-  * ProfileGC
-  * Quiet
-  * RetainPaths
-  * ShowCommandLine
-  * ShowDependencies
-  * ShowGC
-  * ShowTLS
-  * StackFrame
-  * StackStomp
-  * SymbolsLikeC
-  * UnitTest
-  * UseLDC
-  * Verbose
+    * AllInstantiate
+    * CodeCoverage
+    * Color
+    * Documentation
+    * GenerateHeader
+    * GenerateJSON
+    * GenerateMap
+    * IgnorePragma
+    * LowMem
+    * Main
+    * PerformSyntaxCheckOnly
+    * Profile
+    * ProfileGC
+    * Quiet
+    * RetainPaths
+    * ShowCommandLine
+    * ShowDependencies
+    * ShowGC
+    * ShowTLS
+    * StackFrame
+    * StackStomp
+    * SymbolsLikeC
+    * UnitTest
+    * UseLDC
+    * Verbose
 * boundscheck ("type") [Off, SafeOnly, On]
 * compilationmodel ("model") [ Project, Package, File ]
 * checkaction

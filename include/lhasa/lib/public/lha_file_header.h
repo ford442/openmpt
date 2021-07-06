@@ -20,9 +20,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_PUBLIC_LHA_FILE_HEADER_H
 #define LHASA_PUBLIC_LHA_FILE_HEADER_H
-
 #include <inttypes.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -113,11 +111,9 @@ extern "C" {
  * permissions field is set.
  */
 #define LHA_FILE_OS9_PERMS             0x10
-
 typedef struct _LHAFileHeader LHAFileHeader;
-
 #define LHA_FILE_HAVE_EXTRA(header, flag) \
-	(((header)->extra_flags & (flag)) != 0)
+    (((header)->extra_flags & (flag)) != 0)
 /**
  * Structure containing a decoded LZH file header.
  *
@@ -130,119 +126,94 @@ typedef struct _LHAFileHeader LHAFileHeader;
 
 struct _LHAFileHeader {
 
-	// Internal fields, do not touch!
+// Internal fields, do not touch!
 
-	unsigned int _refcount;
-	LHAFileHeader *_next;
-
-	/**
-	 * Stored path, with Unix-style ('/') path separators.
-	 *
-	 * This may be NULL, although if this is a directory
-	 * (@ref LHA_COMPRESS_TYPE_DIR), it is never NULL.
-	 */
-	char *path;
-
-	/**
-	 * File name.
-	 *
-	 * This is never NULL, except if this is a directory
-	 * (@ref LHA_COMPRESS_TYPE_DIR), where it is always NULL.
-	 */
-	char *filename;
-
-	/**
-	 * Target for symbolic link.
-	 *
-	 * This is NULL unless this header represents a symbolic link
-	 * (@ref LHA_COMPRESS_TYPE_DIR).
-	 */
-	char *symlink_target;
-
-	/**
-	 * Compression method.
-	 *
-	 * If the header represents a directory or a symbolic link, the
-	 * compression method is equal to @ref LHA_COMPRESS_TYPE_DIR.
-	 */
-	char compress_method[6];
-
-	/** Length of the compressed data. */
-	size_t compressed_length;
-
-	/** Length of the uncompressed data. */
-	size_t length;
-
-	/** LZH header format used to store this header. */
-	uint8_t header_level;
-
-	/**
-	 * OS type indicator, identifying the OS on which
-	 * the archive was created.
-	 */
-	uint8_t os_type;
-
-	/** 16-bit CRC of the compressed data. */
-	uint16_t crc;
-
-	/** Unix timestamp of the modification time of the file. */
-	unsigned int timestamp;
-
-	/** Pointer to a buffer containing the raw header data. */
-	uint8_t *raw_data;
-
-	/** Length of the raw header data. */
-	size_t raw_data_len;
-
-	/**
-	 * Flags bitfield identifying extra data decoded from extended
-	 * headers.
-	 */
-	unsigned int extra_flags;
-
-	/** Unix permissions, set if @ref LHA_FILE_UNIX_PERMS is set. */
-	unsigned int unix_perms;
-
-	/** Unix user ID, set if @ref LHA_FILE_UNIX_UID_GID is set. */
-	unsigned int unix_uid;
-
-	/** Unix group ID, set if @ref LHA_FILE_UNIX_UID_GID is set. */
-	unsigned int unix_gid;
-
-	/** OS-9 permissions, set if @ref LHA_FILE_OS9_PERMS is set. */
-	unsigned int os9_perms;
-
-	/** Unix username. */
-	char *unix_username;
-
-	/** Unix group name. */
-	char *unix_group;
-
-	/** 16-bit CRC of header contents. */
-	uint16_t common_crc;
-
-	/**
-	 * Windows FILETIME file creation time, set if
-	 * @ref LHA_FILE_WINDOWS_TIMESTAMPS is set.
-	 */
-	uint64_t win_creation_time;
-
-	/**
-	 * Windows FILETIME file modification time, set if
-	 * @ref LHA_FILE_WINDOWS_TIMESTAMPS is set.
-	 */
-	uint64_t win_modification_time;
-
-	/**
-	 * Windows FILETIME file access time, set if
-	 * @ref LHA_FILE_WINDOWS_TIMESTAMPS is set.
-	 */
-	uint64_t win_access_time;
+unsigned int _refcount;
+LHAFileHeader *_next;
+/**
+ * Stored path, with Unix-style ('/') path separators.
+ *
+ * This may be NULL, although if this is a directory
+ * (@ref LHA_COMPRESS_TYPE_DIR), it is never NULL.
+ */
+char *path;
+/**
+ * File name.
+ *
+ * This is never NULL, except if this is a directory
+ * (@ref LHA_COMPRESS_TYPE_DIR), where it is always NULL.
+ */
+char *filename;
+/**
+ * Target for symbolic link.
+ *
+ * This is NULL unless this header represents a symbolic link
+ * (@ref LHA_COMPRESS_TYPE_DIR).
+ */
+char *symlink_target;
+/**
+ * Compression method.
+ *
+ * If the header represents a directory or a symbolic link, the
+ * compression method is equal to @ref LHA_COMPRESS_TYPE_DIR.
+ */
+char compress_method[6];
+/** Length of the compressed data. */
+size_t compressed_length;
+/** Length of the uncompressed data. */
+size_t length;
+/** LZH header format used to store this header. */
+uint8_t header_level;
+/**
+ * OS type indicator, identifying the OS on which
+ * the archive was created.
+ */
+uint8_t os_type;
+/** 16-bit CRC of the compressed data. */
+uint16_t crc;
+/** Unix timestamp of the modification time of the file. */
+unsigned int timestamp;
+/** Pointer to a buffer containing the raw header data. */
+uint8_t *raw_data;
+/** Length of the raw header data. */
+size_t raw_data_len;
+/**
+ * Flags bitfield identifying extra data decoded from extended
+ * headers.
+ */
+unsigned int extra_flags;
+/** Unix permissions, set if @ref LHA_FILE_UNIX_PERMS is set. */
+unsigned int unix_perms;
+/** Unix user ID, set if @ref LHA_FILE_UNIX_UID_GID is set. */
+unsigned int unix_uid;
+/** Unix group ID, set if @ref LHA_FILE_UNIX_UID_GID is set. */
+unsigned int unix_gid;
+/** OS-9 permissions, set if @ref LHA_FILE_OS9_PERMS is set. */
+unsigned int os9_perms;
+/** Unix username. */
+char *unix_username;
+/** Unix group name. */
+char *unix_group;
+/** 16-bit CRC of header contents. */
+uint16_t common_crc;
+/**
+ * Windows FILETIME file creation time, set if
+ * @ref LHA_FILE_WINDOWS_TIMESTAMPS is set.
+ */
+uint64_t win_creation_time;
+/**
+ * Windows FILETIME file modification time, set if
+ * @ref LHA_FILE_WINDOWS_TIMESTAMPS is set.
+ */
+uint64_t win_modification_time;
+/**
+ * Windows FILETIME file access time, set if
+ * @ref LHA_FILE_WINDOWS_TIMESTAMPS is set.
+ */
+uint64_t win_access_time;
 };
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* #ifndef LHASA_PUBLIC_LHA_FILE_HEADER_H */
 

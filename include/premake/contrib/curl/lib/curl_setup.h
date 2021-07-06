@@ -41,7 +41,6 @@
 #include "curl_config.h"
 
 #else /* HAVE_CONFIG_H */
-
 #ifdef _WIN32_WCE
 #  include "config-win32ce.h"
 #else
@@ -49,52 +48,40 @@
 #    include "config-win32.h"
 #  endif
 #endif
-
 #if defined(macintosh) && defined(__MRC__)
 #  include "config-mac.h"
 #endif
-
 #ifdef __riscos__
 #  include "config-riscos.h"
 #endif
-
 #ifdef __AMIGA__
 #  include "config-amigaos.h"
 #endif
-
 #ifdef __SYMBIAN32__
 #  include "config-symbian.h"
 #endif
-
 #ifdef __OS400__
 #  include "config-os400.h"
 #endif
-
 #ifdef TPF
 #  include "config-tpf.h"
 #endif
-
 #ifdef __VXWORKS__
 #  include "config-vxworks.h"
 #endif
-
 #ifdef __linux__
 #  include "config-linux.h"
 #endif
-
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
 #  include "config-linux.h"
 #endif
-
 #if defined(__sun__) && defined(__svr4__) || defined(__HAIKU__)
 #  include "config-linux.h"
 #  undef HAVE_IOCTL_SIOCGIFADDR
 #endif
-
 #ifdef __APPLE__ && __MACH__
 #  include "config-osx.h"
 #endif
-
 #endif /* HAVE_CONFIG_H */
 
 /* ================================================================ */
@@ -160,7 +147,7 @@
 
 #ifdef SIZEOF_CURL_OFF_T
 #  error "SIZEOF_CURL_OFF_T shall not be defined!"
-   Error Compilation_aborted_SIZEOF_CURL_OFF_T_shall_not_be_defined
+Error Compilation_aborted_SIZEOF_CURL_OFF_T_shall_not_be_defined
 #endif
 
 /*
@@ -281,7 +268,7 @@
 #  endif
 #  include <tchar.h>
 #  ifdef UNICODE
-     typedef wchar_t *(*curl_wcsdup_callback)(const wchar_t *str);
+typedef wchar_t *(*curl_wcsdup_callback)(const wchar_t *str);
 #  endif
 #endif
 
@@ -292,7 +279,6 @@
  */
 
 #undef USE_WINSOCK
-
 #ifdef HAVE_WINSOCK2_H
 #  define USE_WINSOCK 2
 #else
@@ -300,21 +286,17 @@
 #    define USE_WINSOCK 1
 #  endif
 #endif
-
 #ifdef USE_LWIPSOCK
 #  include <lwip/init.h>
 #  include <lwip/sockets.h>
 #  include <lwip/netdb.h>
 #endif
-
 #ifdef HAVE_EXTRA_STRICMP_H
 #  include <extra/stricmp.h>
 #endif
-
 #ifdef HAVE_EXTRA_STRDUP_H
 #  include <extra/strdup.h>
 #endif
-
 #ifdef TPF
 #  include <strings.h>    /* for bzero, strcasecmp, and strncasecmp */
 #  include <string.h>     /* for strcpy and strlen */
@@ -322,15 +304,13 @@
 #  include <sys/socket.h> /* for select and ioctl*/
 #  include <netdb.h>      /* for in_addr_t definition */
 #  include <tpf/sysapi.h> /* for tpf_process_signals */
-   /* change which select is used for libcurl */
+/* change which select is used for libcurl */
 #  define select(a,b,c,d,e) tpf_select_libcurl(a,b,c,d,e)
 #endif
-
 #ifdef __VXWORKS__
 #  include <sockLib.h>    /* for generic BSD socket functions */
 #  include <ioLib.h>      /* for basic I/O interface functions */
 #endif
-
 #ifdef __AMIGA__
 #  ifndef __ixemul__
 #    include <exec/types.h>
@@ -340,20 +320,16 @@
 #    define select(a,b,c,d,e) WaitSelect(a,b,c,d,e,0)
 #  endif
 #endif
-
 #include <stdio.h>
 #ifdef HAVE_ASSERT_H
 #include <assert.h>
 #endif
-
 #ifdef __TANDEM /* for nsr-tandem-nsk systems */
 #include <floss.h>
 #endif
-
 #ifndef STDC_HEADERS /* no standard C headers! */
 #include <curl/stdcheaders.h>
 #endif
-
 #ifdef __POCC__
 #  include <sys/types.h>
 #  include <unistd.h>
@@ -364,11 +340,11 @@
  * Salford-C kludge section (mostly borrowed from wxWidgets).
  */
 #ifdef __SALFORDC__
-  #pragma suppress 353             /* Possible nested comments */
-  #pragma suppress 593             /* Define not used */
-  #pragma suppress 61              /* enum has no name */
-  #pragma suppress 106             /* unnamed, unused parameter */
-  #include <clib.h>
+#pragma suppress 353             /* Possible nested comments */
+#pragma suppress 593             /* Define not used */
+#pragma suppress 61              /* enum has no name */
+#pragma suppress 106             /* unnamed, unused parameter */
+#include <clib.h>
 #endif
 
 /*
@@ -406,11 +382,9 @@
 #  endif
 #  define LSEEK_ERROR                (long)-1
 #endif
-
 #ifndef struct_stat
 #  define struct_stat struct stat
 #endif
-
 #ifndef LSEEK_ERROR
 #  define LSEEK_ERROR (off_t)-1
 #endif
@@ -466,7 +440,6 @@
 #  define DOT_CHAR      "_"
 
 #else /* WIN32 */
-
 #  ifdef MSDOS  /* Watt-32 */
 
 #    include <sys/ioctl.h>
@@ -481,27 +454,22 @@
 #    endif
 
 #  endif /* MSDOS */
-
 #  ifdef __minix
-     /* Minix 3 versions up to at least 3.1.3 are missing these prototypes */
-     extern char *strtok_r(char *s, const char *delim, char **last);
-     extern struct tm *gmtime_r(const time_t * const timep, struct tm *tmp);
+/* Minix 3 versions up to at least 3.1.3 are missing these prototypes */
+extern char *strtok_r(char *s, const char *delim, char **last);
+extern struct tm *gmtime_r(const time_t * const timep, struct tm *tmp);
 #  endif
-
 #  define DIR_CHAR      "/"
 #  ifndef DOT_CHAR
 #    define DOT_CHAR      "."
 #  endif
-
 #  ifdef MSDOS
 #    undef DOT_CHAR
 #    define DOT_CHAR      "_"
 #  endif
-
 #  ifndef fileno /* sunos 4 have this as a macro! */
-     int fileno(FILE *stream);
+int fileno(FILE *stream);
 #  endif
-
 #endif /* WIN32 */
 
 /*
@@ -562,7 +530,6 @@
 #else
 #  define CURLRES_SYNCH
 #endif
-
 #ifdef ENABLE_IPV6
 #  define CURLRES_IPV6
 #else
@@ -607,7 +574,6 @@
 #    endif
 #  endif
 #endif
-
 #ifdef NETWARE
 int netware_init(void);
 #ifndef __NOVELL_LIBC__
@@ -615,19 +581,15 @@ int netware_init(void);
 #include <sys/timeval.h>
 #endif
 #endif
-
 #if defined(HAVE_LIBIDN2) && defined(HAVE_IDN2_H)
 /* The lib and header are present */
 #define USE_LIBIDN2
 #endif
-
 #ifndef SIZEOF_TIME_T
 /* assume default size of time_t to be 32 bit */
 #define SIZEOF_TIME_T 4
 #endif
-
 #define LIBIDN_REQUIRED_VERSION "0.4.1"
-
 #if defined(USE_GNUTLS) || defined(USE_OPENSSL) || defined(USE_NSS) || \
     defined(USE_POLARSSL) || defined(USE_AXTLS) || defined(USE_MBEDTLS) || \
     defined(USE_CYASSL) || defined(USE_SCHANNEL) || \
@@ -778,5 +740,4 @@ endings either CRLF or LF so 't' is appropriate.
 #    define CURL_WINDOWS_APP
 #  endif
 # endif
-
 #endif /* HEADER_CURL_SETUP_H */

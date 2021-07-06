@@ -31,58 +31,42 @@
 
 #ifndef _InterpolateLinear_H_
 #define _InterpolateLinear_H_
-
 #include "RateTransposer.h"
 #include "STTypes.h"
-
-namespace soundtouch
-{
-
+namespace soundtouch {
 /// Linear transposer class that uses integer arithmetic
-class InterpolateLinearInteger : public TransposerBase
-{
+class InterpolateLinearInteger : public TransposerBase {
 protected:
-    int iFract;
-    int iRate;
-
-    virtual void resetRegisters();
-
-    virtual int transposeMono(SAMPLETYPE *dest, 
-                       const SAMPLETYPE *src, 
-                       int &srcSamples);
-    virtual int transposeStereo(SAMPLETYPE *dest, 
-                         const SAMPLETYPE *src, 
-                         int &srcSamples);
-    virtual int transposeMulti(SAMPLETYPE *dest, const SAMPLETYPE *src, int &srcSamples);
+int iFract;
+int iRate;
+virtual void resetRegisters();
+virtual int transposeMono(SAMPLETYPE *dest,
+                          const SAMPLETYPE *src,
+                          int &srcSamples);
+virtual int transposeStereo(SAMPLETYPE *dest,
+                            const SAMPLETYPE *src,
+                            int &srcSamples);
+virtual int transposeMulti(SAMPLETYPE *dest, const SAMPLETYPE *src, int &srcSamples);
 public:
-    InterpolateLinearInteger();
-
-    /// Sets new target rate. Normal rate = 1.0, smaller values represent slower 
-    /// rate, larger faster rates.
-    virtual void setRate(double newRate);
+InterpolateLinearInteger();
+/// Sets new target rate. Normal rate = 1.0, smaller values represent slower
+/// rate, larger faster rates.
+virtual void setRate(double newRate);
 };
-
-
 /// Linear transposer class that uses floating point arithmetic
-class InterpolateLinearFloat : public TransposerBase
-{
+class InterpolateLinearFloat : public TransposerBase {
 protected:
-    double fract;
-
-    virtual void resetRegisters();
-
-    virtual int transposeMono(SAMPLETYPE *dest, 
-                       const SAMPLETYPE *src, 
-                       int &srcSamples);
-    virtual int transposeStereo(SAMPLETYPE *dest, 
-                         const SAMPLETYPE *src, 
-                         int &srcSamples);
-    virtual int transposeMulti(SAMPLETYPE *dest, const SAMPLETYPE *src, int &srcSamples);
-
+double fract;
+virtual void resetRegisters();
+virtual int transposeMono(SAMPLETYPE *dest,
+                          const SAMPLETYPE *src,
+                          int &srcSamples);
+virtual int transposeStereo(SAMPLETYPE *dest,
+                            const SAMPLETYPE *src,
+                            int &srcSamples);
+virtual int transposeMulti(SAMPLETYPE *dest, const SAMPLETYPE *src, int &srcSamples);
 public:
-    InterpolateLinearFloat();
+InterpolateLinearFloat();
 };
-
 }
-
 #endif

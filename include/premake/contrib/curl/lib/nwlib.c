@@ -21,7 +21,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef NETWARE /* Novell NetWare */
 
 #ifdef __NOVELL_LIBC__
@@ -319,9 +318,7 @@ int main(void)
 #endif /* __NOVELL_LIBC__ */
 
 #else /* NETWARE */
-
 #ifdef __POCC__
 #  pragma warn(disable:2024)  /* Disable warning #2024: Empty input file */
 #endif
-
 #endif /* NETWARE */

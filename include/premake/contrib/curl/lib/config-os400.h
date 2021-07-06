@@ -27,7 +27,6 @@
 /* ================================================================ */
 
 #pragma enum(int)
-
 #undef PACKAGE
 
 /* Version number of this archive. */
@@ -559,5 +558,4 @@
 #define qadrt_use_fputc_inline         /* Generate fputc() wrapper inline. */
 #define qadrt_use_fread_inline         /* Generate fread() wrapper inline. */
 #define qadrt_use_fwrite_inline        /* Generate fwrite() wrapper inline. */
-
 #endif /* HEADER_CURL_CONFIG_OS400_H */

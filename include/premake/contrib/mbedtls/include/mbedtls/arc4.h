@@ -22,15 +22,12 @@
  */
 #ifndef MBEDTLS_ARC4_H
 #define MBEDTLS_ARC4_H
-
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #include <stddef.h>
-
 #if !defined(MBEDTLS_ARC4_ALT)
 // Regular implementation
 //
@@ -38,32 +35,27 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /**
  * \brief          ARC4 context structure
  */
-typedef struct
-{
-    int x;                      /*!< permutation index */
-    int y;                      /*!< permutation index */
-    unsigned char m[256];       /*!< permutation table */
+typedef struct {
+int x;                      /*!< permutation index */
+int y;                      /*!< permutation index */
+unsigned char m[256];       /*!< permutation table */
 }
-mbedtls_arc4_context;
-
+        mbedtls_arc4_context;
 /**
  * \brief          Initialize ARC4 context
  *
  * \param ctx      ARC4 context to be initialized
  */
-void mbedtls_arc4_init( mbedtls_arc4_context *ctx );
-
+void mbedtls_arc4_init(mbedtls_arc4_context *ctx);
 /**
  * \brief          Clear ARC4 context
  *
  * \param ctx      ARC4 context to be cleared
  */
-void mbedtls_arc4_free( mbedtls_arc4_context *ctx );
-
+void mbedtls_arc4_free(mbedtls_arc4_context *ctx);
 /**
  * \brief          ARC4 key schedule
  *
@@ -71,9 +63,8 @@ void mbedtls_arc4_free( mbedtls_arc4_context *ctx );
  * \param key      the secret key
  * \param keylen   length of the key, in bytes
  */
-void mbedtls_arc4_setup( mbedtls_arc4_context *ctx, const unsigned char *key,
-                 unsigned int keylen );
-
+void mbedtls_arc4_setup(mbedtls_arc4_context *ctx, const unsigned char *key,
+                        unsigned int keylen);
 /**
  * \brief          ARC4 cipher function
  *
@@ -84,30 +75,24 @@ void mbedtls_arc4_setup( mbedtls_arc4_context *ctx, const unsigned char *key,
  *
  * \return         0 if successful
  */
-int mbedtls_arc4_crypt( mbedtls_arc4_context *ctx, size_t length, const unsigned char *input,
-                unsigned char *output );
-
+int mbedtls_arc4_crypt(mbedtls_arc4_context *ctx, size_t length, const unsigned char *input,
+                       unsigned char *output);
 #ifdef __cplusplus
 }
 #endif
-
 #else  /* MBEDTLS_ARC4_ALT */
 #include "arc4_alt.h"
 #endif /* MBEDTLS_ARC4_ALT */
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /**
  * \brief          Checkup routine
  *
  * \return         0 if successful, or 1 if the test failed
  */
-int mbedtls_arc4_self_test( int verbose );
-
+int mbedtls_arc4_self_test(int verbose);
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* arc4.h */

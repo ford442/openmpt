@@ -16,10 +16,8 @@
 
 #ifndef _V_SCALES_H_
 #define _V_SCALES_H_
-
 #include <math.h>
 #include "os.h"
-
 #ifdef _MSC_VER
 /* MS Visual Studio doesn't have C99 inline keyword. */
 #define inline __inline
@@ -28,30 +26,26 @@
 /* 20log10(x) */
 #define VORBIS_IEEE_FLOAT32 1
 #ifdef VORBIS_IEEE_FLOAT32
-
-static inline float unitnorm(float x){
-  union {
-    ogg_uint32_t i;
-    float f;
-  } ix;
-  ix.f = x;
-  ix.i = (ix.i & 0x80000000U) | (0x3f800000U);
-  return ix.f;
+static inline float unitnorm(float x) {
+union {
+ogg_uint32_t i;
+float f;
+} ix;
+ix.f = x;
+ix.i = (ix.i & 0x80000000U) | (0x3f800000U);
+return ix.f;
 }
-
 /* Segher was off (too high) by ~ .3 decibel.  Center the conversion correctly. */
-static inline float todB(const float *x){
-  union {
-    ogg_uint32_t i;
-    float f;
-  } ix;
-  ix.f = *x;
-  ix.i = ix.i&0x7fffffff;
-  return (float)(ix.i * 7.17711438e-7f -764.6161886f);
+static inline float todB(const float *x) {
+union {
+ogg_uint32_t i;
+float f;
+} ix;
+ix.f = *x;
+ix.i = ix.i & 0x7fffffff;
+return (float) (ix.i * 7.17711438e-7f - 764.6161886f);
 }
-
 #define todB_nn(x) todB(x)
-
 #else
 
 static float unitnorm(float x){
@@ -63,7 +57,6 @@ static float unitnorm(float x){
 #define todB_nn(x)   (*(x)==0.f?-400.f:log(*(x))*8.6858896f)
 
 #endif
-
 #define fromdB(x) (exp((x)*.11512925f))
 
 /* The bark scale equations are approximations, since the original
@@ -85,5 +78,4 @@ static float unitnorm(float x){
 
 #define toOC(n)     (log(n)*1.442695f-5.965784f)
 #define fromOC(o)   (exp(((o)+5.965784f)*.693147f))
-
 #endif

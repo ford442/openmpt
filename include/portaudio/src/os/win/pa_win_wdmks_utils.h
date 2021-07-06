@@ -45,7 +45,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /**
     Query for the maximum number of channels supported by any pin of the
     specified device. Returns 0 if the query fails for any reason.
@@ -55,11 +54,8 @@ extern "C" {
 
     @param isInput A flag specifying whether to query for input (non-zero) or output (zero) channels.
 */
-int PaWin_WDMKS_QueryFilterMaximumChannelCount( void *wcharDevicePath, int isInput );
-
-
+int PaWin_WDMKS_QueryFilterMaximumChannelCount(void *wcharDevicePath, int isInput);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
 #endif /* PA_WIN_WDMKS_UTILS_H */

@@ -24,7 +24,6 @@
 
 #include "curl_setup.h"
 #include "curl_addrinfo.h"
-
 struct addrinfo;
 struct hostent;
 struct Curl_easy;
@@ -45,13 +44,11 @@ struct Curl_dns_entry;
  * Returning anything else than CURLE_OK fails curl_global_init().
  */
 int Curl_resolver_global_init(void);
-
 /*
  * Curl_resolver_global_cleanup()
  * Called from curl_global_cleanup() to destroy global resolver environment.
  */
 void Curl_resolver_global_cleanup(void);
-
 /*
  * Curl_resolver_init()
  * Called from curl_easy_init() -> Curl_open() to initialize resolver
@@ -61,7 +58,6 @@ void Curl_resolver_global_cleanup(void);
  * correspondent code.
  */
 CURLcode Curl_resolver_init(void **resolver);
-
 /*
  * Curl_resolver_cleanup()
  * Called from curl_easy_cleanup() -> Curl_close() to cleanup resolver
@@ -70,7 +66,6 @@ CURLcode Curl_resolver_init(void **resolver);
  * it.
  */
 void Curl_resolver_cleanup(void *resolver);
-
 /*
  * Curl_resolver_duphandle()
  * Called from curl_easy_duphandle() to duplicate resolver URL-state specific
@@ -80,7 +75,6 @@ void Curl_resolver_cleanup(void *resolver);
  * curl_easy_duphandle() call.
  */
 int Curl_resolver_duphandle(void **to, void *from);
-
 /*
  * Curl_resolver_cancel().
  *
@@ -89,7 +83,6 @@ int Curl_resolver_duphandle(void **to, void *from);
  * perform a request.
  */
 void Curl_resolver_cancel(struct connectdata *conn);
-
 /* Curl_resolver_getsock()
  *
  * This function is called from the multi_getsock() function.  'sock' is a
@@ -100,7 +93,6 @@ void Curl_resolver_cancel(struct connectdata *conn);
  */
 int Curl_resolver_getsock(struct connectdata *conn, curl_socket_t *sock,
                           int numsocks);
-
 /*
  * Curl_resolver_is_resolved()
  *
@@ -112,7 +104,6 @@ int Curl_resolver_getsock(struct connectdata *conn, curl_socket_t *sock,
  */
 CURLcode Curl_resolver_is_resolved(struct connectdata *conn,
                                    struct Curl_dns_entry **dns);
-
 /*
  * Curl_resolver_wait_resolv()
  *
@@ -127,7 +118,6 @@ CURLcode Curl_resolver_is_resolved(struct connectdata *conn,
  */
 CURLcode Curl_resolver_wait_resolv(struct connectdata *conn,
                                    struct Curl_dns_entry **dnsentry);
-
 /*
  * Curl_resolver_getaddrinfo() - when using this resolver
  *
@@ -143,20 +133,18 @@ Curl_addrinfo *Curl_resolver_getaddrinfo(struct connectdata *conn,
                                          const char *hostname,
                                          int port,
                                          int *waitp);
-
 #ifndef CURLRES_ASYNCH
 /* convert these functions if an asynch resolver isn't used */
 #define Curl_resolver_cancel(x) Curl_nop_stmt
-#define Curl_resolver_is_resolved(x,y) CURLE_COULDNT_RESOLVE_HOST
-#define Curl_resolver_wait_resolv(x,y) CURLE_COULDNT_RESOLVE_HOST
-#define Curl_resolver_getsock(x,y,z) 0
-#define Curl_resolver_duphandle(x,y) CURLE_OK
+#define Curl_resolver_is_resolved(x, y) CURLE_COULDNT_RESOLVE_HOST
+#define Curl_resolver_wait_resolv(x, y) CURLE_COULDNT_RESOLVE_HOST
+#define Curl_resolver_getsock(x, y, z) 0
+#define Curl_resolver_duphandle(x, y) CURLE_OK
 #define Curl_resolver_init(x) CURLE_OK
 #define Curl_resolver_global_init() CURLE_OK
 #define Curl_resolver_global_cleanup() Curl_nop_stmt
 #define Curl_resolver_cleanup(x) Curl_nop_stmt
 #endif
-
 #ifdef CURLRES_ASYNCH
 #define Curl_resolver_asynch() 1
 #else

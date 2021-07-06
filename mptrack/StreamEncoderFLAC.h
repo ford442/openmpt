@@ -9,28 +9,17 @@
  */
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
 #include "StreamEncoder.h"
-
-
 OPENMPT_NAMESPACE_BEGIN
 
-	
-class FLACEncoder : public EncoderFactoryBase
-{
 
+class FLACEncoder : public EncoderFactoryBase {
 public:
-
-	std::unique_ptr<IAudioStreamEncoder> ConstructStreamEncoder(std::ostream &file, const Encoder::Settings &settings, const FileTags &tags) const override;
-	bool IsAvailable() const override;
-
+std::unique_ptr <IAudioStreamEncoder>
+ConstructStreamEncoder(std::ostream &file, const Encoder::Settings &settings, const FileTags &tags) const override;
+bool IsAvailable() const override;
 public:
-
-	FLACEncoder();
-
+FLACEncoder();
 };
-
-
 OPENMPT_NAMESPACE_END

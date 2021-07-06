@@ -31,20 +31,19 @@
 
 #ifndef FLAC__PRIVATE__MACROS_H
 #define FLAC__PRIVATE__MACROS_H
-
-#if defined(__GNUC__) && (__GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ >= 3))
+#if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3))
 
 #define flac_max(a,b) \
-	({ __typeof__ (a) _a = (a); \
-	__typeof__ (b) _b = (b); \
-	_a > _b ? _a : _b; })
+    ({ __typeof__ (a) _a = (a); \
+    __typeof__ (b) _b = (b); \
+    _a > _b ? _a : _b; })
 
 #define MIN_PASTE(A,B) A##B
 #define MIN_IMPL(A,B,L) ({ \
-	__typeof__(A) MIN_PASTE(__a,L) = (A); \
-	__typeof__(B) MIN_PASTE(__b,L) = (B); \
-	MIN_PASTE(__a,L) < MIN_PASTE(__b,L) ? MIN_PASTE(__a,L) : MIN_PASTE(__b,L); \
-	})
+    __typeof__(A) MIN_PASTE(__a,L) = (A); \
+    __typeof__(B) MIN_PASTE(__b,L) = (B); \
+    MIN_PASTE(__a,L) < MIN_PASTE(__b,L) ? MIN_PASTE(__a,L) : MIN_PASTE(__b,L); \
+    })
 
 #define flac_min(A,B) MIN_IMPL(A,B,__COUNTER__)
 
@@ -60,13 +59,10 @@
 #define flac_max(a,b) __max(a,b)
 #define flac_min(a,b) __min(a,b)
 #endif
-
 #ifndef flac_min
-#define flac_min(x,y)	((x) <= (y) ? (x) : (y))
+#define flac_min(x, y)    ((x) <= (y) ? (x) : (y))
 #endif
-
 #ifndef flac_max
-#define flac_max(x,y)	((x) >= (y) ? (x) : (y))
+#define flac_max(x, y)    ((x) >= (y) ? (x) : (y))
 #endif
-
 #endif

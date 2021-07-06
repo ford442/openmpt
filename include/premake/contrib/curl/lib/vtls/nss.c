@@ -26,7 +26,6 @@
  */
 
 #include "curl_setup.h"
-
 #ifdef USE_NSS
 
 #include "urldata.h"

@@ -27,24 +27,19 @@
 
 #ifndef PICTURE_H
 #define PICTURE_H
-
 #include <opus.h>
 #include "opusenc.h"
-
-typedef enum{
-  PIC_FORMAT_JPEG,
-  PIC_FORMAT_PNG,
-  PIC_FORMAT_GIF
-}picture_format;
-
+typedef enum {
+PIC_FORMAT_JPEG,
+PIC_FORMAT_PNG,
+PIC_FORMAT_GIF
+} picture_format;
 #define BASE64_LENGTH(len) (((len)+2)/3*4)
-
 char *opeint_parse_picture_specification(const char *filename, int picture_type, const char *description,
-                                  int *error, int *seen_file_icons);
-
-char *opeint_parse_picture_specification_from_memory(const char *mem, size_t size, int picture_type, const char *description,
-                                  int *error, int *seen_file_icons);
-
+                                         int *error, int *seen_file_icons);
+char *
+opeint_parse_picture_specification_from_memory(const char *mem, size_t size, int picture_type, const char *description,
+                                               int *error, int *seen_file_icons);
 #define WRITE_U32_BE(buf, val) \
   do{ \
     (buf)[0]=(unsigned char)((val)>>24); \
@@ -53,5 +48,4 @@ char *opeint_parse_picture_specification_from_memory(const char *mem, size_t siz
     (buf)[3]=(unsigned char)(val); \
   } \
   while(0);
-
 #endif /* PICTURE_H */

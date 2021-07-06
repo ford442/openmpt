@@ -9,35 +9,23 @@
 
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
 #include "CDecimalSupport.h"
-
 OPENMPT_NAMESPACE_BEGIN
 
 struct InstrumentEnvelope;
-
-class CScaleEnvPointsDlg : public CDialog
-{
+class CScaleEnvPointsDlg : public CDialog {
 protected:
-	CNumberEdit m_EditX, m_EditY, m_EditOffset;
-	InstrumentEnvelope &m_Env;
-	static double m_factorX, m_factorY, m_offsetY;
-	int m_nCenter;
-
+CNumberEdit m_EditX, m_EditY, m_EditOffset;
+InstrumentEnvelope &m_Env;
+static double m_factorX, m_factorY, m_offsetY;
+int m_nCenter;
 public:
-	CScaleEnvPointsDlg(CWnd* pParent, InstrumentEnvelope &env, int nCenter)
-		: CDialog(IDD_SCALE_ENV_POINTS, pParent)
-		, m_Env(env)
-		, m_nCenter(nCenter)
-	{ }
-
-	void Apply();
-
+CScaleEnvPointsDlg(CWnd *pParent, InstrumentEnvelope &env, int nCenter)
+        : CDialog(IDD_SCALE_ENV_POINTS, pParent), m_Env(env), m_nCenter(nCenter) {}
+void Apply();
 protected:
-	void OnOK() override;
-	BOOL OnInitDialog() override;
+void OnOK() override;
+BOOL OnInitDialog() override;
 };
-
 OPENMPT_NAMESPACE_END

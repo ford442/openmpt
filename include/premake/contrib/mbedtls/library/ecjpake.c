@@ -29,7 +29,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_ECJPAKE_C)
 
 #include "mbedtls/ecjpake.h"

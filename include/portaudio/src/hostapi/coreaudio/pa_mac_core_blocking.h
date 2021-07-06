@@ -58,7 +58,6 @@
 
 #ifndef PA_MAC_CORE_BLOCKING_H_
 #define PA_MAC_CORE_BLOCKING_H_
-
 #include "pa_ringbuffer.h"
 #include "portaudio.h"
 #include "pa_mac_core_utilities.h"
@@ -77,36 +76,33 @@
 */
 
 typedef struct {
-    PaUtilRingBuffer inputRingBuffer;
-    PaUtilRingBuffer outputRingBuffer;
-    ring_buffer_size_t ringBufferFrames;
-    PaSampleFormat inputSampleFormat;
-    size_t inputSampleSizeActual;
-    size_t inputSampleSizePow2;
-    PaSampleFormat outputSampleFormat;
-    size_t outputSampleSizeActual;
-    size_t outputSampleSizePow2;
+PaUtilRingBuffer inputRingBuffer;
+PaUtilRingBuffer outputRingBuffer;
+ring_buffer_size_t ringBufferFrames;
+PaSampleFormat inputSampleFormat;
+size_t inputSampleSizeActual;
+size_t inputSampleSizePow2;
+PaSampleFormat outputSampleFormat;
+size_t outputSampleSizeActual;
+size_t outputSampleSizePow2;
+int inChan;
+int outChan;
+//PaStreamCallbackFlags statusFlags;
+uint32_t statusFlags;
+PaError errors;
 
-    int inChan;
-    int outChan;
-
-    //PaStreamCallbackFlags statusFlags;
-    uint32_t statusFlags;
-    PaError errors;
-
-    /* Here we handle blocking, using condition variables. */
+/* Here we handle blocking, using condition variables. */
 #ifdef  PA_MAC_BLIO_MUTEX
-    volatile bool isInputEmpty;
-    pthread_mutex_t inputMutex;
-    pthread_cond_t inputCond;
+volatile bool isInputEmpty;
+pthread_mutex_t inputMutex;
+pthread_cond_t inputCond;
 
-    volatile bool isOutputFull;
-    pthread_mutex_t outputMutex;
-    pthread_cond_t outputCond;
+volatile bool isOutputFull;
+pthread_mutex_t outputMutex;
+pthread_cond_t outputCond;
 #endif
 }
-PaMacBlio;
-
+        PaMacBlio;
 /*
  * These functions operate on condition and related variables.
  */
@@ -117,18 +113,15 @@ PaError initializeBlioRingBuffers(
         PaSampleFormat outputSampleFormat,
         long ringBufferSizeInFrames,
         int inChan,
-        int outChan );
-PaError destroyBlioRingBuffers( PaMacBlio *blio );
-PaError resetBlioRingBuffers( PaMacBlio *blio );
-
+        int outChan);
+PaError destroyBlioRingBuffers(PaMacBlio *blio);
+PaError resetBlioRingBuffers(PaMacBlio *blio);
 int BlioCallback(
         const void *input, void *output,
         unsigned long frameCount,
-        const PaStreamCallbackTimeInfo* timeInfo,
+        const PaStreamCallbackTimeInfo *timeInfo,
         PaStreamCallbackFlags statusFlags,
-        void *userData );
-
-PaError waitUntilBlioWriteBufferIsEmpty( PaMacBlio *blio, double sampleRate,
-        size_t framesPerBuffer );
-
+        void *userData);
+PaError waitUntilBlioWriteBufferIsEmpty(PaMacBlio *blio, double sampleRate,
+                                        size_t framesPerBuffer);
 #endif /*PA_MAC_CORE_BLOCKING_H_*/

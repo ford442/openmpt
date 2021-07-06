@@ -28,7 +28,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_MD_C)
 
 #include "mbedtls/md_internal.h"

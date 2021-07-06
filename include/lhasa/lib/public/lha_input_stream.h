@@ -21,9 +21,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_PUBLIC_LHA_INPUT_STREAM_H
 #define LHASA_PUBLIC_LHA_INPUT_STREAM_H
-
 #include <stdio.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,47 +41,40 @@ extern "C" {
  */
 
 typedef struct _LHAInputStream LHAInputStream;
-
 /**
  * Structure containing pointers to callback functions to read data from
  * the input stream.
  */
 
 typedef struct {
+/**
+ * Read a block of data into the specified buffer.
+ *
+ * @param handle       Handle pointer.
+ * @param buf          Pointer to buffer in which to store read data.
+ * @param buf_len      Size of buffer, in bytes.
+ * @return             Number of bytes read, or -1 for error.
+ */
 
-	/**
-	 * Read a block of data into the specified buffer.
-	 *
-	 * @param handle       Handle pointer.
-	 * @param buf          Pointer to buffer in which to store read data.
-	 * @param buf_len      Size of buffer, in bytes.
-	 * @return             Number of bytes read, or -1 for error.
-	 */
+int (*read)(void *handle, void *buf, size_t buf_len);
+/**
+ * Skip the specified number of bytes from the input stream.
+ * This is an optional function.
+ *
+ * @param handle       Handle pointer.
+ * @param bytes        Number of bytes to skip.
+ * @return             Non-zero for success, or zero for failure.
+ */
 
-	int (*read)(void *handle, void *buf, size_t buf_len);
+int (*skip)(void *handle, size_t bytes);
+/**
+ * Close the input stream.
+ *
+ * @param handle       Handle pointer.
+ */
 
-
-	/**
-	 * Skip the specified number of bytes from the input stream.
-	 * This is an optional function.
-	 *
-	 * @param handle       Handle pointer.
-	 * @param bytes        Number of bytes to skip.
-	 * @return             Non-zero for success, or zero for failure.
-	 */
-
-	int (*skip)(void *handle, size_t bytes);
-
-	/**
-	 * Close the input stream.
-	 *
-	 * @param handle       Handle pointer.
-	 */
-
-	void (*close)(void *handle);
-
+void (*close)(void *handle);
 } LHAInputStreamType;
-
 /**
  * Create new @ref LHAInputStream structure, using a set of generic functions
  * to provide LHA data.
@@ -96,7 +87,6 @@ typedef struct {
 
 LHAInputStream *lha_input_stream_new(const LHAInputStreamType *type,
                                      void *handle);
-
 /**
  * Create new @ref LHAInputStream, reading from the specified filename.
  * The file is automatically closed when the input stream is freed.
@@ -106,7 +96,6 @@ LHAInputStream *lha_input_stream_new(const LHAInputStreamType *type,
  */
 
 LHAInputStream *lha_input_stream_from(char *filename);
-
 /**
  * Create new @ref LHAInputStream, to read from an already-open FILE pointer.
  * The FILE is not closed when the input stream is freed; the calling code
@@ -117,7 +106,6 @@ LHAInputStream *lha_input_stream_from(char *filename);
  */
 
 LHAInputStream *lha_input_stream_from_FILE(FILE *stream);
-
 /**
  * Free an @ref LHAInputStream structure.
  *
@@ -125,10 +113,8 @@ LHAInputStream *lha_input_stream_from_FILE(FILE *stream);
  */
 
 void lha_input_stream_free(LHAInputStream *stream);
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* #ifndef LHASA_PUBLIC_LHA_INPUT_STREAM_H */
 

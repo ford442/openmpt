@@ -1,6 +1,5 @@
 #include "compat.h"
-
-#if LUA_VERSION_NUM==501
+#if LUA_VERSION_NUM == 501
 /*
 ** Adapted from Lua 5.2
 */

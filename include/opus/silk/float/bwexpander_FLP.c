@@ -28,22 +28,18 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include "SigProc_FLP.h"
-
 /* Chirp (bw expand) LP AR filter */
 void silk_bwexpander_FLP(
-    silk_float          *ar,                /* I/O  AR filter to be expanded (without leading 1)                */
-    const opus_int      d,                  /* I    length of ar                                                */
-    const silk_float    chirp               /* I    chirp factor (typically in range (0..1) )                   */
-)
-{
-    opus_int   i;
-    silk_float cfac = chirp;
-
-    for( i = 0; i < d - 1; i++ ) {
-        ar[ i ] *=  cfac;
-        cfac    *=  chirp;
-    }
-    ar[ d - 1 ] *=  cfac;
+        silk_float *ar,                /* I/O  AR filter to be expanded (without leading 1)                */
+        const opus_int d,                  /* I    length of ar                                                */
+        const silk_float chirp               /* I    chirp factor (typically in range (0..1) )                   */
+) {
+opus_int i;
+silk_float cfac = chirp;
+for(i = 0; i < d - 1; i++) {
+ar[i] *= cfac;
+cfac *= chirp;
+}
+ar[d - 1] *= cfac;
 }

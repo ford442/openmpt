@@ -9,25 +9,17 @@
 
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
 #include "../common/mptPathString.h"
-
 #include <ShObjIdl.h>
-
 OPENMPT_NAMESPACE_BEGIN
 
-class LinkResolver
-{
-	IShellLink *psl = nullptr;
-	IPersistFile *ppf = nullptr;
-
+class LinkResolver {
+IShellLink *psl = nullptr;
+IPersistFile *ppf = nullptr;
 public:
-	LinkResolver();
-	~LinkResolver();
-
-
-	mpt::PathString Resolve(const TCHAR *inPath);
+LinkResolver();
+~LinkResolver();
+mpt::PathString Resolve(const TCHAR *inPath);
 };
-
 OPENMPT_NAMESPACE_END

@@ -23,7 +23,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef USE_OPENSSL
 /*
  * This header should only be needed to get included by vtls.c and openssl.c

@@ -27,11 +27,9 @@
 
 #ifndef SIGPROC_FIX_SSE_H
 #define SIGPROC_FIX_SSE_H
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #if defined(OPUS_X86_MAY_HAVE_SSE4_1)
 void silk_burg_modified_sse4_1(
     opus_int32                  *res_nrg,           /* O    Residual energy                                             */

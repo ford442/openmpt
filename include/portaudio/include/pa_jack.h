@@ -45,11 +45,9 @@
  */
 
 #include "portaudio.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /** Set the JACK client name.
  *
  * During Pa_Initialize, When PA JACK connects as a client of the JACK server, it requests a certain
@@ -62,16 +60,13 @@ extern "C" {
  * PA might need it.
  * @sa PaJack_GetClientName
  */
-PaError PaJack_SetClientName( const char* name );
-
+PaError PaJack_SetClientName(const char *name);
 /** Get the JACK client name used by PA JACK.
  *
  * The caller is responsible for freeing the returned pointer.
  */
-PaError PaJack_GetClientName(const char** clientName);
-
+PaError PaJack_GetClientName(const char **clientName);
 #ifdef __cplusplus
 }
 #endif
-
 #endif

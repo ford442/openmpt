@@ -80,9 +80,7 @@
 #ifdef HEADER_CURL_MEMDEBUG_H
 #error "Header memdebug.h shall not be included before curl_memory.h"
 #endif
-
 #ifndef CURLX_NO_MEMORY_CALLBACKS
-
 #ifndef CURL_DID_MEMORY_FUNC_TYPEDEFS /* only if not already done */
 /*
  * The following memory function replacement typedef's are COPIED from
@@ -97,7 +95,6 @@ typedef char *(*curl_strdup_callback)(const char *str);
 typedef void *(*curl_calloc_callback)(size_t nmemb, size_t size);
 #define CURL_DID_MEMORY_FUNC_TYPEDEFS
 #endif
-
 extern curl_malloc_callback Curl_cmalloc;
 extern curl_free_callback Curl_cfree;
 extern curl_realloc_callback Curl_crealloc;
@@ -106,7 +103,6 @@ extern curl_calloc_callback Curl_ccalloc;
 #if defined(WIN32) && defined(UNICODE)
 extern curl_wcsdup_callback Curl_cwcsdup;
 #endif
-
 #ifndef CURLDEBUG
 
 /*
@@ -123,12 +119,11 @@ extern curl_wcsdup_callback Curl_cwcsdup;
 #undef malloc
 #define malloc(size) Curl_cmalloc(size)
 #undef calloc
-#define calloc(nbelem,size) Curl_ccalloc(nbelem, size)
+#define calloc(nbelem, size) Curl_ccalloc(nbelem, size)
 #undef realloc
-#define realloc(ptr,size) Curl_crealloc(ptr, size)
+#define realloc(ptr, size) Curl_crealloc(ptr, size)
 #undef free
 #define free(ptr) Curl_cfree(ptr)
-
 #ifdef WIN32
 #  ifdef UNICODE
 #    undef wcsdup
@@ -142,9 +137,7 @@ extern curl_wcsdup_callback Curl_cwcsdup;
 #    define _tcsdup(ptr) Curl_cstrdup(ptr)
 #  endif
 #endif
-
 #endif /* CURLDEBUG */
-
 #else /* CURLX_NO_MEMORY_CALLBACKS */
 
 #ifndef MEMDEBUG_NODEFINES
@@ -152,5 +145,4 @@ extern curl_wcsdup_callback Curl_cwcsdup;
 #endif
 
 #endif /* CURLX_NO_MEMORY_CALLBACKS */
-
 #endif /* HEADER_CURL_MEMORY_H */

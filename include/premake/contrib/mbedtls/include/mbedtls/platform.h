@@ -22,13 +22,11 @@
  */
 #ifndef MBEDTLS_PLATFORM_H
 #define MBEDTLS_PLATFORM_H
-
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -164,7 +162,6 @@ int mbedtls_platform_set_printf( int (*printf_func)( const char *, ... ) );
 /* For Windows (inc. MSYS2), we provide our own fixed implementation */
 int mbedtls_platform_win32_snprintf( char *s, size_t n, const char *fmt, ... );
 #endif
-
 #if defined(MBEDTLS_PLATFORM_SNPRINTF_ALT)
 extern int (*mbedtls_snprintf)( char * s, size_t n, const char * format, ... );
 
@@ -206,9 +203,7 @@ int mbedtls_platform_set_exit( void (*exit_func)( int status ) );
 #define mbedtls_exit   exit
 #endif /* MBEDTLS_PLATFORM_EXIT_MACRO */
 #endif /* MBEDTLS_PLATFORM_EXIT_ALT */
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* platform.h */

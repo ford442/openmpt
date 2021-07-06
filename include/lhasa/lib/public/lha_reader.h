@@ -20,11 +20,9 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_PUBLIC_LHA_READER_H
 #define LHASA_PUBLIC_LHA_READER_H
-
 #include "lha_decoder.h"
 #include "lha_input_stream.h"
 #include "lha_file_header.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -44,7 +42,6 @@ extern "C" {
  */
 
 typedef struct _LHAReader LHAReader;
-
 /**
  * Policy for extracting directories.
  *
@@ -58,56 +55,51 @@ typedef struct _LHAReader LHAReader;
  */
 
 typedef enum {
+/**
+ * "Plain" policy. In this mode, the metadata is set at the
+ * same time that the directory is created. This is the
+ * simplest to comprehend, and the files returned from
+ * @ref lha_reader_next_file will match the files in the
+ * archive, but it is not recommended.
+ */
 
-	/**
-	 * "Plain" policy. In this mode, the metadata is set at the
-	 * same time that the directory is created. This is the
-	 * simplest to comprehend, and the files returned from
-	 * @ref lha_reader_next_file will match the files in the
-	 * archive, but it is not recommended.
-	 */
+LHA_READER_DIR_PLAIN,
+/**
+ * "End of directory" policy. In this mode, if a directory
+ * is extracted, the directory name will be saved. Once the
+ * contents of the directory appear to have been extracted
+ * (ie. a file is found that is not within the directory),
+ * the directory will be returned again by
+ * @ref lha_reader_next_file. This time, when the directory
+ * is "extracted" (via @ref lha_reader_extract), the metadata
+ * will be set.
+ *
+ * This method uses less memory than
+ * @ref LHA_READER_DIR_END_OF_FILE, but there is the risk
+ * that a file will appear within the archive after the
+ * metadata has been set for the directory. However, this is
+ * not normally the case, as files and directories typically
+ * appear within an archive in order. GNU tar uses the same
+ * method to address this problem with tar files.
+ *
+ * This is the default policy.
+ */
 
-	LHA_READER_DIR_PLAIN,
+LHA_READER_DIR_END_OF_DIR,
+/**
+ * "End of file" policy. In this mode, each directory that
+ * is extracted is recorded in a list. When the end of the
+ * archive is reached, these directories are returned again by
+ * @ref lha_reader_next_file. When the directories are
+ * "extracted" again (via @ref lha_reader_extract), the
+ * metadata is set.
+ *
+ * This avoids the problems that can potentially occur with
+ * @ref LHA_READER_DIR_END_OF_DIR, but uses more memory.
+ */
 
-	/**
-	 * "End of directory" policy. In this mode, if a directory
-	 * is extracted, the directory name will be saved. Once the
-	 * contents of the directory appear to have been extracted
-	 * (ie. a file is found that is not within the directory),
-	 * the directory will be returned again by
-	 * @ref lha_reader_next_file. This time, when the directory
-	 * is "extracted" (via @ref lha_reader_extract), the metadata
-	 * will be set.
-	 *
-	 * This method uses less memory than
-	 * @ref LHA_READER_DIR_END_OF_FILE, but there is the risk
-	 * that a file will appear within the archive after the
-	 * metadata has been set for the directory. However, this is
-	 * not normally the case, as files and directories typically
-	 * appear within an archive in order. GNU tar uses the same
-	 * method to address this problem with tar files.
-	 *
-	 * This is the default policy.
-	 */
-
-	LHA_READER_DIR_END_OF_DIR,
-
-	/**
-	 * "End of file" policy. In this mode, each directory that
-	 * is extracted is recorded in a list. When the end of the
-	 * archive is reached, these directories are returned again by
-	 * @ref lha_reader_next_file. When the directories are
-	 * "extracted" again (via @ref lha_reader_extract), the
-	 * metadata is set.
-	 *
-	 * This avoids the problems that can potentially occur with
-	 * @ref LHA_READER_DIR_END_OF_DIR, but uses more memory.
-	 */
-
-	LHA_READER_DIR_END_OF_FILE
-
+LHA_READER_DIR_END_OF_FILE
 } LHAReaderDirPolicy;
-
 /**
  * Create a new @ref LHAReader to read data from an @ref LHAInputStream.
  *
@@ -117,7 +109,6 @@ typedef enum {
  */
 
 LHAReader *lha_reader_new(LHAInputStream *stream);
-
 /**
  * Free a @ref LHAReader structure.
  *
@@ -125,7 +116,6 @@ LHAReader *lha_reader_new(LHAInputStream *stream);
  */
 
 void lha_reader_free(LHAReader *reader);
-
 /**
  * Set the @ref LHAReaderDirPolicy used to extract directories.
  *
@@ -135,7 +125,6 @@ void lha_reader_free(LHAReader *reader);
 
 void lha_reader_set_dir_policy(LHAReader *reader,
                                LHAReaderDirPolicy policy);
-
 /**
  * Read the header of the next archived file from the input stream.
  *
@@ -146,7 +135,6 @@ void lha_reader_set_dir_policy(LHAReader *reader,
  */
 
 LHAFileHeader *lha_reader_next_file(LHAReader *reader);
-
 /**
  * Read some of the (decompresed) data for the current archived file,
  * decompressing as appropriate.
@@ -159,7 +147,6 @@ LHAFileHeader *lha_reader_next_file(LHAReader *reader);
  */
 
 size_t lha_reader_read(LHAReader *reader, void *buf, size_t buf_len);
-
 /**
  * Decompress the contents of the current archived file, and check
  * that the checksum matches correctly.
@@ -174,7 +161,6 @@ size_t lha_reader_read(LHAReader *reader, void *buf, size_t buf_len);
 int lha_reader_check(LHAReader *reader,
                      LHADecoderProgressCallback callback,
                      void *callback_data);
-
 /**
  * Extract the contents of the current archived file.
  *
@@ -192,7 +178,6 @@ int lha_reader_extract(LHAReader *reader,
                        char *filename,
                        LHADecoderProgressCallback callback,
                        void *callback_data);
-
 /**
  * Check if the current file (last returned by @ref lha_reader_next_file)
  * was generated internally by the extract process. This occurs when a
@@ -208,10 +193,8 @@ int lha_reader_extract(LHAReader *reader,
  */
 
 int lha_reader_current_is_fake(LHAReader *reader);
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* #ifndef LHASA_PUBLIC_LHA_READER_H */
 

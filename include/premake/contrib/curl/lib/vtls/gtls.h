@@ -23,7 +23,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef USE_GNUTLS
 
 #include "urldata.h"

@@ -30,7 +30,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include "celt.h"
 #include "modes.h"
 #include "rate.h"
@@ -38,10 +37,9 @@
 #include "stack_alloc.h"
 #include "quant_bands.h"
 #include "cpu_support.h"
-
 static const opus_int16 eband5ms[] = {
 /*0  200 400 600 800  1k 1.2 1.4 1.6  2k 2.4 2.8 3.2  4k 4.8 5.6 6.8  8k 9.6 12k 15.6 */
-  0,  1,  2,  3,  4,  5,  6,  7,  8, 10, 12, 14, 16, 20, 24, 28, 34, 40, 48, 60, 78, 100
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 34, 40, 48, 60, 78, 100
 };
 
 /* Alternate tuning (partially derived from Vorbis) */
@@ -49,31 +47,28 @@ static const opus_int16 eband5ms[] = {
 /* Bit allocation table in units of 1/32 bit/sample (0.1875 dB SNR) */
 static const unsigned char band_allocation[] = {
 /*0  200 400 600 800  1k 1.2 1.4 1.6  2k 2.4 2.8 3.2  4k 4.8 5.6 6.8  8k 9.6 12k 15.6 */
-  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
- 90, 80, 75, 69, 63, 56, 49, 40, 34, 29, 20, 18, 10,  0,  0,  0,  0,  0,  0,  0,  0,
-110,100, 90, 84, 78, 71, 65, 58, 51, 45, 39, 32, 26, 20, 12,  0,  0,  0,  0,  0,  0,
-118,110,103, 93, 86, 80, 75, 70, 65, 59, 53, 47, 40, 31, 23, 15,  4,  0,  0,  0,  0,
-126,119,112,104, 95, 89, 83, 78, 72, 66, 60, 54, 47, 39, 32, 25, 17, 12,  1,  0,  0,
-134,127,120,114,103, 97, 91, 85, 78, 72, 66, 60, 54, 47, 41, 35, 29, 23, 16, 10,  1,
-144,137,130,124,113,107,101, 95, 88, 82, 76, 70, 64, 57, 51, 45, 39, 33, 26, 15,  1,
-152,145,138,132,123,117,111,105, 98, 92, 86, 80, 74, 67, 61, 55, 49, 43, 36, 20,  1,
-162,155,148,142,133,127,121,115,108,102, 96, 90, 84, 77, 71, 65, 59, 53, 46, 30,  1,
-172,165,158,152,143,137,131,125,118,112,106,100, 94, 87, 81, 75, 69, 63, 56, 45, 20,
-200,200,200,200,200,200,200,200,198,193,188,183,178,173,168,163,158,153,148,129,104,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        90, 80, 75, 69, 63, 56, 49, 40, 34, 29, 20, 18, 10, 0, 0, 0, 0, 0, 0, 0, 0,
+        110, 100, 90, 84, 78, 71, 65, 58, 51, 45, 39, 32, 26, 20, 12, 0, 0, 0, 0, 0, 0,
+        118, 110, 103, 93, 86, 80, 75, 70, 65, 59, 53, 47, 40, 31, 23, 15, 4, 0, 0, 0, 0,
+        126, 119, 112, 104, 95, 89, 83, 78, 72, 66, 60, 54, 47, 39, 32, 25, 17, 12, 1, 0, 0,
+        134, 127, 120, 114, 103, 97, 91, 85, 78, 72, 66, 60, 54, 47, 41, 35, 29, 23, 16, 10, 1,
+        144, 137, 130, 124, 113, 107, 101, 95, 88, 82, 76, 70, 64, 57, 51, 45, 39, 33, 26, 15, 1,
+        152, 145, 138, 132, 123, 117, 111, 105, 98, 92, 86, 80, 74, 67, 61, 55, 49, 43, 36, 20, 1,
+        162, 155, 148, 142, 133, 127, 121, 115, 108, 102, 96, 90, 84, 77, 71, 65, 59, 53, 46, 30, 1,
+        172, 165, 158, 152, 143, 137, 131, 125, 118, 112, 106, 100, 94, 87, 81, 75, 69, 63, 56, 45, 20,
+        200, 200, 200, 200, 200, 200, 200, 200, 198, 193, 188, 183, 178, 173, 168, 163, 158, 153, 148, 129, 104,
 };
-
 #ifndef CUSTOM_MODES_ONLY
- #ifdef FIXED_POINT
-  #include "static_modes_fixed.h"
- #else
-  #include "static_modes_float.h"
- #endif
+#ifdef FIXED_POINT
+#include "static_modes_fixed.h"
+#else
+#include "static_modes_float.h"
+#endif
 #endif /* CUSTOM_MODES_ONLY */
-
 #ifndef M_PI
 #define M_PI 3.141592653
 #endif
-
 #ifdef CUSTOM_MODES
 
 /* Defining 25 critical bands for the full 0-20 kHz audio bandwidth
@@ -220,193 +215,185 @@ static void compute_allocation_table(CELTMode *mode)
 }
 
 #endif /* CUSTOM_MODES */
-
-CELTMode *opus_custom_mode_create(opus_int32 Fs, int frame_size, int *error)
-{
-   int i;
+CELTMode *opus_custom_mode_create(opus_int32 Fs, int frame_size, int *error) {
+int i;
 #ifdef CUSTOM_MODES
-   CELTMode *mode=NULL;
-   int res;
-   opus_val16 *window;
-   opus_int16 *logN;
-   int LM;
-   int arch = opus_select_arch();
-   ALLOC_STACK;
+CELTMode *mode=NULL;
+int res;
+opus_val16 *window;
+opus_int16 *logN;
+int LM;
+int arch = opus_select_arch();
+ALLOC_STACK;
 #if !defined(VAR_ARRAYS) && !defined(USE_ALLOCA)
-   if (global_stack==NULL)
-      goto failure;
+if (global_stack==NULL)
+   goto failure;
 #endif
 #endif
-
 #ifndef CUSTOM_MODES_ONLY
-   for (i=0;i<TOTAL_MODES;i++)
-   {
-      int j;
-      for (j=0;j<4;j++)
-      {
-         if (Fs == static_mode_list[i]->Fs &&
-               (frame_size<<j) == static_mode_list[i]->shortMdctSize*static_mode_list[i]->nbShortMdcts)
-         {
-            if (error)
-               *error = OPUS_OK;
-            return (CELTMode*)static_mode_list[i];
-         }
-      }
-   }
+for(i = 0; i < TOTAL_MODES; i++) {
+int j;
+for(j = 0; j < 4; j++) {
+if(Fs == static_mode_list[i]->Fs &&
+   (frame_size << j) == static_mode_list[i]->shortMdctSize * static_mode_list[i]->nbShortMdcts) {
+if(error)
+*error = OPUS_OK;
+return (CELTMode *) static_mode_list[i];
+}
+}
+}
 #endif /* CUSTOM_MODES_ONLY */
-
 #ifndef CUSTOM_MODES
+if(error)
+*error = OPUS_BAD_ARG;
+return NULL;
+#else
+
+/* The good thing here is that permutation of the arguments will automatically be invalid */
+
+if (Fs < 8000 || Fs > 96000)
+{
    if (error)
       *error = OPUS_BAD_ARG;
    return NULL;
-#else
-
-   /* The good thing here is that permutation of the arguments will automatically be invalid */
-
-   if (Fs < 8000 || Fs > 96000)
-   {
-      if (error)
-         *error = OPUS_BAD_ARG;
-      return NULL;
-   }
-   if (frame_size < 40 || frame_size > 1024 || frame_size%2!=0)
-   {
-      if (error)
-         *error = OPUS_BAD_ARG;
-      return NULL;
-   }
-   /* Frames of less than 1ms are not supported. */
-   if ((opus_int32)frame_size*1000 < Fs)
-   {
-      if (error)
-         *error = OPUS_BAD_ARG;
-      return NULL;
-   }
-
-   if ((opus_int32)frame_size*75 >= Fs && (frame_size%16)==0)
-   {
-     LM = 3;
-   } else if ((opus_int32)frame_size*150 >= Fs && (frame_size%8)==0)
-   {
-     LM = 2;
-   } else if ((opus_int32)frame_size*300 >= Fs && (frame_size%4)==0)
-   {
-     LM = 1;
-   } else
-   {
-     LM = 0;
-   }
-
-   /* Shorts longer than 3.3ms are not supported. */
-   if ((opus_int32)(frame_size>>LM)*300 > Fs)
-   {
-      if (error)
-         *error = OPUS_BAD_ARG;
-      return NULL;
-   }
-
-   mode = opus_alloc(sizeof(CELTMode));
-   if (mode==NULL)
-      goto failure;
-   mode->Fs = Fs;
-
-   /* Pre/de-emphasis depends on sampling rate. The "standard" pre-emphasis
-      is defined as A(z) = 1 - 0.85*z^-1 at 48 kHz. Other rates should
-      approximate that. */
-   if(Fs < 12000) /* 8 kHz */
-   {
-      mode->preemph[0] =  QCONST16(0.3500061035f, 15);
-      mode->preemph[1] = -QCONST16(0.1799926758f, 15);
-      mode->preemph[2] =  QCONST16(0.2719968125f, SIG_SHIFT); /* exact 1/preemph[3] */
-      mode->preemph[3] =  QCONST16(3.6765136719f, 13);
-   } else if(Fs < 24000) /* 16 kHz */
-   {
-      mode->preemph[0] =  QCONST16(0.6000061035f, 15);
-      mode->preemph[1] = -QCONST16(0.1799926758f, 15);
-      mode->preemph[2] =  QCONST16(0.4424998650f, SIG_SHIFT); /* exact 1/preemph[3] */
-      mode->preemph[3] =  QCONST16(2.2598876953f, 13);
-   } else if(Fs < 40000) /* 32 kHz */
-   {
-      mode->preemph[0] =  QCONST16(0.7799987793f, 15);
-      mode->preemph[1] = -QCONST16(0.1000061035f, 15);
-      mode->preemph[2] =  QCONST16(0.7499771125f, SIG_SHIFT); /* exact 1/preemph[3] */
-      mode->preemph[3] =  QCONST16(1.3333740234f, 13);
-   } else /* 48 kHz */
-   {
-      mode->preemph[0] =  QCONST16(0.8500061035f, 15);
-      mode->preemph[1] =  QCONST16(0.0f, 15);
-      mode->preemph[2] =  QCONST16(1.f, SIG_SHIFT);
-      mode->preemph[3] =  QCONST16(1.f, 13);
-   }
-
-   mode->maxLM = LM;
-   mode->nbShortMdcts = 1<<LM;
-   mode->shortMdctSize = frame_size/mode->nbShortMdcts;
-   res = (mode->Fs+mode->shortMdctSize)/(2*mode->shortMdctSize);
-
-   mode->eBands = compute_ebands(Fs, mode->shortMdctSize, res, &mode->nbEBands);
-   if (mode->eBands==NULL)
-      goto failure;
-#if !defined(SMALL_FOOTPRINT)
-   /* Make sure we don't allocate a band larger than our PVQ table.
-      208 should be enough, but let's be paranoid. */
-   if ((mode->eBands[mode->nbEBands] - mode->eBands[mode->nbEBands-1])<<LM >
-    208) {
-       goto failure;
-   }
-#endif
-
-   mode->effEBands = mode->nbEBands;
-   while (mode->eBands[mode->effEBands] > mode->shortMdctSize)
-      mode->effEBands--;
-
-   /* Overlap must be divisible by 4 */
-   mode->overlap = ((mode->shortMdctSize>>2)<<2);
-
-   compute_allocation_table(mode);
-   if (mode->allocVectors==NULL)
-      goto failure;
-
-   window = (opus_val16*)opus_alloc(mode->overlap*sizeof(opus_val16));
-   if (window==NULL)
-      goto failure;
-
-#ifndef FIXED_POINT
-   for (i=0;i<mode->overlap;i++)
-      window[i] = Q15ONE*sin(.5*M_PI* sin(.5*M_PI*(i+.5)/mode->overlap) * sin(.5*M_PI*(i+.5)/mode->overlap));
-#else
-   for (i=0;i<mode->overlap;i++)
-      window[i] = MIN32(32767,floor(.5+32768.*sin(.5*M_PI* sin(.5*M_PI*(i+.5)/mode->overlap) * sin(.5*M_PI*(i+.5)/mode->overlap))));
-#endif
-   mode->window = window;
-
-   logN = (opus_int16*)opus_alloc(mode->nbEBands*sizeof(opus_int16));
-   if (logN==NULL)
-      goto failure;
-
-   for (i=0;i<mode->nbEBands;i++)
-      logN[i] = log2_frac(mode->eBands[i+1]-mode->eBands[i], BITRES);
-   mode->logN = logN;
-
-   compute_pulse_cache(mode, mode->maxLM);
-
-   if (clt_mdct_init(&mode->mdct, 2*mode->shortMdctSize*mode->nbShortMdcts,
-           mode->maxLM, arch) == 0)
-      goto failure;
-
+}
+if (frame_size < 40 || frame_size > 1024 || frame_size%2!=0)
+{
    if (error)
-      *error = OPUS_OK;
-
-   return mode;
-failure:
-   if (error)
-      *error = OPUS_ALLOC_FAIL;
-   if (mode!=NULL)
-      opus_custom_mode_destroy(mode);
+      *error = OPUS_BAD_ARG;
    return NULL;
-#endif /* !CUSTOM_MODES */
+}
+/* Frames of less than 1ms are not supported. */
+if ((opus_int32)frame_size*1000 < Fs)
+{
+   if (error)
+      *error = OPUS_BAD_ARG;
+   return NULL;
 }
 
+if ((opus_int32)frame_size*75 >= Fs && (frame_size%16)==0)
+{
+  LM = 3;
+} else if ((opus_int32)frame_size*150 >= Fs && (frame_size%8)==0)
+{
+  LM = 2;
+} else if ((opus_int32)frame_size*300 >= Fs && (frame_size%4)==0)
+{
+  LM = 1;
+} else
+{
+  LM = 0;
+}
+
+/* Shorts longer than 3.3ms are not supported. */
+if ((opus_int32)(frame_size>>LM)*300 > Fs)
+{
+   if (error)
+      *error = OPUS_BAD_ARG;
+   return NULL;
+}
+
+mode = opus_alloc(sizeof(CELTMode));
+if (mode==NULL)
+   goto failure;
+mode->Fs = Fs;
+
+/* Pre/de-emphasis depends on sampling rate. The "standard" pre-emphasis
+   is defined as A(z) = 1 - 0.85*z^-1 at 48 kHz. Other rates should
+   approximate that. */
+if(Fs < 12000) /* 8 kHz */
+{
+   mode->preemph[0] =  QCONST16(0.3500061035f, 15);
+   mode->preemph[1] = -QCONST16(0.1799926758f, 15);
+   mode->preemph[2] =  QCONST16(0.2719968125f, SIG_SHIFT); /* exact 1/preemph[3] */
+   mode->preemph[3] =  QCONST16(3.6765136719f, 13);
+} else if(Fs < 24000) /* 16 kHz */
+{
+   mode->preemph[0] =  QCONST16(0.6000061035f, 15);
+   mode->preemph[1] = -QCONST16(0.1799926758f, 15);
+   mode->preemph[2] =  QCONST16(0.4424998650f, SIG_SHIFT); /* exact 1/preemph[3] */
+   mode->preemph[3] =  QCONST16(2.2598876953f, 13);
+} else if(Fs < 40000) /* 32 kHz */
+{
+   mode->preemph[0] =  QCONST16(0.7799987793f, 15);
+   mode->preemph[1] = -QCONST16(0.1000061035f, 15);
+   mode->preemph[2] =  QCONST16(0.7499771125f, SIG_SHIFT); /* exact 1/preemph[3] */
+   mode->preemph[3] =  QCONST16(1.3333740234f, 13);
+} else /* 48 kHz */
+{
+   mode->preemph[0] =  QCONST16(0.8500061035f, 15);
+   mode->preemph[1] =  QCONST16(0.0f, 15);
+   mode->preemph[2] =  QCONST16(1.f, SIG_SHIFT);
+   mode->preemph[3] =  QCONST16(1.f, 13);
+}
+
+mode->maxLM = LM;
+mode->nbShortMdcts = 1<<LM;
+mode->shortMdctSize = frame_size/mode->nbShortMdcts;
+res = (mode->Fs+mode->shortMdctSize)/(2*mode->shortMdctSize);
+
+mode->eBands = compute_ebands(Fs, mode->shortMdctSize, res, &mode->nbEBands);
+if (mode->eBands==NULL)
+   goto failure;
+#if !defined(SMALL_FOOTPRINT)
+/* Make sure we don't allocate a band larger than our PVQ table.
+   208 should be enough, but let's be paranoid. */
+if ((mode->eBands[mode->nbEBands] - mode->eBands[mode->nbEBands-1])<<LM >
+ 208) {
+    goto failure;
+}
+#endif
+
+mode->effEBands = mode->nbEBands;
+while (mode->eBands[mode->effEBands] > mode->shortMdctSize)
+   mode->effEBands--;
+
+/* Overlap must be divisible by 4 */
+mode->overlap = ((mode->shortMdctSize>>2)<<2);
+
+compute_allocation_table(mode);
+if (mode->allocVectors==NULL)
+   goto failure;
+
+window = (opus_val16*)opus_alloc(mode->overlap*sizeof(opus_val16));
+if (window==NULL)
+   goto failure;
+
+#ifndef FIXED_POINT
+for (i=0;i<mode->overlap;i++)
+   window[i] = Q15ONE*sin(.5*M_PI* sin(.5*M_PI*(i+.5)/mode->overlap) * sin(.5*M_PI*(i+.5)/mode->overlap));
+#else
+for (i=0;i<mode->overlap;i++)
+   window[i] = MIN32(32767,floor(.5+32768.*sin(.5*M_PI* sin(.5*M_PI*(i+.5)/mode->overlap) * sin(.5*M_PI*(i+.5)/mode->overlap))));
+#endif
+mode->window = window;
+
+logN = (opus_int16*)opus_alloc(mode->nbEBands*sizeof(opus_int16));
+if (logN==NULL)
+   goto failure;
+
+for (i=0;i<mode->nbEBands;i++)
+   logN[i] = log2_frac(mode->eBands[i+1]-mode->eBands[i], BITRES);
+mode->logN = logN;
+
+compute_pulse_cache(mode, mode->maxLM);
+
+if (clt_mdct_init(&mode->mdct, 2*mode->shortMdctSize*mode->nbShortMdcts,
+        mode->maxLM, arch) == 0)
+   goto failure;
+
+if (error)
+   *error = OPUS_OK;
+
+return mode;
+failure:
+if (error)
+   *error = OPUS_ALLOC_FAIL;
+if (mode!=NULL)
+   opus_custom_mode_destroy(mode);
+return NULL;
+#endif /* !CUSTOM_MODES */
+}
 #ifdef CUSTOM_MODES
 void opus_custom_mode_destroy(CELTMode *mode)
 {

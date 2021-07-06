@@ -25,11 +25,9 @@
 
 #ifndef KISS_FFT_ARMv5E_H
 #define KISS_FFT_ARMv5E_H
-
 #if !defined(KISS_FFT_GUTS_H)
 #error "This file should only be included from _kiss_fft_guts.h"
 #endif
-
 #ifdef FIXED_POINT
 
 #if defined(__thumb__)||defined(__thumb2__)
@@ -114,5 +112,4 @@
     while(0)
 
 #endif /* FIXED_POINT */
-
 #endif /* KISS_FFT_GUTS_H */

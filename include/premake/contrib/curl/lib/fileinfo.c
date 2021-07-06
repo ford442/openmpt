@@ -21,30 +21,23 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #include "strdup.h"
 #include "fileinfo.h"
 #include "curl_memory.h"
 /* The last #include file should be: */
 #include "memdebug.h"
-
-struct curl_fileinfo *Curl_fileinfo_alloc(void)
-{
-  struct curl_fileinfo *tmp = malloc(sizeof(struct curl_fileinfo));
-  if(!tmp)
-    return NULL;
-  memset(tmp, 0, sizeof(struct curl_fileinfo));
-  return tmp;
+struct curl_fileinfo *Curl_fileinfo_alloc(void) {
+struct curl_fileinfo *tmp = malloc(sizeof(struct curl_fileinfo));
+if(!tmp)
+return NULL;
+memset(tmp, 0, sizeof(struct curl_fileinfo));
+return tmp;
 }
-
-void Curl_fileinfo_dtor(void *user, void *element)
-{
-  struct curl_fileinfo *finfo = element;
-  (void) user;
-  if(!finfo)
-    return;
-
-  Curl_safefree(finfo->b_data);
-
-  free(finfo);
+void Curl_fileinfo_dtor(void *user, void *element) {
+struct curl_fileinfo *finfo = element;
+(void) user;
+if(!finfo)
+return;
+Curl_safefree(finfo->b_data);
+free(finfo);
 }

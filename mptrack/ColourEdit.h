@@ -9,30 +9,26 @@
 
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
 OPENMPT_NAMESPACE_BEGIN
 
-class CColourEdit : public CEdit
-{
+class CColourEdit : public CEdit {
 public:
-	CColourEdit();
-	~CColourEdit();
-
+CColourEdit();
+~CColourEdit();
 public:
-	void SetTextColor(COLORREF rgb);
-	void SetBackColor(COLORREF rgb);
-
+void SetTextColor(COLORREF rgb);
+void SetBackColor(COLORREF rgb);
 private:
-	COLORREF m_crText;
-	COLORREF m_crBackGnd;
-	CBrush m_brBackGnd;
-
+COLORREF m_crText;
+COLORREF m_crBackGnd;
+CBrush m_brBackGnd;
 protected:
-	afx_msg HBRUSH CtlColor(CDC* pDC, UINT nCtlColor);
-	DECLARE_MESSAGE_MAP()
-
+afx_msg HBRUSH
+CtlColor(CDC
+* pDC,
+UINT nCtlColor
+);
+DECLARE_MESSAGE_MAP()
 };
-
 OPENMPT_NAMESPACE_END

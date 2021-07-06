@@ -9,13 +9,10 @@
 
 #ifndef MPG123_H_INTERN
 #define MPG123_H_INTERN
-
 #define MPG123_RATES 9
 #define MPG123_ENCODINGS 12
-
 #include "config.h" /* Load this before _anything_ */
 #include "intsym.h" /* Prefixing of internal symbols that still are public in a static lib. */
-
 #include "abi_align.h"
 
 /* export DLL symbols */
@@ -25,16 +22,13 @@
 #include "compat.h"
 #define MPG123_ENUM_API
 #include "mpg123.h"
-
 #define SKIP_JUNK 1
-
 #ifndef M_PI
 # define M_PI       3.14159265358979323846
 #endif
 #ifndef M_SQRT2
-# define M_SQRT2	1.41421356237309504880
+# define M_SQRT2    1.41421356237309504880
 #endif
-
 #ifdef SUNOS
 #define memmove(dst,src,size) bcopy(src,dst,size)
 #endif
@@ -60,17 +54,17 @@
 
 static inline int32_t double_to_long_rounded(double x, double scalefac)
 {
-	x *= scalefac;
-	x += (x > 0) ? 0.5 : -0.5;
-	return (int32_t)x;
+    x *= scalefac;
+    x += (x > 0) ? 0.5 : -0.5;
+    return (int32_t)x;
 }
 
 static inline int32_t scale_rounded(int32_t x, int shift)
 {
-	x += (x >> 31);
-	x >>= (shift - 1);
-	x += (x & 1);
-	return (x >> 1);
+    x += (x >> 31);
+    x >>= (shift - 1);
+    x += (x & 1);
+    return (x >> 1);
 }
 
 # ifdef __GNUC__
@@ -78,89 +72,89 @@ static inline int32_t scale_rounded(int32_t x, int shift)
 /* for i386_nofpu decoder */
 #   define REAL_MUL_ASM(x, y, radix) \
 ({ \
-	long _x=(x), _y=(y); \
-	__asm__ ( \
-		"imull %1 \n\t" \
-		"shrdl %2, %%edx, %0 \n\t" \
-		: "+&a" (_x) \
-		: "mr" (_y), "I" (radix) \
-		: "%edx", "cc" \
-	); \
-	_x; \
+    long _x=(x), _y=(y); \
+    __asm__ ( \
+        "imull %1 \n\t" \
+        "shrdl %2, %%edx, %0 \n\t" \
+        : "+&a" (_x) \
+        : "mr" (_y), "I" (radix) \
+        : "%edx", "cc" \
+    ); \
+    _x; \
 })
 
 #   define REAL_MUL_SCALE_LAYER3_ASM(x, y, radix) \
 ({ \
-	long _x=(x), _y=(y), _radix=(radix); \
-	__asm__ ( \
-		"imull %1 \n\t" \
-		"shrdl %%cl, %%edx, %0 \n\t" \
-		: "+&a" (_x) \
-		: "mr" (_y), "c" (_radix) \
-		: "%edx", "cc" \
-	); \
-	_x; \
+    long _x=(x), _y=(y), _radix=(radix); \
+    __asm__ ( \
+        "imull %1 \n\t" \
+        "shrdl %%cl, %%edx, %0 \n\t" \
+        : "+&a" (_x) \
+        : "mr" (_y), "c" (_radix) \
+        : "%edx", "cc" \
+    ); \
+    _x; \
 })
 #  elif defined(OPT_PPC)
 /* for powerpc */
 #   define REAL_MUL_ASM(x, y, radix) \
 ({ \
-	long _x=(x), _y=(y), _mull, _mulh; \
-	__asm__ ( \
-		"mullw %0, %2, %3 \n\t" \
-		"mulhw %1, %2, %3 \n\t" \
-		"srwi %0, %0, %4 \n\t" \
-		"rlwimi %0, %1, %5, 0, %6 \n\t" \
-		: "=&r" (_mull), "=&r" (_mulh) \
-		: "r" (_x), "r" (_y), "i" (radix), "i" (32-(radix)), "i" ((radix)-1) \
-	); \
-	_mull; \
+    long _x=(x), _y=(y), _mull, _mulh; \
+    __asm__ ( \
+        "mullw %0, %2, %3 \n\t" \
+        "mulhw %1, %2, %3 \n\t" \
+        "srwi %0, %0, %4 \n\t" \
+        "rlwimi %0, %1, %5, 0, %6 \n\t" \
+        : "=&r" (_mull), "=&r" (_mulh) \
+        : "r" (_x), "r" (_y), "i" (radix), "i" (32-(radix)), "i" ((radix)-1) \
+    ); \
+    _mull; \
 })
 
 #   define REAL_MUL_SCALE_LAYER3_ASM(x, y, radix) \
 ({ \
-	long _x=(x), _y=(y), _radix=(radix), _mull, _mulh, _radix2; \
-	__asm__ ( \
-		"mullw %0, %3, %4 \n\t" \
-		"mulhw %1, %3, %4 \n\t" \
-		"subfic %2, %5, 32 \n\t" \
-		"srw %0, %0, %5 \n\t" \
-		"slw %1, %1, %2 \n\t" \
-		"or %0, %0, %1 \n\t" \
-		: "=&r" (_mull), "=&r" (_mulh), "=&r" (_radix2) \
-		: "r" (_x), "r" (_y), "r" (_radix) \
-		: "cc" \
-	); \
-	_mull; \
+    long _x=(x), _y=(y), _radix=(radix), _mull, _mulh, _radix2; \
+    __asm__ ( \
+        "mullw %0, %3, %4 \n\t" \
+        "mulhw %1, %3, %4 \n\t" \
+        "subfic %2, %5, 32 \n\t" \
+        "srw %0, %0, %5 \n\t" \
+        "slw %1, %1, %2 \n\t" \
+        "or %0, %0, %1 \n\t" \
+        : "=&r" (_mull), "=&r" (_mulh), "=&r" (_radix2) \
+        : "r" (_x), "r" (_y), "r" (_radix) \
+        : "cc" \
+    ); \
+    _mull; \
 })
 #  elif defined(OPT_ARM)
 /* for arm */
 #   define REAL_MUL_ASM(x, y, radix) \
 ({ \
-	long _x=(x), _y=(y), _mull, _mulh; \
-	__asm__ ( \
-		"smull %0, %1, %2, %3 \n\t" \
-		"mov %0, %0, lsr %4 \n\t" \
-		"orr %0, %0, %1, lsl %5 \n\t" \
-		: "=&r" (_mull), "=&r" (_mulh) \
-		: "r" (_x), "r" (_y), "M" (radix), "M" (32-(radix)) \
-	); \
-	_mull; \
+    long _x=(x), _y=(y), _mull, _mulh; \
+    __asm__ ( \
+        "smull %0, %1, %2, %3 \n\t" \
+        "mov %0, %0, lsr %4 \n\t" \
+        "orr %0, %0, %1, lsl %5 \n\t" \
+        : "=&r" (_mull), "=&r" (_mulh) \
+        : "r" (_x), "r" (_y), "M" (radix), "M" (32-(radix)) \
+    ); \
+    _mull; \
 })
 
 #   define REAL_MUL_SCALE_LAYER3_ASM(x, y, radix) \
 ({ \
-	long _x=(x), _y=(y), _radix=(radix), _mull, _mulh, _radix2; \
-	__asm__ ( \
-		"smull %0, %1, %3, %4 \n\t" \
-		"mov %0, %0, lsr %5 \n\t" \
-		"rsb %2, %5, #32 \n\t" \
-		"mov %1, %1, lsl %2 \n\t" \
-		"orr %0, %0, %1 \n\t" \
-		: "=&r" (_mull), "=&r" (_mulh), "=&r" (_radix2) \
-		: "r" (_x), "r" (_y), "r" (_radix) \
-	); \
-	_mull; \
+    long _x=(x), _y=(y), _radix=(radix), _mull, _mulh, _radix2; \
+    __asm__ ( \
+        "smull %0, %1, %3, %4 \n\t" \
+        "mov %0, %0, lsr %5 \n\t" \
+        "rsb %2, %5, #32 \n\t" \
+        "mov %1, %1, lsl %2 \n\t" \
+        "orr %0, %0, %1 \n\t" \
+        : "=&r" (_mull), "=&r" (_mulh), "=&r" (_radix2) \
+        : "r" (_x), "r" (_y), "r" (_radix) \
+    ); \
+    _mull; \
 })
 #  endif
 # endif
@@ -202,67 +196,60 @@ static inline int32_t scale_rounded(int32_t x, int shift)
 # endif
 
 #else
-
 #error "Simple float or fixed-point, nothing else makes sense."
-
 #endif
-
 #ifndef REAL_IS_FIXED
 # if (defined SIZEOF_INT32_T) && (SIZEOF_INT32_T != 4)
 #  error "Bad 32bit types!!!"
 # endif
 #endif
-
 #ifndef DOUBLE_TO_REAL
-# define DOUBLE_TO_REAL(x)					(real)(x)
+# define DOUBLE_TO_REAL(x)                    (real)(x)
 #endif
 #ifndef DOUBLE_TO_REAL_15
-# define DOUBLE_TO_REAL_15(x)				(real)(x)
+# define DOUBLE_TO_REAL_15(x)                (real)(x)
 #endif
 #ifndef DOUBLE_TO_REAL_POW43
-# define DOUBLE_TO_REAL_POW43(x)			(real)(x)
+# define DOUBLE_TO_REAL_POW43(x)            (real)(x)
 #endif
 #ifndef DOUBLE_TO_REAL_SCALE_LAYER12
-# define DOUBLE_TO_REAL_SCALE_LAYER12(x)	(real)(x)
+# define DOUBLE_TO_REAL_SCALE_LAYER12(x)    (real)(x)
 #endif
 #ifndef DOUBLE_TO_REAL_SCALE_LAYER3
-# define DOUBLE_TO_REAL_SCALE_LAYER3(x, y)	(real)(x)
+# define DOUBLE_TO_REAL_SCALE_LAYER3(x, y)    (real)(x)
 #endif
 #ifndef REAL_TO_DOUBLE
-# define REAL_TO_DOUBLE(x)					(x)
+# define REAL_TO_DOUBLE(x)                    (x)
 #endif
-
 #ifndef REAL_MUL
-# define REAL_MUL(x, y)						((x) * (y))
+# define REAL_MUL(x, y)                        ((x) * (y))
 #endif
 #ifndef REAL_MUL_SYNTH
-# define REAL_MUL_SYNTH(x, y)				((x) * (y))
+# define REAL_MUL_SYNTH(x, y)                ((x) * (y))
 #endif
 #ifndef REAL_MUL_15
-# define REAL_MUL_15(x, y)					((x) * (y))
+# define REAL_MUL_15(x, y)                    ((x) * (y))
 #endif
 #ifndef REAL_MUL_SCALE_LAYER12
-# define REAL_MUL_SCALE_LAYER12(x, y)		((x) * (y))
+# define REAL_MUL_SCALE_LAYER12(x, y)        ((x) * (y))
 #endif
 #ifndef REAL_MUL_SCALE_LAYER3
-# define REAL_MUL_SCALE_LAYER3(x, y, z)		((x) * (y))
+# define REAL_MUL_SCALE_LAYER3(x, y, z)        ((x) * (y))
 #endif
 #ifndef REAL_SCALE_LAYER12
-# define REAL_SCALE_LAYER12(x)				(x)
+# define REAL_SCALE_LAYER12(x)                (x)
 #endif
 #ifndef REAL_SCALE_LAYER3
-# define REAL_SCALE_LAYER3(x, y)			(x)
+# define REAL_SCALE_LAYER3(x, y)            (x)
 #endif
 #ifndef REAL_SCALE_DCT64
-# define REAL_SCALE_DCT64(x)				(x)
+# define REAL_SCALE_DCT64(x)                (x)
 #endif
 
 /* used to be: AUDIOBUFSIZE = n*64 with n=1,2,3 ...
    now: factor on minimum frame buffer size (which takes upsampling into account) */
-#define		AUDIOBUFSIZE		2
-
+#define        AUDIOBUFSIZE        2
 #include "true.h"
-
 #define         MAX_NAME_SIZE           81
 #define         SBLIMIT                 32
 #define         SCALE_BLOCK             12
@@ -283,7 +270,6 @@ static inline int32_t scale_rounded(int32_t x, int shift)
 
 /* Pre Shift fo 16 to 8 bit converter table */
 #define AUSHIFT (3)
-
 #include "optimize.h"
 #include "decode.h"
 #include "parse.h"
@@ -296,16 +282,14 @@ static inline int32_t scale_rounded(int32_t x, int shift)
 #define VERBOSE3 (NOQUIET && fr->p.verbose > 2)
 #define VERBOSE4 (NOQUIET && fr->p.verbose > 3)
 #define PVERB(mp, level) (!((mp)->flags & MPG123_QUIET) && (mp)->verbose >= (level))
-
 int decode_update(mpg123_handle *mh);
 /* residing in format.c  */
-off_t decoder_synth_bytes(mpg123_handle *fr , off_t s);
-off_t samples_to_bytes(mpg123_handle *fr , off_t s);
-off_t bytes_to_samples(mpg123_handle *fr , off_t b);
+off_t decoder_synth_bytes(mpg123_handle *fr, off_t s);
+off_t samples_to_bytes(mpg123_handle *fr, off_t s);
+off_t bytes_to_samples(mpg123_handle *fr, off_t b);
 off_t outblock_bytes(mpg123_handle *fr, off_t s);
 /* Postprocessing format conversion of freshly decoded buffer. */
 void postprocess_buffer(mpg123_handle *fr);
-
 int open_fixed_pre(mpg123_handle *mh, int channels, int encoding);
 int open_fixed_post(mpg123_handle *mh, int channels, int encoding);
 
@@ -314,5 +298,4 @@ int open_fixed_post(mpg123_handle *mh, int channels, int encoding);
 /* Does not work with win32 */
 #define TIMEOUT_READ
 #endif
-
 #endif

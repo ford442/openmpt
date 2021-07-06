@@ -52,7 +52,6 @@
 #include "pa_trace.h"
 #include "pa_util.h"
 #include "pa_debugprint.h"
-
 #if PA_TRACE_REALTIME_EVENTS
 
 static char const *traceTextArray[PA_MAX_TRACE_RECORDS];
@@ -231,8 +230,7 @@ void PaUtil_DiscardHighSpeedLog( LogHandle hLog )
 /* This stub was added so that this file will generate a symbol.
  * Otherwise linker/archiver programs will complain.
  */
-int PaUtil_TraceStubToSatisfyLinker(void)
-{
-    return 0;
+int PaUtil_TraceStubToSatisfyLinker(void) {
+return 0;
 }
 #endif /* TRACE_REALTIME_EVENTS */

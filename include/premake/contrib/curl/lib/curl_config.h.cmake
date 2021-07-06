@@ -317,7 +317,7 @@
 #cmakedefine HAVE_IOCTLSOCKET_CAMEL 1
 
 /* Define to 1 if you have a working IoctlSocket camel case FIONBIO function.
-   */
+*/
 #cmakedefine HAVE_IOCTLSOCKET_CAMEL_FIONBIO 1
 
 /* Define to 1 if you have a working ioctlsocket FIONBIO function. */
@@ -759,7 +759,7 @@
 #cmakedefine HAVE_ZLIB_H 1
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+*/
 #cmakedefine LT_OBJDIR ${LT_OBJDIR}
 
 /* If you lack a fine basename() prototype */
@@ -990,7 +990,7 @@
 #cmakedefine in_addr_t ${in_addr_t}
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
-   calls it, or to nothing if 'inline' is not supported under any name.  */
+calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
 #undef inline
 #endif

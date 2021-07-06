@@ -24,6 +24,5 @@
 #ifndef CURL_DISABLE_TFTP
 extern const struct Curl_handler Curl_handler_tftp;
 #endif
-
 #endif /* HEADER_CURL_TFTP_H */
 

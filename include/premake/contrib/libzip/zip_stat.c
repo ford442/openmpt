@@ -31,19 +31,13 @@
   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
+
 
 #include "zipint.h"
-
-
-
 ZIP_EXTERN int
-zip_stat(struct zip *za, const char *fname, zip_flags_t flags, struct zip_stat *st)
-{
-    zip_int64_t idx;
-
-    if ((idx=zip_name_locate(za, fname, flags)) < 0)
-	return -1;
-
-    return zip_stat_index(za, (zip_uint64_t)idx, flags, st);
+zip_stat(struct zip *za, const char *fname, zip_flags_t flags, struct zip_stat *st) {
+zip_int64_t idx;
+if((idx = zip_name_locate(za, fname, flags)) < 0)
+return -1;
+return zip_stat_index(za, (zip_uint64_t) idx, flags, st);
 }

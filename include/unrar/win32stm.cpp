@@ -1,5 +1,4 @@
 
-
 #if !defined(SFX_MODULE) && defined(_WIN_ALL)
 void ExtractStreams20(Archive &Arc,const wchar *FileName)
 {
@@ -77,8 +76,6 @@ void ExtractStreams20(Archive &Arc,const wchar *FileName)
     SetFileAttr(FileName,fd.FileAttr);
 }
 #endif
-
-
 #ifdef _WIN_ALL
 void ExtractStreams(Archive &Arc,const wchar *FileName,bool TestMode)
 {
@@ -129,24 +126,18 @@ void ExtractStreams(Archive &Arc,const wchar *FileName,bool TestMode)
   SetFileAttr(FileName,fd.FileAttr);
 }
 #endif
-
-
-void GetStreamNameNTFS(Archive &Arc,wchar *StreamName,size_t MaxSize)
-{
-  byte *Data=&Arc.SubHead.SubData[0];
-  size_t DataSize=Arc.SubHead.SubData.Size();
-  if (Arc.Format==RARFMT15)
-  {
-    size_t DestSize=Min(DataSize/2,MaxSize-1);
-    RawToWide(Data,StreamName,DestSize);
-    StreamName[DestSize]=0;
-  }
-  else
-  {
-    char UtfString[NM*4];
-    size_t DestSize=Min(DataSize,ASIZE(UtfString)-1);
-    memcpy(UtfString,Data,DestSize);
-    UtfString[DestSize]=0;
-    UtfToWide(UtfString,StreamName,MaxSize);
-  }
+void GetStreamNameNTFS(Archive &Arc, wchar *StreamName, size_t MaxSize) {
+byte *Data = &Arc.SubHead.SubData[0];
+size_t DataSize = Arc.SubHead.SubData.Size();
+if(Arc.Format == RARFMT15) {
+size_t DestSize = Min(DataSize / 2, MaxSize - 1);
+RawToWide(Data, StreamName, DestSize);
+StreamName[DestSize] = 0;
+} else {
+char UtfString[NM * 4];
+size_t DestSize = Min(DataSize, ASIZE(UtfString) - 1);
+memcpy(UtfString, Data, DestSize);
+UtfString[DestSize] = 0;
+UtfToWide(UtfString, StreamName, MaxSize);
+}
 }

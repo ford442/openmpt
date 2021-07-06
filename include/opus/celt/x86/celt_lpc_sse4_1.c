@@ -28,7 +28,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include <xmmintrin.h>
 #include <emmintrin.h>
 #include <smmintrin.h>
@@ -37,7 +36,6 @@
 #include "mathops.h"
 #include "pitch.h"
 #include "x86cpu.h"
-
 #if defined(FIXED_POINT)
 
 void celt_fir_sse4_1(const opus_val16 *x,

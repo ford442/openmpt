@@ -21,7 +21,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
@@ -35,11 +34,9 @@
 #include <in.h>
 #include <inet.h>
 #endif
-
 #ifdef HAVE_PROCESS_H
 #include <process.h>
 #endif
-
 #include "urldata.h"
 #include "sendf.h"
 #include "hostip.h"

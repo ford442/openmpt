@@ -22,7 +22,6 @@
  *
  ***************************************************************************/
 #include "curl_setup.h"
-
 #if defined(USE_THREADS_POSIX)
 #  define CURL_STDCALL
 #  define curl_mutex_t           pthread_mutex_t
@@ -47,7 +46,6 @@
 #  define Curl_mutex_release(m)  LeaveCriticalSection(m)
 #  define Curl_mutex_destroy(m)  DeleteCriticalSection(m)
 #endif
-
 #if defined(USE_THREADS_POSIX) || defined(USE_THREADS_WIN32)
 
 /* !checksrc! disable SPACEBEFOREPAREN 1 */
@@ -59,5 +57,4 @@ void Curl_thread_destroy(curl_thread_t hnd);
 int Curl_thread_join(curl_thread_t *hnd);
 
 #endif /* USE_THREADS_POSIX || USE_THREADS_WIN32 */
-
 #endif /* HEADER_CURL_THREADS_H */

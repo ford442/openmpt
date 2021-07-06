@@ -33,9 +33,7 @@
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
-
 #include "private/bitmath.h"
-
 /* An example of what FLAC__bitmath_silog2() computes:
  *
  * silog2(-10) = 5
@@ -60,14 +58,11 @@
  * silog2(  9) = 5
  * silog2( 10) = 5
  */
-uint32_t FLAC__bitmath_silog2(FLAC__int64 v)
-{
-	if(v == 0)
-		return 0;
-
-	if(v == -1)
-		return 2;
-
-	v = (v < 0) ? (-(v+1)) : v;
-	return FLAC__bitmath_ilog2_wide(v)+2;
+uint32_t FLAC__bitmath_silog2(FLAC__int64 v) {
+if(v == 0)
+return 0;
+if(v == -1)
+return 2;
+v = (v < 0) ? (-(v + 1)) : v;
+return FLAC__bitmath_ilog2_wide(v) + 2;
 }

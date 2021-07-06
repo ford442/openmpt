@@ -20,10 +20,8 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_PUBLIC_LHA_DECODER_H
 #define LHASA_PUBLIC_LHA_DECODER_H
-
 #include <stdlib.h>
 #include <inttypes.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -53,7 +51,6 @@ extern "C" {
  */
 
 typedef struct _LHADecoderType LHADecoderType;
-
 /**
  * Opaque type representing an instance of a decoder.
  *
@@ -63,7 +60,6 @@ typedef struct _LHADecoderType LHADecoderType;
  */
 
 typedef struct _LHADecoder LHADecoder;
-
 /**
  * Callback function invoked when a decoder wants to read more compressed
  * data.
@@ -76,7 +72,6 @@ typedef struct _LHADecoder LHADecoder;
 
 typedef size_t (*LHADecoderCallback)(void *buf, size_t buf_len,
                                      void *user_data);
-
 /**
  * Callback function used for monitoring decode progress.
  * The callback is invoked for every block processed (block size depends on
@@ -90,7 +85,6 @@ typedef size_t (*LHADecoderCallback)(void *buf, size_t buf_len,
 typedef void (*LHADecoderProgressCallback)(unsigned int num_blocks,
                                            unsigned int total_blocks,
                                            void *callback_data);
-
 /**
  * Get the decoder type for the specified name.
  *
@@ -101,7 +95,6 @@ typedef void (*LHADecoderProgressCallback)(unsigned int num_blocks,
  */
 
 LHADecoderType *lha_decoder_for_name(char *name);
-
 /**
  * Allocate a new decoder for the specified type.
  *
@@ -118,7 +111,6 @@ LHADecoder *lha_decoder_new(LHADecoderType *dtype,
                             LHADecoderCallback callback,
                             void *callback_data,
                             size_t stream_length);
-
 /**
  * Free a decoder.
  *
@@ -126,7 +118,6 @@ LHADecoder *lha_decoder_new(LHADecoderType *dtype,
  */
 
 void lha_decoder_free(LHADecoder *decoder);
-
 /**
  * Set a callback function to monitor decode progress.
  *
@@ -138,7 +129,6 @@ void lha_decoder_free(LHADecoder *decoder);
 void lha_decoder_monitor(LHADecoder *decoder,
                          LHADecoderProgressCallback callback,
                          void *callback_data);
-
 /**
  * Decode (decompress) more data.
  *
@@ -149,7 +139,6 @@ void lha_decoder_monitor(LHADecoder *decoder,
  */
 
 size_t lha_decoder_read(LHADecoder *decoder, uint8_t *buf, size_t buf_len);
-
 /**
  * Get the current 16-bit CRC of the decompressed data.
  *
@@ -162,7 +151,6 @@ size_t lha_decoder_read(LHADecoder *decoder, uint8_t *buf, size_t buf_len);
  */
 
 uint16_t lha_decoder_get_crc(LHADecoder *decoder);
-
 /**
  * Get the count of the number of bytes decoded.
  *
@@ -174,10 +162,8 @@ uint16_t lha_decoder_get_crc(LHADecoder *decoder);
  */
 
 size_t lha_decoder_get_length(LHADecoder *decoder);
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* #ifndef LHASA_LHA_DECODER_H */
 

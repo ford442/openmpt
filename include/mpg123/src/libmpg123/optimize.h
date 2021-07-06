@@ -91,29 +91,28 @@ for my $n (@names)
 print "};\n##endif"
 EOT
 */
-enum optdec
-{
-	 autodec=0
-	,generic
-	,generic_dither
-	,idrei
-	,ivier
-	,ifuenf
-	,ifuenf_dither
-	,mmx
-	,dreidnow
-	,dreidnowext
-	,altivec
-	,sse
-	,x86_64
-	,arm
-	,neon
-	,neon64
-	,avx
-	,dreidnow_vintage
-	,dreidnowext_vintage
-	,sse_vintage
-	,nodec
+enum optdec {
+autodec = 0,
+generic,
+generic_dither,
+idrei,
+ivier,
+ifuenf,
+ifuenf_dither,
+mmx,
+dreidnow,
+dreidnowext,
+altivec,
+sse,
+x86_64,
+arm,
+neon,
+neon64,
+avx,
+dreidnow_vintage,
+dreidnowext_vintage,
+sse_vintage,
+nodec
 };
 #ifdef I_AM_OPTIMIZE
 static const char dn_autodec[] = "auto";
@@ -139,38 +138,38 @@ static const char dn_sse_vintage[] = "SSE_vintage";
 static const char dn_nodec[] = "nodec";
 static const char* decname[] =
 {
-	 dn_autodec
-	,dn_generic
-	,dn_generic_dither
-	,dn_idrei
-	,dn_ivier
-	,dn_ifuenf
-	,dn_ifuenf_dither
-	,dn_mmx
-	,dn_dreidnow
-	,dn_dreidnowext
-	,dn_altivec
-	,dn_sse
-	,dn_x86_64
-	,dn_arm
-	,dn_neon
-	,dn_neon64
-	,dn_avx
-	,dn_dreidnow_vintage
-	,dn_dreidnowext_vintage
-	,dn_sse_vintage
-	,dn_nodec
+     dn_autodec
+    ,dn_generic
+    ,dn_generic_dither
+    ,dn_idrei
+    ,dn_ivier
+    ,dn_ifuenf
+    ,dn_ifuenf_dither
+    ,dn_mmx
+    ,dn_dreidnow
+    ,dn_dreidnowext
+    ,dn_altivec
+    ,dn_sse
+    ,dn_x86_64
+    ,dn_arm
+    ,dn_neon
+    ,dn_neon64
+    ,dn_avx
+    ,dn_dreidnow_vintage
+    ,dn_dreidnowext_vintage
+    ,dn_sse_vintage
+    ,dn_nodec
 };
 #endif
-
-enum optcla { nocla=0, normal, mmxsse };
-
+enum optcla {
+nocla = 0, normal, mmxsse
+};
 /*  - Set up the table of synth functions for current decoder choice. */
-int frame_cpu_opt(mpg123_handle *fr, const char* cpu);
+int frame_cpu_opt(mpg123_handle *fr, const char *cpu);
 /*  - Choose, from the synth table, the synth functions to use for current output format/rate. */
 int set_synth_functions(mpg123_handle *fr);
 /*  - Parse decoder name and return numerical code. */
-enum optdec dectype(const char* decoder);
+enum optdec dectype(const char *decoder);
 /*  - Return the default decoder type. */
 enum optdec defdec(void);
 /*  - Return the class of a decoder type (mmxsse or normal). */
@@ -198,17 +197,14 @@ enum optcla decclass(const enum optdec);
 #error "Bad decoder choice together with fixed point math!"
 #endif
 #endif
-
 #if (defined NO_LAYER1 && defined NO_LAYER2)
 #define NO_LAYER12
 #endif
-
 #ifdef OPT_GENERIC
 #ifndef OPT_MULTI
 #	define defopt generic
 #endif
 #endif
-
 #ifdef OPT_GENERIC_DITHER
 #define OPT_DITHER
 #ifndef OPT_MULTI
@@ -226,21 +222,18 @@ enum optcla decclass(const enum optdec);
 #define FIR_BUFFER_SIZE  128
 #define FIR_SIZE 16
 #endif
-
 #ifdef OPT_I386
 #define OPT_X86
 #ifndef OPT_MULTI
 #	define defopt idrei
 #endif
 #endif
-
 #ifdef OPT_I586
 #define OPT_X86
 #ifndef OPT_MULTI
 #	define defopt ifuenf
 #endif
 #endif
-
 #ifdef OPT_I586_DITHER
 #define OPT_X86
 #define OPT_DITHER
@@ -258,7 +251,6 @@ enum optcla decclass(const enum optdec);
 #	define defopt mmx
 #endif
 #endif
-
 #ifdef OPT_SSE
 #define OPT_MMXORSSE
 #define OPT_MPLAYER
@@ -268,7 +260,6 @@ enum optcla decclass(const enum optdec);
 #	define opt_dct36(fr) dct36_sse
 #endif
 #endif
-
 #ifdef OPT_SSE_VINTAGE
 #define OPT_MMXORSSE
 #define OPT_MPLAYER
@@ -277,7 +268,6 @@ enum optcla decclass(const enum optdec);
 #	define defopt sse
 #endif
 #endif
-
 #ifdef OPT_3DNOWEXT
 #define OPT_MMXORSSE
 #define OPT_MPLAYER
@@ -297,7 +287,6 @@ enum optcla decclass(const enum optdec);
 #	define opt_dct36(fr) dct36_3dnowext
 #endif
 #endif
-
 #ifdef OPT_MPLAYER
 extern const int costab_mmxsse[];
 #endif
@@ -319,13 +308,11 @@ extern const int costab_mmxsse[];
 #	define opt_dct36(fr) dct36_3dnow
 #endif
 #endif
-
 #ifdef OPT_ALTIVEC
 #ifndef OPT_MULTI
 #	define defopt altivec
 #endif
 #endif
-
 #ifdef OPT_X86_64
 #define OPT_MMXORSSE
 #ifndef OPT_MULTI
@@ -333,7 +320,6 @@ extern const int costab_mmxsse[];
 #	define opt_dct36(fr) dct36_x86_64
 #endif
 #endif
-
 #ifdef OPT_AVX
 #define OPT_MMXORSSE
 #ifndef OPT_MULTI
@@ -341,13 +327,11 @@ extern const int costab_mmxsse[];
 #	define opt_dct36(fr) dct36_avx
 #endif
 #endif
-
 #ifdef OPT_ARM
 #ifndef OPT_MULTI
 #	define defopt arm
 #endif
 #endif
-
 #ifdef OPT_NEON
 #define OPT_MMXORSSE
 #ifndef OPT_MULTI
@@ -355,7 +339,6 @@ extern const int costab_mmxsse[];
 #	define opt_dct36(fr) dct36_neon
 #endif
 #endif
-
 #ifdef OPT_NEON64
 #define OPT_MMXORSSE
 #ifndef OPT_MULTI
@@ -379,10 +362,8 @@ extern const int costab_mmxsse[];
 #	endif
 
 #endif /* OPT_MULTI else */
-
 #	ifndef opt_dct36
 #		define opt_dct36(fr) dct36
 #	endif
-
 #endif /* MPG123_H_OPTIMIZE */
 

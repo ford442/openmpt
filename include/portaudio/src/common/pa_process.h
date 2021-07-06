@@ -203,13 +203,10 @@
 #include "portaudio.h"
 #include "pa_converters.h"
 #include "pa_dither.h"
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
-
-
 /** @brief Mode flag passed to PaUtil_InitializeBufferProcessor indicating the type
  of buffering that the host API uses.
 
@@ -218,14 +215,11 @@ extern "C"
 */
 typedef enum {
 /** The host buffer size is a fixed known size. */
-    paUtilFixedHostBufferSize,
-
+paUtilFixedHostBufferSize,
 /** The host buffer size may vary, but has a known maximum size. */
-    paUtilBoundedHostBufferSize,
-
+paUtilBoundedHostBufferSize,
 /** Nothing is known about the host buffer size. */
-    paUtilUnknownHostBufferSize,
-
+paUtilUnknownHostBufferSize,
 /** The host buffer size varies, and the client does not require the buffer
  processor to consume all of the input and fill all of the output buffer. This
  is useful when the implementation has access to the host API's circular buffer
@@ -233,83 +227,70 @@ typedef enum {
  call to the buffer processor. This is the only mode where
  PaUtil_EndBufferProcessing() may not consume the whole buffer.
 */
-    paUtilVariableHostBufferSizePartialUsageAllowed
-}PaUtilHostBufferSizeMode;
-
-
+paUtilVariableHostBufferSizePartialUsageAllowed
+} PaUtilHostBufferSizeMode;
 /** @brief An auxiliary data structure used internally by the buffer processor
  to represent host input and output buffers. */
-typedef struct PaUtilChannelDescriptor{
-    void *data;
-    unsigned int stride;  /**< stride in samples, not bytes */
-}PaUtilChannelDescriptor;
-
-
+typedef struct PaUtilChannelDescriptor {
+void *data;
+unsigned int stride;  /**< stride in samples, not bytes */
+} PaUtilChannelDescriptor;
 /** @brief The main buffer processor data structure.
 
  Allocate one of these, initialize it with PaUtil_InitializeBufferProcessor
  and terminate it with PaUtil_TerminateBufferProcessor.
 */
 typedef struct {
-    unsigned long framesPerUserBuffer;
-    unsigned long framesPerHostBuffer;
+unsigned long framesPerUserBuffer;
+unsigned long framesPerHostBuffer;
+PaUtilHostBufferSizeMode hostBufferSizeMode;
+int useNonAdaptingProcess;
+int userOutputSampleFormatIsEqualToHost;
+int userInputSampleFormatIsEqualToHost;
+unsigned long framesPerTempBuffer;
+unsigned int inputChannelCount;
+unsigned int bytesPerHostInputSample;
+unsigned int bytesPerUserInputSample;
+int userInputIsInterleaved;
+PaUtilConverter *inputConverter;
+PaUtilZeroer *inputZeroer;
+unsigned int outputChannelCount;
+unsigned int bytesPerHostOutputSample;
+unsigned int bytesPerUserOutputSample;
+int userOutputIsInterleaved;
+PaUtilConverter *outputConverter;
+PaUtilZeroer *outputZeroer;
+unsigned long initialFramesInTempInputBuffer;
+unsigned long initialFramesInTempOutputBuffer;
+void *tempInputBuffer;          /**< used for slips, block adaption, and conversion. */
+void **tempInputBufferPtrs;     /**< storage for non-interleaved buffer pointers, NULL for interleaved user input */
+unsigned long framesInTempInputBuffer; /**< frames remaining in input buffer from previous adaption iteration */
 
-    PaUtilHostBufferSizeMode hostBufferSizeMode;
-    int useNonAdaptingProcess;
-    int userOutputSampleFormatIsEqualToHost;
-    int userInputSampleFormatIsEqualToHost;
-    unsigned long framesPerTempBuffer;
+void *tempOutputBuffer;         /**< used for slips, block adaption, and conversion. */
+void **tempOutputBufferPtrs;    /**< storage for non-interleaved buffer pointers, NULL for interleaved user output */
+unsigned long framesInTempOutputBuffer; /**< frames remaining in input buffer from previous adaption iteration */
 
-    unsigned int inputChannelCount;
-    unsigned int bytesPerHostInputSample;
-    unsigned int bytesPerUserInputSample;
-    int userInputIsInterleaved;
-    PaUtilConverter *inputConverter;
-    PaUtilZeroer *inputZeroer;
-
-    unsigned int outputChannelCount;
-    unsigned int bytesPerHostOutputSample;
-    unsigned int bytesPerUserOutputSample;
-    int userOutputIsInterleaved;
-    PaUtilConverter *outputConverter;
-    PaUtilZeroer *outputZeroer;
-
-    unsigned long initialFramesInTempInputBuffer;
-    unsigned long initialFramesInTempOutputBuffer;
-
-    void *tempInputBuffer;          /**< used for slips, block adaption, and conversion. */
-    void **tempInputBufferPtrs;     /**< storage for non-interleaved buffer pointers, NULL for interleaved user input */
-    unsigned long framesInTempInputBuffer; /**< frames remaining in input buffer from previous adaption iteration */
-
-    void *tempOutputBuffer;         /**< used for slips, block adaption, and conversion. */
-    void **tempOutputBufferPtrs;    /**< storage for non-interleaved buffer pointers, NULL for interleaved user output */
-    unsigned long framesInTempOutputBuffer; /**< frames remaining in input buffer from previous adaption iteration */
-
-    PaStreamCallbackTimeInfo *timeInfo;
-
-    PaStreamCallbackFlags callbackStatusFlags;
-
-    int hostInputIsInterleaved;
-    unsigned long hostInputFrameCount[2];
-    PaUtilChannelDescriptor *hostInputChannels[2]; /**< pointers to arrays of channel descriptors.
+PaStreamCallbackTimeInfo *timeInfo;
+PaStreamCallbackFlags callbackStatusFlags;
+int hostInputIsInterleaved;
+unsigned long hostInputFrameCount[2];
+PaUtilChannelDescriptor *hostInputChannels[2]; /**< pointers to arrays of channel descriptors.
                                                         pointers are NULL for half-duplex output processing.
                                                         hostInputChannels[i].data is NULL when the caller
                                                         calls PaUtil_SetNoInput()
                                                         */
-    int hostOutputIsInterleaved;
-    unsigned long hostOutputFrameCount[2];
-    PaUtilChannelDescriptor *hostOutputChannels[2]; /**< pointers to arrays of channel descriptors.
+int hostOutputIsInterleaved;
+unsigned long hostOutputFrameCount[2];
+PaUtilChannelDescriptor *hostOutputChannels[2]; /**< pointers to arrays of channel descriptors.
                                                          pointers are NULL for half-duplex input processing.
                                                          hostOutputChannels[i].data is NULL when the caller
                                                          calls PaUtil_SetNoOutput()
                                                          */
 
-    PaUtilTriangularDitherGenerator ditherGenerator;
-
-    double samplePeriod;
-
-    PaStreamCallback *streamCallback;
-    void *userData;
+PaUtilTriangularDitherGenerator ditherGenerator;
+double samplePeriod;
+PaStreamCallback *streamCallback;
+void *userData;
 } PaUtilBufferProcessor;
 
 
@@ -374,19 +355,17 @@ typedef struct {
 
  @see Pa_OpenStream, PaUtilHostBufferSizeMode, PaUtil_TerminateBufferProcessor
 */
-PaError PaUtil_InitializeBufferProcessor( PaUtilBufferProcessor* bufferProcessor,
-            int inputChannelCount, PaSampleFormat userInputSampleFormat,
-            PaSampleFormat hostInputSampleFormat,
-            int outputChannelCount, PaSampleFormat userOutputSampleFormat,
-            PaSampleFormat hostOutputSampleFormat,
-            double sampleRate,
-            PaStreamFlags streamFlags,
-            unsigned long framesPerUserBuffer, /* 0 indicates don't care */
-            unsigned long framesPerHostBuffer,
-            PaUtilHostBufferSizeMode hostBufferSizeMode,
-            PaStreamCallback *streamCallback, void *userData );
-
-
+PaError PaUtil_InitializeBufferProcessor(PaUtilBufferProcessor *bufferProcessor,
+                                         int inputChannelCount, PaSampleFormat userInputSampleFormat,
+                                         PaSampleFormat hostInputSampleFormat,
+                                         int outputChannelCount, PaSampleFormat userOutputSampleFormat,
+                                         PaSampleFormat hostOutputSampleFormat,
+                                         double sampleRate,
+                                         PaStreamFlags streamFlags,
+                                         unsigned long framesPerUserBuffer, /* 0 indicates don't care */
+                                         unsigned long framesPerHostBuffer,
+                                         PaUtilHostBufferSizeMode hostBufferSizeMode,
+                                         PaStreamCallback *streamCallback, void *userData);
 /** Terminate a buffer processor's representation. Deallocates any temporary
  buffers allocated by PaUtil_InitializeBufferProcessor.
 
@@ -394,18 +373,14 @@ PaError PaUtil_InitializeBufferProcessor( PaUtilBufferProcessor* bufferProcessor
 
  @see PaUtil_InitializeBufferProcessor.
 */
-void PaUtil_TerminateBufferProcessor( PaUtilBufferProcessor* bufferProcessor );
-
-
+void PaUtil_TerminateBufferProcessor(PaUtilBufferProcessor *bufferProcessor);
 /** Clear any internally buffered data. If you call
  PaUtil_InitializeBufferProcessor in your OpenStream routine, make sure you
  call PaUtil_ResetBufferProcessor in your StartStream call.
 
  @param bufferProcessor The buffer processor to reset.
 */
-void PaUtil_ResetBufferProcessor( PaUtilBufferProcessor* bufferProcessor );
-
-
+void PaUtil_ResetBufferProcessor(PaUtilBufferProcessor *bufferProcessor);
 /** Retrieve the input latency of a buffer processor, in frames.
 
  @param bufferProcessor The buffer processor examine.
@@ -414,8 +389,7 @@ void PaUtil_ResetBufferProcessor( PaUtilBufferProcessor* bufferProcessor );
 
  @see PaUtil_GetBufferProcessorOutputLatencyFrames
 */
-unsigned long PaUtil_GetBufferProcessorInputLatencyFrames( PaUtilBufferProcessor* bufferProcessor );
-
+unsigned long PaUtil_GetBufferProcessorInputLatencyFrames(PaUtilBufferProcessor *bufferProcessor);
 /** Retrieve the output latency of a buffer processor, in frames.
 
  @param bufferProcessor The buffer processor examine.
@@ -424,7 +398,7 @@ unsigned long PaUtil_GetBufferProcessorInputLatencyFrames( PaUtilBufferProcessor
 
  @see PaUtil_GetBufferProcessorInputLatencyFrames
 */
-unsigned long PaUtil_GetBufferProcessorOutputLatencyFrames( PaUtilBufferProcessor* bufferProcessor );
+unsigned long PaUtil_GetBufferProcessorOutputLatencyFrames(PaUtilBufferProcessor *bufferProcessor);
 
 /*@}*/
 
@@ -448,10 +422,8 @@ unsigned long PaUtil_GetBufferProcessorOutputLatencyFrames( PaUtilBufferProcesso
  @see PaUtil_SetNoInput, PaUtil_SetInputChannel,
  PaUtil_SetInterleavedInputChannels, PaUtil_SetNonInterleavedInputChannel
 */
-void PaUtil_SetInputFrameCount( PaUtilBufferProcessor* bufferProcessor,
-        unsigned long frameCount );
-
-
+void PaUtil_SetInputFrameCount(PaUtilBufferProcessor *bufferProcessor,
+                               unsigned long frameCount);
 /** Indicate that no input is available. This function should be used when
  priming the output of a full-duplex stream opened with the
  paPrimeOutputBuffersUsingStreamCallback flag. Note that it is not necessary
@@ -459,9 +431,7 @@ void PaUtil_SetInputFrameCount( PaUtilBufferProcessor* bufferProcessor,
 
  @param bufferProcessor The buffer processor.
 */
-void PaUtil_SetNoInput( PaUtilBufferProcessor* bufferProcessor );
-
-
+void PaUtil_SetNoInput(PaUtilBufferProcessor *bufferProcessor);
 /** Provide the buffer processor with a pointer to a host input channel.
 
  @param bufferProcessor The buffer processor.
@@ -471,10 +441,8 @@ void PaUtil_SetNoInput( PaUtilBufferProcessor* bufferProcessor );
  interleaved host buffers, the stride will usually be the same as the number of
  channels in the buffer.
 */
-void PaUtil_SetInputChannel( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int channel, void *data, unsigned int stride );
-
-
+void PaUtil_SetInputChannel(PaUtilBufferProcessor *bufferProcessor,
+                            unsigned int channel, void *data, unsigned int stride);
 /** Provide the buffer processor with a pointer to an number of interleaved
  host input channels.
 
@@ -485,10 +453,8 @@ void PaUtil_SetInputChannel( PaUtilBufferProcessor* bufferProcessor,
  channelCount is zero, the number of channels specified to
  PaUtil_InitializeBufferProcessor will be used.
 */
-void PaUtil_SetInterleavedInputChannels( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int firstChannel, void *data, unsigned int channelCount );
-
-
+void PaUtil_SetInterleavedInputChannels(PaUtilBufferProcessor *bufferProcessor,
+                                        unsigned int firstChannel, void *data, unsigned int channelCount);
 /** Provide the buffer processor with a pointer to one non-interleaved host
  output channel.
 
@@ -496,35 +462,28 @@ void PaUtil_SetInterleavedInputChannels( PaUtilBufferProcessor* bufferProcessor,
  @param channel The channel number.
  @param data The buffer.
 */
-void PaUtil_SetNonInterleavedInputChannel( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int channel, void *data );
-
-
+void PaUtil_SetNonInterleavedInputChannel(PaUtilBufferProcessor *bufferProcessor,
+                                          unsigned int channel, void *data);
 /** Use for the second buffer half when the input buffer is split in two halves.
  @see PaUtil_SetInputFrameCount
 */
-void PaUtil_Set2ndInputFrameCount( PaUtilBufferProcessor* bufferProcessor,
-        unsigned long frameCount );
-
+void PaUtil_Set2ndInputFrameCount(PaUtilBufferProcessor *bufferProcessor,
+                                  unsigned long frameCount);
 /** Use for the second buffer half when the input buffer is split in two halves.
  @see PaUtil_SetInputChannel
 */
-void PaUtil_Set2ndInputChannel( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int channel, void *data, unsigned int stride );
-
+void PaUtil_Set2ndInputChannel(PaUtilBufferProcessor *bufferProcessor,
+                               unsigned int channel, void *data, unsigned int stride);
 /** Use for the second buffer half when the input buffer is split in two halves.
  @see PaUtil_SetInterleavedInputChannels
 */
-void PaUtil_Set2ndInterleavedInputChannels( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int firstChannel, void *data, unsigned int channelCount );
-
+void PaUtil_Set2ndInterleavedInputChannels(PaUtilBufferProcessor *bufferProcessor,
+                                           unsigned int firstChannel, void *data, unsigned int channelCount);
 /** Use for the second buffer half when the input buffer is split in two halves.
  @see PaUtil_SetNonInterleavedInputChannel
 */
-void PaUtil_Set2ndNonInterleavedInputChannel( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int channel, void *data );
-
-
+void PaUtil_Set2ndNonInterleavedInputChannel(PaUtilBufferProcessor *bufferProcessor,
+                                             unsigned int channel, void *data);
 /** Set the number of frames in the output host buffer(s) specified by the
  PaUtil_Set*OutputChannel functions.
 
@@ -536,18 +495,14 @@ void PaUtil_Set2ndNonInterleavedInputChannel( PaUtilBufferProcessor* bufferProce
  @see PaUtil_SetOutputChannel, PaUtil_SetInterleavedOutputChannels,
  PaUtil_SetNonInterleavedOutputChannel
 */
-void PaUtil_SetOutputFrameCount( PaUtilBufferProcessor* bufferProcessor,
-        unsigned long frameCount );
-
-
+void PaUtil_SetOutputFrameCount(PaUtilBufferProcessor *bufferProcessor,
+                                unsigned long frameCount);
 /** Indicate that the output will be discarded. This function should be used
  when implementing the paNeverDropInput mode for full duplex streams.
 
  @param bufferProcessor The buffer processor.
 */
-void PaUtil_SetNoOutput( PaUtilBufferProcessor* bufferProcessor );
-
-
+void PaUtil_SetNoOutput(PaUtilBufferProcessor *bufferProcessor);
 /** Provide the buffer processor with a pointer to a host output channel.
 
  @param bufferProcessor The buffer processor.
@@ -557,10 +512,8 @@ void PaUtil_SetNoOutput( PaUtilBufferProcessor* bufferProcessor );
  interleaved host buffers, the stride will usually be the same as the number of
  channels in the buffer.
 */
-void PaUtil_SetOutputChannel( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int channel, void *data, unsigned int stride );
-
-
+void PaUtil_SetOutputChannel(PaUtilBufferProcessor *bufferProcessor,
+                             unsigned int channel, void *data, unsigned int stride);
 /** Provide the buffer processor with a pointer to a number of interleaved
  host output channels.
 
@@ -571,10 +524,8 @@ void PaUtil_SetOutputChannel( PaUtilBufferProcessor* bufferProcessor,
  channelCount is zero, the number of channels specified to
  PaUtil_InitializeBufferProcessor will be used.
 */
-void PaUtil_SetInterleavedOutputChannels( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int firstChannel, void *data, unsigned int channelCount );
-
-
+void PaUtil_SetInterleavedOutputChannels(PaUtilBufferProcessor *bufferProcessor,
+                                         unsigned int firstChannel, void *data, unsigned int channelCount);
 /** Provide the buffer processor with a pointer to one non-interleaved host
  output channel.
 
@@ -582,33 +533,28 @@ void PaUtil_SetInterleavedOutputChannels( PaUtilBufferProcessor* bufferProcessor
  @param channel The channel number.
  @param data The buffer.
 */
-void PaUtil_SetNonInterleavedOutputChannel( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int channel, void *data );
-
-
+void PaUtil_SetNonInterleavedOutputChannel(PaUtilBufferProcessor *bufferProcessor,
+                                           unsigned int channel, void *data);
 /** Use for the second buffer half when the output buffer is split in two halves.
  @see PaUtil_SetOutputFrameCount
 */
-void PaUtil_Set2ndOutputFrameCount( PaUtilBufferProcessor* bufferProcessor,
-        unsigned long frameCount );
-
+void PaUtil_Set2ndOutputFrameCount(PaUtilBufferProcessor *bufferProcessor,
+                                   unsigned long frameCount);
 /** Use for the second buffer half when the output buffer is split in two halves.
  @see PaUtil_SetOutputChannel
 */
-void PaUtil_Set2ndOutputChannel( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int channel, void *data, unsigned int stride );
-
+void PaUtil_Set2ndOutputChannel(PaUtilBufferProcessor *bufferProcessor,
+                                unsigned int channel, void *data, unsigned int stride);
 /** Use for the second buffer half when the output buffer is split in two halves.
  @see PaUtil_SetInterleavedOutputChannels
 */
-void PaUtil_Set2ndInterleavedOutputChannels( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int firstChannel, void *data, unsigned int channelCount );
-
+void PaUtil_Set2ndInterleavedOutputChannels(PaUtilBufferProcessor *bufferProcessor,
+                                            unsigned int firstChannel, void *data, unsigned int channelCount);
 /** Use for the second buffer half when the output buffer is split in two halves.
  @see PaUtil_SetNonInterleavedOutputChannel
 */
-void PaUtil_Set2ndNonInterleavedOutputChannel( PaUtilBufferProcessor* bufferProcessor,
-        unsigned int channel, void *data );
+void PaUtil_Set2ndNonInterleavedOutputChannel(PaUtilBufferProcessor *bufferProcessor,
+                                              unsigned int channel, void *data);
 
 /*@}*/
 
@@ -629,10 +575,8 @@ void PaUtil_Set2ndNonInterleavedOutputChannel( PaUtilBufferProcessor* bufferProc
  @param callbackStatusFlags Flags indicating whether underruns and overruns
  have occurred since the last time the buffer processor was called.
 */
-void PaUtil_BeginBufferProcessing( PaUtilBufferProcessor* bufferProcessor,
-        PaStreamCallbackTimeInfo* timeInfo, PaStreamCallbackFlags callbackStatusFlags );
-
-
+void PaUtil_BeginBufferProcessing(PaUtilBufferProcessor *bufferProcessor,
+                                  PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags callbackStatusFlags);
 /** Finish processing a host buffer (or a pair of host buffers in the
  full-duplex case) for a callback stream.
 
@@ -656,10 +600,8 @@ void PaUtil_BeginBufferProcessing( PaUtilBufferProcessor* bufferProcessor,
  the paUtilVariableHostBufferSizePartialUsageAllowed buffer size mode when a
  smaller value may be returned.
 */
-unsigned long PaUtil_EndBufferProcessing( PaUtilBufferProcessor* bufferProcessor,
-        int *callbackResult );
-
-
+unsigned long PaUtil_EndBufferProcessing(PaUtilBufferProcessor *bufferProcessor,
+                                         int *callbackResult);
 /** Determine whether any callback generated output remains in the buffer
  processor's internal buffers. This method may be used to determine when to
  continue calling PaUtil_EndBufferProcessing() after the callback has returned
@@ -671,7 +613,7 @@ unsigned long PaUtil_EndBufferProcessing( PaUtilBufferProcessor* bufferProcessor
  buffer and zero (0) when there internal buffer contains no callback generated
  data.
 */
-int PaUtil_IsBufferProcessorOutputEmpty( PaUtilBufferProcessor* bufferProcessor );
+int PaUtil_IsBufferProcessorOutputEmpty(PaUtilBufferProcessor *bufferProcessor);
 
 /*@}*/
 
@@ -701,10 +643,8 @@ int PaUtil_IsBufferProcessorOutputEmpty( PaUtilBufferProcessor* bufferProcessor 
  buffer parameter are advanced to point to the frame(s) following the last one
  filled.
 */
-unsigned long PaUtil_CopyInput( PaUtilBufferProcessor* bufferProcessor,
-        void **buffer, unsigned long frameCount );
-
-
+unsigned long PaUtil_CopyInput(PaUtilBufferProcessor *bufferProcessor,
+                               void **buffer, unsigned long frameCount);
 /* Copy samples from a user supplied buffer to host output channels set up by
  the PaUtil_Set*OutputChannels functions. This function is intended for use with
  blocking read/write streams. Copies the minimum of the number of
@@ -726,10 +666,8 @@ unsigned long PaUtil_CopyInput( PaUtilBufferProcessor* bufferProcessor,
  buffer parameter are advanced to point to the frame(s) following the last one
  copied.
 */
-unsigned long PaUtil_CopyOutput( PaUtilBufferProcessor* bufferProcessor,
-        const void ** buffer, unsigned long frameCount );
-
-
+unsigned long PaUtil_CopyOutput(PaUtilBufferProcessor *bufferProcessor,
+                                const void **buffer, unsigned long frameCount);
 /* Zero samples in host output channels set up by the PaUtil_Set*OutputChannels
  functions. This function is useful for flushing streams.
  Zeros the minimum of frameCount and the number of host frames specified in a
@@ -741,8 +679,8 @@ unsigned long PaUtil_CopyOutput( PaUtilBufferProcessor* bufferProcessor,
 
  @return The number of frames zeroed.
 */
-unsigned long PaUtil_ZeroOutput( PaUtilBufferProcessor* bufferProcessor,
-        unsigned long frameCount );
+unsigned long PaUtil_ZeroOutput(PaUtilBufferProcessor *bufferProcessor,
+                                unsigned long frameCount);
 
 
 /*@}*/

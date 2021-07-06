@@ -27,7 +27,6 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
 #ifdef HAVE_MPGLIB
 #define hip_global_struct mpstr_tag 
 #include "lame.h"

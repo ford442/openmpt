@@ -32,11 +32,9 @@
 
 #ifndef FLAC__PRIVATE__FLOAT_H
 #define FLAC__PRIVATE__FLOAT_H
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
 #include "FLAC/ordinals.h"
 
 /*
@@ -91,5 +89,4 @@ extern const FLAC__fixedpoint FLAC__FP_E;
 FLAC__uint32 FLAC__fixedpoint_log2(FLAC__uint32 x, uint32_t fracbits, uint32_t precision);
 
 #endif
-
 #endif

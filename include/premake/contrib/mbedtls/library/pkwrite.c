@@ -24,7 +24,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PK_WRITE_C)
 
 #include "mbedtls/pk.h"

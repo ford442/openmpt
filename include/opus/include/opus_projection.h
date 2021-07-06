@@ -32,9 +32,7 @@
 
 #ifndef OPUS_PROJECTION_H
 #define OPUS_PROJECTION_H
-
 #include "opus_multistream.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -87,7 +85,7 @@ extern "C" {
   *                              pointer location.
   * @hideinitializer
   */
-#define OPUS_PROJECTION_GET_DEMIXING_MATRIX(x,y) OPUS_PROJECTION_GET_DEMIXING_MATRIX_REQUEST, x, __opus_check_int(y)
+#define OPUS_PROJECTION_GET_DEMIXING_MATRIX(x, y) OPUS_PROJECTION_GET_DEMIXING_MATRIX_REQUEST, x, __opus_check_int(y)
 
 
 /**@}*/
@@ -98,8 +96,6 @@ extern "C" {
  * @see opus_projection_ambisonics_encoder_create
  */
 typedef struct OpusProjectionEncoder OpusProjectionEncoder;
-
-
 /** Opus projection decoder state.
   * This contains the complete state of a projection Opus decoder.
   * It is position independent and can be freely copied.
@@ -121,8 +117,8 @@ typedef struct OpusProjectionDecoder OpusProjectionDecoder;
   *          (see @ref opus_errorcodes) on error.
   */
 OPUS_EXPORT OPUS_WARN_UNUSED_RESULT opus_int32 opus_projection_ambisonics_encoder_get_size(
-    int channels,
-    int mapping_family
+        int channels,
+        int mapping_family
 );
 
 
@@ -159,13 +155,13 @@ OPUS_EXPORT OPUS_WARN_UNUSED_RESULT opus_int32 opus_projection_ambisonics_encode
   *                                   failure.
   */
 OPUS_EXPORT OPUS_WARN_UNUSED_RESULT OpusProjectionEncoder *opus_projection_ambisonics_encoder_create(
-    opus_int32 Fs,
-    int channels,
-    int mapping_family,
-    int *streams,
-    int *coupled_streams,
-    int application,
-    int *error
+        opus_int32 Fs,
+        int channels,
+        int mapping_family,
+        int *streams,
+        int *coupled_streams,
+        int application,
+        int *error
 ) OPUS_ARG_NONNULL(4) OPUS_ARG_NONNULL(5);
 
 
@@ -212,13 +208,13 @@ OPUS_EXPORT OPUS_WARN_UNUSED_RESULT OpusProjectionEncoder *opus_projection_ambis
   *          on failure.
   */
 OPUS_EXPORT int opus_projection_ambisonics_encoder_init(
-    OpusProjectionEncoder *st,
-    opus_int32 Fs,
-    int channels,
-    int mapping_family,
-    int *streams,
-    int *coupled_streams,
-    int application
+        OpusProjectionEncoder *st,
+        opus_int32 Fs,
+        int channels,
+        int mapping_family,
+        int *streams,
+        int *coupled_streams,
+        int application
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(5) OPUS_ARG_NONNULL(6);
 
 
@@ -253,11 +249,11 @@ OPUS_EXPORT int opus_projection_ambisonics_encoder_init(
   *          negative error code (see @ref opus_errorcodes) on failure.
   */
 OPUS_EXPORT OPUS_WARN_UNUSED_RESULT int opus_projection_encode(
-    OpusProjectionEncoder *st,
-    const opus_int16 *pcm,
-    int frame_size,
-    unsigned char *data,
-    opus_int32 max_data_bytes
+        OpusProjectionEncoder *st,
+        const opus_int16 *pcm,
+        int frame_size,
+        unsigned char *data,
+        opus_int32 max_data_bytes
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(2) OPUS_ARG_NONNULL(4);
 
 
@@ -299,11 +295,11 @@ OPUS_EXPORT OPUS_WARN_UNUSED_RESULT int opus_projection_encode(
   *          negative error code (see @ref opus_errorcodes) on failure.
   */
 OPUS_EXPORT OPUS_WARN_UNUSED_RESULT int opus_projection_encode_float(
-    OpusProjectionEncoder *st,
-    const float *pcm,
-    int frame_size,
-    unsigned char *data,
-    opus_int32 max_data_bytes
+        OpusProjectionEncoder *st,
+        const float *pcm,
+        int frame_size,
+        unsigned char *data,
+        opus_int32 max_data_bytes
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(2) OPUS_ARG_NONNULL(4);
 
 
@@ -354,9 +350,9 @@ OPUS_EXPORT int opus_projection_encoder_ctl(OpusProjectionEncoder *st, int reque
   *          (see @ref opus_errorcodes) on error.
   */
 OPUS_EXPORT OPUS_WARN_UNUSED_RESULT opus_int32 opus_projection_decoder_get_size(
-    int channels,
-    int streams,
-    int coupled_streams
+        int channels,
+        int streams,
+        int coupled_streams
 );
 
 
@@ -395,13 +391,13 @@ OPUS_EXPORT OPUS_WARN_UNUSED_RESULT opus_int32 opus_projection_decoder_get_size(
   *                                   failure.
   */
 OPUS_EXPORT OPUS_WARN_UNUSED_RESULT OpusProjectionDecoder *opus_projection_decoder_create(
-    opus_int32 Fs,
-    int channels,
-    int streams,
-    int coupled_streams,
-    unsigned char *demixing_matrix,
-    opus_int32 demixing_matrix_size,
-    int *error
+        opus_int32 Fs,
+        int channels,
+        int streams,
+        int coupled_streams,
+        unsigned char *demixing_matrix,
+        opus_int32 demixing_matrix_size,
+        int *error
 ) OPUS_ARG_NONNULL(5);
 
 
@@ -445,13 +441,13 @@ OPUS_EXPORT OPUS_WARN_UNUSED_RESULT OpusProjectionDecoder *opus_projection_decod
   *          on failure.
   */
 OPUS_EXPORT int opus_projection_decoder_init(
-    OpusProjectionDecoder *st,
-    opus_int32 Fs,
-    int channels,
-    int streams,
-    int coupled_streams,
-    unsigned char *demixing_matrix,
-    opus_int32 demixing_matrix_size
+        OpusProjectionDecoder *st,
+        opus_int32 Fs,
+        int channels,
+        int streams,
+        int coupled_streams,
+        unsigned char *demixing_matrix,
+        opus_int32 demixing_matrix_size
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(6);
 
 
@@ -485,12 +481,12 @@ OPUS_EXPORT int opus_projection_decoder_init(
   *          (see @ref opus_errorcodes) on failure.
   */
 OPUS_EXPORT OPUS_WARN_UNUSED_RESULT int opus_projection_decode(
-    OpusProjectionDecoder *st,
-    const unsigned char *data,
-    opus_int32 len,
-    opus_int16 *pcm,
-    int frame_size,
-    int decode_fec
+        OpusProjectionDecoder *st,
+        const unsigned char *data,
+        opus_int32 len,
+        opus_int16 *pcm,
+        int frame_size,
+        int decode_fec
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(4);
 
 
@@ -524,12 +520,12 @@ OPUS_EXPORT OPUS_WARN_UNUSED_RESULT int opus_projection_decode(
   *          (see @ref opus_errorcodes) on failure.
   */
 OPUS_EXPORT OPUS_WARN_UNUSED_RESULT int opus_projection_decode_float(
-    OpusProjectionDecoder *st,
-    const unsigned char *data,
-    opus_int32 len,
-    float *pcm,
-    int frame_size,
-    int decode_fec
+        OpusProjectionDecoder *st,
+        const unsigned char *data,
+        opus_int32 len,
+        float *pcm,
+        int frame_size,
+        int decode_fec
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(4);
 
 
@@ -564,5 +560,4 @@ OPUS_EXPORT void opus_projection_decoder_destroy(OpusProjectionDecoder *st);
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* OPUS_PROJECTION_H */

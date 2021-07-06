@@ -28,7 +28,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #if defined(OPUS_X86_MAY_HAVE_SSE4_1) /* OpenMPT */
 
 #include <xmmintrin.h>

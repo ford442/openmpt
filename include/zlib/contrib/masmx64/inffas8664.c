@@ -78,7 +78,7 @@
 
 
 
-    typedef struct inffast_ar {
+typedef struct inffast_ar {
 /* 64   32                               x86  x86_64 */
 /* ar offset                              register */
 /*  0    0 */ void *esp;                /* esp save */
@@ -100,7 +100,7 @@
 /*108   64 */ unsigned len;             /*     r14  match length */
 /*112   68 */ unsigned dist;            /*     r15  match distance */
 /*116   72 */ unsigned status;          /*          set when state chng*/
-    } type_ar;
+} type_ar;
 #ifdef ASMINF
 
 void inflate_fast(strm, start)

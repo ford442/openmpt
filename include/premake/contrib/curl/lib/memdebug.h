@@ -169,5 +169,4 @@ CURL_EXTERN int curl_fclose(FILE *file, int line, const char *source);
 
 #define Curl_safefree(ptr) \
   do { free((ptr)); (ptr) = NULL;} WHILE_FALSE
-
 #endif /* HEADER_CURL_MEMDEBUG_H */

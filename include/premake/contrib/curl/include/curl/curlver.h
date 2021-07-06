@@ -69,9 +69,7 @@
  * "Mon Feb 12 11:35:33 UTC 2007"
  */
 #define LIBCURL_TIMESTAMP "DEV"
-
-#define CURL_VERSION_BITS(x,y,z) ((x)<<16|(y)<<8|z)
-#define CURL_AT_LEAST_VERSION(x,y,z) \
+#define CURL_VERSION_BITS(x, y, z) ((x)<<16|(y)<<8|z)
+#define CURL_AT_LEAST_VERSION(x, y, z) \
   (LIBCURL_VERSION_NUM >= CURL_VERSION_BITS(x, y, z))
-
 #endif /* __CURL_CURLVER_H */

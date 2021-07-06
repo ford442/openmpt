@@ -1,5 +1,7 @@
-#!/usr/bin/perl
-print <<'EOD';
+#!/usr/bin/
+perl
+        print
+<<'EOD';
 /********************************************************************
  *                                                                  *
  * THIS FILE IS PART OF THE OggVorbis SOFTWARE CODEC SOURCE CODE.   *
@@ -17,7 +19,6 @@ print <<'EOD';
  ********************************************************************/
 
 #ifndef _V_LOOKUP_DATA_H_
-
 #ifdef FLOAT_LOOKUP
 EOD
 
@@ -40,7 +41,7 @@ print "static float COS_LOOKUP[COS_LOOKUP_SZ+1]={\n";
 for($i=0;$i<=$cos_sz;){
     print "\t";
     for($j=0;$j<4 && $i<=$cos_sz;$j++){
-	printf "%+.13f,", cos(3.14159265358979323846*($i++)/$cos_sz) ;
+    printf "%+.13f,", cos(3.14159265358979323846*($i++)/$cos_sz) ;
     }
     print "\n";
 }
@@ -52,8 +53,8 @@ print "static float INVSQ_LOOKUP[INVSQ_LOOKUP_SZ+1]={\n";
 for($i=0;$i<=$invsq_sz;){
     print "\t";
     for($j=0;$j<4 && $i<=$invsq_sz;$j++){
-	my$indexmap=$i++/$invsq_sz*.5+.5;
-	printf "%.12f,", 1./sqrt($indexmap);
+    my$indexmap=$i++/$invsq_sz*.5+.5;
+    printf "%.12f,", 1./sqrt($indexmap);
     }
     print "\n";
 }
@@ -67,7 +68,7 @@ print "static float INVSQ2EXP_LOOKUP[INVSQ2EXP_LOOKUP_MAX-\\\n".
 for($i=$invsq2exp_min;$i<=$invsq2exp_max;){
     print "\t";
     for($j=0;$j<4 && $i<=$invsq2exp_max;$j++){
-	printf "%15.10g,", 2**($i++*-.5);
+    printf "%15.10g,", 2**($i++*-.5);
     }
     print "\n";
 }
@@ -88,7 +89,7 @@ print "static float FROMdB_LOOKUP[FROMdB_LOOKUP_SZ]={\n";
 for($i=0;$i<$fromdB_sz;){
     print "\t";
     for($j=0;$j<4 && $i<$fromdB_sz;$j++){
-	printf "%15.10g,", 10**(.05*(-$fromdB_gran*$i++));
+    printf "%15.10g,", 10**(.05*(-$fromdB_gran*$i++));
     }
     print "\n";
 }
@@ -99,7 +100,7 @@ print "static float FROMdB2_LOOKUP[FROMdB2_LOOKUP_SZ]={\n";
 for($i=0;$i<$fromdB2_sz;){
     print "\t";
     for($j=0;$j<4 && $i<$fromdB_sz;$j++){
-	printf "%15.10g,", 10**(.05*(-$fromdB_gran/$fromdB2_sz*(.5+$i++)));
+    printf "%15.10g,", 10**(.05*(-$fromdB_gran/$fromdB2_sz*(.5+$i++)));
     }
     print "\n";
 }
@@ -113,8 +114,8 @@ print "static long INVSQ_LOOKUP_I[$iisz+1]={\n";
 for($i=0;$i<=$iisz;){
     print "\t";
     for($j=0;$j<4 && $i<=$iisz;$j++){
-	my$indexmap=$i++/$iisz*.5+.5;
-	printf "%8d,", int(1./sqrt($indexmap)*65536.+.5);
+    my$indexmap=$i++/$iisz*.5+.5;
+    printf "%8d,", int(1./sqrt($indexmap)*65536.+.5);
     }
     print "\n";
 }
@@ -129,7 +130,7 @@ print "static long COS_LOOKUP_I[COS_LOOKUP_I_SZ+1]={\n";
 for($i=0;$i<=$cisz;){
     print "\t";
     for($j=0;$j<4 && $i<=$cisz;$j++){
-	printf "%8d,", int(cos(3.14159265358979323846*($i++)/$cos_sz)*16384.+.5) ;
+    printf "%8d,", int(cos(3.14159265358979323846*($i++)/$cos_sz)*16384.+.5) ;
     }
     print "\n";
 }

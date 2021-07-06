@@ -11,7 +11,6 @@
 
 /* really need it _here_! */
 #include "frame.h"
-
 #ifdef NO_ID3V2
 # ifdef init_id3
 #  undef init_id3
@@ -35,9 +34,9 @@ void exit_id3(mpg123_handle *fr);
 void reset_id3(mpg123_handle *fr);
 void id3_link(mpg123_handle *fr);
 #endif
-int  parse_new_id3(mpg123_handle *fr, unsigned long first4bytes);
+int parse_new_id3(mpg123_handle *fr, unsigned long first4bytes);
 /* Convert text from some ID3 encoding to UTf-8.
    On error, sb->fill is 0. The noquiet flag enables warning/error messages. */
-void id3_to_utf8(mpg123_string *sb, unsigned char encoding, const unsigned char *source, size_t source_size, int noquiet);
-
+void
+id3_to_utf8(mpg123_string *sb, unsigned char encoding, const unsigned char *source, size_t source_size, int noquiet);
 #endif

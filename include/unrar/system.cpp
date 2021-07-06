@@ -1,107 +1,90 @@
 #include "rar.hpp"
-
-static int SleepTime=0;
-
-void InitSystemOptions(int SleepTime)
-{
-  ::SleepTime=SleepTime;
+static int SleepTime = 0;
+void InitSystemOptions(int SleepTime) {
+::SleepTime = SleepTime;
 }
-
-
 #if !defined(SFX_MODULE)
-void SetPriority(int Priority)
-{
+void SetPriority(int Priority) {
 #ifdef _WIN_ALL
-  uint PriorityClass;
-  int PriorityLevel;
-  if (Priority<1 || Priority>15)
-    return;
+uint PriorityClass;
+int PriorityLevel;
+if (Priority<1 || Priority>15)
+  return;
 
-  if (Priority==1)
-  {
-    PriorityClass=IDLE_PRIORITY_CLASS;
-    PriorityLevel=THREAD_PRIORITY_IDLE;
+if (Priority==1)
+{
+  PriorityClass=IDLE_PRIORITY_CLASS;
+  PriorityLevel=THREAD_PRIORITY_IDLE;
 
 //  Background mode for Vista, can be slow for many small files.
 //    if (WinNT()>=WNT_VISTA)
 //      SetPriorityClass(GetCurrentProcess(),PROCESS_MODE_BACKGROUND_BEGIN);
+}
+else
+  if (Priority<7)
+  {
+    PriorityClass=IDLE_PRIORITY_CLASS;
+    PriorityLevel=Priority-4;
   }
   else
-    if (Priority<7)
+    if (Priority==7)
     {
-      PriorityClass=IDLE_PRIORITY_CLASS;
-      PriorityLevel=Priority-4;
+      PriorityClass=BELOW_NORMAL_PRIORITY_CLASS;
+      PriorityLevel=THREAD_PRIORITY_ABOVE_NORMAL;
     }
     else
-      if (Priority==7)
+      if (Priority<10)
       {
-        PriorityClass=BELOW_NORMAL_PRIORITY_CLASS;
-        PriorityLevel=THREAD_PRIORITY_ABOVE_NORMAL;
+        PriorityClass=NORMAL_PRIORITY_CLASS;
+        PriorityLevel=Priority-7;
       }
       else
-        if (Priority<10)
+        if (Priority==10)
         {
-          PriorityClass=NORMAL_PRIORITY_CLASS;
-          PriorityLevel=Priority-7;
+          PriorityClass=ABOVE_NORMAL_PRIORITY_CLASS;
+          PriorityLevel=THREAD_PRIORITY_NORMAL;
         }
         else
-          if (Priority==10)
-          {
-            PriorityClass=ABOVE_NORMAL_PRIORITY_CLASS;
-            PriorityLevel=THREAD_PRIORITY_NORMAL;
-          }
-          else
-          {
-            PriorityClass=HIGH_PRIORITY_CLASS;
-            PriorityLevel=Priority-13;
-          }
-  SetPriorityClass(GetCurrentProcess(),PriorityClass);
-  SetThreadPriority(GetCurrentThread(),PriorityLevel);
+        {
+          PriorityClass=HIGH_PRIORITY_CLASS;
+          PriorityLevel=Priority-13;
+        }
+SetPriorityClass(GetCurrentProcess(),PriorityClass);
+SetThreadPriority(GetCurrentThread(),PriorityLevel);
 
 #ifdef RAR_SMP
-  ThreadPool::SetPriority(PriorityLevel);
+ThreadPool::SetPriority(PriorityLevel);
 #endif
 
 #endif
 }
 #endif
-
-
 // Monotonic clock. Like clock(), returns time passed in CLOCKS_PER_SEC items.
 // In Android 5+ and Unix usual clock() returns time spent by all threads
 // together, so we cannot use it to measure time intervals anymore.
-clock_t MonoClock()
-{
-  return clock();
+clock_t MonoClock() {
+return clock();
 }
-
-
-
-void Wait()
-{
-  return; // OPENMPT ADDITION
-  if (ErrHandler.UserBreak)
-    ErrHandler.Exit(RARX_USERBREAK);
+void Wait() {
+return; // OPENMPT ADDITION
+if(ErrHandler.UserBreak)
+ErrHandler.Exit(RARX_USERBREAK);
 #if defined(_WIN_ALL) && !defined(SFX_MODULE)
-  if (SleepTime!=0)
+if (SleepTime!=0)
+{
+  static clock_t LastTime=MonoClock();
+  if (MonoClock()-LastTime>10*CLOCKS_PER_SEC/1000)
   {
-    static clock_t LastTime=MonoClock();
-    if (MonoClock()-LastTime>10*CLOCKS_PER_SEC/1000)
-    {
-      Sleep(SleepTime);
-      LastTime=MonoClock();
-    }
+    Sleep(SleepTime);
+    LastTime=MonoClock();
   }
+}
 #endif
 #if defined(_WIN_ALL)
-  // Reset system sleep timer to prevent system going sleep.
-  SetThreadExecutionState(ES_SYSTEM_REQUIRED);
+// Reset system sleep timer to prevent system going sleep.
+SetThreadExecutionState(ES_SYSTEM_REQUIRED);
 #endif
 }
-
-
-
-
 #if defined(_WIN_ALL) && !defined(SFX_MODULE)
 void Shutdown(POWER_MODE Mode)
 {
@@ -148,10 +131,6 @@ bool ShutdownCheckAnother(bool Open)
   return Result;
 }
 #endif
-
-
-
-
 #if defined(_WIN_ALL)
 // Load library from Windows System32 folder. Use this function to prevent
 // loading a malicious code from current folder or same folder as exe.
@@ -181,8 +160,6 @@ bool IsUserAdmin()
 }
 
 #endif
-
-
 #ifdef USE_SSE
 SSE_VERSION _SSE_Version=GetSSEVersion();
 

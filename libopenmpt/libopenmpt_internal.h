@@ -9,9 +9,7 @@
 
 #ifndef LIBOPENMPT_INTERNAL_H
 #define LIBOPENMPT_INTERNAL_H
-
 #include "libopenmpt_config.h"
-
 #ifdef __cplusplus
 #if defined(LIBOPENMPT_BUILD_DLL) || defined(LIBOPENMPT_USE_DLL)
 #if defined(_MSC_VER) && !defined(_DLL)
@@ -21,5 +19,4 @@
 #endif
 #endif
 #endif
-
 #endif /* LIBOPENMPT_INTERNAL_H */

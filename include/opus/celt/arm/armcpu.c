@@ -30,7 +30,6 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #ifdef OPUS_HAVE_RTCD
 
 #include "armcpu.h"

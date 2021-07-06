@@ -34,13 +34,10 @@
 
 #ifndef OPUS_CUSTOM_H
 #define OPUS_CUSTOM_H
-
 #include "opus_defines.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 #ifdef CUSTOM_MODES
 # define OPUS_CUSTOM_EXPORT OPUS_EXPORT
 # define OPUS_CUSTOM_EXPORT_STATIC OPUS_EXPORT
@@ -93,14 +90,12 @@ extern "C" {
    @brief Encoder state
  */
 typedef struct OpusCustomEncoder OpusCustomEncoder;
-
 /** State of the decoder. One decoder state is needed for each stream.
     It is initialized once at the beginning of the stream. Do *not*
     re-initialize the state for every frame.
    @brief Decoder state
  */
 typedef struct OpusCustomDecoder OpusCustomDecoder;
-
 /** The mode contains all the information necessary to create an
     encoder. Both the encoder and decoder need to be initialized
     with exactly the same mode, otherwise the output will be
@@ -118,15 +113,14 @@ typedef struct OpusCustomMode OpusCustomMode;
   * @param [out] error <tt>int*</tt>: Returned error code (if NULL, no error will be returned)
   * @return A newly created mode
   */
-OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT OpusCustomMode *opus_custom_mode_create(opus_int32 Fs, int frame_size, int *error);
+OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT OpusCustomMode *
+opus_custom_mode_create(opus_int32 Fs, int frame_size, int *error);
 
 /** Destroys a mode struct. Only call this after all encoders and
   * decoders using this mode are destroyed as well.
   * @param [in] mode <tt>OpusCustomMode*</tt>: Mode to be freed.
   */
 OPUS_CUSTOM_EXPORT void opus_custom_mode_destroy(OpusCustomMode *mode);
-
-
 #if !defined(OPUS_BUILD) || defined(CELT_ENCODER_C)
 
 /* Encoder */
@@ -136,10 +130,9 @@ OPUS_CUSTOM_EXPORT void opus_custom_mode_destroy(OpusCustomMode *mode);
   * @returns size
   */
 OPUS_CUSTOM_EXPORT_STATIC OPUS_WARN_UNUSED_RESULT int opus_custom_encoder_get_size(
-    const OpusCustomMode *mode,
-    int channels
+        const OpusCustomMode *mode,
+        int channels
 ) OPUS_ARG_NONNULL(1);
-
 # ifdef CUSTOM_MODES
 /** Initializes a previously allocated encoder state
   * The memory pointed to by st must be the size returned by opus_custom_encoder_get_size.
@@ -172,9 +165,9 @@ OPUS_CUSTOM_EXPORT int opus_custom_encoder_init(
   * @return Newly created encoder state.
 */
 OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT OpusCustomEncoder *opus_custom_encoder_create(
-    const OpusCustomMode *mode,
-    int channels,
-    int *error
+        const OpusCustomMode *mode,
+        int channels,
+        int *error
 ) OPUS_ARG_NONNULL(1);
 
 
@@ -201,11 +194,11 @@ OPUS_CUSTOM_EXPORT void opus_custom_encoder_destroy(OpusCustomEncoder *st);
   *       decoding is possible.
   */
 OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT int opus_custom_encode_float(
-    OpusCustomEncoder *st,
-    const float *pcm,
-    int frame_size,
-    unsigned char *compressed,
-    int maxCompressedBytes
+        OpusCustomEncoder *st,
+        const float *pcm,
+        int frame_size,
+        unsigned char *compressed,
+        int maxCompressedBytes
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(2) OPUS_ARG_NONNULL(4);
 
 /** Encodes a frame of audio.
@@ -222,11 +215,11 @@ OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT int opus_custom_encode_float(
   *       decoding is possible.
  */
 OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT int opus_custom_encode(
-    OpusCustomEncoder *st,
-    const opus_int16 *pcm,
-    int frame_size,
-    unsigned char *compressed,
-    int maxCompressedBytes
+        OpusCustomEncoder *st,
+        const opus_int16 *pcm,
+        int frame_size,
+        unsigned char *compressed,
+        int maxCompressedBytes
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(2) OPUS_ARG_NONNULL(4);
 
 /** Perform a CTL function on an Opus custom encoder.
@@ -235,9 +228,8 @@ OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT int opus_custom_encode(
   * by a convenience macro.
   * @see opus_encoderctls
   */
-OPUS_CUSTOM_EXPORT int opus_custom_encoder_ctl(OpusCustomEncoder * OPUS_RESTRICT st, int request, ...) OPUS_ARG_NONNULL(1);
-
-
+OPUS_CUSTOM_EXPORT int opus_custom_encoder_ctl(OpusCustomEncoder *OPUS_RESTRICT st, int request, ...) OPUS_ARG_NONNULL(
+        1);
 #if !defined(OPUS_BUILD) || defined(CELT_DECODER_C)
 /* Decoder */
 
@@ -247,8 +239,8 @@ OPUS_CUSTOM_EXPORT int opus_custom_encoder_ctl(OpusCustomEncoder * OPUS_RESTRICT
   * @returns size
   */
 OPUS_CUSTOM_EXPORT_STATIC OPUS_WARN_UNUSED_RESULT int opus_custom_decoder_get_size(
-    const OpusCustomMode *mode,
-    int channels
+        const OpusCustomMode *mode,
+        int channels
 ) OPUS_ARG_NONNULL(1);
 
 /** Initializes a previously allocated decoder state
@@ -264,11 +256,10 @@ OPUS_CUSTOM_EXPORT_STATIC OPUS_WARN_UNUSED_RESULT int opus_custom_decoder_get_si
   * @return OPUS_OK Success or @ref opus_errorcodes
   */
 OPUS_CUSTOM_EXPORT_STATIC int opus_custom_decoder_init(
-    OpusCustomDecoder *st,
-    const OpusCustomMode *mode,
-    int channels
+        OpusCustomDecoder *st,
+        const OpusCustomMode *mode,
+        int channels
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(2);
-
 #endif
 
 
@@ -281,9 +272,9 @@ OPUS_CUSTOM_EXPORT_STATIC int opus_custom_decoder_init(
   * @return Newly created decoder state.
   */
 OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT OpusCustomDecoder *opus_custom_decoder_create(
-    const OpusCustomMode *mode,
-    int channels,
-    int *error
+        const OpusCustomMode *mode,
+        int channels,
+        int *error
 ) OPUS_ARG_NONNULL(1);
 
 /** Destroys a an decoder state.
@@ -301,11 +292,11 @@ OPUS_CUSTOM_EXPORT void opus_custom_decoder_destroy(OpusCustomDecoder *st);
   * @returns Number of decoded samples or @ref opus_errorcodes
   */
 OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT int opus_custom_decode_float(
-    OpusCustomDecoder *st,
-    const unsigned char *data,
-    int len,
-    float *pcm,
-    int frame_size
+        OpusCustomDecoder *st,
+        const unsigned char *data,
+        int len,
+        float *pcm,
+        int frame_size
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(4);
 
 /** Decode an opus custom frame
@@ -318,11 +309,11 @@ OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT int opus_custom_decode_float(
   * @returns Number of decoded samples or @ref opus_errorcodes
   */
 OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT int opus_custom_decode(
-    OpusCustomDecoder *st,
-    const unsigned char *data,
-    int len,
-    opus_int16 *pcm,
-    int frame_size
+        OpusCustomDecoder *st,
+        const unsigned char *data,
+        int len,
+        opus_int16 *pcm,
+        int frame_size
 ) OPUS_ARG_NONNULL(1) OPUS_ARG_NONNULL(4);
 
 /** Perform a CTL function on an Opus custom decoder.
@@ -331,12 +322,12 @@ OPUS_CUSTOM_EXPORT OPUS_WARN_UNUSED_RESULT int opus_custom_decode(
   * by a convenience macro.
   * @see opus_genericctls
   */
-OPUS_CUSTOM_EXPORT int opus_custom_decoder_ctl(OpusCustomDecoder * OPUS_RESTRICT st, int request, ...) OPUS_ARG_NONNULL(1);
+OPUS_CUSTOM_EXPORT int opus_custom_decoder_ctl(OpusCustomDecoder *OPUS_RESTRICT st, int request, ...) OPUS_ARG_NONNULL(
+        1);
 
 /**@}*/
 
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* OPUS_CUSTOM_H */

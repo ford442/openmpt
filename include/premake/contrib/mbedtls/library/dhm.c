@@ -29,7 +29,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_DHM_C)
 
 #include "mbedtls/dhm.h"

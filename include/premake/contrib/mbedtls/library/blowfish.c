@@ -30,7 +30,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_BLOWFISH_C)
 
 #include "mbedtls/blowfish.h"

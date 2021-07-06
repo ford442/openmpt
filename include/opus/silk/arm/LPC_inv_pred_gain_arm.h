@@ -27,9 +27,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef SILK_LPC_INV_PRED_GAIN_ARM_H
 # define SILK_LPC_INV_PRED_GAIN_ARM_H
-
 # include "celt/arm/armcpu.h"
-
 # if defined(OPUS_ARM_MAY_HAVE_NEON_INTR)
 opus_int32 silk_LPC_inverse_pred_gain_neon(         /* O   Returns inverse prediction gain in energy domain, Q30        */
     const opus_int16            *A_Q12,             /* I   Prediction coefficients, Q12 [order]                         */
@@ -41,7 +39,6 @@ opus_int32 silk_LPC_inverse_pred_gain_neon(         /* O   Returns inverse predi
 #   define silk_LPC_inverse_pred_gain(A_Q12, order, arch) ((void)(arch), PRESUME_NEON(silk_LPC_inverse_pred_gain)(A_Q12, order))
 #  endif
 # endif
-
 # if !defined(OVERRIDE_silk_LPC_inverse_pred_gain)
 /*Is run-time CPU detection enabled on this platform?*/
 #  if defined(OPUS_HAVE_RTCD) && (defined(OPUS_ARM_MAY_HAVE_NEON_INTR) && !defined(OPUS_ARM_PRESUME_NEON_INTR))
@@ -53,5 +50,4 @@ extern opus_int32 (*const SILK_LPC_INVERSE_PRED_GAIN_IMPL[OPUS_ARCHMASK+1])(cons
 #   define silk_LPC_inverse_pred_gain(A_Q12, order, arch) ((void)(arch), silk_LPC_inverse_pred_gain_neon(A_Q12, order))
 #  endif
 # endif
-
 #endif /* end SILK_LPC_INV_PRED_GAIN_ARM_H */

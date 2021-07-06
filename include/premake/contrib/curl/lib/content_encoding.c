@@ -21,7 +21,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef HAVE_LIBZ
 
 #include "urldata.h"

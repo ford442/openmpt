@@ -22,7 +22,6 @@
  */
 #ifndef MBEDTLS_ERROR_H
 #define MBEDTLS_ERROR_H
-
 #include <stddef.h>
 
 /**
@@ -88,7 +87,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 /**
  * \brief Translate a mbed TLS error code into a string representation,
  *        Result is truncated if necessary and always includes a terminating
@@ -98,10 +96,8 @@ extern "C" {
  * \param buffer    buffer to place representation in
  * \param buflen    length of the buffer
  */
-void mbedtls_strerror( int errnum, char *buffer, size_t buflen );
-
+void mbedtls_strerror(int errnum, char *buffer, size_t buflen);
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* error.h */

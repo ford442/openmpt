@@ -27,9 +27,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef SILK_NSQ_DEL_DEC_ARM_H
 #define SILK_NSQ_DEL_DEC_ARM_H
-
 #include "celt/arm/armcpu.h"
-
 #if defined(OPUS_ARM_MAY_HAVE_NEON_INTR)
 void silk_NSQ_del_dec_neon(
     const silk_encoder_state *psEncC, silk_nsq_state *NSQ,
@@ -57,7 +55,6 @@ void silk_NSQ_del_dec_neon(
          Lambda_Q10, LTP_scale_Q14))
 #endif
 #endif
-
 #if !defined(OVERRIDE_silk_NSQ_del_dec)
 /*Is run-time CPU detection enabled on this platform?*/
 #if defined(OPUS_HAVE_RTCD) && (defined(OPUS_ARM_MAY_HAVE_NEON_INTR) && \
@@ -96,5 +93,4 @@ extern void (*const SILK_NSQ_DEL_DEC_IMPL[OPUS_ARCHMASK + 1])(
                            LTP_scale_Q14))
 #endif
 #endif
-
 #endif /* end SILK_NSQ_DEL_DEC_ARM_H */

@@ -24,13 +24,11 @@
  */
 #ifndef MBEDTLS_PKCS11_H
 #define MBEDTLS_PKCS11_H
-
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PKCS11_C)
 
 #include "x509_crt.h"
@@ -169,5 +167,4 @@ static inline size_t mbedtls_ssl_pkcs11_key_len( void *ctx )
 #endif
 
 #endif /* MBEDTLS_PKCS11_C */
-
 #endif /* MBEDTLS_PKCS11_H */

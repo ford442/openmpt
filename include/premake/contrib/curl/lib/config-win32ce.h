@@ -400,7 +400,6 @@
 #    define USE_WIN32_SMALL_FILES
 #  endif
 #endif
-
 #if !defined(USE_WIN32_LARGE_FILES) && !defined(USE_WIN32_SMALL_FILES)
 #  define USE_WIN32_SMALL_FILES
 #endif
@@ -430,19 +429,14 @@
 #ifndef UNICODE
 #  define UNICODE
 #endif
-
 #ifndef _UNICODE
 #  define _UNICODE
 #endif
-
 #define CURL_DISABLE_FILE 1
 #define CURL_DISABLE_TELNET 1
 #define CURL_DISABLE_LDAP 1
-
 #define ENOSPC 1
 #define ENOMEM 2
 #define EAGAIN 3
-
 extern int stat(const char *path, struct stat *buffer);
-
 #endif /* HEADER_CURL_CONFIG_WIN32CE_H */

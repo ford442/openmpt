@@ -1,14 +1,11 @@
 #ifndef _RAR_RARCOMMON_
 #define _RAR_RARCOMMON_
-
 #include "raros.hpp"
 #include "rartypes.hpp"
 #include "os.hpp"
-
 #ifdef RARDLL
 #include "dll.hpp"
 #endif
-
 #include "version.hpp"
 #include "rardefs.hpp"
 #include "rarlang.hpp"
@@ -56,41 +53,20 @@
 #include "encname.hpp"
 #include "resource.hpp"
 #include "compress.hpp"
-
 #include "rarvm.hpp"
 #include "model.hpp"
-
 #include "threadpool.hpp"
-
 #include "unpack.hpp"
-
-
-
 #include "extinfo.hpp"
 #include "extract.hpp"
-
-
-
 #include "list.hpp"
-
-
 #include "rs.hpp"
 #include "rs16.hpp"
-
-
-
 #include "recvol.hpp"
 #include "volume.hpp"
 #include "smallfn.hpp"
-
 #include "global.hpp"
-
 #if 0
 #include "benchmark.hpp"
 #endif
-
-
-
-
-
 #endif

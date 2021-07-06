@@ -15,7 +15,6 @@
  ********************************************************************/
 
 #ifndef _V_LOOKUP_DATA_H_
-
 #ifdef FLOAT_LOOKUP
 #define COS_LOOKUP_SZ 128
 static const float COS_LOOKUP[COS_LOOKUP_SZ+1]={
@@ -91,13 +90,11 @@ static const float INVSQ2EXP_LOOKUP[INVSQ2EXP_LOOKUP_MAX-\
 };
 
 #endif
-
 #define FROMdB_LOOKUP_SZ 35
 #define FROMdB2_LOOKUP_SZ 32
 #define FROMdB_SHIFT 5
 #define FROMdB2_SHIFT 3
 #define FROMdB2_MASK 31
-
 #ifdef FLOAT_LOOKUP
 static const float FROMdB_LOOKUP[FROMdB_LOOKUP_SZ]={
                      1.f,   0.6309573445f,   0.3981071706f,   0.2511886432f,
@@ -122,7 +119,6 @@ static const float FROMdB2_LOOKUP[FROMdB2_LOOKUP_SZ]={
            0.6635520573f,   0.6540711597f,   0.6447257262f,   0.6355138211f,
 };
 #endif
-
 #ifdef INT_LOOKUP
 
 #define INVSQ_LOOKUP_I_SHIFT 10
@@ -187,5 +183,4 @@ static const long COS_LOOKUP_I[COS_LOOKUP_I_SZ+1]={
 };
 
 #endif
-
 #endif

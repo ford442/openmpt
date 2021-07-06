@@ -24,14 +24,12 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
 #define mbedtls_printf     printf
 #endif
-
 #if defined(MBEDTLS_PK_WRITE_C) && defined(MBEDTLS_FS_IO) && \
     defined(MBEDTLS_ENTROPY_C) && defined(MBEDTLS_CTR_DRBG_C)
 #include "mbedtls/error.h"
@@ -86,29 +84,24 @@ int dev_random_entropy_poll( void *data, unsigned char *output,
 }
 #endif /* !_WIN32 */
 #endif
-
 #if defined(MBEDTLS_ECP_C)
 #define DFL_EC_CURVE            mbedtls_ecp_curve_list()->grp_id
 #else
 #define DFL_EC_CURVE            0
 #endif
-
 #if !defined(_WIN32) && defined(MBEDTLS_FS_IO)
 #define USAGE_DEV_RANDOM \
     "    use_dev_random=0|1    default: 0\n"
 #else
 #define USAGE_DEV_RANDOM ""
 #endif /* !_WIN32 && MBEDTLS_FS_IO */
-
 #define FORMAT_PEM              0
 #define FORMAT_DER              1
-
 #define DFL_TYPE                MBEDTLS_PK_RSA
 #define DFL_RSA_KEYSIZE         4096
 #define DFL_FILENAME            "keyfile.key"
 #define DFL_FORMAT              FORMAT_PEM
 #define DFL_USE_DEV_RANDOM      0
-
 #define USAGE \
     "\n usage: gen_key param=<>...\n"                   \
     "\n acceptable parameters:\n"                       \
@@ -119,15 +112,13 @@ int dev_random_entropy_poll( void *data, unsigned char *output,
     "    format=pem|der        default: pem\n"          \
     USAGE_DEV_RANDOM                                    \
     "\n"
-
-#if !defined(MBEDTLS_PK_WRITE_C) || !defined(MBEDTLS_FS_IO) ||    \
+#if !defined(MBEDTLS_PK_WRITE_C) || !defined(MBEDTLS_FS_IO) || \
     !defined(MBEDTLS_ENTROPY_C) || !defined(MBEDTLS_CTR_DRBG_C)
-int main( void )
-{
-    mbedtls_printf( "MBEDTLS_PK_WRITE_C and/or MBEDTLS_FS_IO and/or "
-            "MBEDTLS_ENTROPY_C and/or MBEDTLS_CTR_DRBG_C "
-            "not defined.\n" );
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_PK_WRITE_C and/or MBEDTLS_FS_IO and/or "
+               "MBEDTLS_ENTROPY_C and/or MBEDTLS_CTR_DRBG_C "
+               "not defined.\n");
+return (0);
 }
 #else
 /*

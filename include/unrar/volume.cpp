@@ -1,175 +1,132 @@
 #include "rar.hpp"
-
 #ifdef RARDLL
 static bool DllVolChange(RAROptions *Cmd,wchar *NextName,size_t NameSize);
 static bool DllVolNotify(RAROptions *Cmd,wchar *NextName);
 #endif
-
-
-
-bool MergeArchive(Archive &Arc,ComprDataIO *DataIO,bool ShowFileName,wchar Command)
-{
-  RAROptions *Cmd=Arc.GetRAROptions();
-
-  HEADER_TYPE HeaderType=Arc.GetHeaderType();
-  FileHeader *hd=HeaderType==HEAD_SERVICE ? &Arc.SubHead:&Arc.FileHead;
-  bool SplitHeader=(HeaderType==HEAD_FILE || HeaderType==HEAD_SERVICE) &&
+bool MergeArchive(Archive &Arc, ComprDataIO *DataIO, bool ShowFileName, wchar Command) {
+RAROptions *Cmd = Arc.GetRAROptions();
+HEADER_TYPE HeaderType = Arc.GetHeaderType();
+FileHeader *hd = HeaderType == HEAD_SERVICE ? &Arc.SubHead : &Arc.FileHead;
+bool SplitHeader = (HeaderType == HEAD_FILE || HeaderType == HEAD_SERVICE) &&
                    hd->SplitAfter;
-
-  if (DataIO!=NULL && SplitHeader)
-  {
-    bool PackedHashPresent=Arc.Format==RARFMT50 || 
-         hd->UnpVer>=20 && hd->FileHash.CRC32!=0xffffffff;
-    if (PackedHashPresent && 
-        !DataIO->PackedDataHash.Cmp(&hd->FileHash,hd->UseHashKey ? hd->HashKey:NULL))
-      uiMsg(UIERROR_CHECKSUMPACKED, Arc.FileName, hd->FileName);
-  }
-
-  int64 PosBeforeClose=Arc.Tell();
-
-  if (DataIO!=NULL)
-    DataIO->ProcessedArcSize+=Arc.FileLength();
-
-
-  Arc.Close();
-
-  wchar NextName[NM];
-  wcsncpyz(NextName,Arc.FileName,ASIZE(NextName));
-  NextVolumeName(NextName,ASIZE(NextName),!Arc.NewNumbering);
-
-#if !defined(SFX_MODULE) && !defined(RARDLL)
-  bool RecoveryDone=false;
-#endif
-  bool FailedOpen=false,OldSchemeTested=false;
-
-#if !defined(SILENT)
-  // In -vp mode we force the pause before next volume even if it is present
-  // and even if we are on the hard disk. It is important when user does not
-  // want to process partially downloaded volumes preliminary.
-  if (Cmd->VolumePause && !uiAskNextVolume(NextName,ASIZE(NextName)))
-    FailedOpen=true;
-#endif
-
-  uint OpenMode = Cmd->OpenShared ? FMF_OPENSHARED : 0;
-
-  if (!FailedOpen)
-    while (!Arc.Open(NextName,OpenMode))
-    {
-      // We need to open a new volume which size was not calculated
-      // in total size before, so we cannot calculate the total progress
-      // anymore. Let's reset the total size to zero and stop 
-      // the total progress.
-      if (DataIO!=NULL)
-        DataIO->TotalArcSize=0;
-
-      if (!OldSchemeTested)
-      {
-        // Checking for new style volumes renamed by user to old style
-        // name format. Some users did it for unknown reason.
-        wchar AltNextName[NM];
-        wcsncpyz(AltNextName,Arc.FileName,ASIZE(AltNextName));
-        NextVolumeName(AltNextName,ASIZE(AltNextName),true);
-        OldSchemeTested=true;
-        if (Arc.Open(AltNextName,OpenMode))
-        {
-          wcsncpyz(NextName,AltNextName,ASIZE(NextName));
-          break;
-        }
-      }
-#ifdef RARDLL
-      if (!DllVolChange(Cmd,NextName,ASIZE(NextName)))
-      {
-        FailedOpen=true;
-        break;
-      }
-#else // !RARDLL
-
-#ifndef SFX_MODULE
-      if (!RecoveryDone)
-      {
-        RecVolumesRestore(Cmd,Arc.FileName,true);
-        RecoveryDone=true;
-        continue;
-      }
-#endif
-
-      if (!Cmd->VolumePause && !IsRemovable(NextName))
-      {
-        FailedOpen=true;
-        break;
-      }
-#ifndef SILENT
-      if (Cmd->AllYes || !uiAskNextVolume(NextName,ASIZE(NextName)))
-#endif
-      {
-        FailedOpen=true;
-        break;
-      }
-
-#endif // RARDLL
-    }
-  
-  if (FailedOpen)
-  {
-    uiMsg(UIERROR_MISSINGVOL,NextName);
-    Arc.Open(Arc.FileName,OpenMode);
-    Arc.Seek(PosBeforeClose,SEEK_SET);
-    return false;
-  }
-
-  if (Command=='T' || Command=='X' || Command=='E')
-    mprintf(St(Command=='T' ? MTestVol:MExtrVol),Arc.FileName);
-
-
-  Arc.CheckArc(true);
-#ifdef RARDLL
-  if (!DllVolNotify(Cmd,NextName))
-    return false;
-#endif
-
-  if (SplitHeader)
-    Arc.SearchBlock(HeaderType);
-  else
-    Arc.ReadHeader();
-  if (Arc.GetHeaderType()==HEAD_FILE)
-  {
-    Arc.ConvertAttributes();
-    Arc.Seek(Arc.NextBlockPos-Arc.FileHead.PackSize,SEEK_SET);
-  }
-  if (ShowFileName && !Cmd->DisableNames)
-  {
-    mprintf(St(MExtrPoints),Arc.FileHead.FileName);
-    if (!Cmd->DisablePercentage)
-      mprintf(L"     ");
-  }
-  if (DataIO!=NULL)
-  {
-    if (HeaderType==HEAD_ENDARC)
-      DataIO->UnpVolume=false;
-    else
-    {
-      DataIO->UnpVolume=hd->SplitAfter;
-      DataIO->SetPackedSizeToRead(hd->PackSize);
-    }
-#ifdef SFX_MODULE
-    DataIO->UnpArcSize=Arc.FileLength();
-#endif
-    
-    // Reset the size of packed data read from current volume. It is used
-    // to display the total progress and preceding volumes are already
-    // compensated with ProcessedArcSize, so we need to reset this variable.
-    DataIO->CurUnpRead=0;
-
-    DataIO->PackedDataHash.Init(hd->FileHash.Type,Cmd->Threads);
-  }
-  return true;
+if(DataIO != NULL && SplitHeader) {
+bool PackedHashPresent = Arc.Format == RARFMT50 ||
+                         hd->UnpVer >= 20 && hd->FileHash.CRC32 != 0xffffffff;
+if(PackedHashPresent &&
+   !DataIO->PackedDataHash.Cmp(&hd->FileHash, hd->UseHashKey ? hd->HashKey : NULL))
+uiMsg(UIERROR_CHECKSUMPACKED, Arc.FileName, hd->FileName);
 }
+int64 PosBeforeClose = Arc.Tell();
+if(DataIO != NULL)
+DataIO->ProcessedArcSize += Arc.FileLength();
+Arc.Close();
+wchar NextName[NM];
+wcsncpyz(NextName, Arc.FileName, ASIZE(NextName));
+NextVolumeName(NextName, ASIZE(NextName), !Arc.NewNumbering);
+#if !defined(SFX_MODULE) && !defined(RARDLL)
+bool RecoveryDone = false;
+#endif
+bool FailedOpen = false, OldSchemeTested = false;
+#if !defined(SILENT)
+// In -vp mode we force the pause before next volume even if it is present
+// and even if we are on the hard disk. It is important when user does not
+// want to process partially downloaded volumes preliminary.
+if(Cmd->VolumePause && !uiAskNextVolume(NextName, ASIZE(NextName)))
+FailedOpen = true;
+#endif
+uint OpenMode = Cmd->OpenShared ? FMF_OPENSHARED : 0;
+if(!FailedOpen)
+while (!Arc.Open(NextName, OpenMode)) {
+// We need to open a new volume which size was not calculated
+// in total size before, so we cannot calculate the total progress
+// anymore. Let's reset the total size to zero and stop
+// the total progress.
+if(DataIO != NULL)
+DataIO->TotalArcSize = 0;
+if(!OldSchemeTested) {
+// Checking for new style volumes renamed by user to old style
+// name format. Some users did it for unknown reason.
+wchar AltNextName[NM];
+wcsncpyz(AltNextName, Arc.FileName, ASIZE(AltNextName));
+NextVolumeName(AltNextName, ASIZE(AltNextName), true);
+OldSchemeTested = true;
+if(Arc.Open(AltNextName, OpenMode)) {
+wcsncpyz(NextName, AltNextName, ASIZE(NextName));
+break;
+}
+}
+#ifdef RARDLL
+if (!DllVolChange(Cmd,NextName,ASIZE(NextName)))
+{
+  FailedOpen=true;
+  break;
+}
+#else // !RARDLL
+#ifndef SFX_MODULE
+if(!RecoveryDone) {
+RecVolumesRestore(Cmd, Arc.FileName, true);
+RecoveryDone = true;
+continue;
+}
+#endif
+if(!Cmd->VolumePause && !IsRemovable(NextName)) {
+FailedOpen = true;
+break;
+}
+#ifndef SILENT
+if(Cmd->AllYes || !uiAskNextVolume(NextName, ASIZE(NextName)))
+#endif
+{
+FailedOpen = true;
+break;
+}
+#endif // RARDLL
+}
+if(FailedOpen) {
+uiMsg(UIERROR_MISSINGVOL, NextName);
+Arc.Open(Arc.FileName, OpenMode);
+Arc.Seek(PosBeforeClose, SEEK_SET);
+return false;
+}
+if(Command == 'T' || Command == 'X' || Command == 'E')
+mprintf(St(Command == 'T' ? MTestVol : MExtrVol), Arc.FileName);
+Arc.CheckArc(true);
+#ifdef RARDLL
+if (!DllVolNotify(Cmd,NextName))
+  return false;
+#endif
+if(SplitHeader)
+Arc.SearchBlock(HeaderType);
+else
+Arc.ReadHeader();
+if(Arc.GetHeaderType() == HEAD_FILE) {
+Arc.ConvertAttributes();
+Arc.Seek(Arc.NextBlockPos - Arc.FileHead.PackSize, SEEK_SET);
+}
+if(ShowFileName && !Cmd->DisableNames) {
+mprintf(St(MExtrPoints), Arc.FileHead.FileName);
+if(!Cmd->DisablePercentage)
+mprintf(L"     ");
+}
+if(DataIO != NULL) {
+if(HeaderType == HEAD_ENDARC)
+DataIO->UnpVolume = false;
+else {
+DataIO->UnpVolume = hd->SplitAfter;
+DataIO->SetPackedSizeToRead(hd->PackSize);
+}
+#ifdef SFX_MODULE
+DataIO->UnpArcSize=Arc.FileLength();
+#endif
 
-
-
-
-
-
+// Reset the size of packed data read from current volume. It is used
+// to display the total progress and preceding volumes are already
+// compensated with ProcessedArcSize, so we need to reset this variable.
+DataIO->CurUnpRead = 0;
+DataIO->PackedDataHash.Init(hd->FileHash.Type, Cmd->Threads);
+}
+return true;
+}
 #ifdef RARDLL
 #if defined(RARDLL) && defined(_MSC_VER) && !defined(_WIN_64)
 // Disable the run time stack check for unrar.dll, so we can manipulate
@@ -256,8 +213,6 @@ bool DllVolChange(RAROptions *Cmd,wchar *NextName,size_t NameSize)
   return true;
 }
 #endif
-
-
 #ifdef RARDLL
 bool DllVolNotify(RAROptions *Cmd,wchar *NextName)
 {

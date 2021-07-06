@@ -23,7 +23,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef USE_WINDOWS_SSPI
 
 #include <curl/curl.h>
@@ -346,5 +345,4 @@ extern PSecurityFunctionTable s_pSecFn;
 #define KERB_WRAP_NO_ENCRYPT 0x80000001
 
 #endif /* USE_WINDOWS_SSPI */
-
 #endif /* HEADER_CURL_SSPI_H */

@@ -2,14 +2,8 @@
 
 #ifndef MPT_BASE_COMPILETIME_WARNING_HPP
 #define MPT_BASE_COMPILETIME_WARNING_HPP
-
-
-
 #include "mpt/base/detect.hpp"
 #include "mpt/base/preprocessor.hpp"
-
-
-
 #if MPT_COMPILER_MSVC
 
 #define MPT_WARNING(text)           __pragma(message(__FILE__ "(" MPT_PP_DEFER(MPT_PP_STRINGIFY, __LINE__) "): Warning: " text))
@@ -24,19 +18,15 @@
 
 // portable #pragma message or #warning replacement
 #define MPT_WARNING(text) \
-	static inline int MPT_PP_UNIQUE_IDENTIFIER(MPT_WARNING_NAME)() noexcept { \
-		int warning [[deprecated("Warning: " text)]] = 0; \
-		return warning; \
-	} \
+    static inline int MPT_PP_UNIQUE_IDENTIFIER(MPT_WARNING_NAME)() noexcept { \
+        int warning [[deprecated("Warning: " text)]] = 0; \
+        return warning; \
+    } \
 /**/
 #define MPT_WARNING_STATEMENT(text) \
-	int MPT_PP_UNIQUE_IDENTIFIER(MPT_WARNING_NAME) = []() { \
-		int warning [[deprecated("Warning: " text)]] = 0; \
-		return warning; \
-	}() /**/
-
+    int MPT_PP_UNIQUE_IDENTIFIER(MPT_WARNING_NAME) = []() { \
+        int warning [[deprecated("Warning: " text)]] = 0; \
+        return warning; \
+    }() /**/
 #endif
-
-
-
 #endif // MPT_BASE_COMPILETIME_WARNING_HPP

@@ -38,14 +38,12 @@
 
 #ifndef FLAC__SHARE__COMPAT_H
 #define FLAC__SHARE__COMPAT_H
-
 #if defined _WIN32 && !defined __CYGWIN__
 /* where MSVC puts unlink() */
 # include <io.h>
 #else
 # include <unistd.h>
 #endif
-
 #if defined _MSC_VER || defined __BORLANDC__ || defined __MINGW32__
 #include <sys/types.h> /* for off_t */
 #define FLAC__off_t __int64 /* use this instead of off_t to fix the 2 GB limit */
@@ -61,21 +59,17 @@
 #else
 #define FLAC__off_t off_t
 #endif
-
 #if HAVE_INTTYPES_H
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #endif
-
 #if defined(_MSC_VER)
 #define strtoll _strtoi64
 #define strtoull _strtoui64
 #endif
-
 #if defined(_MSC_VER) && !defined(__cplusplus)
 #define inline __inline
 #endif
-
 #if defined __INTEL_COMPILER || (defined _MSC_VER && defined _WIN64)
 /* MSVS generates VERY slow 32-bit code with __restrict */
 #define flac_restrict __restrict
@@ -84,9 +78,7 @@
 #else
 #define flac_restrict
 #endif
-
 #define FLAC__U64L(x) x##ULL
-
 #if defined _MSC_VER || defined __MINGW32__
 #define FLAC__STRCASECMP _stricmp
 #define FLAC__STRNCASECMP _strnicmp
@@ -97,14 +89,12 @@
 #define FLAC__STRCASECMP strcasecmp
 #define FLAC__STRNCASECMP strncasecmp
 #endif
-
 #if defined _MSC_VER || defined __MINGW32__ || defined __EMX__
 #include <io.h> /* for _setmode(), chmod() */
 #include <fcntl.h> /* for _O_BINARY */
 #else
 #include <unistd.h> /* for chown(), unlink() */
 #endif
-
 #if defined _MSC_VER || defined __BORLANDC__ || defined __MINGW32__
 #if defined __BORLANDC__
 #include <utime.h> /* for utime() */
@@ -119,7 +109,6 @@
 #include <utime.h> /* for utime() */
 #endif
 #endif
-
 #if defined _MSC_VER
 #  if _MSC_VER >= 1800
 #    include <inttypes.h>
@@ -139,7 +128,6 @@
 #    define PRIx64 "I64x"
 #  endif
 #endif /* defined _MSC_VER */
-
 #ifdef _WIN32
 /* All char* strings are in UTF-8 format. Added to support Unicode files on Windows */
 
@@ -157,24 +145,20 @@
 #define flac_stat flac_internal_stat64_utf8
 
 #else
-
 #define flac_printf printf
 #define flac_fprintf fprintf
 #define flac_vfprintf vfprintf
-
 #define flac_fopen fopen
 #define flac_chmod chmod
 #define flac_unlink unlink
 #define flac_rename rename
 #define flac_stat stat
-
 #if defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE >= 200809L)
 #define flac_utime(a, b) utimensat (AT_FDCWD, a, *b, 0)
 #else
 #define flac_utime utime
 #endif
 #endif
-
 #ifdef _WIN32
 #define flac_stat_s __stat64 /* stat struct */
 #define flac_fstat _fstat64
@@ -182,11 +166,9 @@
 #define flac_stat_s stat /* stat struct */
 #define flac_fstat fstat
 #endif
-
 #ifdef ANDROID
 #include <limits.h>
 #endif
-
 #ifndef M_LN2
 #define M_LN2 0.69314718055994530942
 #endif
@@ -209,5 +191,4 @@ int flac_vsnprintf(char *str, size_t size, const char *fmt, va_list va);
 #ifdef __cplusplus
 };
 #endif
-
 #endif /* FLAC__SHARE__COMPAT_H */

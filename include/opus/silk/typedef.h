@@ -27,16 +27,13 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef SILK_TYPEDEF_H
 #define SILK_TYPEDEF_H
-
 #include "opus_types.h"
 #include "opus_defines.h"
-
 #ifndef FIXED_POINT
 # include <float.h>
 # define silk_float      float
 # define silk_float_MAX  FLT_MAX
 #endif
-
 #define silk_int64_MAX   ((opus_int64)0x7FFFFFFFFFFFFFFFLL)   /*  2^63 - 1 */
 #define silk_int64_MIN   ((opus_int64)0x8000000000000000LL)   /* -2^63 */
 #define silk_int32_MAX   0x7FFFFFFF                           /*  2^31 - 1 =  2147483647 */
@@ -46,7 +43,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #define silk_int8_MAX    0x7F                                 /*  2^7 - 1  =  127 */
 #define silk_int8_MIN    ((opus_int8)0x80)                    /* -2^7      = -128 */
 #define silk_uint8_MAX   0xFF                                 /*  2^8 - 1 = 255 */
-
 #define silk_TRUE        1
 #define silk_FALSE       0
 
@@ -74,5 +70,4 @@ static OPUS_INLINE void _silk_fatal(const char *str, const char *file, int line)
 #  define silk_assert(COND)
 # endif
 #endif
-
 #endif /* SILK_TYPEDEF_H */

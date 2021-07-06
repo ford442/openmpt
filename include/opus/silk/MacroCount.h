@@ -28,7 +28,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef SIGPROCFIX_API_MACROCOUNT_H
 #define SIGPROCFIX_API_MACROCOUNT_H
 #include <stdio.h>
-
 #ifdef    silk_MACRO_COUNT
 #define varDefine opus_int64 ops_count = 0;
 
@@ -704,7 +703,6 @@ static OPUS_INLINE opus_int32 silk_LIMIT_32(opus_int32 a, opus_int32 limit1, opu
 #else
 #define varDefine
 #define silk_SaveCount()
-
 #endif
 #endif
 

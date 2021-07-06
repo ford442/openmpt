@@ -21,9 +21,7 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #include <curl/curl.h>
-
 #if defined(USE_THREADS_POSIX)
 #  ifdef HAVE_PTHREAD_H
 #    include <pthread.h>
@@ -33,12 +31,10 @@
 #    include <process.h>
 #  endif
 #endif
-
 #include "curl_threads.h"
 #include "curl_memory.h"
 /* The last #include file should be: */
 #include "memdebug.h"
-
 #if defined(USE_THREADS_POSIX)
 
 struct curl_actual_call {

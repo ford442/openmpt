@@ -1,5 +1,4 @@
 #include "rar.hpp"
-
 #ifdef RAR_SMP
 #include "threadmisc.cpp"
 

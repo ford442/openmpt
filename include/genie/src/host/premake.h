@@ -45,47 +45,41 @@
 
 /* A success return code */
 #define OKAY   (0)
-
-
 /* Bootstrapping helper functions */
-unsigned long do_hash(const char* str, int seed);
-int do_isfile(const char* filename);
+unsigned long do_hash(const char *str, int seed);
+int do_isfile(const char *filename);
 
 
 /* Path helper functions */
 #define PATH_BUFSIZE 0x4000
-int is_absolute_path(const char * path);
+int is_absolute_path(const char *path);
 char *get_relative_path(const char src[], const char dst[], char *buffer, int bufsize);
 char *get_absolute_path(const char path[], char *buffer, int bufsize);
-
-
 /* Built-in functions */
-int path_isabsolute(lua_State* L);
+int path_isabsolute(lua_State *L);
 int path_getabsolute(lua_State *L);
 int path_getrelative(lua_State *L);
-int os_chdir(lua_State* L);
-int os_copyfile(lua_State* L);
-int os_getcwd(lua_State* L);
-int os_getversion(lua_State* L);
-int os_is64bit(lua_State* L);
-int os_isdir(lua_State* L);
-int os_isfile(lua_State* L);
-int os_matchdone(lua_State* L);
-int os_matchisfile(lua_State* L);
-int os_matchname(lua_State* L);
-int os_matchnext(lua_State* L);
-int os_matchstart(lua_State* L);
-int os_mkdir(lua_State* L);
-int os_pathsearch(lua_State* L);
-int os_rmdir(lua_State* L);
-int os_stat(lua_State* L);
-int os_ticks(lua_State* L);
-int os_uuid(lua_State* L);
-int string_endswith(lua_State* L);
-
-
+int os_chdir(lua_State *L);
+int os_copyfile(lua_State *L);
+int os_getcwd(lua_State *L);
+int os_getversion(lua_State *L);
+int os_is64bit(lua_State *L);
+int os_isdir(lua_State *L);
+int os_isfile(lua_State *L);
+int os_matchdone(lua_State *L);
+int os_matchisfile(lua_State *L);
+int os_matchname(lua_State *L);
+int os_matchnext(lua_State *L);
+int os_matchstart(lua_State *L);
+int os_mkdir(lua_State *L);
+int os_pathsearch(lua_State *L);
+int os_rmdir(lua_State *L);
+int os_stat(lua_State *L);
+int os_ticks(lua_State *L);
+int os_uuid(lua_State *L);
+int string_endswith(lua_State *L);
 /* Engine interface */
-int premake_init(lua_State* L);
-int premake_locate(lua_State* L, const char* argv0);
-int premake_execute(lua_State* L, int argc, const char** argv);
+int premake_init(lua_State *L);
+int premake_locate(lua_State *L, const char *argv0);
+int premake_execute(lua_State *L, int argc, const char **argv);
 

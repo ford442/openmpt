@@ -762,11 +762,8 @@
 
 /* Define to the function return type for send. */
 #define SEND_TYPE_RETV int
-
 #define CURL_DOES_CONVERSIONS
 #ifndef CURL_ICONV_CODESET_OF_HOST
 #define CURL_ICONV_CODESET_OF_HOST "IBM-1047"
 #endif
-
-
 #endif /* HEADER_CURL_CONFIG_TPF_H */

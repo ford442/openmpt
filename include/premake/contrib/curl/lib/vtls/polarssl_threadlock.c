@@ -21,7 +21,6 @@
  *
  ***************************************************************************/
 #include "curl_setup.h"
-
 #if (defined(USE_POLARSSL) || defined(USE_MBEDTLS)) && \
     (defined(USE_THREADS_POSIX) || defined(USE_THREADS_WIN32))
 

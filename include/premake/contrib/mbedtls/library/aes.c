@@ -30,7 +30,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_AES_C)
 
 #include <string.h>

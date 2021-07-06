@@ -14,8 +14,6 @@
 
 // has to be first
 #include "openmpt/all/BuildSettings.hpp"
-
-
 #if defined(MODPLUG_TRACKER)
 
 #if defined(MPT_WITH_MFC)
@@ -51,13 +49,9 @@
 #endif // MPT_OS_WINDOWS
 
 #endif // MODPLUG_TRACKER
-
-
 #if MPT_COMPILER_MSVC
 #include <intrin.h>
 #endif
-
-
 #include "mpt/base/span.hpp"
 #include "mpt/check/libc.hpp"
 #if defined(MPT_WITH_MFC)
@@ -69,11 +63,8 @@
 #include "mpt/exception_text/exception_text.hpp"
 #include "mpt/out_of_memory/out_of_memory.hpp"
 #include "mpt/system_error/system_error.hpp"
-
 #include "openmpt/base/Types.hpp"
 #include "openmpt/logging/Logger.hpp"
-
-
 #include <memory>
 #include <new>
 
@@ -115,12 +106,10 @@
 // <cstring>
 
 #include "../common/mptStringBuffer.h"
-
 #include "../common/mptStringFormat.h"
 // <stdexcept>
 
 #include "../common/mptPathString.h"
-
 #include "../common/Logging.h"
 // "openmpt/logging/Logger.hpp"
 // <atomic>

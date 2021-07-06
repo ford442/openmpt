@@ -28,7 +28,6 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "unicode_support.h"
-
 #if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
 
 
@@ -37,42 +36,39 @@
 
 static wchar_t *utf8_to_utf16(const char *input)
 {
-	wchar_t *Buffer;
-	int BuffSize = 0, Result = 0;
+    wchar_t *Buffer;
+    int BuffSize = 0, Result = 0;
 
-	BuffSize = MultiByteToWideChar(CP_UTF8, 0, input, -1, NULL, 0);
-	Buffer = (wchar_t*) malloc(sizeof(wchar_t) * BuffSize);
-	if(Buffer)
-	{
-		Result = MultiByteToWideChar(CP_UTF8, 0, input, -1, Buffer, BuffSize);
-	}
+    BuffSize = MultiByteToWideChar(CP_UTF8, 0, input, -1, NULL, 0);
+    Buffer = (wchar_t*) malloc(sizeof(wchar_t) * BuffSize);
+    if(Buffer)
+    {
+        Result = MultiByteToWideChar(CP_UTF8, 0, input, -1, Buffer, BuffSize);
+    }
 
-	return ((Result > 0) && (Result <= BuffSize)) ? Buffer : NULL;
+    return ((Result > 0) && (Result <= BuffSize)) ? Buffer : NULL;
 }
 
 FILE *opeint_fopen(const char *filename_utf8, const char *mode_utf8)
 {
-	FILE *ret = NULL;
-	wchar_t *filename_utf16 = utf8_to_utf16(filename_utf8);
-	wchar_t *mode_utf16 = utf8_to_utf16(mode_utf8);
-	
-	if(filename_utf16 && mode_utf16)
-	{
-		ret = _wfopen(filename_utf16, mode_utf16);
-	}
+    FILE *ret = NULL;
+    wchar_t *filename_utf16 = utf8_to_utf16(filename_utf8);
+    wchar_t *mode_utf16 = utf8_to_utf16(mode_utf8);
 
-	if(filename_utf16) free(filename_utf16);
-	if(mode_utf16) free(mode_utf16);
+    if(filename_utf16 && mode_utf16)
+    {
+        ret = _wfopen(filename_utf16, mode_utf16);
+    }
 
-	return ret;
+    if(filename_utf16) free(filename_utf16);
+    if(mode_utf16) free(mode_utf16);
+
+    return ret;
 }
 
 #else
-
 #include <stdio.h>
-
 FILE *opeint_fopen(const char *filename_utf8, const char *mode_utf8) {
-  return fopen(filename_utf8, mode_utf8);
+return fopen(filename_utf8, mode_utf8);
 }
-
 #endif

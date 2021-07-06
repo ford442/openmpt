@@ -26,24 +26,24 @@ AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: true
 BinPackParameters: false
 BraceWrapping:
- AfterCaseLabel: false
- AfterClass: false
- AfterControlStatement: MultiLine
- AfterEnum: false
- AfterFunction: false
- AfterNamespace: false
- #AfterObjCDeclaration
- AfterStruct: false
- AfterUnion: false
- AfterExternBlock: false
- BeforeCatch: false
- BeforeElse: false
- BeforeLambdaBody: false
- BeforeWhile: false
- IndentBraces: false
- SplitEmptyFunction: true
- SplitEmptyRecord: false
- SplitEmptyNamespace: true
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: MultiLine
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  #AfterObjCDeclaration
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: true
 #BreakAfterJavaFieldAnnotations
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
@@ -61,9 +61,9 @@ Cpp11BracedListStyle: true
 DeriveLineEnding: true
 DerivePointerAlignment: false
 FixNamespaceComments: true
-ForEachMacros: []
+ForEachMacros: [ ]
 IncludeBlocks: Preserve
-IncludeCategories: [] #?
+IncludeCategories: [ ] #?
 IncludeIsMainRegex: '' #?
 IncludeIsMainSourceRegex: '' #?
 IndentCaseLabels: true
@@ -83,7 +83,7 @@ MacroBlockBegin: '' #?
 MacroBlockEnd: '' #?
 MaxEmptyLinesToKeep: 5
 NamespaceIndentation: None
-NamespaceMacros: [] #?
+NamespaceMacros: [ ] #?
 #ObjCBinPackProtocolList
 #ObjCBlockIndentWidth
 #ObjCBreakBeforeNestedBlockParam
@@ -123,7 +123,7 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 StatementMacros: [ '_Pragma', '__pragma' ] #?
 TabWidth: 4
-TypenameMacros: [] #?
+TypenameMacros: [ ] #?
 UseCRLF: false
 UseTab: ForContinuationAndIndentation
 WhitespaceSensitiveMacros:

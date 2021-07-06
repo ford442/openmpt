@@ -50,16 +50,11 @@
 
 
 #include "portaudio.h"
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
-
-
 struct PaUtilHostApiRepresentation;
-
-
 /** Retrieve a specific host API representation. This function can be used
  by implementations to retrieve a pointer to their representation in
  host api specific extension functions which aren't passed a rep pointer
@@ -74,10 +69,8 @@ struct PaUtilHostApiRepresentation;
  requested host API representation will be stored in *hostApi. If the host API
  specified by type is not found, this function returns paHostApiNotFound.
 */
-PaError PaUtil_GetHostApiRepresentation( struct PaUtilHostApiRepresentation **hostApi,
-        PaHostApiTypeId type );
-
-
+PaError PaUtil_GetHostApiRepresentation(struct PaUtilHostApiRepresentation **hostApi,
+                                        PaHostApiTypeId type);
 /** Convert a PortAudio device index into a host API specific device index.
  @param hostApiDevice Pointer to a device index, on success this will receive the
  converted device index value.
@@ -89,9 +82,7 @@ PaError PaUtil_GetHostApiRepresentation( struct PaUtilHostApiRepresentation **ho
 */
 PaError PaUtil_DeviceIndexToHostApiDeviceIndex(
         PaDeviceIndex *hostApiDevice, PaDeviceIndex device,
-        struct PaUtilHostApiRepresentation *hostApi );
-
-
+        struct PaUtilHostApiRepresentation *hostApi);
 /** Set the host error information returned by Pa_GetLastHostErrorInfo. This
  function and the paUnanticipatedHostError error code should be used as a
  last resort.  Implementors should use existing PA error codes where possible,
@@ -108,8 +99,8 @@ PaError PaUtil_DeviceIndexToHostApiDeviceIndex(
  valid after the call to PaUtil_SetLastHostErrorInfo() returns.
 
 */
-void PaUtil_SetLastHostErrorInfo( PaHostApiTypeId hostApiType, long errorCode,
-        const char *errorText );
+void PaUtil_SetLastHostErrorInfo(PaHostApiTypeId hostApiType, long errorCode,
+                                 const char *errorText);
 
 
 
@@ -118,35 +109,27 @@ void PaUtil_SetLastHostErrorInfo( PaHostApiTypeId hostApiType, long errorCode,
 */
 
 /** Allocate size bytes, guaranteed to be aligned to a FIXME byte boundary */
-void *PaUtil_AllocateMemory( long size );
-
-
+void *PaUtil_AllocateMemory(long size);
 /** Release block if non-NULL. block may be NULL */
-void PaUtil_FreeMemory( void *block );
-
-
+void PaUtil_FreeMemory(void *block);
 /** Return the number of currently allocated blocks. This function can be
  used for detecting memory leaks.
 
  @note Allocations will only be tracked if PA_TRACK_MEMORY is #defined. If
  it isn't, this function will always return 0.
 */
-int PaUtil_CountCurrentlyAllocatedBlocks( void );
-
-
+int PaUtil_CountCurrentlyAllocatedBlocks(void);
 /** Initialize the clock used by PaUtil_GetTime(). Call this before calling
  PaUtil_GetTime.
 
  @see PaUtil_GetTime
 */
-void PaUtil_InitializeClock( void );
-
-
+void PaUtil_InitializeClock(void);
 /** Return the system time in seconds. Used to implement CPU load functions
 
  @see PaUtil_InitializeClock
 */
-double PaUtil_GetTime( void );
+double PaUtil_GetTime(void);
 
 
 /* void Pa_Sleep( long msec );  must also be implemented in per-platform .c file */

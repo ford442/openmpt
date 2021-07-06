@@ -24,14 +24,11 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
-
 #include "lame.h"
 #include "machine.h"
 #include "encoder.h"
 #include "util.h"
 #include "reservoir.h"
-
 #include "bitstream.h"
 #include "lame-analysis.h"
 #include "lame_global_flags.h"
@@ -80,19 +77,17 @@
  */
 
 int
-ResvFrameBegin(lame_internal_flags * gfc, int *mean_bits)
-{
-    SessionConfig_t const *const cfg = &gfc->cfg;
-    EncStateVar_t *const esv = &gfc->sv_enc;
-    int     fullFrameBits;
-    int     resvLimit;
-    int     maxmp3buf;
-    III_side_info_t *const l3_side = &gfc->l3_side;
-    int     frameLength;
-    int     meanBits;
-
-    frameLength = getframebits(gfc);
-    meanBits = (frameLength - cfg->sideinfo_len * 8) / cfg->mode_gr;
+ResvFrameBegin(lame_internal_flags *gfc, int *mean_bits) {
+SessionConfig_t const *const cfg = &gfc->cfg;
+EncStateVar_t *const esv = &gfc->sv_enc;
+int fullFrameBits;
+int resvLimit;
+int maxmp3buf;
+III_side_info_t *const l3_side = &gfc->l3_side;
+int frameLength;
+int meanBits;
+frameLength = getframebits(gfc);
+meanBits = (frameLength - cfg->sideinfo_len * 8) / cfg->mode_gr;
 
 /*
  *  Meaning of the variables:
@@ -134,37 +129,31 @@ ResvFrameBegin(lame_internal_flags * gfc, int *mean_bits)
  *
  */
 
-    /* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
-    resvLimit = (8 * 256) * cfg->mode_gr - 8;
+/* main_data_begin has 9 bits in MPEG-1, 8 bits MPEG-2 */
+resvLimit = (8 * 256) * cfg->mode_gr - 8;
 
-    /* maximum allowed frame size.  dont use more than this number of
-       bits, even if the frame has the space for them: */
-    maxmp3buf = cfg->buffer_constraint;
-    esv->ResvMax = maxmp3buf - frameLength;
-    if (esv->ResvMax > resvLimit)
-        esv->ResvMax = resvLimit;
-    if (esv->ResvMax < 0 || cfg->disable_reservoir)
-        esv->ResvMax = 0;
-    
-    fullFrameBits = meanBits * cfg->mode_gr + Min(esv->ResvSize, esv->ResvMax);
-
-    if (fullFrameBits > maxmp3buf)
-        fullFrameBits = maxmp3buf;
-
-    assert(0 == esv->ResvMax % 8);
-    assert(esv->ResvMax >= 0);
-
-    l3_side->resvDrain_pre = 0;
-
-    if (gfc->pinfo != NULL) {
-        gfc->pinfo->mean_bits = meanBits / 2; /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
-        gfc->pinfo->resvsize = esv->ResvSize;
-    }
-    *mean_bits = meanBits;
-    return fullFrameBits;
+/* maximum allowed frame size.  dont use more than this number of
+   bits, even if the frame has the space for them: */
+maxmp3buf = cfg->buffer_constraint;
+esv->ResvMax = maxmp3buf - frameLength;
+if(esv->ResvMax > resvLimit)
+esv->ResvMax = resvLimit;
+if(esv->ResvMax < 0 || cfg->disable_reservoir)
+esv->ResvMax = 0;
+fullFrameBits = meanBits * cfg->mode_gr + Min(esv->ResvSize, esv->ResvMax);
+if(fullFrameBits > maxmp3buf)
+fullFrameBits = maxmp3buf;
+assert(0 == esv->ResvMax % 8);
+assert(esv->ResvMax >= 0);
+l3_side->resvDrain_pre = 0;
+if(gfc->pinfo != NULL) {
+gfc->pinfo->mean_bits =
+        meanBits / 2; /* expected bits per channel per granule [is this also right for mono/stereo, MPEG-1/2 ?] */
+gfc->pinfo->resvsize = esv->ResvSize;
 }
-
-
+*mean_bits = meanBits;
+return fullFrameBits;
+}
 /*
   ResvMaxBits
   returns targ_bits:  target number of bits to use for 1 granule
@@ -172,63 +161,53 @@ ResvFrameBegin(lame_internal_flags * gfc, int *mean_bits)
   Mark Taylor 4/99
 */
 void
-ResvMaxBits(lame_internal_flags * gfc, int mean_bits, int *targ_bits, int *extra_bits, int cbr)
-{
-    SessionConfig_t const *const cfg = &gfc->cfg;
-    EncStateVar_t *const esv = &gfc->sv_enc;
-    int     add_bits, targBits, extraBits;
-    int     ResvSize = esv->ResvSize, ResvMax = esv->ResvMax;
+ResvMaxBits(lame_internal_flags *gfc, int mean_bits, int *targ_bits, int *extra_bits, int cbr) {
+SessionConfig_t const *const cfg = &gfc->cfg;
+EncStateVar_t *const esv = &gfc->sv_enc;
+int add_bits, targBits, extraBits;
+int ResvSize = esv->ResvSize, ResvMax = esv->ResvMax;
 
-    /* conpensate the saved bits used in the 1st granule */
-    if (cbr)
-        ResvSize += mean_bits;
+/* conpensate the saved bits used in the 1st granule */
+if(cbr)
+ResvSize += mean_bits;
+if(gfc->sv_qnt.substep_shaping & 1)
+ResvMax *= 0.9;
+targBits = mean_bits;
 
-    if (gfc->sv_qnt.substep_shaping & 1)
-        ResvMax *= 0.9;
-
-    targBits = mean_bits;
-
-    /* extra bits if the reservoir is almost full */
-    if (ResvSize * 10 > ResvMax * 9) {
-        add_bits = ResvSize - (ResvMax * 9) / 10;
-        targBits += add_bits;
-        gfc->sv_qnt.substep_shaping |= 0x80;
-    }
-    else {
-        add_bits = 0;
-        gfc->sv_qnt.substep_shaping &= 0x7f;
-        /* build up reservoir.  this builds the reservoir a little slower
-         * than FhG.  It could simple be mean_bits/15, but this was rigged
-         * to always produce 100 (the old value) at 128kbs */
-        /*    *targ_bits -= (int) (mean_bits/15.2); */
-        if (!cfg->disable_reservoir && !(gfc->sv_qnt.substep_shaping & 1))
-            targBits -= .1 * mean_bits;
-    }
-
-
-    /* amount from the reservoir we are allowed to use. ISO says 6/10 */
-    extraBits = (ResvSize < (esv->ResvMax * 6) / 10 ? ResvSize : (esv->ResvMax * 6) / 10);
-    extraBits -= add_bits;
-
-    if (extraBits < 0)
-        extraBits = 0;
-
-    *targ_bits = targBits;
-    *extra_bits = extraBits;
+/* extra bits if the reservoir is almost full */
+if(ResvSize * 10 > ResvMax * 9) {
+add_bits = ResvSize - (ResvMax * 9) / 10;
+targBits += add_bits;
+gfc->sv_qnt.substep_shaping |= 0x80;
+} else {
+add_bits = 0;
+gfc->sv_qnt.substep_shaping &= 0x7f;
+/* build up reservoir.  this builds the reservoir a little slower
+ * than FhG.  It could simple be mean_bits/15, but this was rigged
+ * to always produce 100 (the old value) at 128kbs */
+/*    *targ_bits -= (int) (mean_bits/15.2); */
+if(!cfg->disable_reservoir && !(gfc->sv_qnt.substep_shaping & 1))
+targBits -= .1 * mean_bits;
 }
 
+
+/* amount from the reservoir we are allowed to use. ISO says 6/10 */
+extraBits = (ResvSize < (esv->ResvMax * 6) / 10 ? ResvSize : (esv->ResvMax * 6) / 10);
+extraBits -= add_bits;
+if(extraBits < 0)
+extraBits = 0;
+*targ_bits = targBits;
+*extra_bits = extraBits;
+}
 /*
   ResvAdjust:
   Called after a granule's bit allocation. Readjusts the size of
   the reservoir to reflect the granule's usage.
 */
 void
-ResvAdjust(lame_internal_flags * gfc, gr_info const *gi)
-{
-    gfc->sv_enc.ResvSize -= gi->part2_3_length + gi->part2_length;
+ResvAdjust(lame_internal_flags *gfc, gr_info const *gi) {
+gfc->sv_enc.ResvSize -= gi->part2_3_length + gi->part2_length;
 }
-
-
 /*
   ResvFrameEnd:
   Called after all granules in a frame have been allocated. Makes sure
@@ -236,58 +215,54 @@ ResvAdjust(lame_internal_flags * gfc, gr_info const *gi)
   bits.
 */
 void
-ResvFrameEnd(lame_internal_flags * gfc, int mean_bits)
+ResvFrameEnd(lame_internal_flags *gfc, int mean_bits) {
+SessionConfig_t const *const cfg = &gfc->cfg;
+EncStateVar_t *const esv = &gfc->sv_enc;
+III_side_info_t *const l3_side = &gfc->l3_side;
+int stuffingBits;
+int over_bits;
+esv->ResvSize += mean_bits * cfg->mode_gr;
+stuffingBits = 0;
+l3_side->resvDrain_post = 0;
+l3_side->resvDrain_pre = 0;
+
+/* we must be byte aligned */
+if((over_bits = esv->ResvSize % 8) != 0)
+stuffingBits += over_bits;
+over_bits = (esv->ResvSize - stuffingBits) - esv->ResvMax;
+if(over_bits > 0) {
+assert(0 == over_bits % 8);
+assert(over_bits >= 0);
+stuffingBits += over_bits;
+}
+
+
+/* NOTE: enabling the NEW_DRAIN code fixes some problems with FhG decoder
+         shipped with MS Windows operating systems. Using this, it is even
+         possible to use Gabriel's lax buffer consideration again, which
+         assumes, any decoder should have a buffer large enough
+         for a 320 kbps frame at 32 kHz sample rate.
+
+   old drain code:
+         lame -b320 BlackBird.wav ---> does not play with GraphEdit.exe using FhG decoder V1.5 Build 50
+
+   new drain code:
+         lame -b320 BlackBird.wav ---> plays fine with GraphEdit.exe using FhG decoder V1.5 Build 50
+
+         Robert Hegemann, 2010-02-13.
+ */
+/* drain as many bits as possible into previous frame ancillary data
+ * In particular, in VBR mode ResvMax may have changed, and we have
+ * to make sure main_data_begin does not create a reservoir bigger
+ * than ResvMax  mt 4/00*/
 {
-    SessionConfig_t const *const cfg = &gfc->cfg;
-    EncStateVar_t *const esv = &gfc->sv_enc;
-    III_side_info_t *const l3_side = &gfc->l3_side;
-    int     stuffingBits;
-    int     over_bits;
-
-    esv->ResvSize += mean_bits * cfg->mode_gr;
-    stuffingBits = 0;
-    l3_side->resvDrain_post = 0;
-    l3_side->resvDrain_pre = 0;
-
-    /* we must be byte aligned */
-    if ((over_bits = esv->ResvSize % 8) != 0)
-        stuffingBits += over_bits;
-
-
-    over_bits = (esv->ResvSize - stuffingBits) - esv->ResvMax;
-    if (over_bits > 0) {
-        assert(0 == over_bits % 8);
-        assert(over_bits >= 0);
-        stuffingBits += over_bits;
-    }
-
-
-    /* NOTE: enabling the NEW_DRAIN code fixes some problems with FhG decoder
-             shipped with MS Windows operating systems. Using this, it is even
-             possible to use Gabriel's lax buffer consideration again, which
-             assumes, any decoder should have a buffer large enough
-             for a 320 kbps frame at 32 kHz sample rate.
-
-       old drain code:
-             lame -b320 BlackBird.wav ---> does not play with GraphEdit.exe using FhG decoder V1.5 Build 50
-
-       new drain code:
-             lame -b320 BlackBird.wav ---> plays fine with GraphEdit.exe using FhG decoder V1.5 Build 50
-
-             Robert Hegemann, 2010-02-13.
-     */
-    /* drain as many bits as possible into previous frame ancillary data
-     * In particular, in VBR mode ResvMax may have changed, and we have
-     * to make sure main_data_begin does not create a reservoir bigger
-     * than ResvMax  mt 4/00*/
-    {
-        int     mdb_bytes = Min(l3_side->main_data_begin * 8, stuffingBits) / 8;
-        l3_side->resvDrain_pre += 8 * mdb_bytes;
-        stuffingBits -= 8 * mdb_bytes;
-        esv->ResvSize -= 8 * mdb_bytes;
-        l3_side->main_data_begin -= mdb_bytes;
-    }
-    /* drain the rest into this frames ancillary data */
-    l3_side->resvDrain_post += stuffingBits;
-    esv->ResvSize -= stuffingBits;
+int mdb_bytes = Min(l3_side->main_data_begin * 8, stuffingBits) / 8;
+l3_side->resvDrain_pre += 8 * mdb_bytes;
+stuffingBits -= 8 * mdb_bytes;
+esv->ResvSize -= 8 * mdb_bytes;
+l3_side->main_data_begin -= mdb_bytes;
+}
+/* drain the rest into this frames ancillary data */
+l3_side->resvDrain_post += stuffingBits;
+esv->ResvSize -= stuffingBits;
 }

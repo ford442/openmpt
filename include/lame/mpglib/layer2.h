@@ -22,18 +22,11 @@
 
 #ifndef LAYER2_H_INCLUDED
 #define LAYER2_H_INCLUDED
-
-
 struct al_table2 {
-    short   bits;
-    short   d;
+short bits;
+short d;
 };
-
-
-
-void    hip_init_tables_layer2(void);
-int     decode_layer2_sideinfo(PMPSTR mp);
-int     decode_layer2_frame(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point);
-
-
+void hip_init_tables_layer2(void);
+int decode_layer2_sideinfo(PMPSTR mp);
+int decode_layer2_frame(PMPSTR mp, unsigned char *pcm_sample, int *pcm_point);
 #endif

@@ -11,7 +11,6 @@
  ********************************************************************/
 #if !defined(_opusfile_winerrno_h)
 # define _opusfile_winerrno_h (1)
-
 # include <errno.h>
 # include <winerror.h>
 
@@ -48,7 +47,6 @@
 # undef ENAMETOOLONG
 # undef EHOSTUNREACH
 # undef ENOTEMPTY
-
 # define EWOULDBLOCK     (WSAEWOULDBLOCK-WSABASEERR)
 # define EINPROGRESS     (WSAEINPROGRESS-WSABASEERR)
 # define EALREADY        (WSAEALREADY-WSABASEERR)
@@ -86,5 +84,4 @@
 # define EDQUOT          (WSAEDQUOT-WSABASEERR)
 # define ESTALE          (WSAESTALE-WSABASEERR)
 # define EREMOTE         (WSAEREMOTE-WSABASEERR)
-
 #endif

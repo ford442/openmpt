@@ -27,24 +27,24 @@ AlwaysBreakTemplateDeclarations: Yes
 BinPackArguments: true
 BinPackParameters: false
 BraceWrapping:
- AfterCaseLabel: true
- AfterClass: false
- AfterControlStatement: MultiLine
- AfterEnum: false
- AfterFunction: false
- AfterNamespace: false
- #AfterObjCDeclaration
- AfterStruct: false
- AfterUnion: false
- AfterExternBlock: false
- BeforeCatch: false
- BeforeElse: false
- BeforeLambdaBody: true
- BeforeWhile: false
- IndentBraces: false
- SplitEmptyFunction: true
- SplitEmptyRecord: false
- SplitEmptyNamespace: true
+  AfterCaseLabel: true
+  AfterClass: false
+  AfterControlStatement: MultiLine
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  #AfterObjCDeclaration
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: true
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: true
 #BreakAfterJavaFieldAnnotations
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Custom
@@ -62,9 +62,9 @@ Cpp11BracedListStyle: true
 DeriveLineEnding: true
 DerivePointerAlignment: false
 FixNamespaceComments: true
-ForEachMacros: []
+ForEachMacros: [ ]
 IncludeBlocks: Preserve
-IncludeCategories: [] #?
+IncludeCategories: [ ] #?
 IncludeIsMainRegex: '' #?
 IncludeIsMainSourceRegex: '' #?
 IndentCaseBlocks: true
@@ -84,7 +84,7 @@ MacroBlockBegin: '^BEGIN_MESSAGE_MAP$' #?
 MacroBlockEnd: '^END_MESSAGE_MAP$' #?
 MaxEmptyLinesToKeep: 3
 NamespaceIndentation: None
-NamespaceMacros: [] #?
+NamespaceMacros: [ ] #?
 #ObjCBinPackProtocolList
 #ObjCBlockIndentWidth
 #ObjCBreakBeforeNestedBlockParam
@@ -124,7 +124,7 @@ SpacesInParentheses: true
 SpacesInSquareBrackets: false
 StatementMacros: [ 'MPT_WARNING', 'MPT_TEST_GROUP_INLINE_IDENTIFIER', 'MPT_TEST_GROUP_INLINE', 'MPT_TEST_GROUP_STATIC' ] #?
 TabWidth: 2
-TypenameMacros: [] #?
+TypenameMacros: [ ] #?
 UseCRLF: false
 UseTab: ForContinuationAndIndentation
 WhitespaceSensitiveMacros:

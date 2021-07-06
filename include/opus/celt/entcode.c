@@ -28,59 +28,56 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include "entcode.h"
 #include "arch.h"
-
 #if !defined(EC_CLZ)
 /*This is a fallback for systems where we don't know how to access
    a BSR or CLZ instruction (see ecintrin.h).
   If you are optimizing Opus on a new platform and it has a native CLZ or
    BZR (e.g. cell, MIPS, x86, etc) then making it available to Opus will be
    an easy performance win.*/
-int ec_ilog(opus_uint32 _v){
-  /*On a Pentium M, this branchless version tested as the fastest on
-     1,000,000,000 random 32-bit integers, edging out a similar version with
-     branches, and a 256-entry LUT version.*/
-  int ret;
-  int m;
-  ret=!!_v;
-  m=!!(_v&0xFFFF0000)<<4;
-  _v>>=m;
-  ret|=m;
-  m=!!(_v&0xFF00)<<3;
-  _v>>=m;
-  ret|=m;
-  m=!!(_v&0xF0)<<2;
-  _v>>=m;
-  ret|=m;
-  m=!!(_v&0xC)<<1;
-  _v>>=m;
-  ret|=m;
-  ret+=!!(_v&0x2);
-  return ret;
+int ec_ilog(opus_uint32 _v) {
+/*On a Pentium M, this branchless version tested as the fastest on
+   1,000,000,000 random 32-bit integers, edging out a similar version with
+   branches, and a 256-entry LUT version.*/
+int ret;
+int m;
+ret = !!_v;
+m = !!(_v & 0xFFFF0000) << 4;
+_v >>= m;
+ret |= m;
+m = !!(_v & 0xFF00) << 3;
+_v >>= m;
+ret |= m;
+m = !!(_v & 0xF0) << 2;
+_v >>= m;
+ret |= m;
+m = !!(_v & 0xC) << 1;
+_v >>= m;
+ret |= m;
+ret += !!(_v & 0x2);
+return ret;
 }
 #endif
-
 #if 1
 /* This is a faster version of ec_tell_frac() that takes advantage
    of the low (1/8 bit) resolution to use just a linear function
    followed by a lookup to determine the exact transition thresholds. */
-opus_uint32 ec_tell_frac(ec_ctx *_this){
-  static const unsigned correction[8] =
-    {35733, 38967, 42495, 46340,
-     50535, 55109, 60097, 65535};
-  opus_uint32 nbits;
-  opus_uint32 r;
-  int         l;
-  unsigned    b;
-  nbits=_this->nbits_total<<BITRES;
-  l=EC_ILOG(_this->rng);
-  r=_this->rng>>(l-16);
-  b = (r>>12)-8;
-  b += r>correction[b];
-  l = (l<<3)+b;
-  return nbits-l;
+opus_uint32 ec_tell_frac(ec_ctx *_this) {
+static const unsigned correction[8] =
+        {35733, 38967, 42495, 46340,
+         50535, 55109, 60097, 65535};
+opus_uint32 nbits;
+opus_uint32 r;
+int l;
+unsigned b;
+nbits = _this->nbits_total << BITRES;
+l = EC_ILOG(_this->rng);
+r = _this->rng >> (l - 16);
+b = (r >> 12) - 8;
+b += r > correction[b];
+l = (l << 3) + b;
+return nbits - l;
 }
 #else
 opus_uint32 ec_tell_frac(ec_ctx *_this){
@@ -113,7 +110,6 @@ opus_uint32 ec_tell_frac(ec_ctx *_this){
   return nbits-l;
 }
 #endif
-
 #ifdef USE_SMALL_DIV_TABLE
 /* Result of 2^32/(2*i+1), except for i=0. */
 const opus_uint32 SMALL_DIV_TABLE[129] = {

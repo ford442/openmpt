@@ -24,7 +24,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
@@ -33,16 +32,14 @@
 #define mbedtls_printf     printf
 #define mbedtls_snprintf   snprintf
 #endif
-
-#if !defined(MBEDTLS_BIGNUM_C) || !defined(MBEDTLS_RSA_C) ||  \
+#if !defined(MBEDTLS_BIGNUM_C) || !defined(MBEDTLS_RSA_C) || \
     !defined(MBEDTLS_SHA256_C) || !defined(MBEDTLS_MD_C) || \
     !defined(MBEDTLS_FS_IO)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_BIGNUM_C and/or MBEDTLS_RSA_C and/or "
-            "MBEDTLS_MD_C and/or "
-            "MBEDTLS_SHA256_C and/or MBEDTLS_FS_IO not defined.\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_BIGNUM_C and/or MBEDTLS_RSA_C and/or "
+               "MBEDTLS_MD_C and/or "
+               "MBEDTLS_SHA256_C and/or MBEDTLS_FS_IO not defined.\n");
+return (0);
 }
 #else
 

@@ -124,9 +124,9 @@
 // We need to do this because IASIOThiscallResolver works by eclipsing the
 // original definition of ASIOInit() with a macro (see below).
 #if !defined(iasiothiscallresolver_sourcefile)
-	#if !defined(__ASIO_H)
-	#error iasiothiscallresolver.h must be included AFTER asio.h
-	#endif
+#if !defined(__ASIO_H)
+#error iasiothiscallresolver.h must be included AFTER asio.h
+#endif
 #endif
 
 #include <windows.h>
@@ -135,14 +135,14 @@
 
 class IASIOThiscallResolver : public IASIO {
 private:
-	IASIO* that_; // Points to the real IASIO
+    IASIO* that_; // Points to the real IASIO
 
-	static IASIOThiscallResolver instance; // Singleton instance
+    static IASIOThiscallResolver instance; // Singleton instance
 
-	// Constructors - declared private so construction is limited to
+    // Constructors - declared private so construction is limited to
     // our Singleton instance
     IASIOThiscallResolver();
-	IASIOThiscallResolver(IASIO* that);
+    IASIOThiscallResolver(IASIO* that);
 public:
 
     // Methods from the IUnknown interface. We don't fully implement IUnknown
@@ -153,27 +153,27 @@ public:
     virtual ULONG STDMETHODCALLTYPE Release();
 
     // Methods from the IASIO interface, implemented as forwarning calls to that.
-	virtual ASIOBool init(void *sysHandle);
-	virtual void getDriverName(char *name);
-	virtual long getDriverVersion();
-	virtual void getErrorMessage(char *string);
-	virtual ASIOError start();
-	virtual ASIOError stop();
-	virtual ASIOError getChannels(long *numInputChannels, long *numOutputChannels);
-	virtual ASIOError getLatencies(long *inputLatency, long *outputLatency);
-	virtual ASIOError getBufferSize(long *minSize, long *maxSize, long *preferredSize, long *granularity);
-	virtual ASIOError canSampleRate(ASIOSampleRate sampleRate);
-	virtual ASIOError getSampleRate(ASIOSampleRate *sampleRate);
-	virtual ASIOError setSampleRate(ASIOSampleRate sampleRate);
-	virtual ASIOError getClockSources(ASIOClockSource *clocks, long *numSources);
-	virtual ASIOError setClockSource(long reference);
-	virtual ASIOError getSamplePosition(ASIOSamples *sPos, ASIOTimeStamp *tStamp);
-	virtual ASIOError getChannelInfo(ASIOChannelInfo *info);
-	virtual ASIOError createBuffers(ASIOBufferInfo *bufferInfos, long numChannels, long bufferSize, ASIOCallbacks *callbacks);
-	virtual ASIOError disposeBuffers();
-	virtual ASIOError controlPanel();
-	virtual ASIOError future(long selector,void *opt);
-	virtual ASIOError outputReady();
+    virtual ASIOBool init(void *sysHandle);
+    virtual void getDriverName(char *name);
+    virtual long getDriverVersion();
+    virtual void getErrorMessage(char *string);
+    virtual ASIOError start();
+    virtual ASIOError stop();
+    virtual ASIOError getChannels(long *numInputChannels, long *numOutputChannels);
+    virtual ASIOError getLatencies(long *inputLatency, long *outputLatency);
+    virtual ASIOError getBufferSize(long *minSize, long *maxSize, long *preferredSize, long *granularity);
+    virtual ASIOError canSampleRate(ASIOSampleRate sampleRate);
+    virtual ASIOError getSampleRate(ASIOSampleRate *sampleRate);
+    virtual ASIOError setSampleRate(ASIOSampleRate sampleRate);
+    virtual ASIOError getClockSources(ASIOClockSource *clocks, long *numSources);
+    virtual ASIOError setClockSource(long reference);
+    virtual ASIOError getSamplePosition(ASIOSamples *sPos, ASIOTimeStamp *tStamp);
+    virtual ASIOError getChannelInfo(ASIOChannelInfo *info);
+    virtual ASIOError createBuffers(ASIOBufferInfo *bufferInfos, long numChannels, long bufferSize, ASIOCallbacks *callbacks);
+    virtual ASIOError disposeBuffers();
+    virtual ASIOError controlPanel();
+    virtual ASIOError future(long selector,void *opt);
+    virtual ASIOError outputReady();
 
     // Class method, see ASIOInit() macro below.
     static ASIOError ASIOInit(ASIODriverInfo *info); // Delegates to ::ASIOInit
@@ -191,7 +191,6 @@ public:
 #endif /* !defined(_MSC_VER) */
 
 #endif /* Win32 */
-
 #endif /* included_iasiothiscallresolver_h */
 
 

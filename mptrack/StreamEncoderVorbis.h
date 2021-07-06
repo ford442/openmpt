@@ -9,30 +9,19 @@
  */
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
 #include "StreamEncoder.h"
-
-
 OPENMPT_NAMESPACE_BEGIN
 
 
-class VorbisEncoder : public EncoderFactoryBase
-{
-
+class VorbisEncoder : public EncoderFactoryBase {
 public:
-
-	std::unique_ptr<IAudioStreamEncoder> ConstructStreamEncoder(std::ostream &file, const Encoder::Settings &settings, const FileTags &tags) const override;
-	bool IsBitrateSupported(int samplerate, int channels, int bitrate) const override;
-	mpt::ustring DescribeQuality(float quality) const override;
-	bool IsAvailable() const override;
-
+std::unique_ptr <IAudioStreamEncoder>
+ConstructStreamEncoder(std::ostream &file, const Encoder::Settings &settings, const FileTags &tags) const override;
+bool IsBitrateSupported(int samplerate, int channels, int bitrate) const override;
+mpt::ustring DescribeQuality(float quality) const override;
+bool IsAvailable() const override;
 public:
-
-	VorbisEncoder();
-
+VorbisEncoder();
 };
-
-
 OPENMPT_NAMESPACE_END

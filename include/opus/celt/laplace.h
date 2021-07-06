@@ -28,7 +28,6 @@
 
 #include "entenc.h"
 #include "entdec.h"
-
 /** Encode a value that is assumed to be the realisation of a
     Laplace-distributed random process
  @param enc Entropy encoder state
@@ -37,7 +36,6 @@
  @param decay Probability of the value +/- 1, multiplied by 16384
 */
 void ec_laplace_encode(ec_enc *enc, int *value, unsigned fs, int decay);
-
 /** Decode a value that is assumed to be the realisation of a
     Laplace-distributed random process
  @param dec Entropy decoder state

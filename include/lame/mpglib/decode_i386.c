@@ -32,7 +32,6 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
 #ifdef STDC_HEADERS
 # include <stdlib.h>
 # include <string.h>
@@ -41,41 +40,37 @@
 #  define strchr index
 #  define strrchr rindex
 # endif
-char   *strchr(), *strrchr();
+char *strchr(), *strrchr();
 # ifndef HAVE_MEMCPY
 #  define memcpy(d, s, n) bcopy ((s), (d), (n))
 #  define memmove(d, s, n) bcopy ((s), (d), (n))
 # endif
 #endif
-
 #if defined(__riscos__) && defined(FPA10)
 #include "ymath.h"
 #else
 #include <math.h>
 #endif
-
 #include "decode_i386.h"
 #include "dct64_i386.h"
 #include "tabinit.h"
-
 #ifdef WITH_DMALLOC
 #include <dmalloc.h>
 #endif
 
 
- /* old WRITE_SAMPLE_CLIPPED */
-#define WRITE_SAMPLE_CLIPPED(TYPE,samples,sum,clip) \
+/* old WRITE_SAMPLE_CLIPPED */
+#define WRITE_SAMPLE_CLIPPED(TYPE, samples, sum, clip) \
   if( (sum) > 32767.0) { *(samples) = 0x7fff; (clip)++; } \
   else if( (sum) < -32768.0) { *(samples) = -0x8000; (clip)++; } \
   else { *(samples) = (TYPE)((sum)>0 ? (sum)+0.5 : (sum)-0.5) ; }
-
-#define WRITE_SAMPLE_UNCLIPPED(TYPE,samples,sum,clip) \
+#define WRITE_SAMPLE_UNCLIPPED(TYPE, samples, sum, clip) \
   *samples = (TYPE)sum;
 
-  /* *INDENT-OFF* */
+/* *INDENT-OFF* */
 
- /* versions: clipped (when TYPE == short) and unclipped (when TYPE == real) of synth_1to1_mono* functions */
-#define SYNTH_1TO1_MONO_CLIPCHOICE(TYPE,SYNTH_1TO1)                    \
+/* versions: clipped (when TYPE == short) and unclipped (when TYPE == real) of synth_1to1_mono* functions */
+#define SYNTH_1TO1_MONO_CLIPCHOICE(TYPE, SYNTH_1TO1)                    \
   TYPE samples_tmp[64];                                                \
   TYPE *tmp1 = samples_tmp;                                            \
   int i,ret;                                                           \
@@ -91,24 +86,22 @@ char   *strchr(), *strrchr();
   }                                                                    \
   *pnt += 32*sizeof(TYPE);                                             \
                                                                        \
-  return ret; 
-
-  /* *INDENT-ON* */
+  return ret;
+/* *INDENT-ON* */
 
 
 int
-synth_1to1_mono(PMPSTR mp, real * bandPtr, unsigned char *out, int *pnt)
-{
-    SYNTH_1TO1_MONO_CLIPCHOICE(short, synth_1to1)
-} int
-synth_1to1_mono_unclipped(PMPSTR mp, real * bandPtr, unsigned char *out, int *pnt)
-{
-    SYNTH_1TO1_MONO_CLIPCHOICE(real, synth_1to1_unclipped)
+synth_1to1_mono(PMPSTR mp, real *bandPtr, unsigned char *out, int *pnt) {
+SYNTH_1TO1_MONO_CLIPCHOICE(short, synth_1to1)
+}
+int
+synth_1to1_mono_unclipped(PMPSTR mp, real *bandPtr, unsigned char *out, int *pnt) {
+SYNTH_1TO1_MONO_CLIPCHOICE(real, synth_1to1_unclipped)
 }
 
-    /* *INDENT-OFF* */
+/* *INDENT-OFF* */
 /* versions: clipped (when TYPE == short) and unclipped (when TYPE == real) of synth_1to1* functions */
-#define SYNTH_1TO1_CLIPCHOICE(TYPE,WRITE_SAMPLE)         \
+#define SYNTH_1TO1_CLIPCHOICE(TYPE, WRITE_SAMPLE)         \
   static const int step = 2;                             \
   int bo;                                                \
   TYPE *samples = (TYPE *) (out + *pnt);                 \
@@ -209,16 +202,15 @@ synth_1to1_mono_unclipped(PMPSTR mp, real * bandPtr, unsigned char *out, int *pn
   }                                                      \
   *pnt += 64*sizeof(TYPE);                               \
                                                          \
-  return clip;                                           
-    /* *INDENT-ON* */
+  return clip;
+/* *INDENT-ON* */
 
 
 int
-synth_1to1(PMPSTR mp, real * bandPtr, int channel, unsigned char *out, int *pnt)
-{
-    SYNTH_1TO1_CLIPCHOICE(short, WRITE_SAMPLE_CLIPPED)
-} int
-synth_1to1_unclipped(PMPSTR mp, real * bandPtr, int channel, unsigned char *out, int *pnt)
-{
-    SYNTH_1TO1_CLIPCHOICE(real, WRITE_SAMPLE_UNCLIPPED)
+synth_1to1(PMPSTR mp, real *bandPtr, int channel, unsigned char *out, int *pnt) {
+SYNTH_1TO1_CLIPCHOICE(short, WRITE_SAMPLE_CLIPPED)
+}
+int
+synth_1to1_unclipped(PMPSTR mp, real *bandPtr, int channel, unsigned char *out, int *pnt) {
+SYNTH_1TO1_CLIPCHOICE(real, WRITE_SAMPLE_UNCLIPPED)
 }

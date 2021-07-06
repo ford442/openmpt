@@ -28,32 +28,28 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include "SigProc_FLP.h"
-
 /* inner product of two silk_float arrays, with result as double */
 double silk_inner_product_FLP(
-    const silk_float    *data1,
-    const silk_float    *data2,
-    opus_int            dataSize
-)
-{
-    opus_int i;
-    double   result;
+        const silk_float *data1,
+        const silk_float *data2,
+        opus_int dataSize
+) {
+opus_int i;
+double result;
 
-    /* 4x unrolled loop */
-    result = 0.0;
-    for( i = 0; i < dataSize - 3; i += 4 ) {
-        result += data1[ i + 0 ] * (double)data2[ i + 0 ] +
-                  data1[ i + 1 ] * (double)data2[ i + 1 ] +
-                  data1[ i + 2 ] * (double)data2[ i + 2 ] +
-                  data1[ i + 3 ] * (double)data2[ i + 3 ];
-    }
+/* 4x unrolled loop */
+result = 0.0;
+for(i = 0; i < dataSize - 3; i += 4) {
+result += data1[i + 0] * (double) data2[i + 0] +
+          data1[i + 1] * (double) data2[i + 1] +
+          data1[i + 2] * (double) data2[i + 2] +
+          data1[i + 3] * (double) data2[i + 3];
+}
 
-    /* add any remaining products */
-    for( ; i < dataSize; i++ ) {
-        result += data1[ i ] * (double)data2[ i ];
-    }
-
-    return result;
+/* add any remaining products */
+for(; i < dataSize; i++) {
+result += data1[i] * (double) data2[i];
+}
+return result;
 }

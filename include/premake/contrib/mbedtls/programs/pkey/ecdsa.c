@@ -24,14 +24,12 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
 #define mbedtls_printf     printf
 #endif
-
 #if defined(MBEDTLS_ECDSA_C) && \
     defined(MBEDTLS_ENTROPY_C) && defined(MBEDTLS_CTR_DRBG_C)
 #include "mbedtls/entropy.h"
@@ -50,18 +48,15 @@
  * Uncomment to force use of a specific curve
  */
 #define ECPARAMS    MBEDTLS_ECP_DP_SECP192R1
-
 #if !defined(ECPARAMS)
 #define ECPARAMS    mbedtls_ecp_curve_list()->grp_id
 #endif
-
 #if !defined(MBEDTLS_ECDSA_C) || !defined(MBEDTLS_SHA256_C) || \
     !defined(MBEDTLS_ENTROPY_C) || !defined(MBEDTLS_CTR_DRBG_C)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_ECDSA_C and/or MBEDTLS_SHA256_C and/or "
-           "MBEDTLS_ENTROPY_C and/or MBEDTLS_CTR_DRBG_C not defined\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_ECDSA_C and/or MBEDTLS_SHA256_C and/or "
+               "MBEDTLS_ENTROPY_C and/or MBEDTLS_CTR_DRBG_C not defined\n");
+return (0);
 }
 #else
 #if defined(VERBOSE)

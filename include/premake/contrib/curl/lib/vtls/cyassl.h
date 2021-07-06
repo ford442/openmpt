@@ -22,7 +22,6 @@
  *
  ***************************************************************************/
 #include "curl_setup.h"
-
 #ifdef USE_CYASSL
 
 /* KEEP_PEER_CERT is a product of the presence of build time symbol

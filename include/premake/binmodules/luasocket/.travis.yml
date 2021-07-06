@@ -14,7 +14,7 @@ branches:
 
 before_install:
   - if [ $LUA = "luajit" ]; then
-      sudo add-apt-repository ppa:mwild1/ppa -y && sudo apt-get update -y;
+    sudo add-apt-repository ppa:mwild1/ppa -y && sudo apt-get update -y;
     fi
   - sudo apt-get install $LUA
   - sudo apt-get install $LUA_DEV
@@ -32,9 +32,9 @@ before_install:
 
 install:
   - export DEBUG=DEBUG
-  - sudo -E luarocks make luasocket-scm-0.rockspec 
+  - sudo -E luarocks make luasocket-scm-0.rockspec
 
-script: 
+script:
   - cd test
   - lua$LUA_SFX hello.lua
   - lua$LUA_SFX testsrvr.lua > /dev/null &

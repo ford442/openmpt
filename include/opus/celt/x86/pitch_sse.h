@@ -32,11 +32,9 @@
 
 #ifndef PITCH_SSE_H
 #define PITCH_SSE_H
-
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
-
 #if defined(OPUS_X86_MAY_HAVE_SSE4_1) && defined(FIXED_POINT)
 void xcorr_kernel_sse4_1(
                     const opus_int16 *x,
@@ -44,7 +42,6 @@ void xcorr_kernel_sse4_1(
                     opus_val32       sum[4],
                     int              len);
 #endif
-
 #if defined(OPUS_X86_MAY_HAVE_SSE) && !defined(FIXED_POINT)
 void xcorr_kernel_sse(
                     const opus_val16 *x,
@@ -52,7 +49,6 @@ void xcorr_kernel_sse(
                     opus_val32       sum[4],
                     int              len);
 #endif
-
 #if defined(OPUS_X86_PRESUME_SSE4_1) && defined(FIXED_POINT)
 #define OVERRIDE_XCORR_KERNEL
 #define xcorr_kernel(x, y, sum, len, arch) \
@@ -76,29 +72,24 @@ extern void (*const XCORR_KERNEL_IMPL[OPUS_ARCHMASK + 1])(
     ((*XCORR_KERNEL_IMPL[(arch) & OPUS_ARCHMASK])(x, y, sum, len))
 
 #endif
-
 #if defined(OPUS_X86_MAY_HAVE_SSE4_1) && defined(FIXED_POINT)
 opus_val32 celt_inner_prod_sse4_1(
     const opus_int16 *x,
     const opus_int16 *y,
     int               N);
 #endif
-
 #if defined(OPUS_X86_MAY_HAVE_SSE2) && defined(FIXED_POINT)
 opus_val32 celt_inner_prod_sse2(
     const opus_int16 *x,
     const opus_int16 *y,
     int               N);
 #endif
-
 #if defined(OPUS_X86_MAY_HAVE_SSE2) && !defined(FIXED_POINT)
 opus_val32 celt_inner_prod_sse(
     const opus_val16 *x,
     const opus_val16 *y,
     int               N);
 #endif
-
-
 #if defined(OPUS_X86_PRESUME_SSE4_1) && defined(FIXED_POINT)
 #define OVERRIDE_CELT_INNER_PROD
 #define celt_inner_prod(x, y, N, arch) \
@@ -128,7 +119,6 @@ extern opus_val32 (*const CELT_INNER_PROD_IMPL[OPUS_ARCHMASK + 1])(
     ((*CELT_INNER_PROD_IMPL[(arch) & OPUS_ARCHMASK])(x, y, N))
 
 #endif
-
 #if defined(OPUS_X86_MAY_HAVE_SSE) && !defined(FIXED_POINT)
 
 #define OVERRIDE_DUAL_INNER_PROD
@@ -188,5 +178,4 @@ extern void (*const COMB_FILTER_CONST_IMPL[OPUS_ARCHMASK + 1])(
 
 #endif
 #endif
-
 #endif

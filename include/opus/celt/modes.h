@@ -29,47 +29,38 @@
 
 #ifndef MODES_H
 #define MODES_H
-
 #include "opus_types.h"
 #include "celt.h"
 #include "arch.h"
 #include "mdct.h"
 #include "entenc.h"
 #include "entdec.h"
-
 #define MAX_PERIOD 1024
-
 typedef struct {
-   int size;
-   const opus_int16 *index;
-   const unsigned char *bits;
-   const unsigned char *caps;
+int size;
+const opus_int16 *index;
+const unsigned char *bits;
+const unsigned char *caps;
 } PulseCache;
-
 /** Mode definition (opaque)
  @brief Mode definition
  */
 struct OpusCustomMode {
-   opus_int32 Fs;
-   int          overlap;
+opus_int32 Fs;
+int overlap;
+int nbEBands;
+int effEBands;
+opus_val16 preemph[4];
+const opus_int16 *eBands;   /**< Definition for each "pseudo-critical band" */
 
-   int          nbEBands;
-   int          effEBands;
-   opus_val16    preemph[4];
-   const opus_int16   *eBands;   /**< Definition for each "pseudo-critical band" */
-
-   int         maxLM;
-   int         nbShortMdcts;
-   int         shortMdctSize;
-
-   int          nbAllocVectors; /**< Number of lines in the matrix below */
-   const unsigned char   *allocVectors;   /**< Number of bits in each band for several rates */
-   const opus_int16 *logN;
-
-   const opus_val16 *window;
-   mdct_lookup mdct;
-   PulseCache cache;
+int maxLM;
+int nbShortMdcts;
+int shortMdctSize;
+int nbAllocVectors; /**< Number of lines in the matrix below */
+const unsigned char *allocVectors;   /**< Number of bits in each band for several rates */
+const opus_int16 *logN;
+const opus_val16 *window;
+mdct_lookup mdct;
+PulseCache cache;
 };
-
-
 #endif

@@ -30,7 +30,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_MD2_C)
 
 #include "mbedtls/md2.h"

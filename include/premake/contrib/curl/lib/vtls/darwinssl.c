@@ -27,11 +27,9 @@
  */
 
 #include "curl_setup.h"
-
 #include "urldata.h" /* for the Curl_easy definition */
 #include "curl_base64.h"
 #include "strtok.h"
-
 #ifdef USE_DARWINSSL
 
 #ifdef HAVE_LIMITS_H
@@ -1417,9 +1415,9 @@ static CURLcode darwinssl_connect_step1(struct connectdata *conn,
     }
 
     if((Curl_inet_pton(AF_INET, hostname, &addr))
-  #ifdef ENABLE_IPV6
+#ifdef ENABLE_IPV6
     || (Curl_inet_pton(AF_INET6, hostname, &addr))
-  #endif
+#endif
        ) {
       infof(data, "WARNING: using IP address, SNI is being disabled by "
             "the OS.\n");

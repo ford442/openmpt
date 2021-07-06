@@ -1,85 +1,73 @@
 #include "rar.hpp"
-
 // If NewFile==NULL, we delete created file after user confirmation.
 // It is useful if we need to overwrite an existing folder or file,
 // but need user confirmation for that.
-bool FileCreate(RAROptions *Cmd,File *NewFile,wchar *Name,size_t MaxNameSize,
-                bool *UserReject,int64 FileSize,RarTime *FileTime,bool WriteOnly)
-{
-  return true;	// OPENMPT ADDITION
-  if (UserReject!=NULL)
-    *UserReject=false;
+bool FileCreate(RAROptions *Cmd, File *NewFile, wchar *Name, size_t MaxNameSize,
+                bool *UserReject, int64 FileSize, RarTime *FileTime, bool WriteOnly) {
+return true;    // OPENMPT ADDITION
+if(UserReject != NULL)
+*UserReject = false;
 #ifdef _WIN_ALL
-  bool ShortNameChanged=false;
+bool ShortNameChanged=false;
 #endif
-  while (FileExist(Name))
-  {
+while (FileExist(Name)) {
 #if defined(_WIN_ALL)
-    if (!ShortNameChanged)
-    {
-      // Avoid the infinite loop if UpdateExistingShortName returns
-      // the same name.
-      ShortNameChanged=true;
-
-      // Maybe our long name matches the short name of existing file.
-      // Let's check if we can change the short name.
-      if (UpdateExistingShortName(Name))
-        continue;
-    }
-    // Allow short name check again. It is necessary, because rename and
-    // autorename below can change the name, so we need to check it again.
-    ShortNameChanged=false;
-#endif
-    UIASKREP_RESULT Choice=uiAskReplaceEx(Cmd,Name,MaxNameSize,FileSize,FileTime,(NewFile==NULL ? UIASKREP_F_NORENAME:0));
-
-    if (Choice==UIASKREP_R_REPLACE)
-      break;
-    if (Choice==UIASKREP_R_SKIP)
-    {
-      if (UserReject!=NULL)
-        *UserReject=true;
-      return false;
-    }
-    if (Choice==UIASKREP_R_CANCEL)
-      ErrHandler.Exit(RARX_USERBREAK);
-  }
-
-  // Try to truncate the existing file first instead of delete,
-  // so we preserve existing file permissions, such as NTFS permissions,
-  // also as "Compressed" attribute and hard links. In GUI version we avoid
-  // deleting an existing file for non-.rar archive formats as well.
-  uint FileMode=WriteOnly ? FMF_WRITE|FMF_SHAREREAD:FMF_UPDATE|FMF_SHAREREAD;
-  if (NewFile!=NULL && NewFile->Create(Name,FileMode))
-    return true;
-
-  CreatePath(Name,true,Cmd->DisableNames);
-  return NewFile!=NULL ? NewFile->Create(Name,FileMode):DelFile(Name);
-}
-
-
-bool GetAutoRenamedName(wchar *Name,size_t MaxNameSize)
+if (!ShortNameChanged)
 {
-  return true;	// OPENMPT ADDITION
-  wchar NewName[NM];
-  size_t NameLength=wcslen(Name);
-  wchar *Ext=GetExt(Name);
-  if (Ext==NULL)
-    Ext=Name+NameLength;
-  for (uint FileVer=1;;FileVer++)
-  {
-    swprintf(NewName,ASIZE(NewName),L"%.*ls(%u)%ls",uint(Ext-Name),Name,FileVer,Ext);
-    if (!FileExist(NewName))
-    {
-      wcsncpyz(Name,NewName,MaxNameSize);
-      break;
-    }
-    if (FileVer>=1000000)
-      return false;
-  }
-  return true;
+  // Avoid the infinite loop if UpdateExistingShortName returns
+  // the same name.
+  ShortNameChanged=true;
+
+  // Maybe our long name matches the short name of existing file.
+  // Let's check if we can change the short name.
+  if (UpdateExistingShortName(Name))
+    continue;
+}
+// Allow short name check again. It is necessary, because rename and
+// autorename below can change the name, so we need to check it again.
+ShortNameChanged=false;
+#endif
+UIASKREP_RESULT Choice = uiAskReplaceEx(Cmd, Name, MaxNameSize, FileSize, FileTime,
+                                        (NewFile == NULL ? UIASKREP_F_NORENAME : 0));
+if(Choice == UIASKREP_R_REPLACE)
+break;
+if(Choice == UIASKREP_R_SKIP) {
+if(UserReject != NULL)
+*UserReject = true;
+return false;
+}
+if(Choice == UIASKREP_R_CANCEL)
+ErrHandler.Exit(RARX_USERBREAK);
 }
 
-
+// Try to truncate the existing file first instead of delete,
+// so we preserve existing file permissions, such as NTFS permissions,
+// also as "Compressed" attribute and hard links. In GUI version we avoid
+// deleting an existing file for non-.rar archive formats as well.
+uint FileMode = WriteOnly ? FMF_WRITE | FMF_SHAREREAD : FMF_UPDATE | FMF_SHAREREAD;
+if(NewFile != NULL && NewFile->Create(Name, FileMode))
+return true;
+CreatePath(Name, true, Cmd->DisableNames);
+return NewFile != NULL ? NewFile->Create(Name, FileMode) : DelFile(Name);
+}
+bool GetAutoRenamedName(wchar *Name, size_t MaxNameSize) {
+return true;    // OPENMPT ADDITION
+wchar NewName[NM];
+size_t NameLength = wcslen(Name);
+wchar *Ext = GetExt(Name);
+if(Ext == NULL)
+Ext = Name + NameLength;
+for(uint FileVer = 1;; FileVer++) {
+swprintf(NewName, ASIZE(NewName), L"%.*ls(%u)%ls", uint(Ext - Name), Name, FileVer, Ext);
+if(!FileExist(NewName)) {
+wcsncpyz(Name, NewName, MaxNameSize);
+break;
+}
+if(FileVer >= 1000000)
+return false;
+}
+return true;
+}
 #if defined(_WIN_ALL)
 // If we find a file, which short name is equal to 'Name', we try to change
 // its short name, while preserving the long name. It helps when unpacking

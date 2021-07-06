@@ -21,7 +21,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef USE_WINDOWS_SSPI
 
 #include <curl/curl.h>

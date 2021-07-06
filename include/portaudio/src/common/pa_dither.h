@@ -45,8 +45,6 @@
 */
 
 #include "pa_types.h"
-
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -58,17 +56,13 @@ extern "C"
  */
 
 /** @brief State needed to generate a dither signal */
-typedef struct PaUtilTriangularDitherGenerator{
-    PaUint32 previous;
-    PaUint32 randSeed1;
-    PaUint32 randSeed2;
+typedef struct PaUtilTriangularDitherGenerator {
+PaUint32 previous;
+PaUint32 randSeed1;
+PaUint32 randSeed2;
 } PaUtilTriangularDitherGenerator;
-
-
 /** @brief Initialize dither state */
-void PaUtil_InitializeTriangularDitherState( PaUtilTriangularDitherGenerator *ditherState );
-
-
+void PaUtil_InitializeTriangularDitherState(PaUtilTriangularDitherGenerator *ditherState);
 /**
  @brief Calculate 2 LSB dither signal with a triangular distribution.
  Ranged for adding to a 1 bit right-shifted 32 bit integer
@@ -81,9 +75,7 @@ void PaUtil_InitializeTriangularDitherState( PaUtilTriangularDitherGenerator *di
  @return
  A signed 32-bit integer with a range of +32767 to -32768
 */
-PaInt32 PaUtil_Generate16BitTriangularDither( PaUtilTriangularDitherGenerator *ditherState );
-
-
+PaInt32 PaUtil_Generate16BitTriangularDither(PaUtilTriangularDitherGenerator *ditherState);
 /**
  @brief Calculate 2 LSB dither signal with a triangular distribution.
  Ranged for adding to a pre-scaled float.
@@ -96,10 +88,7 @@ PaInt32 PaUtil_Generate16BitTriangularDither( PaUtilTriangularDitherGenerator *d
  @return
  A float with a range of -2.0 to +1.99999.
 */
-float PaUtil_GenerateFloatTriangularDither( PaUtilTriangularDitherGenerator *ditherState );
-
-
-
+float PaUtil_GenerateFloatTriangularDither(PaUtilTriangularDitherGenerator *ditherState);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -22,27 +22,21 @@
  *
  ***************************************************************************/
 #include "curl_setup.h"
-
 #include "nonblock.h" /* for curlx_nonblock(), formerly Curl_nonblock() */
 #include "sockaddr.h"
-
 CURLcode Curl_is_connected(struct connectdata *conn,
                            int sockindex,
                            bool *connected);
-
 CURLcode Curl_connecthost(struct connectdata *conn,
                           const struct Curl_dns_entry *host);
-
 /* generic function that returns how much time there's left to run, according
    to the timeouts set */
 time_t Curl_timeleft(struct Curl_easy *data,
                      struct timeval *nowp,
                      bool duringconnect);
-
 #define DEFAULT_CONNECT_TIMEOUT 300000 /* milliseconds == five minutes */
 #define HAPPY_EYEBALLS_TIMEOUT     200 /* milliseconds to wait between
                                           IPv4/IPv6 connection attempts */
-
 /*
  * Used to extract socket and connectdata struct for the most recent
  * transfer on the given Curl_easy.
@@ -51,12 +45,10 @@ time_t Curl_timeleft(struct Curl_easy *data,
  */
 curl_socket_t Curl_getconnectinfo(struct Curl_easy *data,
                                   struct connectdata **connp);
-
 /*
  * Check if a connection seems to be alive.
  */
 bool Curl_connalive(struct connectdata *conn);
-
 #ifdef USE_WINSOCK
 /* When you run a program that uses the Windows Sockets API, you may
    experience slow performance when you copy data to a TCP server.
@@ -71,11 +63,9 @@ void Curl_sndbufset(curl_socket_t sockfd);
 #else
 #define Curl_sndbufset(y) Curl_nop_stmt
 #endif
-
 void Curl_updateconninfo(struct connectdata *conn, curl_socket_t sockfd);
 void Curl_persistconninfo(struct connectdata *conn);
 int Curl_closesocket(struct connectdata *conn, curl_socket_t sock);
-
 /*
  * The Curl_sockaddr_ex structure is basically libcurl's external API
  * curl_sockaddr structure with enough space available to directly hold any
@@ -84,17 +74,16 @@ int Curl_closesocket(struct connectdata *conn, curl_socket_t sock);
  * been set, before that, it is initialized from parameters.
  */
 struct Curl_sockaddr_ex {
-  int family;
-  int socktype;
-  int protocol;
-  unsigned int addrlen;
-  union {
-    struct sockaddr addr;
-    struct Curl_sockaddr_storage buff;
-  } _sa_ex_u;
+int family;
+int socktype;
+int protocol;
+unsigned int addrlen;
+union {
+struct sockaddr addr;
+struct Curl_sockaddr_storage buff;
+} _sa_ex_u;
 };
 #define sa_addr _sa_ex_u.addr
-
 /*
  * Create a socket based on info from 'conn' and 'ai'.
  *
@@ -106,7 +95,6 @@ CURLcode Curl_socket(struct connectdata *conn,
                      const Curl_addrinfo *ai,
                      struct Curl_sockaddr_ex *addr,
                      curl_socket_t *sockfd);
-
 void Curl_tcpnodelay(struct connectdata *conn, curl_socket_t sockfd);
 
 /*
@@ -124,24 +112,20 @@ void Curl_tcpnodelay(struct connectdata *conn, curl_socket_t sockfd);
 #define CONNCTRL_KEEP 0 /* undo a marked closure */
 #define CONNCTRL_CONNECTION 1
 #define CONNCTRL_STREAM 2
-
 void Curl_conncontrol(struct connectdata *conn,
                       int closeit
 #ifdef DEBUGBUILD
-                      , const char *reason
+        , const char *reason
 #endif
-  );
-
+);
 #ifdef DEBUGBUILD
 #define streamclose(x,y) Curl_conncontrol(x, CONNCTRL_STREAM, y)
 #define connclose(x,y) Curl_conncontrol(x, CONNCTRL_CONNECTION, y)
 #define connkeep(x,y) Curl_conncontrol(x, CONNCTRL_KEEP, y)
 #else /* if !CURLDEBUG */
-#define streamclose(x,y) Curl_conncontrol(x, CONNCTRL_STREAM)
-#define connclose(x,y) Curl_conncontrol(x, CONNCTRL_CONNECTION)
-#define connkeep(x,y) Curl_conncontrol(x, CONNCTRL_KEEP)
+#define streamclose(x, y) Curl_conncontrol(x, CONNCTRL_STREAM)
+#define connclose(x, y) Curl_conncontrol(x, CONNCTRL_CONNECTION)
+#define connkeep(x, y) Curl_conncontrol(x, CONNCTRL_KEEP)
 #endif
-
 bool Curl_conn_data_pending(struct connectdata *conn, int sockindex);
-
 #endif /* HEADER_CURL_CONNECT_H */

@@ -45,51 +45,40 @@
 
 #include "portaudio.h"
 #include "pa_win_waveformat.h"
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
-
-
 #define paWinDirectSoundUseLowLevelLatencyParameters            (0x01)
 #define paWinDirectSoundUseChannelMask                          (0x04)
+typedef struct PaWinDirectSoundStreamInfo {
+unsigned long size;             /**< sizeof(PaWinDirectSoundStreamInfo) */
+PaHostApiTypeId hostApiType;    /**< paDirectSound */
+unsigned long version;          /**< 2 */
 
+unsigned long flags;            /**< enable other features of this struct */
 
-typedef struct PaWinDirectSoundStreamInfo{
-    unsigned long size;             /**< sizeof(PaWinDirectSoundStreamInfo) */
-    PaHostApiTypeId hostApiType;    /**< paDirectSound */
-    unsigned long version;          /**< 2 */
+/**
+   low-level latency setting support
+   Sets the size of the DirectSound host buffer.
+   When flags contains the paWinDirectSoundUseLowLevelLatencyParameters
+   this size will be used instead of interpreting the generic latency
+   parameters to Pa_OpenStream(). If the flag is not set this value is ignored.
 
-    unsigned long flags;            /**< enable other features of this struct */
+   If the stream is a full duplex stream the implementation requires that
+   the values of framesPerBuffer for input and output match (if both are specified).
+*/
+unsigned long framesPerBuffer;
+/**
+    support for WAVEFORMATEXTENSIBLE channel masks. If flags contains
+    paWinDirectSoundUseChannelMask this allows you to specify which speakers
+    to address in a multichannel stream. Constants for channelMask
+    are specified in pa_win_waveformat.h
 
-    /**
-       low-level latency setting support
-       Sets the size of the DirectSound host buffer.
-       When flags contains the paWinDirectSoundUseLowLevelLatencyParameters
-       this size will be used instead of interpreting the generic latency
-       parameters to Pa_OpenStream(). If the flag is not set this value is ignored.
-
-       If the stream is a full duplex stream the implementation requires that
-       the values of framesPerBuffer for input and output match (if both are specified).
-    */
-    unsigned long framesPerBuffer;
-
-    /**
-        support for WAVEFORMATEXTENSIBLE channel masks. If flags contains
-        paWinDirectSoundUseChannelMask this allows you to specify which speakers
-        to address in a multichannel stream. Constants for channelMask
-        are specified in pa_win_waveformat.h
-
-    */
-    PaWinWaveFormatChannelMask channelMask;
-
-}PaWinDirectSoundStreamInfo;
-
-
-
+*/
+PaWinWaveFormatChannelMask channelMask;
+} PaWinDirectSoundStreamInfo;
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
 #endif /* PA_WIN_DS_H */

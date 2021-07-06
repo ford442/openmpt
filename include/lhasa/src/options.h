@@ -20,45 +20,42 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_OPTIONS_H
 #define LHASA_OPTIONS_H
-
 typedef enum {
-	LHA_OVERWRITE_PROMPT,
-	LHA_OVERWRITE_SKIP,
-	LHA_OVERWRITE_ALL
+LHA_OVERWRITE_PROMPT,
+LHA_OVERWRITE_SKIP,
+LHA_OVERWRITE_ALL
 } LHAOverwritePolicy;
 
 // Options structure. Populated from command line arguments.
 
 typedef struct {
 
-	// Policy to take when extracting files and a file
-	// already exists.
+// Policy to take when extracting files and a file
+// already exists.
 
-	LHAOverwritePolicy overwrite_policy;
+LHAOverwritePolicy overwrite_policy;
 
-	// "Quiet" level. Normal operation is level 0.
+// "Quiet" level. Normal operation is level 0.
 
-	int quiet;
+int quiet;
 
-	// "Verbose" mode.
+// "Verbose" mode.
 
-	int verbose;
+int verbose;
 
-	// If true, just perform a dry run of the operations that
-	// would normally be performed, printing messages.
+// If true, just perform a dry run of the operations that
+// would normally be performed, printing messages.
 
-	int dry_run;
+int dry_run;
 
-	// If not NULL, specifies a path into which to extract files.
+// If not NULL, specifies a path into which to extract files.
 
-	char *extract_path;
+char *extract_path;
 
-	// If true, use the directory path for files - otherwise,
-	// the directory path is ignored.
+// If true, use the directory path for files - otherwise,
+// the directory path is ignored.
 
-	int use_path;
-
+int use_path;
 } LHAOptions;
-
 #endif /* #ifndef LHASA_OPTIONS_H */
 

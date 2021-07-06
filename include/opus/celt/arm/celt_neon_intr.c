@@ -33,10 +33,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include <arm_neon.h>
 #include "../pitch.h"
-
 #if defined(FIXED_POINT)
 void xcorr_kernel_neon_fixed(const opus_val16 * x, const opus_val16 * y, opus_val32 sum[4], int len)
 {
@@ -103,109 +101,96 @@ void xcorr_kernel_neon_fixed(const opus_val16 * x, const opus_val16 * y, opus_va
  * Computes 4 correlation values and stores them in sum[4]
  */
 static void xcorr_kernel_neon_float(const float32_t *x, const float32_t *y,
-      float32_t sum[4], int len) {
-   float32x4_t YY[3];
-   float32x4_t YEXT[3];
-   float32x4_t XX[2];
-   float32x2_t XX_2;
-   float32x4_t SUMM;
-   const float32_t *xi = x;
-   const float32_t *yi = y;
+                                    float32_t sum[4], int len) {
+float32x4_t YY[3];
+float32x4_t YEXT[3];
+float32x4_t XX[2];
+float32x2_t XX_2;
+float32x4_t SUMM;
+const float32_t *xi = x;
+const float32_t *yi = y;
 
-   celt_assert(len>0);
+celt_assert(len > 0);
+YY[0] = vld1q_f32(yi);
+SUMM = vdupq_n_f32(0);
 
-   YY[0] = vld1q_f32(yi);
-   SUMM = vdupq_n_f32(0);
-
-   /* Consume 8 elements in x vector and 12 elements in y
-    * vector. However, the 12'th element never really gets
-    * touched in this loop. So, if len == 8, then we only
-    * must access y[0] to y[10]. y[11] must not be accessed
-    * hence make sure len > 8 and not len >= 8
-    */
-   while (len > 8) {
-      yi += 4;
-      YY[1] = vld1q_f32(yi);
-      yi += 4;
-      YY[2] = vld1q_f32(yi);
-
-      XX[0] = vld1q_f32(xi);
-      xi += 4;
-      XX[1] = vld1q_f32(xi);
-      xi += 4;
-
-      SUMM = vmlaq_lane_f32(SUMM, YY[0], vget_low_f32(XX[0]), 0);
-      YEXT[0] = vextq_f32(YY[0], YY[1], 1);
-      SUMM = vmlaq_lane_f32(SUMM, YEXT[0], vget_low_f32(XX[0]), 1);
-      YEXT[1] = vextq_f32(YY[0], YY[1], 2);
-      SUMM = vmlaq_lane_f32(SUMM, YEXT[1], vget_high_f32(XX[0]), 0);
-      YEXT[2] = vextq_f32(YY[0], YY[1], 3);
-      SUMM = vmlaq_lane_f32(SUMM, YEXT[2], vget_high_f32(XX[0]), 1);
-
-      SUMM = vmlaq_lane_f32(SUMM, YY[1], vget_low_f32(XX[1]), 0);
-      YEXT[0] = vextq_f32(YY[1], YY[2], 1);
-      SUMM = vmlaq_lane_f32(SUMM, YEXT[0], vget_low_f32(XX[1]), 1);
-      YEXT[1] = vextq_f32(YY[1], YY[2], 2);
-      SUMM = vmlaq_lane_f32(SUMM, YEXT[1], vget_high_f32(XX[1]), 0);
-      YEXT[2] = vextq_f32(YY[1], YY[2], 3);
-      SUMM = vmlaq_lane_f32(SUMM, YEXT[2], vget_high_f32(XX[1]), 1);
-
-      YY[0] = YY[2];
-      len -= 8;
-   }
-
-   /* Consume 4 elements in x vector and 8 elements in y
-    * vector. However, the 8'th element in y never really gets
-    * touched in this loop. So, if len == 4, then we only
-    * must access y[0] to y[6]. y[7] must not be accessed
-    * hence make sure len>4 and not len>=4
-    */
-   if (len > 4) {
-      yi += 4;
-      YY[1] = vld1q_f32(yi);
-
-      XX[0] = vld1q_f32(xi);
-      xi += 4;
-
-      SUMM = vmlaq_lane_f32(SUMM, YY[0], vget_low_f32(XX[0]), 0);
-      YEXT[0] = vextq_f32(YY[0], YY[1], 1);
-      SUMM = vmlaq_lane_f32(SUMM, YEXT[0], vget_low_f32(XX[0]), 1);
-      YEXT[1] = vextq_f32(YY[0], YY[1], 2);
-      SUMM = vmlaq_lane_f32(SUMM, YEXT[1], vget_high_f32(XX[0]), 0);
-      YEXT[2] = vextq_f32(YY[0], YY[1], 3);
-      SUMM = vmlaq_lane_f32(SUMM, YEXT[2], vget_high_f32(XX[0]), 1);
-
-      YY[0] = YY[1];
-      len -= 4;
-   }
-
-   while (--len > 0) {
-      XX_2 = vld1_dup_f32(xi++);
-      SUMM = vmlaq_lane_f32(SUMM, YY[0], XX_2, 0);
-      YY[0]= vld1q_f32(++yi);
-   }
-
-   XX_2 = vld1_dup_f32(xi);
-   SUMM = vmlaq_lane_f32(SUMM, YY[0], XX_2, 0);
-
-   vst1q_f32(sum, SUMM);
+/* Consume 8 elements in x vector and 12 elements in y
+ * vector. However, the 12'th element never really gets
+ * touched in this loop. So, if len == 8, then we only
+ * must access y[0] to y[10]. y[11] must not be accessed
+ * hence make sure len > 8 and not len >= 8
+ */
+while (len > 8) {
+yi += 4;
+YY[1] = vld1q_f32(yi);
+yi += 4;
+YY[2] = vld1q_f32(yi);
+XX[0] = vld1q_f32(xi);
+xi += 4;
+XX[1] = vld1q_f32(xi);
+xi += 4;
+SUMM = vmlaq_lane_f32(SUMM, YY[0], vget_low_f32(XX[0]), 0);
+YEXT[0] = vextq_f32(YY[0], YY[1], 1);
+SUMM = vmlaq_lane_f32(SUMM, YEXT[0], vget_low_f32(XX[0]), 1);
+YEXT[1] = vextq_f32(YY[0], YY[1], 2);
+SUMM = vmlaq_lane_f32(SUMM, YEXT[1], vget_high_f32(XX[0]), 0);
+YEXT[2] = vextq_f32(YY[0], YY[1], 3);
+SUMM = vmlaq_lane_f32(SUMM, YEXT[2], vget_high_f32(XX[0]), 1);
+SUMM = vmlaq_lane_f32(SUMM, YY[1], vget_low_f32(XX[1]), 0);
+YEXT[0] = vextq_f32(YY[1], YY[2], 1);
+SUMM = vmlaq_lane_f32(SUMM, YEXT[0], vget_low_f32(XX[1]), 1);
+YEXT[1] = vextq_f32(YY[1], YY[2], 2);
+SUMM = vmlaq_lane_f32(SUMM, YEXT[1], vget_high_f32(XX[1]), 0);
+YEXT[2] = vextq_f32(YY[1], YY[2], 3);
+SUMM = vmlaq_lane_f32(SUMM, YEXT[2], vget_high_f32(XX[1]), 1);
+YY[0] = YY[2];
+len -= 8;
 }
 
+/* Consume 4 elements in x vector and 8 elements in y
+ * vector. However, the 8'th element in y never really gets
+ * touched in this loop. So, if len == 4, then we only
+ * must access y[0] to y[6]. y[7] must not be accessed
+ * hence make sure len>4 and not len>=4
+ */
+if(len > 4) {
+yi += 4;
+YY[1] = vld1q_f32(yi);
+XX[0] = vld1q_f32(xi);
+xi += 4;
+SUMM = vmlaq_lane_f32(SUMM, YY[0], vget_low_f32(XX[0]), 0);
+YEXT[0] = vextq_f32(YY[0], YY[1], 1);
+SUMM = vmlaq_lane_f32(SUMM, YEXT[0], vget_low_f32(XX[0]), 1);
+YEXT[1] = vextq_f32(YY[0], YY[1], 2);
+SUMM = vmlaq_lane_f32(SUMM, YEXT[1], vget_high_f32(XX[0]), 0);
+YEXT[2] = vextq_f32(YY[0], YY[1], 3);
+SUMM = vmlaq_lane_f32(SUMM, YEXT[2], vget_high_f32(XX[0]), 1);
+YY[0] = YY[1];
+len -= 4;
+}
+while (--len > 0) {
+XX_2 = vld1_dup_f32(xi++);
+SUMM = vmlaq_lane_f32(SUMM, YY[0], XX_2, 0);
+YY[0] = vld1q_f32(++yi);
+}
+XX_2 = vld1_dup_f32(xi);
+SUMM = vmlaq_lane_f32(SUMM, YY[0], XX_2, 0);
+vst1q_f32(sum, SUMM);
+}
 void celt_pitch_xcorr_float_neon(const opus_val16 *_x, const opus_val16 *_y,
-                        opus_val32 *xcorr, int len, int max_pitch, int arch) {
-   int i;
-   (void)arch;
-   celt_assert(max_pitch > 0);
-   celt_sig_assert((((unsigned char *)_x-(unsigned char *)NULL)&3)==0);
+                                 opus_val32 *xcorr, int len, int max_pitch, int arch) {
+int i;
+(void) arch;
+celt_assert(max_pitch > 0);
+celt_sig_assert((((unsigned char *) _x - (unsigned char *) NULL) & 3) == 0);
+for(i = 0; i < (max_pitch - 3); i += 4) {
+xcorr_kernel_neon_float((const float32_t *) _x, (const float32_t *) _y + i,
+                        (float32_t *) xcorr + i, len);
+}
 
-   for (i = 0; i < (max_pitch-3); i += 4) {
-      xcorr_kernel_neon_float((const float32_t *)_x, (const float32_t *)_y+i,
-            (float32_t *)xcorr+i, len);
-   }
-
-   /* In case max_pitch isn't a multiple of 4, do non-unrolled version. */
-   for (; i < max_pitch; i++) {
-      xcorr[i] = celt_inner_prod_neon(_x, _y+i, len);
-   }
+/* In case max_pitch isn't a multiple of 4, do non-unrolled version. */
+for(; i < max_pitch; i++) {
+xcorr[i] = celt_inner_prod_neon(_x, _y + i, len);
+}
 }
 #endif

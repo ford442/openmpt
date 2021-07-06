@@ -31,7 +31,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_ECDH_C)
 
 #include "mbedtls/ecdh.h"

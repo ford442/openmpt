@@ -27,102 +27,89 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 typedef struct {
 
-	// Callback function to invoke to read more data from the
-	// input stream.
+// Callback function to invoke to read more data from the
+// input stream.
 
-	LHADecoderCallback callback;
-	void *callback_data;
+LHADecoderCallback callback;
+void *callback_data;
 
-	// Bits from the input stream that are waiting to be read.
+// Bits from the input stream that are waiting to be read.
 
-	uint32_t bit_buffer;
-	unsigned int bits;
-
+uint32_t bit_buffer;
+unsigned int bits;
 } BitStreamReader;
 
 // Initialize bit stream reader structure.
 
 static void bit_stream_reader_init(BitStreamReader *reader,
                                    LHADecoderCallback callback,
-                                   void *callback_data)
-{
-	reader->callback = callback;
-	reader->callback_data = callback_data;
-
-	reader->bits = 0;
-	reader->bit_buffer = 0;
+                                   void *callback_data) {
+reader->callback = callback;
+reader->callback_data = callback_data;
+reader->bits = 0;
+reader->bit_buffer = 0;
 }
 
 // Return the next n bits waiting to be read from the input stream,
 // without removing any.  Returns -1 for failure.
 
 static int peek_bits(BitStreamReader *reader,
-                     unsigned int n)
-{
-	uint8_t buf[4];
-	unsigned int fill_bytes;
-	size_t bytes;
+                     unsigned int n) {
+uint8_t buf[4];
+unsigned int fill_bytes;
+size_t bytes;
+if(n == 0) {
+return 0;
+}
 
-	if (n == 0) {
-		return 0;
-	}
+// If there are not enough bits in the buffer to satisfy this
+// request, we need to fill up the buffer with more bits.
 
-	// If there are not enough bits in the buffer to satisfy this
-	// request, we need to fill up the buffer with more bits.
+while (reader->bits < n) {
 
-	while (reader->bits < n) {
+// Maximum number of bytes we can fill?
 
-		// Maximum number of bytes we can fill?
+fill_bytes = (32 - reader->bits) / 8;
 
-		fill_bytes = (32 - reader->bits) / 8;
+// Read from input and fill bit_buffer.
 
-		// Read from input and fill bit_buffer.
+memset(buf, 0, sizeof(buf));
+bytes = reader->callback(buf, fill_bytes,
+                         reader->callback_data);
 
-		memset(buf, 0, sizeof(buf));
-		bytes = reader->callback(buf, fill_bytes,
-		                         reader->callback_data);
+// End of file?
 
-		// End of file?
-
-		if (bytes == 0) {
-			return -1;
-		}
-
-		reader->bit_buffer |= (uint32_t) buf[0] << (24 - reader->bits);
-		reader->bit_buffer |= (uint32_t) buf[1] << (16 - reader->bits);
-		reader->bit_buffer |= (uint32_t) buf[2] << (8 - reader->bits);
-		reader->bit_buffer |= (uint32_t) buf[3];
-
-		reader->bits += bytes * 8;
-	}
-
-	return (signed int) (reader->bit_buffer >> (32 - n));
+if(bytes == 0) {
+return -1;
+}
+reader->bit_buffer |= (uint32_t) buf[0] << (24 - reader->bits);
+reader->bit_buffer |= (uint32_t) buf[1] << (16 - reader->bits);
+reader->bit_buffer |= (uint32_t) buf[2] << (8 - reader->bits);
+reader->bit_buffer |= (uint32_t) buf[3];
+reader->bits += bytes * 8;
+}
+return (signed int) (reader->bit_buffer >> (32 - n));
 }
 
 // Read a bit from the input stream.
 // Returns -1 for failure.
 
 static int read_bits(BitStreamReader *reader,
-                     unsigned int n)
-{
-	int result;
-
-	result = peek_bits(reader, n);
-
-	if (result >= 0) {
-		reader->bit_buffer <<= n;
-		reader->bits -= n;
-	}
-
-	return result;
+                     unsigned int n) {
+int result;
+result = peek_bits(reader, n);
+if(result >= 0) {
+reader->bit_buffer <<= n;
+reader->bits -= n;
+}
+return result;
 }
 
 
 // Read a bit from the input stream.
 // Returns -1 for failure.
 
-static int read_bit(BitStreamReader *reader)
-{
-	return read_bits(reader, 1);
+static int read_bit(BitStreamReader *reader) {
+return read_bits(reader, 1);
 }
 

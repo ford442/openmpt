@@ -2,9 +2,7 @@
 
 #ifndef MPT_DETECT_DL_HPP
 #define MPT_DETECT_DL_HPP
-
 #include "mpt/base/compiletime_warning.hpp"
-
 #if defined(MPT_WITH_DL)
 #if !defined(CPPCHECK)
 #if !__has_include(<dlfcn.h>)
@@ -23,5 +21,4 @@
 #endif
 #endif
 #endif
-
 #endif // MPT_DETECT_DL_HPP

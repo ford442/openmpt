@@ -29,7 +29,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_MD5_C)
 
 #include "mbedtls/md5.h"

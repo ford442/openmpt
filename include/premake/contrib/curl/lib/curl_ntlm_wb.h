@@ -23,7 +23,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #if !defined(CURL_DISABLE_HTTP) && defined(USE_NTLM) && \
     defined(NTLM_WB_ENABLED)
 
@@ -34,5 +33,4 @@ CURLcode Curl_output_ntlm_wb(struct connectdata *conn, bool proxy);
 void Curl_ntlm_wb_cleanup(struct connectdata *conn);
 
 #endif /* !CURL_DISABLE_HTTP && USE_NTLM && NTLM_WB_ENABLED */
-
 #endif /* HEADER_CURL_NTLM_WB_H */

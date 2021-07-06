@@ -21,7 +21,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef CURL_DOES_CONVERSIONS
 
 #include <curl/curl.h>

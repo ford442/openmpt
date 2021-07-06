@@ -25,11 +25,9 @@
 
 #ifndef KISS_FFT_ARMv4_H
 #define KISS_FFT_ARMv4_H
-
 #if !defined(KISS_FFT_GUTS_H)
 #error "This file should only be included from _kiss_fft_guts.h"
 #endif
-
 #ifdef FIXED_POINT
 
 #undef C_MUL
@@ -117,5 +115,4 @@
     while(0)
 
 #endif /* FIXED_POINT */
-
 #endif /* KISS_FFT_ARMv4_H */

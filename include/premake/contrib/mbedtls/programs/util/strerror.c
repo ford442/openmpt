@@ -24,14 +24,12 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
 #define mbedtls_printf     printf
 #endif
-
 #if defined(MBEDTLS_ERROR_C) || defined(MBEDTLS_ERROR_STRERROR_DUMMY)
 #include "mbedtls/error.h"
 
@@ -39,16 +37,13 @@
 #include <stdlib.h>
 #include <string.h>
 #endif
-
 #define USAGE \
     "\n usage: strerror <errorcode>\n" \
     "\n where <errorcode> can be a decimal or hexadecimal (starts with 0x or -0x)\n"
-
 #if !defined(MBEDTLS_ERROR_C) && !defined(MBEDTLS_ERROR_STRERROR_DUMMY)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_ERROR_C and/or MBEDTLS_ERROR_STRERROR_DUMMY not defined.\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_ERROR_C and/or MBEDTLS_ERROR_STRERROR_DUMMY not defined.\n");
+return (0);
 }
 #else
 int main( int argc, char *argv[] )

@@ -45,7 +45,6 @@
 
 #include "portaudio.h"
 #include "pa_win_waveformat.h"
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -71,63 +70,54 @@ extern "C"
 */
 #define paWinMmeWaveFormatDolbyAc3Spdif                 (0x10)
 #define paWinMmeWaveFormatWmaSpdif                      (0x20)
+typedef struct PaWinMmeDeviceAndChannelCount {
+PaDeviceIndex device;
+int channelCount;
+} PaWinMmeDeviceAndChannelCount;
+typedef struct PaWinMmeStreamInfo {
+unsigned long size;             /**< sizeof(PaWinMmeStreamInfo) */
+PaHostApiTypeId hostApiType;    /**< paMME */
+unsigned long version;          /**< 1 */
 
+unsigned long flags;
+/* low-level latency setting support
+    These settings control the number and size of host buffers in order
+    to set latency. They will be used instead of the generic parameters
+    to Pa_OpenStream() if flags contains the PaWinMmeUseLowLevelLatencyParameters
+    flag.
 
-typedef struct PaWinMmeDeviceAndChannelCount{
-    PaDeviceIndex device;
-    int channelCount;
-}PaWinMmeDeviceAndChannelCount;
+    If PaWinMmeStreamInfo structures with PaWinMmeUseLowLevelLatencyParameters
+    are supplied for both input and output in a full duplex stream, then the
+    input and output framesPerBuffer must be the same, or the larger of the
+    two must be a multiple of the smaller, otherwise a
+    paIncompatibleHostApiSpecificStreamInfo error will be returned from
+    Pa_OpenStream().
+*/
+unsigned long framesPerBuffer;
+unsigned long bufferCount;  /* formerly numBuffers */
 
+/* multiple devices per direction support
+    If flags contains the PaWinMmeUseMultipleDevices flag,
+    this functionality will be used, otherwise the device parameter to
+    Pa_OpenStream() will be used instead.
+    If devices are specified here, the corresponding device parameter
+    to Pa_OpenStream() should be set to paUseHostApiSpecificDeviceSpecification,
+    otherwise an paInvalidDevice error will result.
+    The total number of channels across all specified devices
+    must agree with the corresponding channelCount parameter to
+    Pa_OpenStream() otherwise a paInvalidChannelCount error will result.
+*/
+PaWinMmeDeviceAndChannelCount *devices;
+unsigned long deviceCount;
+/*
+    support for WAVEFORMATEXTENSIBLE channel masks. If flags contains
+    paWinMmeUseChannelMask this allows you to specify which speakers
+    to address in a multichannel stream. Constants for channelMask
+    are specified in pa_win_waveformat.h
 
-typedef struct PaWinMmeStreamInfo{
-    unsigned long size;             /**< sizeof(PaWinMmeStreamInfo) */
-    PaHostApiTypeId hostApiType;    /**< paMME */
-    unsigned long version;          /**< 1 */
-
-    unsigned long flags;
-
-    /* low-level latency setting support
-        These settings control the number and size of host buffers in order
-        to set latency. They will be used instead of the generic parameters
-        to Pa_OpenStream() if flags contains the PaWinMmeUseLowLevelLatencyParameters
-        flag.
-
-        If PaWinMmeStreamInfo structures with PaWinMmeUseLowLevelLatencyParameters
-        are supplied for both input and output in a full duplex stream, then the
-        input and output framesPerBuffer must be the same, or the larger of the
-        two must be a multiple of the smaller, otherwise a
-        paIncompatibleHostApiSpecificStreamInfo error will be returned from
-        Pa_OpenStream().
-    */
-    unsigned long framesPerBuffer;
-    unsigned long bufferCount;  /* formerly numBuffers */
-
-    /* multiple devices per direction support
-        If flags contains the PaWinMmeUseMultipleDevices flag,
-        this functionality will be used, otherwise the device parameter to
-        Pa_OpenStream() will be used instead.
-        If devices are specified here, the corresponding device parameter
-        to Pa_OpenStream() should be set to paUseHostApiSpecificDeviceSpecification,
-        otherwise an paInvalidDevice error will result.
-        The total number of channels across all specified devices
-        must agree with the corresponding channelCount parameter to
-        Pa_OpenStream() otherwise a paInvalidChannelCount error will result.
-    */
-    PaWinMmeDeviceAndChannelCount *devices;
-    unsigned long deviceCount;
-
-    /*
-        support for WAVEFORMATEXTENSIBLE channel masks. If flags contains
-        paWinMmeUseChannelMask this allows you to specify which speakers
-        to address in a multichannel stream. Constants for channelMask
-        are specified in pa_win_waveformat.h
-
-    */
-    PaWinWaveFormatChannelMask channelMask;
-
-}PaWinMmeStreamInfo;
-
-
+*/
+PaWinWaveFormatChannelMask channelMask;
+} PaWinMmeStreamInfo;
 /** Retrieve the number of wave in handles used by a PortAudio WinMME stream.
  Returns zero if the stream is output only.
 
@@ -137,9 +127,7 @@ typedef struct PaWinMmeStreamInfo{
 
  @see PaWinMME_GetStreamInputHandle
 */
-int PaWinMME_GetStreamInputHandleCount( PaStream* stream );
-
-
+int PaWinMME_GetStreamInputHandleCount(PaStream *stream);
 /** Retrieve a wave in handle used by a PortAudio WinMME stream.
 
  @param stream The stream to query.
@@ -150,9 +138,7 @@ int PaWinMME_GetStreamInputHandleCount( PaStream* stream );
 
  @see PaWinMME_GetStreamInputHandle
 */
-HWAVEIN PaWinMME_GetStreamInputHandle( PaStream* stream, int handleIndex );
-
-
+HWAVEIN PaWinMME_GetStreamInputHandle(PaStream *stream, int handleIndex);
 /** Retrieve the number of wave out handles used by a PortAudio WinMME stream.
  Returns zero if the stream is input only.
 
@@ -162,9 +148,7 @@ HWAVEIN PaWinMME_GetStreamInputHandle( PaStream* stream, int handleIndex );
 
  @see PaWinMME_GetStreamOutputHandle
 */
-int PaWinMME_GetStreamOutputHandleCount( PaStream* stream );
-
-
+int PaWinMME_GetStreamOutputHandleCount(PaStream *stream);
 /** Retrieve a wave out handle used by a PortAudio WinMME stream.
 
  @param stream The stream to query.
@@ -175,11 +159,8 @@ int PaWinMME_GetStreamOutputHandleCount( PaStream* stream );
 
  @see PaWinMME_GetStreamOutputHandleCount
 */
-HWAVEOUT PaWinMME_GetStreamOutputHandle( PaStream* stream, int handleIndex );
-
-
+HWAVEOUT PaWinMME_GetStreamOutputHandle(PaStream *stream, int handleIndex);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
 #endif /* PA_WIN_WMME_H */

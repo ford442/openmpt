@@ -9,38 +9,23 @@
 
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
 #include <string>
-
 OPENMPT_NAMESPACE_BEGIN
 
 
-struct FileTags
-{
-
-	mpt::ustring encoder;
-
-	mpt::ustring title;
-	mpt::ustring comments;
-
-	mpt::ustring bpm;
-
-	mpt::ustring artist;
-	mpt::ustring album;
-	mpt::ustring trackno;
-	mpt::ustring year;
-	mpt::ustring url;
-
-	mpt::ustring genre;
-
-	void SetEncoder();
-
+struct FileTags {
+mpt::ustring encoder;
+mpt::ustring title;
+mpt::ustring comments;
+mpt::ustring bpm;
+mpt::ustring artist;
+mpt::ustring album;
+mpt::ustring trackno;
+mpt::ustring year;
+mpt::ustring url;
+mpt::ustring genre;
+void SetEncoder();
 };
-
-
 mpt::ustring GetSampleNameFromTags(const FileTags &tags);
-
-
 OPENMPT_NAMESPACE_END

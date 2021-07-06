@@ -21,9 +21,7 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #include <curl/curl.h>
-
 #ifdef HAVE_NETINET_IN_H
 #  include <netinet/in.h>
 #endif
@@ -36,19 +34,15 @@
 #ifdef HAVE_SYS_UN_H
 #  include <sys/un.h>
 #endif
-
 #ifdef __VMS
 #  include <in.h>
 #  include <inet.h>
 #endif
-
 #if defined(NETWARE) && defined(__NOVELL_LIBC__)
 #  undef  in_addr_t
 #  define in_addr_t unsigned long
 #endif
-
 #include <stddef.h>
-
 #include "curl_addrinfo.h"
 #include "inet_pton.h"
 #include "warnless.h"
@@ -67,29 +61,23 @@
  */
 
 #if defined(__INTEL_COMPILER) && (__INTEL_COMPILER == 910) && \
-    defined(__OPTIMIZE__) && defined(__unix__) &&  defined(__i386__)
-  /* workaround icc 9.1 optimizer issue */
+    defined(__OPTIMIZE__) && defined(__unix__) && defined(__i386__)
+/* workaround icc 9.1 optimizer issue */
 # define vqualifier volatile
 #else
 # define vqualifier
 #endif
-
 void
-Curl_freeaddrinfo(Curl_addrinfo *cahead)
-{
-  Curl_addrinfo *vqualifier canext;
-  Curl_addrinfo *ca;
-
-  for(ca = cahead; ca != NULL; ca = canext) {
-    free(ca->ai_addr);
-    free(ca->ai_canonname);
-    canext = ca->ai_next;
-
-    free(ca);
-  }
+Curl_freeaddrinfo(Curl_addrinfo *cahead) {
+Curl_addrinfo *vqualifier canext;
+Curl_addrinfo *ca;
+for(ca = cahead; ca != NULL; ca = canext) {
+free(ca->ai_addr);
+free(ca->ai_canonname);
+canext = ca->ai_next;
+free(ca);
 }
-
-
+}
 #ifdef HAVE_GETADDRINFO
 /*
  * Curl_getaddrinfo_ex()
@@ -223,8 +211,6 @@ Curl_getaddrinfo_ex(const char *nodename,
   return error;
 }
 #endif /* HAVE_GETADDRINFO */
-
-
 /*
  * Curl_he2ai()
  *
@@ -267,116 +253,98 @@ Curl_getaddrinfo_ex(const char *nodename,
  */
 
 Curl_addrinfo *
-Curl_he2ai(const struct hostent *he, int port)
-{
-  Curl_addrinfo *ai;
-  Curl_addrinfo *prevai = NULL;
-  Curl_addrinfo *firstai = NULL;
-  struct sockaddr_in *addr;
+Curl_he2ai(const struct hostent *he, int port) {
+Curl_addrinfo *ai;
+Curl_addrinfo *prevai = NULL;
+Curl_addrinfo *firstai = NULL;
+struct sockaddr_in *addr;
 #ifdef ENABLE_IPV6
-  struct sockaddr_in6 *addr6;
+struct sockaddr_in6 *addr6;
 #endif
-  CURLcode result = CURLE_OK;
-  int i;
-  char *curr;
-
-  if(!he)
-    /* no input == no output! */
-    return NULL;
-
-  DEBUGASSERT((he->h_name != NULL) && (he->h_addr_list != NULL));
-
-  for(i=0; (curr = he->h_addr_list[i]) != NULL; i++) {
-
-    size_t ss_size;
+CURLcode result = CURLE_OK;
+int i;
+char *curr;
+if(!he)
+/* no input == no output! */
+return NULL;
+DEBUGASSERT((he->h_name != NULL) && (he->h_addr_list != NULL));
+for(i = 0; (curr = he->h_addr_list[i]) != NULL; i++) {
+size_t ss_size;
 #ifdef ENABLE_IPV6
-    if(he->h_addrtype == AF_INET6)
-      ss_size = sizeof(struct sockaddr_in6);
-    else
+if(he->h_addrtype == AF_INET6)
+  ss_size = sizeof(struct sockaddr_in6);
+else
 #endif
-      ss_size = sizeof(struct sockaddr_in);
-
-    ai = calloc(1, sizeof(Curl_addrinfo));
-    if(!ai) {
-      result = CURLE_OUT_OF_MEMORY;
-      break;
-    }
-    ai->ai_canonname = strdup(he->h_name);
-    if(!ai->ai_canonname) {
-      result = CURLE_OUT_OF_MEMORY;
-      free(ai);
-      break;
-    }
-    ai->ai_addr = calloc(1, ss_size);
-    if(!ai->ai_addr) {
-      result = CURLE_OUT_OF_MEMORY;
-      free(ai->ai_canonname);
-      free(ai);
-      break;
-    }
-
-    if(!firstai)
-      /* store the pointer we want to return from this function */
-      firstai = ai;
-
-    if(prevai)
-      /* make the previous entry point to this */
-      prevai->ai_next = ai;
-
-    ai->ai_family = he->h_addrtype;
-
-    /* we return all names as STREAM, so when using this address for TFTP
-       the type must be ignored and conn->socktype be used instead! */
-    ai->ai_socktype = SOCK_STREAM;
-
-    ai->ai_addrlen = (curl_socklen_t)ss_size;
-
-    /* leave the rest of the struct filled with zero */
-
-    switch(ai->ai_family) {
-    case AF_INET:
-      addr = (void *)ai->ai_addr; /* storage area for this info */
-
-      memcpy(&addr->sin_addr, curr, sizeof(struct in_addr));
-      addr->sin_family = (unsigned short)(he->h_addrtype);
-      addr->sin_port = htons((unsigned short)port);
-      break;
-
-#ifdef ENABLE_IPV6
-    case AF_INET6:
-      addr6 = (void *)ai->ai_addr; /* storage area for this info */
-
-      memcpy(&addr6->sin6_addr, curr, sizeof(struct in6_addr));
-      addr6->sin6_family = (unsigned short)(he->h_addrtype);
-      addr6->sin6_port = htons((unsigned short)port);
-      break;
-#endif
-    }
-
-    prevai = ai;
-  }
-
-  if(result) {
-    Curl_freeaddrinfo(firstai);
-    firstai = NULL;
-  }
-
-  return firstai;
+ss_size = sizeof(struct sockaddr_in);
+ai = calloc(1, sizeof(Curl_addrinfo));
+if(!ai) {
+result = CURLE_OUT_OF_MEMORY;
+break;
 }
+ai->ai_canonname = strdup(he->h_name);
+if(!ai->ai_canonname) {
+result = CURLE_OUT_OF_MEMORY;
+free(ai);
+break;
+}
+ai->ai_addr = calloc(1, ss_size);
+if(!ai->ai_addr) {
+result = CURLE_OUT_OF_MEMORY;
+free(ai->ai_canonname);
+free(ai);
+break;
+}
+if(!firstai)
+/* store the pointer we want to return from this function */
+firstai = ai;
+if(prevai)
+/* make the previous entry point to this */
+prevai->ai_next = ai;
+ai->ai_family = he->h_addrtype;
 
+/* we return all names as STREAM, so when using this address for TFTP
+   the type must be ignored and conn->socktype be used instead! */
+ai->ai_socktype = SOCK_STREAM;
+ai->ai_addrlen = (curl_socklen_t) ss_size;
 
-struct namebuff {
-  struct hostent hostentry;
-  union {
-    struct in_addr  ina4;
+/* leave the rest of the struct filled with zero */
+
+switch (ai->ai_family) {
+case AF_INET:
+addr = (void *) ai->ai_addr; /* storage area for this info */
+
+memcpy(&addr->sin_addr, curr, sizeof(struct in_addr));
+addr->sin_family = (unsigned short) (he->h_addrtype);
+addr->sin_port = htons((unsigned short) port);
+break;
 #ifdef ENABLE_IPV6
-    struct in6_addr ina6;
+case AF_INET6:
+  addr6 = (void *)ai->ai_addr; /* storage area for this info */
+
+  memcpy(&addr6->sin6_addr, curr, sizeof(struct in6_addr));
+  addr6->sin6_family = (unsigned short)(he->h_addrtype);
+  addr6->sin6_port = htons((unsigned short)port);
+  break;
 #endif
-  } addrentry;
-  char *h_addr_list[2];
+}
+prevai = ai;
+}
+if(result) {
+Curl_freeaddrinfo(firstai);
+firstai = NULL;
+}
+return firstai;
+}
+struct namebuff {
+struct hostent hostentry;
+union {
+struct in_addr ina4;
+#ifdef ENABLE_IPV6
+struct in6_addr ina6;
+#endif
+} addrentry;
+char *h_addr_list[2];
 };
-
-
 /*
  * Curl_ip2addr()
  *
@@ -387,98 +355,84 @@ struct namebuff {
  */
 
 Curl_addrinfo *
-Curl_ip2addr(int af, const void *inaddr, const char *hostname, int port)
-{
-  Curl_addrinfo *ai;
-
+Curl_ip2addr(int af, const void *inaddr, const char *hostname, int port) {
+Curl_addrinfo *ai;
 #if defined(__VMS) && \
     defined(__INITIAL_POINTER_SIZE) && (__INITIAL_POINTER_SIZE == 64)
 #pragma pointer_size save
 #pragma pointer_size short
 #pragma message disable PTRMISMATCH
 #endif
-
-  struct hostent  *h;
-  struct namebuff *buf;
-  char  *addrentry;
-  char  *hoststr;
-  size_t addrsize;
-
-  DEBUGASSERT(inaddr && hostname);
-
-  buf = malloc(sizeof(struct namebuff));
-  if(!buf)
-    return NULL;
-
-  hoststr = strdup(hostname);
-  if(!hoststr) {
-    free(buf);
-    return NULL;
-  }
-
-  switch(af) {
-  case AF_INET:
-    addrsize = sizeof(struct in_addr);
-    addrentry = (void *)&buf->addrentry.ina4;
-    memcpy(addrentry, inaddr, sizeof(struct in_addr));
-    break;
+struct hostent *h;
+struct namebuff *buf;
+char *addrentry;
+char *hoststr;
+size_t addrsize;
+DEBUGASSERT(inaddr && hostname);
+buf = malloc(sizeof(struct namebuff));
+if(!buf)
+return NULL;
+hoststr = strdup(hostname);
+if(!hoststr) {
+free(buf);
+return NULL;
+}
+switch (af) {
+case AF_INET:
+addrsize = sizeof(struct in_addr);
+addrentry = (void *) &buf->addrentry.ina4;
+memcpy(addrentry, inaddr, sizeof(struct in_addr));
+break;
 #ifdef ENABLE_IPV6
-  case AF_INET6:
-    addrsize = sizeof(struct in6_addr);
-    addrentry = (void *)&buf->addrentry.ina6;
-    memcpy(addrentry, inaddr, sizeof(struct in6_addr));
-    break;
+case AF_INET6:
+  addrsize = sizeof(struct in6_addr);
+  addrentry = (void *)&buf->addrentry.ina6;
+  memcpy(addrentry, inaddr, sizeof(struct in6_addr));
+  break;
 #endif
-  default:
-    free(hoststr);
-    free(buf);
-    return NULL;
-  }
-
-  h = &buf->hostentry;
-  h->h_name = hoststr;
-  h->h_aliases = NULL;
-  h->h_addrtype = (short)af;
-  h->h_length = (short)addrsize;
-  h->h_addr_list = &buf->h_addr_list[0];
-  h->h_addr_list[0] = addrentry;
-  h->h_addr_list[1] = NULL; /* terminate list of entries */
+default:
+free(hoststr);
+free(buf);
+return NULL;
+}
+h = &buf->hostentry;
+h->h_name = hoststr;
+h->h_aliases = NULL;
+h->h_addrtype = (short) af;
+h->h_length = (short) addrsize;
+h->h_addr_list = &buf->h_addr_list[0];
+h->h_addr_list[0] = addrentry;
+h->h_addr_list[1] = NULL; /* terminate list of entries */
 
 #if defined(__VMS) && \
     defined(__INITIAL_POINTER_SIZE) && (__INITIAL_POINTER_SIZE == 64)
 #pragma pointer_size restore
 #pragma message enable PTRMISMATCH
 #endif
-
-  ai = Curl_he2ai(h, port);
-
-  free(hoststr);
-  free(buf);
-
-  return ai;
+ai = Curl_he2ai(h, port);
+free(hoststr);
+free(buf);
+return ai;
 }
-
 /*
  * Given an IPv4 or IPv6 dotted string address, this converts it to a proper
  * allocated Curl_addrinfo struct and returns it.
  */
-Curl_addrinfo *Curl_str2addr(char *address, int port)
-{
-  struct in_addr in;
-  if(Curl_inet_pton(AF_INET, address, &in) > 0)
-    /* This is a dotted IP address 123.123.123.123-style */
-    return Curl_ip2addr(AF_INET, &in, address, port);
+Curl_addrinfo *Curl_str2addr(char *address, int port) {
+struct in_addr in;
+if(Curl_inet_pton(AF_INET, address, &in) > 0)
+/* This is a dotted IP address 123.123.123.123-style */
+return Curl_ip2addr(AF_INET, &in, address, port);
 #ifdef ENABLE_IPV6
-  else {
-    struct in6_addr in6;
-    if(Curl_inet_pton(AF_INET6, address, &in6) > 0)
-      /* This is a dotted IPv6 address ::1-style */
-      return Curl_ip2addr(AF_INET6, &in6, address, port);
-  }
-#endif
-  return NULL; /* bad input format */
+else {
+  struct in6_addr in6;
+  if(Curl_inet_pton(AF_INET6, address, &in6) > 0)
+    /* This is a dotted IPv6 address ::1-style */
+    return Curl_ip2addr(AF_INET6, &in6, address, port);
 }
-
+#endif
+return NULL; /* bad input format */
+}
 #ifdef USE_UNIX_SOCKETS
 /**
  * Given a path to a Unix domain socket, return a newly allocated Curl_addrinfo
@@ -528,7 +482,6 @@ Curl_addrinfo *Curl_unix2addr(const char *path, bool *longpath, bool abstract)
   return ai;
 }
 #endif
-
 #if defined(CURLDEBUG) && defined(HAVE_FREEADDRINFO)
 /*
  * curl_dofreeaddrinfo()
@@ -551,8 +504,6 @@ curl_dofreeaddrinfo(struct addrinfo *freethis,
               source, line, (void *)freethis);
 }
 #endif /* defined(CURLDEBUG) && defined(HAVE_FREEADDRINFO) */
-
-
 #if defined(CURLDEBUG) && defined(HAVE_GETADDRINFO)
 /*
  * curl_dogetaddrinfo()
@@ -584,7 +535,6 @@ curl_dogetaddrinfo(const char *hostname,
   return res;
 }
 #endif /* defined(CURLDEBUG) && defined(HAVE_GETADDRINFO) */
-
 #if defined(HAVE_GETADDRINFO) && defined(USE_RESOLVE_ON_IPS)
 /*
  * Work-arounds the sin6_port is always zero bug on iOS 9.3.2 and Mac OS X

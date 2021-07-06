@@ -48,53 +48,39 @@
 #ifdef PORTAUDIO_CMAKE_GENERATED
 #include "options_cmake.h"
 #endif
-
 #include "pa_hostapi.h"
-
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
-
-PaError PaSkeleton_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
-PaError PaWinMme_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
-PaError PaWinDs_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
-PaError PaAsio_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
-PaError PaWinWdm_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
-PaError PaWasapi_Initialize( PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index );
-
+PaError PaSkeleton_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
+PaError PaWinMme_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
+PaError PaWinDs_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
+PaError PaAsio_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
+PaError PaWinWdm_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
+PaError PaWasapi_Initialize(PaUtilHostApiRepresentation **hostApi, PaHostApiIndex index);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
-
 PaUtilHostApiInitializer *paHostApiInitializers[] =
-    {
-
+        {
 #if PA_USE_WMME
-        PaWinMme_Initialize,
+                PaWinMme_Initialize,
 #endif
-
 #if PA_USE_DS
-        PaWinDs_Initialize,
+                PaWinDs_Initialize,
 #endif
-
 #if PA_USE_ASIO
-        PaAsio_Initialize,
+                PaAsio_Initialize,
 #endif
-
 #if PA_USE_WASAPI
-        PaWasapi_Initialize,
+                PaWasapi_Initialize,
 #endif
-
 #if PA_USE_WDMKS
-        PaWinWdm_Initialize,
+                PaWinWdm_Initialize,
 #endif
-
 #if PA_USE_SKELETON
-        PaSkeleton_Initialize, /* just for testing. last in list so it isn't marked as default. */
+                PaSkeleton_Initialize, /* just for testing. last in list so it isn't marked as default. */
 #endif
-
-        0   /* NULL terminated array */
-    };
+                0   /* NULL terminated array */
+        };

@@ -20,11 +20,8 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_EXT_HEADER_H
 #define LHASA_EXT_HEADER_H
-
 #include <stdlib.h>
-
 #include "lha_file_header.h"
-
 /**
  * Decode the specified extended header.
  *
@@ -39,6 +36,5 @@ int lha_ext_header_decode(LHAFileHeader *header,
                           uint8_t num,
                           uint8_t *data,
                           size_t data_len);
-
 #endif /* #ifndef LHASA_EXT_HEADER_H */
 

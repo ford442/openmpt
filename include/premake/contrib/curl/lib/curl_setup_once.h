@@ -32,27 +32,21 @@
 #include <string.h>
 #include <stdarg.h>
 #include <ctype.h>
-
 #ifdef HAVE_ERRNO_H
 #include <errno.h>
 #endif
-
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
-
 #ifdef NEED_MALLOC_H
 #include <malloc.h>
 #endif
-
 #ifdef NEED_MEMORY_H
 #include <memory.h>
 #endif
-
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
-
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #ifdef TIME_WITH_SYS_TIME
@@ -63,20 +57,16 @@
 #include <time.h>
 #endif
 #endif
-
 #ifdef WIN32
 #include <io.h>
 #include <fcntl.h>
 #endif
-
 #if defined(HAVE_STDBOOL_H) && defined(HAVE_BOOL_T)
 #include <stdbool.h>
 #endif
-
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-
 #ifdef __hpux
 #  if !defined(_XOPEN_SOURCE_EXTENDED) || defined(_KERNEL)
 #    ifdef _APP32_64BIT_OFF_T
@@ -87,11 +77,9 @@
 #    endif
 #  endif
 #endif
-
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
-
 #ifdef __hpux
 #  if !defined(_XOPEN_SOURCE_EXTENDED) || defined(_KERNEL)
 #    ifdef OLD_APP32_64BIT_OFF_T
@@ -108,8 +96,8 @@
 
 #ifndef HAVE_STRUCT_TIMEVAL
 struct timeval {
- long tv_sec;
- long tv_usec;
+long tv_sec;
+long tv_usec;
 };
 #endif
 
@@ -124,8 +112,6 @@ struct timeval {
 #else
 #define SEND_4TH_ARG 0
 #endif
-
-
 #if defined(__minix)
 /* Minix doesn't support recv on TCP sockets */
 #define sread(x,y,z) (ssize_t)read((RECV_TYPE_ARG1)(x), \
@@ -171,13 +157,11 @@ struct timeval {
 #endif
 #else /* HAVE_RECV */
 #ifndef sread
-  /* */
-  Error Missing_definition_of_macro_sread
-  /* */
+/* */
+Error Missing_definition_of_macro_sread
+/* */
 #endif
 #endif /* HAVE_RECV */
-
-
 #if defined(__minix)
 /* Minix doesn't support send on TCP sockets */
 #define swrite(x,y,z) (ssize_t)write((SEND_TYPE_ARG1)(x), \
@@ -191,9 +175,9 @@ struct timeval {
     !defined(SEND_TYPE_ARG3) || \
     !defined(SEND_TYPE_ARG4) || \
     !defined(SEND_TYPE_RETV)
-  /* */
-  Error Missing_definition_of_return_and_arguments_types_of_send
-  /* */
+/* */
+Error Missing_definition_of_return_and_arguments_types_of_send
+/* */
 #else
 #define swrite(x,y,z) (ssize_t)send((SEND_TYPE_ARG1)(x), \
                                     (SEND_TYPE_ARG2)(y), \
@@ -202,13 +186,11 @@ struct timeval {
 #endif
 #else /* HAVE_SEND */
 #ifndef swrite
-  /* */
-  Error Missing_definition_of_macro_swrite
-  /* */
+/* */
+Error Missing_definition_of_macro_swrite
+/* */
 #endif
 #endif /* HAVE_SEND */
-
-
 #if 0
 #if defined(HAVE_RECVFROM)
 /*
@@ -289,10 +271,8 @@ struct timeval {
 #define ISUPPER(x)  (isupper((int)  ((unsigned char)x)))
 #define ISLOWER(x)  (islower((int)  ((unsigned char)x)))
 #define ISASCII(x)  (isascii((int)  ((unsigned char)x)))
-
 #define ISBLANK(x)  (int)((((unsigned char)x) == ' ') || \
                           (((unsigned char)x) == '\t'))
-
 #define TOLOWER(x)  (tolower((int)  ((unsigned char)x)))
 
 
@@ -301,7 +281,7 @@ struct timeval {
  */
 
 #if defined(__hpux) && !defined(HAVE_BOOL_T)
-   typedef int bool;
+typedef int bool;
 #  define false 0
 #  define true 1
 #  define HAVE_BOOL_T
@@ -316,10 +296,11 @@ struct timeval {
  */
 
 #ifndef HAVE_BOOL_T
-  typedef enum {
-      bool_false = 0,
-      bool_true  = 1
-  } bool;
+typedef enum {
+bool_false = 0,
+bool_true = 1
+}
+bool;
 
 /*
  * Use a define to let 'true' and 'false' use those enums.  There
@@ -354,7 +335,6 @@ struct timeval {
  */
 
 #define WHILE_FALSE  while(0)
-
 #if defined(_MSC_VER) && !defined(__POCC__)
 #  undef WHILE_FALSE
 #  if (_MSC_VER < 1500)
@@ -545,7 +525,5 @@ typedef int sig_atomic_t;
  */
 
 #define ZERO_NULL 0
-
-
 #endif /* HEADER_CURL_SETUP_ONCE_H */
 

@@ -2,15 +2,12 @@
 #define HAVE_STRERROR 1
 #define HAVE_SYS_TYPES_H 1
 #define HAVE_LIMITS_H 1
-
 #define HAVE_STRDUP 1
 #define HAVE_STDLIB_H 1
 #define HAVE_STDINT_H 1
 #define HAVE_INTTYPES_H 1
 #define HAVE_STRING_H 1
-
 #define HAVE_DIRENT_H 1
-
 #define HAVE_UNISTD_H 1
 #if !defined(__DJGPP__)
 #define HAVE_SYS_SIGNAL_H 1
@@ -36,8 +33,6 @@
 */
 
 #define GAPLESS 1
-
 #define REAL_IS_FLOAT
-
 #define inline __inline
 

@@ -83,7 +83,6 @@
 #define curlx_mvsprintf curl_mvsprintf
 #define curlx_mvprintf curl_mvprintf
 #define curlx_mvfprintf curl_mvfprintf
-
 #ifdef ENABLE_CURLX_PRINTF
 /* If this define is set, we define all "standard" printf() functions to use
    the curlx_* version instead. It makes the source code transparent and
@@ -110,6 +109,5 @@
 # define aprintf curlx_maprintf
 # define vaprintf curlx_mvaprintf
 #endif /* ENABLE_CURLX_PRINTF */
-
 #endif /* HEADER_CURL_CURLX_H */
 

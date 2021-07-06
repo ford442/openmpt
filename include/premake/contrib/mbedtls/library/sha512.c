@@ -29,15 +29,14 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_SHA512_C)
 
 #include "mbedtls/sha512.h"
 
 #if defined(_MSC_VER) || defined(__WATCOMC__)
-  #define UL64(x) x##ui64
+#define UL64(x) x##ui64
 #else
-  #define UL64(x) x##ULL
+#define UL64(x) x##ULL
 #endif
 
 #include <string.h>

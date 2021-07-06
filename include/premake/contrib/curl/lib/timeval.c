@@ -21,7 +21,6 @@
  ***************************************************************************/
 
 #include "timeval.h"
-
 #if defined(WIN32) && !defined(MSDOS)
 
 struct timeval curlx_tvnow(void)
@@ -95,20 +94,16 @@ struct timeval curlx_tvnow(void)
 }
 
 #else
-
-struct timeval curlx_tvnow(void)
-{
-  /*
-  ** time() returns the value of time in seconds since the Epoch.
-  */
-  struct timeval now;
-  now.tv_sec = (long)time(NULL);
-  now.tv_usec = 0;
-  return now;
+struct timeval curlx_tvnow(void) {
+/*
+** time() returns the value of time in seconds since the Epoch.
+*/
+struct timeval now;
+now.tv_sec = (long) time(NULL);
+now.tv_usec = 0;
+return now;
 }
-
 #endif
-
 /*
  * Make sure that the first argument is the more recent time, as otherwise
  * we'll get a weird negative time-diff back...
@@ -116,35 +111,30 @@ struct timeval curlx_tvnow(void)
  * Returns: the time difference in number of milliseconds. For large diffs it
  * returns 0x7fffffff on 32bit time_t systems.
  */
-time_t curlx_tvdiff(struct timeval newer, struct timeval older)
-{
+time_t curlx_tvdiff(struct timeval newer, struct timeval older) {
 #if SIZEOF_TIME_T < 8
-  /* for 32bit time_t systems, add a precaution to avoid overflow for really
-     big time differences */
-  time_t diff = newer.tv_sec-older.tv_sec;
-  if(diff >= (0x7fffffff/1000))
-    return 0x7fffffff;
+/* for 32bit time_t systems, add a precaution to avoid overflow for really
+   big time differences */
+time_t diff = newer.tv_sec - older.tv_sec;
+if(diff >= (0x7fffffff / 1000))
+return 0x7fffffff;
 #endif
-  return (newer.tv_sec-older.tv_sec)*1000+
-    (time_t)(newer.tv_usec-older.tv_usec)/1000;
+return (newer.tv_sec - older.tv_sec) * 1000 +
+       (time_t)(newer.tv_usec - older.tv_usec) / 1000;
 }
-
 /*
  * Same as curlx_tvdiff but with full usec resolution.
  *
  * Returns: the time difference in seconds with subsecond resolution.
  */
-double curlx_tvdiff_secs(struct timeval newer, struct timeval older)
-{
-  if(newer.tv_sec != older.tv_sec)
-    return (double)(newer.tv_sec-older.tv_sec)+
-      (double)(newer.tv_usec-older.tv_usec)/1000000.0;
-  else
-    return (double)(newer.tv_usec-older.tv_usec)/1000000.0;
+double curlx_tvdiff_secs(struct timeval newer, struct timeval older) {
+if(newer.tv_sec != older.tv_sec)
+return (double) (newer.tv_sec - older.tv_sec) +
+       (double) (newer.tv_usec - older.tv_usec) / 1000000.0;
+else
+return (double) (newer.tv_usec - older.tv_usec) / 1000000.0;
 }
-
 /* return the number of seconds in the given input timeval struct */
-time_t Curl_tvlong(struct timeval t1)
-{
-  return t1.tv_sec;
+time_t Curl_tvlong(struct timeval t1) {
+return t1.tv_sec;
 }

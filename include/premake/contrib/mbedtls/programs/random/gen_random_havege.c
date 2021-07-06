@@ -24,7 +24,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
@@ -32,19 +31,16 @@
 #define mbedtls_fprintf    fprintf
 #define mbedtls_printf     printf
 #endif
-
 #if defined(MBEDTLS_HAVEGE_C) && defined(MBEDTLS_FS_IO)
 #include "mbedtls/havege.h"
 
 #include <stdio.h>
 #include <time.h>
 #endif
-
 #if !defined(MBEDTLS_HAVEGE_C) || !defined(MBEDTLS_FS_IO)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_HAVEGE_C not defined.\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_HAVEGE_C not defined.\n");
+return (0);
 }
 #else
 int main( int argc, char *argv[] )

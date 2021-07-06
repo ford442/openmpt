@@ -17,11 +17,9 @@
 #ifndef _V_RANDOM_H_
 #define _V_RANDOM_H_
 #include "vorbis/codec.h"
-
-extern void *_vorbis_block_alloc(vorbis_block *vb,long bytes);
+extern void *_vorbis_block_alloc(vorbis_block *vb, long bytes);
 extern void _vorbis_block_ripcord(vorbis_block *vb);
 extern int ov_ilog(ogg_uint32_t v);
-
 #ifdef ANALYSIS
 extern int analysis_noisy;
 extern void _analysis_output(char *base,int i,float *v,int n,int bark,int dB,
@@ -29,7 +27,6 @@ extern void _analysis_output(char *base,int i,float *v,int n,int bark,int dB,
 extern void _analysis_output_always(char *base,int i,float *v,int n,int bark,int dB,
                              ogg_int64_t off);
 #endif
-
 #ifdef DEBUG_MALLOC
 
 #define _VDBG_GRAPHFILE "malloc.m"
@@ -49,7 +46,6 @@ extern void _VDBG_free(void *ptr,char *file,long line);
 #define _ogg_free(x) _VDBG_free((x),__FILE__,__LINE__)
 #endif
 #endif
-
 #endif
 
 

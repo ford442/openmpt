@@ -2,9 +2,7 @@
 
 #ifndef MPT_DETECT_MFC_HPP
 #define MPT_DETECT_MFC_HPP
-
 #include "mpt/base/compiletime_warning.hpp"
-
 #if defined(MPT_WITH_MFC)
 #if !defined(CPPCHECK)
 #if !__has_include(<afx.h>)
@@ -18,5 +16,4 @@ MPT_WARNING("Using MFC with unsupported compiler.")
 #else
 #define MPT_DETECTED_MFC 0
 #endif
-
 #endif // MPT_DETECT_MFC_HPP

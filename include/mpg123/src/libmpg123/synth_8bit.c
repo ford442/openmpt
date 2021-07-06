@@ -17,11 +17,10 @@
 */
 
 #define SAMPLE_T unsigned char
-#define WRITE_SAMPLE(samples,sum,clip) WRITE_8BIT_SAMPLE(samples,sum,clip)
+#define WRITE_SAMPLE(samples, sum, clip) WRITE_8BIT_SAMPLE(samples,sum,clip)
 
 /* Part 2a: All straight 1to1 decoding functions */
 #define BLOCK 0x40 /* One decoding block is 64 samples. */
-
 #define SYNTH_NAME synth_1to1_8bit
 #include "synth.h"
 #undef SYNTH_NAME
@@ -34,7 +33,6 @@
 #undef SYNTH_NAME
 #undef MONO_NAME
 #undef MONO2STEREO_NAME
-
 #ifdef OPT_X86
 #define NO_AUTOINCREMENT
 #define SYNTH_NAME synth_1to1_8bit_i386
@@ -56,16 +54,13 @@
 #undef SYNTH_NAME
 #undef MONO_NAME
 #undef MONO2STEREO_NAME
-
 #undef BLOCK
-
 #ifndef NO_DOWNSAMPLE
 
 /*
 	Part 2b: 2to1 synth. Only generic and i386.
 */
 #define BLOCK 0x20 /* One decoding block is 32 samples. */
-
 #define SYNTH_NAME synth_2to1_8bit
 #include "synth.h"
 #undef SYNTH_NAME
@@ -78,7 +73,6 @@
 #undef SYNTH_NAME
 #undef MONO_NAME
 #undef MONO2STEREO_NAME
-
 #ifdef OPT_X86
 #define NO_AUTOINCREMENT
 #define SYNTH_NAME synth_2to1_8bit_i386
@@ -87,14 +81,12 @@
 /* i386 uses the normal mono functions. */
 #undef NO_AUTOINCREMENT
 #endif
-
 #undef BLOCK
 
 /*
 	Part 2c: 4to1 synth. Only generic and i386.
 */
 #define BLOCK 0x10 /* One decoding block is 16 samples. */
-
 #define SYNTH_NAME synth_4to1_8bit
 #include "synth.h"
 #undef SYNTH_NAME
@@ -107,7 +99,6 @@
 #undef SYNTH_NAME
 #undef MONO_NAME
 #undef MONO2STEREO_NAME
-
 #ifdef OPT_X86
 #define NO_AUTOINCREMENT
 #define SYNTH_NAME synth_4to1_8bit_i386
@@ -116,11 +107,8 @@
 /* i386 uses the normal mono functions. */
 #undef NO_AUTOINCREMENT
 #endif
-
 #undef BLOCK
-
 #endif /* NO_DOWNSAMPLE */
-
 #ifndef NO_NTOM
 /*
 	Part 2d: ntom synth.
@@ -135,8 +123,6 @@
 #undef SYNTH_NAME
 #undef MONO_NAME
 #undef MONO2STEREO_NAME
-
 #endif
-
 #undef SAMPLE_T
 #undef WRITE_SAMPLE

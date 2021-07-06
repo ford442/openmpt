@@ -9,30 +9,20 @@
  */
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
-
 OPENMPT_NAMESPACE_BEGIN
-
-
 #ifndef NO_AGC
-
-class CAGC
-{
+class CAGC {
 private:
-	UINT m_nAGC;
-	std::size_t m_nAGCRecoverCount;
-	UINT m_Timeout;
+UINT m_nAGC;
+std::size_t m_nAGCRecoverCount;
+UINT m_Timeout;
 public:
-	CAGC();
-	void Initialize(bool bReset, DWORD MixingFreq);
+CAGC();
+void Initialize(bool bReset, DWORD MixingFreq);
 public:
-	void Process(int *MixSoundBuffer, int *RearSoundBuffer, std::size_t count, std::size_t nChannels);
-	void Adjust(UINT oldVol, UINT newVol);
+void Process(int *MixSoundBuffer, int *RearSoundBuffer, std::size_t count, std::size_t nChannels);
+void Adjust(UINT oldVol, UINT newVol);
 };
-
 #endif // NO_AGC
-
-
 OPENMPT_NAMESPACE_END

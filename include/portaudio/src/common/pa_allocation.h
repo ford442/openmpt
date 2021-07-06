@@ -60,44 +60,32 @@
 extern "C"
 {
 #endif /* __cplusplus */
-
-
-typedef struct
-{
-    long linkCount;
-    struct PaUtilAllocationGroupLink *linkBlocks;
-    struct PaUtilAllocationGroupLink *spareLinks;
-    struct PaUtilAllocationGroupLink *allocations;
-}PaUtilAllocationGroup;
-
-
-
+typedef struct {
+long linkCount;
+struct PaUtilAllocationGroupLink *linkBlocks;
+struct PaUtilAllocationGroupLink *spareLinks;
+struct PaUtilAllocationGroupLink *allocations;
+} PaUtilAllocationGroup;
 /** Create an allocation group.
 */
-PaUtilAllocationGroup* PaUtil_CreateAllocationGroup( void );
-
+PaUtilAllocationGroup *PaUtil_CreateAllocationGroup(void);
 /** Destroy an allocation group, but not the memory allocated through the group.
 */
-void PaUtil_DestroyAllocationGroup( PaUtilAllocationGroup* group );
-
+void PaUtil_DestroyAllocationGroup(PaUtilAllocationGroup *group);
 /** Allocate a block of memory though an allocation group.
 */
-void* PaUtil_GroupAllocateMemory( PaUtilAllocationGroup* group, long size );
-
+void *PaUtil_GroupAllocateMemory(PaUtilAllocationGroup *group, long size);
 /** Free a block of memory that was previously allocated though an allocation
  group. Calling this function is a relatively time consuming operation.
  Under normal circumstances clients should call PaUtil_FreeAllAllocations to
  free all allocated blocks simultaneously.
  @see PaUtil_FreeAllAllocations
 */
-void PaUtil_GroupFreeMemory( PaUtilAllocationGroup* group, void *buffer );
-
+void PaUtil_GroupFreeMemory(PaUtilAllocationGroup *group, void *buffer);
 /** Free all blocks of memory which have been allocated through the allocation
  group. This function doesn't destroy the group itself.
 */
-void PaUtil_FreeAllAllocations( PaUtilAllocationGroup* group );
-
-
+void PaUtil_FreeAllAllocations(PaUtilAllocationGroup *group);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

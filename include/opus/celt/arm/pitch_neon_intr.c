@@ -28,10 +28,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include <arm_neon.h>
 #include "pitch.h"
-
 #ifdef FIXED_POINT
 
 opus_val32 celt_inner_prod_neon(const opus_val16 *x, const opus_val16 *y, int N)
@@ -189,102 +187,86 @@ static void dual_inner_prod_neon_float_c_simulation(const opus_val16 *x, const o
 }
 
 #endif /* OPUS_CHECK_ASM */
-
 /* ========================================================================== */
 
-opus_val32 celt_inner_prod_neon(const opus_val16 *x, const opus_val16 *y, int N)
-{
-    int i;
-    opus_val32 xy;
-    float32x4_t xy_f32x4 = vdupq_n_f32(0);
-    float32x2_t xy_f32x2;
-
-    for (i = 0; i < N - 7; i += 8) {
-        float32x4_t x_f32x4, y_f32x4;
-        x_f32x4  = vld1q_f32(&x[i]);
-        y_f32x4  = vld1q_f32(&y[i]);
-        xy_f32x4 = vmlaq_f32(xy_f32x4, x_f32x4, y_f32x4);
-        x_f32x4  = vld1q_f32(&x[i + 4]);
-        y_f32x4  = vld1q_f32(&y[i + 4]);
-        xy_f32x4 = vmlaq_f32(xy_f32x4, x_f32x4, y_f32x4);
-    }
-
-    if (N - i >= 4) {
-        const float32x4_t x_f32x4 = vld1q_f32(&x[i]);
-        const float32x4_t y_f32x4 = vld1q_f32(&y[i]);
-        xy_f32x4 = vmlaq_f32(xy_f32x4, x_f32x4, y_f32x4);
-        i += 4;
-    }
-
-    xy_f32x2 = vadd_f32(vget_low_f32(xy_f32x4), vget_high_f32(xy_f32x4));
-    xy_f32x2 = vpadd_f32(xy_f32x2, xy_f32x2);
-    xy       = vget_lane_f32(xy_f32x2, 0);
-
-    for (; i < N; i++) {
-        xy = MAC16_16(xy, x[i], y[i]);
-    }
-
-#ifdef OPUS_CHECK_ASM
-    celt_assert(ABS32(celt_inner_prod_neon_float_c_simulation(x, y, N) - xy) <= VERY_SMALL);
-#endif
-
-    return xy;
+opus_val32 celt_inner_prod_neon(const opus_val16 *x, const opus_val16 *y, int N) {
+int i;
+opus_val32 xy;
+float32x4_t xy_f32x4 = vdupq_n_f32(0);
+float32x2_t xy_f32x2;
+for(i = 0; i < N - 7; i += 8) {
+float32x4_t x_f32x4, y_f32x4;
+x_f32x4 = vld1q_f32(&x[i]);
+y_f32x4 = vld1q_f32(&y[i]);
+xy_f32x4 = vmlaq_f32(xy_f32x4, x_f32x4, y_f32x4);
+x_f32x4 = vld1q_f32(&x[i + 4]);
+y_f32x4 = vld1q_f32(&y[i + 4]);
+xy_f32x4 = vmlaq_f32(xy_f32x4, x_f32x4, y_f32x4);
 }
-
+if(N - i >= 4) {
+const float32x4_t x_f32x4 = vld1q_f32(&x[i]);
+const float32x4_t y_f32x4 = vld1q_f32(&y[i]);
+xy_f32x4 = vmlaq_f32(xy_f32x4, x_f32x4, y_f32x4);
+i += 4;
+}
+xy_f32x2 = vadd_f32(vget_low_f32(xy_f32x4), vget_high_f32(xy_f32x4));
+xy_f32x2 = vpadd_f32(xy_f32x2, xy_f32x2);
+xy = vget_lane_f32(xy_f32x2, 0);
+for(; i < N; i++) {
+xy = MAC16_16(xy, x[i], y[i]);
+}
+#ifdef OPUS_CHECK_ASM
+celt_assert(ABS32(celt_inner_prod_neon_float_c_simulation(x, y, N) - xy) <= VERY_SMALL);
+#endif
+return xy;
+}
 void dual_inner_prod_neon(const opus_val16 *x, const opus_val16 *y01, const opus_val16 *y02,
-        int N, opus_val32 *xy1, opus_val32 *xy2)
-{
-    int i;
-    opus_val32 xy01, xy02;
-    float32x4_t xy01_f32x4 = vdupq_n_f32(0);
-    float32x4_t xy02_f32x4 = vdupq_n_f32(0);
-    float32x2_t xy01_f32x2, xy02_f32x2;
-
-    for (i = 0; i < N - 7; i += 8) {
-        float32x4_t x_f32x4, y01_f32x4, y02_f32x4;
-        x_f32x4    = vld1q_f32(&x[i]);
-        y01_f32x4  = vld1q_f32(&y01[i]);
-        y02_f32x4  = vld1q_f32(&y02[i]);
-        xy01_f32x4 = vmlaq_f32(xy01_f32x4, x_f32x4, y01_f32x4);
-        xy02_f32x4 = vmlaq_f32(xy02_f32x4, x_f32x4, y02_f32x4);
-        x_f32x4    = vld1q_f32(&x[i + 4]);
-        y01_f32x4  = vld1q_f32(&y01[i + 4]);
-        y02_f32x4  = vld1q_f32(&y02[i + 4]);
-        xy01_f32x4 = vmlaq_f32(xy01_f32x4, x_f32x4, y01_f32x4);
-        xy02_f32x4 = vmlaq_f32(xy02_f32x4, x_f32x4, y02_f32x4);
-    }
-
-    if (N - i >= 4) {
-        const float32x4_t x_f32x4   = vld1q_f32(&x[i]);
-        const float32x4_t y01_f32x4 = vld1q_f32(&y01[i]);
-        const float32x4_t y02_f32x4 = vld1q_f32(&y02[i]);
-        xy01_f32x4 = vmlaq_f32(xy01_f32x4, x_f32x4, y01_f32x4);
-        xy02_f32x4 = vmlaq_f32(xy02_f32x4, x_f32x4, y02_f32x4);
-        i += 4;
-    }
-
-    xy01_f32x2 = vadd_f32(vget_low_f32(xy01_f32x4), vget_high_f32(xy01_f32x4));
-    xy02_f32x2 = vadd_f32(vget_low_f32(xy02_f32x4), vget_high_f32(xy02_f32x4));
-    xy01_f32x2 = vpadd_f32(xy01_f32x2, xy01_f32x2);
-    xy02_f32x2 = vpadd_f32(xy02_f32x2, xy02_f32x2);
-    xy01       = vget_lane_f32(xy01_f32x2, 0);
-    xy02       = vget_lane_f32(xy02_f32x2, 0);
-
-    for (; i < N; i++) {
-        xy01 = MAC16_16(xy01, x[i], y01[i]);
-        xy02 = MAC16_16(xy02, x[i], y02[i]);
-    }
-    *xy1 = xy01;
-    *xy2 = xy02;
-
+                          int N, opus_val32 *xy1, opus_val32 *xy2) {
+int i;
+opus_val32 xy01, xy02;
+float32x4_t xy01_f32x4 = vdupq_n_f32(0);
+float32x4_t xy02_f32x4 = vdupq_n_f32(0);
+float32x2_t xy01_f32x2, xy02_f32x2;
+for(i = 0; i < N - 7; i += 8) {
+float32x4_t x_f32x4, y01_f32x4, y02_f32x4;
+x_f32x4 = vld1q_f32(&x[i]);
+y01_f32x4 = vld1q_f32(&y01[i]);
+y02_f32x4 = vld1q_f32(&y02[i]);
+xy01_f32x4 = vmlaq_f32(xy01_f32x4, x_f32x4, y01_f32x4);
+xy02_f32x4 = vmlaq_f32(xy02_f32x4, x_f32x4, y02_f32x4);
+x_f32x4 = vld1q_f32(&x[i + 4]);
+y01_f32x4 = vld1q_f32(&y01[i + 4]);
+y02_f32x4 = vld1q_f32(&y02[i + 4]);
+xy01_f32x4 = vmlaq_f32(xy01_f32x4, x_f32x4, y01_f32x4);
+xy02_f32x4 = vmlaq_f32(xy02_f32x4, x_f32x4, y02_f32x4);
+}
+if(N - i >= 4) {
+const float32x4_t x_f32x4 = vld1q_f32(&x[i]);
+const float32x4_t y01_f32x4 = vld1q_f32(&y01[i]);
+const float32x4_t y02_f32x4 = vld1q_f32(&y02[i]);
+xy01_f32x4 = vmlaq_f32(xy01_f32x4, x_f32x4, y01_f32x4);
+xy02_f32x4 = vmlaq_f32(xy02_f32x4, x_f32x4, y02_f32x4);
+i += 4;
+}
+xy01_f32x2 = vadd_f32(vget_low_f32(xy01_f32x4), vget_high_f32(xy01_f32x4));
+xy02_f32x2 = vadd_f32(vget_low_f32(xy02_f32x4), vget_high_f32(xy02_f32x4));
+xy01_f32x2 = vpadd_f32(xy01_f32x2, xy01_f32x2);
+xy02_f32x2 = vpadd_f32(xy02_f32x2, xy02_f32x2);
+xy01 = vget_lane_f32(xy01_f32x2, 0);
+xy02 = vget_lane_f32(xy02_f32x2, 0);
+for(; i < N; i++) {
+xy01 = MAC16_16(xy01, x[i], y01[i]);
+xy02 = MAC16_16(xy02, x[i], y02[i]);
+}
+*xy1 = xy01;
+*xy2 = xy02;
 #ifdef OPUS_CHECK_ASM
-    {
-        opus_val32 xy1_c, xy2_c;
-        dual_inner_prod_neon_float_c_simulation(x, y01, y02, N, &xy1_c, &xy2_c);
-        celt_assert(ABS32(xy1_c - *xy1) <= VERY_SMALL);
-        celt_assert(ABS32(xy2_c - *xy2) <= VERY_SMALL);
-    }
+{
+    opus_val32 xy1_c, xy2_c;
+    dual_inner_prod_neon_float_c_simulation(x, y01, y02, N, &xy1_c, &xy2_c);
+    celt_assert(ABS32(xy1_c - *xy1) <= VERY_SMALL);
+    celt_assert(ABS32(xy2_c - *xy2) <= VERY_SMALL);
+}
 #endif
 }
-
 #endif /* FIXED_POINT */

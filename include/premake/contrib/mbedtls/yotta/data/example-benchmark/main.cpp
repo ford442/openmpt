@@ -20,14 +20,11 @@
  */
 
 #if !defined(TARGET_LIKE_MBED)
-
 #include <stdio.h>
-
 int main() {
-    printf("this version of this program only works on mbed OS\n");
-    return 0;
+printf("this version of this program only works on mbed OS\n");
+return 0;
 }
-
 #else
 
 #if !defined(MBEDTLS_CONFIG_FILE)

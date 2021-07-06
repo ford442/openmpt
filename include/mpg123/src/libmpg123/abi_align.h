@@ -13,7 +13,6 @@
 
 #ifndef MPG123_H_ABI_ALIGN
 #define MPG123_H_ABI_ALIGN
-
 #include "config.h"
 
 /* ABI conformance for other compilers.
@@ -33,9 +32,6 @@
 #endif  /* attribute_align_arg */
 
 #else /* ABI_ALIGN_FUN */
-
 #define attribute_align_arg
-
 #endif /* ABI_ALIGN_FUN */
-
 #endif /* MPG123_H_ABI_ALIGN */

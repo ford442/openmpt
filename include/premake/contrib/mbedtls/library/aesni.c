@@ -29,7 +29,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_AESNI_C)
 
 #include "mbedtls/aesni.h"

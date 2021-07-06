@@ -24,7 +24,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
@@ -33,7 +32,6 @@
 #define mbedtls_calloc    calloc
 #define mbedtls_printf     printf
 #endif
-
 #if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_FS_IO)
 #include "mbedtls/error.h"
 #include "mbedtls/base64.h"
@@ -42,22 +40,18 @@
 #include <stdlib.h>
 #include <string.h>
 #endif
-
 #define DFL_FILENAME            "file.pem"
 #define DFL_OUTPUT_FILENAME     "file.der"
-
 #define USAGE \
     "\n usage: pem2der param=<>...\n"                   \
     "\n acceptable parameters:\n"                       \
     "    filename=%%s         default: file.pem\n"      \
     "    output_file=%%s      default: file.der\n"      \
     "\n"
-
 #if !defined(MBEDTLS_BASE64_C) || !defined(MBEDTLS_FS_IO)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_BASE64_C and/or MBEDTLS_FS_IO not defined.\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_BASE64_C and/or MBEDTLS_FS_IO not defined.\n");
+return (0);
 }
 #else
 /*

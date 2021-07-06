@@ -9,17 +9,14 @@
 
 #ifndef __MANGLE_H
 #define __MANGLE_H
-
 #include "config.h"
 #include "intsym.h"
-
-#if (defined OPT_I486)  || (defined OPT_I586) || (defined OPT_I586_DITHER) \
- || (defined OPT_MMX)   || (defined OPT_SSE)  || (defined OPT_3DNOW) || (defined OPT_3DNOWEXT) \
+#if (defined OPT_I486) || (defined OPT_I586) || (defined OPT_I586_DITHER) \
+ || (defined OPT_MMX) || (defined OPT_SSE) || (defined OPT_3DNOW) || (defined OPT_3DNOWEXT) \
  || (defined OPT_3DNOW_VINTAGE) || (defined OPT_3DNOWEXT_VINTAGE) \
  || (defined OPT_SSE_VINTAGE)
 #define OPT_X86
 #endif
-
 #ifdef CCALIGN
 #define MOVUAPS movaps
 #else
@@ -41,7 +38,6 @@
 #define ALIGN64 .balign 64
 
 #else
-
 #ifdef ASMALIGN_EXP
 #define ALIGN4  .align 2
 #define ALIGN8  .align 3
@@ -67,9 +63,7 @@
 #endif
 #endif
 #endif
-
 #endif
-
 #define MANGLE_MACROCAT_REALLY(a, b) a ## b
 #define MANGLE_MACROCAT(a, b) MANGLE_MACROCAT_REALLY(a, b)
 /* Feel free to add more to the list, eg. a.out IMO */
@@ -102,11 +96,11 @@
 #undef ASM_VALUE
 #define ASM_VALUE(a) MANGLE_MACROCAT($,a) ##@GOTOFF
 #define GET_GOT \
-	call 1f; \
+    call 1f; \
 1: \
-	pop _EBX_; \
+    pop _EBX_; \
 2: \
-	addl $_GLOBAL_OFFSET_TABLE_ + (2b-1b), _EBX_
+    addl $_GLOBAL_OFFSET_TABLE_ + (2b-1b), _EBX_
 #define PREPARE_GOT pushl _EBX_
 #define RESTORE_GOT popl _EBX_
 
@@ -119,9 +113,9 @@
 #define FUNC(a) L_ ## a
 #define EXTERNAL_FUNC(a) L_ ## a
 #define GET_GOT \
-	call Lpic_base; \
+    call Lpic_base; \
 Lpic_base: \
-	pop _EBX_
+    pop _EBX_
 #define PREPARE_GOT pushl _EBX_
 #define RESTORE_GOT popl _EBX_
 
@@ -140,11 +134,10 @@ Lpic_base: \
 #endif /* PIC variants */
 
 #endif /* OPT_X86 */
-
 #if defined(__CYGWIN__) || defined(__MINGW32__) || defined(__APPLE__)
 #define COMM(a,b,c) .comm a,b
 #else
-#define COMM(a,b,c) .comm a,b,c
+#define COMM(a, b, c) .comm a,b,c
 #endif
 /* more hacks for macosx; no .bss ... */
 #ifdef __APPLE__
@@ -171,7 +164,6 @@ Lpic_base: \
 #else
 #define NONEXEC_STACK
 #endif
-
 #if (defined(__x86_64__) || defined(_M_X64)) && (defined(_WIN64) || defined (__CYGWIN__))
 #define IS_MSABI 1 /* Not using SYSV */
 #endif
@@ -184,7 +176,6 @@ Lpic_base: \
 #define AARCH64_PCREL_HI(label) label
 #define AARCH64_PCREL_LO(label) :lo12:label
 #endif
-
 #ifdef __APPLE__
 #define AARCH64_DUP_4S(dst, src, elem) dup.4s dst, src[elem]
 #define AARCH64_DUP_2D(dst, src, elem) dup.2d dst, src[elem]
@@ -194,6 +185,5 @@ Lpic_base: \
 #define AARCH64_DUP_2D(dst, src, elem) dup dst.2d, src.d[elem]
 #define AARCH64_SQXTN2_8H(dst, src) sqxtn2 dst.8h, src.4s
 #endif
-
 #endif /* !__MANGLE_H */
 

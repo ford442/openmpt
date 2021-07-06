@@ -33,7 +33,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_CCM_C)
 
 #include "mbedtls/ccm.h"

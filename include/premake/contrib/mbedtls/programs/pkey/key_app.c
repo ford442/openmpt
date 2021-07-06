@@ -24,14 +24,12 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
 #define mbedtls_printf     printf
 #endif
-
 #if defined(MBEDTLS_BIGNUM_C) && \
     defined(MBEDTLS_PK_PARSE_C) && defined(MBEDTLS_FS_IO)
 #include "mbedtls/error.h"
@@ -40,17 +38,14 @@
 
 #include <string.h>
 #endif
-
 #define MODE_NONE               0
 #define MODE_PRIVATE            1
 #define MODE_PUBLIC             2
-
 #define DFL_MODE                MODE_NONE
 #define DFL_FILENAME            "keyfile.key"
 #define DFL_PASSWORD            ""
 #define DFL_PASSWORD_FILE       ""
 #define DFL_DEBUG_LEVEL         0
-
 #define USAGE \
     "\n usage: key_app param=<>...\n"                   \
     "\n acceptable parameters:\n"                       \
@@ -59,15 +54,12 @@
     "    password=%%s         default: \"\"\n"          \
     "    password_file=%%s    default: \"\"\n"          \
     "\n"
-
-
-#if !defined(MBEDTLS_BIGNUM_C) ||                                  \
+#if !defined(MBEDTLS_BIGNUM_C) || \
     !defined(MBEDTLS_PK_PARSE_C) || !defined(MBEDTLS_FS_IO)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_BIGNUM_C and/or "
-           "MBEDTLS_PK_PARSE_C and/or MBEDTLS_FS_IO not defined.\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_BIGNUM_C and/or "
+               "MBEDTLS_PK_PARSE_C and/or MBEDTLS_FS_IO not defined.\n");
+return (0);
 }
 #else
 /*

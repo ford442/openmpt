@@ -60,7 +60,6 @@
 #else
 #define MPT_OS_UNKNOWN 1
 #endif
-
 #ifndef MPT_OS_DJGPP
 #define MPT_OS_DJGPP 0
 #endif
@@ -103,7 +102,4 @@
 #ifndef MPT_OS_UNKNOWN
 #define MPT_OS_UNKNOWN 0
 #endif
-
-
-
 #endif // MPT_BASE_DETECT_OS.hpp

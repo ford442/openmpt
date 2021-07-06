@@ -34,7 +34,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_GCM_C)
 
 #include "mbedtls/gcm.h"

@@ -5,30 +5,24 @@
  */
 
 #include "premake.h"
-
-int os_getcwd(lua_State* L)
-{
-	char buffer[0x4000];
-	char* ch;
-	int result;
-
+int os_getcwd(lua_State *L) {
+char buffer[0x4000];
+char *ch;
+int result;
 #if PLATFORM_WINDOWS
-	result = (GetCurrentDirectory(0x4000, buffer) != 0);
+result = (GetCurrentDirectory(0x4000, buffer) != 0);
 #else
-	result = (getcwd(buffer, 0x4000) != 0);
+result = (getcwd(buffer, 0x4000) != 0);
 #endif
+if(!result)
+return 0;
 
-	if (!result)
-		return 0;
-
-	/* convert to platform-neutral directory separators */
-	for (ch = buffer; *ch != '\0'; ++ch)
-	{
-		if (*ch == '\\') *ch = '/';
-	}
-
-	lua_pushstring(L, buffer);
-	return 1;
+/* convert to platform-neutral directory separators */
+for(ch = buffer; *ch != '\0'; ++ch) {
+if(*ch == '\\') *ch = '/';
+}
+lua_pushstring(L, buffer);
+return 1;
 }
 
 

@@ -1,16 +1,13 @@
 #define strcasecmp _strcmpi
 #define strncasecmp _strnicmp
-
 #define HAVE_STRERROR 1
 #define HAVE_SYS_TYPES_H 1
 #define HAVE_LIMITS_H 1
-
 #define HAVE_STRDUP
 #define HAVE_STDLIB_H
 #define HAVE_STDINT_H
 #define HAVE_INTTYPES_H
 #define HAVE_STRING_H
-
 #ifdef _M_ARM
 #define ASMALIGN_ARMASM 1
 #else
@@ -32,7 +29,6 @@
 #define EXTRA_DEBUG */
 
 #define REAL_IS_FLOAT
-
 #define inline __inline
 
 /* we are on win32 */

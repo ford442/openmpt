@@ -9,8 +9,7 @@
  */
 
 /* BEGIN_CASE depends_on:MBEDTLS_SELF_TEST */
-void mbedtls_memory_buffer_alloc_self_test( )
-{
-    TEST_ASSERT( mbedtls_memory_buffer_alloc_self_test( 0 ) == 0 );
+void mbedtls_memory_buffer_alloc_self_test() {
+TEST_ASSERT(mbedtls_memory_buffer_alloc_self_test(0) == 0);
 }
 /* END_CASE */

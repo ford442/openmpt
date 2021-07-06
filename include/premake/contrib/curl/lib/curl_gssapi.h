@@ -24,18 +24,17 @@
 
 #include "curl_setup.h"
 #include "urldata.h"
-
 #ifdef HAVE_GSSAPI
 
 #ifdef HAVE_GSSGNU
 #  include <gss.h>
 #elif defined HAVE_GSSMIT
-   /* MIT style */
+/* MIT style */
 #  include <gssapi/gssapi.h>
 #  include <gssapi/gssapi_generic.h>
 #  include <gssapi/gssapi_krb5.h>
 #else
-   /* Heimdal-style */
+/* Heimdal-style */
 #  include <gssapi.h>
 #endif
 
@@ -44,20 +43,20 @@ extern gss_OID_desc Curl_krb5_mech_oid;
 
 /* Common method for using GSS-API */
 OM_uint32 Curl_gss_init_sec_context(
-    struct Curl_easy *data,
-    OM_uint32 *minor_status,
-    gss_ctx_id_t *context,
-    gss_name_t target_name,
-    gss_OID mech_type,
-    gss_channel_bindings_t input_chan_bindings,
-    gss_buffer_t input_token,
-    gss_buffer_t output_token,
-    const bool mutual_auth,
-    OM_uint32 *ret_flags);
+ struct Curl_easy *data,
+ OM_uint32 *minor_status,
+ gss_ctx_id_t *context,
+ gss_name_t target_name,
+ gss_OID mech_type,
+ gss_channel_bindings_t input_chan_bindings,
+ gss_buffer_t input_token,
+ gss_buffer_t output_token,
+ const bool mutual_auth,
+ OM_uint32 *ret_flags);
 
 /* Helper to log a GSS-API error status */
 void Curl_gss_log_error(struct Curl_easy *data, const char *prefix,
-                        OM_uint32 major, OM_uint32 minor);
+                     OM_uint32 major, OM_uint32 minor);
 
 /* Provide some definitions missing in old headers */
 #ifdef HAVE_OLD_GSSMIT
@@ -71,5 +70,4 @@ void Curl_gss_log_error(struct Curl_easy *data, const char *prefix,
 #define GSSAUTH_P_PRIVACY   4
 
 #endif /* HAVE_GSSAPI */
-
 #endif /* HEADER_CURL_GSSAPI_H */

@@ -9,39 +9,25 @@
 
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
 #include "mpt/base/preprocessor.hpp"
 #include "mpt/base/compiletime_warning.hpp"
 #include "mpt/base/macros.hpp"
-
 #if MPT_CXX_AT_LEAST(20)
 #include <version>
 #else // !C++20
 #include <array>
 #endif // C++20
-
 #include <array>
 #include <iterator>
 #include <type_traits>
-
 #include <cstddef>
 #include <cstdint>
-
 #include <stddef.h>
 #include <stdint.h>
-
-
 OPENMPT_NAMESPACE_BEGIN
-
-
-
 #define MPT_UNREFERENCED_PARAMETER(x) MPT_UNUSED(x)
 #define MPT_UNUSED_VARIABLE(x) MPT_UNUSED(x)
-
-
-
 #if MPT_COMPILER_MSVC
 // warning LNK4221: no public symbols found; archive member will be inaccessible
 // There is no way to selectively disable linker warnings.
@@ -56,11 +42,7 @@ OPENMPT_NAMESPACE_BEGIN
 #define MPT_MSVC_WORKAROUND_LNK4221_CONCAT(x,y) MPT_MSVC_WORKAROUND_LNK4221_CONCAT_DETAIL(x,y)
 #define MPT_MSVC_WORKAROUND_LNK4221(x) int MPT_MSVC_WORKAROUND_LNK4221_CONCAT(mpt_msvc_workaround_lnk4221_,x) = 0;
 #endif
-
 #ifndef MPT_MSVC_WORKAROUND_LNK4221
 #define MPT_MSVC_WORKAROUND_LNK4221(x)
 #endif
-
-
-
-OPENMPT_NAMESPACE_END
+        OPENMPT_NAMESPACE_END

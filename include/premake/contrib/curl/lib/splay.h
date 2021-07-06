@@ -22,45 +22,36 @@
  *
  ***************************************************************************/
 #include "curl_setup.h"
-
 struct Curl_tree {
-  struct Curl_tree *smaller; /* smaller node */
-  struct Curl_tree *larger;  /* larger node */
-  struct Curl_tree *same;    /* points to a node with identical key */
-  struct timeval key;        /* this node's "sort" key */
-  void *payload;             /* data the splay code doesn't care about */
+struct Curl_tree *smaller; /* smaller node */
+struct Curl_tree *larger;  /* larger node */
+struct Curl_tree *same;    /* points to a node with identical key */
+struct timeval key;        /* this node's "sort" key */
+void *payload;             /* data the splay code doesn't care about */
 };
-
 struct Curl_tree *Curl_splay(struct timeval i,
                              struct Curl_tree *t);
-
 struct Curl_tree *Curl_splayinsert(struct timeval key,
                                    struct Curl_tree *t,
                                    struct Curl_tree *newnode);
-
 #if 0
 struct Curl_tree *Curl_splayremove(struct timeval key,
                                    struct Curl_tree *t,
                                    struct Curl_tree **removed);
 #endif
-
 struct Curl_tree *Curl_splaygetbest(struct timeval key,
                                     struct Curl_tree *t,
                                     struct Curl_tree **removed);
-
 int Curl_splayremovebyaddr(struct Curl_tree *t,
                            struct Curl_tree *removenode,
                            struct Curl_tree **newroot);
-
-#define Curl_splaycomparekeys(i,j) ( ((i.tv_sec)  < (j.tv_sec))  ? -1 : \
+#define Curl_splaycomparekeys(i, j) ( ((i.tv_sec)  < (j.tv_sec))  ? -1 : \
                                    ( ((i.tv_sec)  > (j.tv_sec))  ?  1 : \
                                    ( ((i.tv_usec) < (j.tv_usec)) ? -1 : \
                                    ( ((i.tv_usec) > (j.tv_usec)) ?  1 : 0))))
-
 #ifdef DEBUGBUILD
 void Curl_splayprint(struct Curl_tree * t, int d, char output);
 #else
-#define Curl_splayprint(x,y,z) Curl_nop_stmt
+#define Curl_splayprint(x, y, z) Curl_nop_stmt
 #endif
-
 #endif /* HEADER_CURL_SPLAY_H */

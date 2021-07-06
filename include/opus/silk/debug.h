@@ -27,16 +27,13 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef SILK_DEBUG_H
 #define SILK_DEBUG_H
-
 #include "typedef.h"
 #include <stdio.h>      /* file writing */
 #include <string.h>     /* strcpy, strcmp */
-
 #ifdef  __cplusplus
 extern "C"
 {
 #endif
-
 unsigned long GetHighResolutionTime(void); /* O  time in usec*/
 
 /* Set to 1 to enable DEBUG_STORE_DATA() macros for dumping
@@ -46,8 +43,6 @@ unsigned long GetHighResolutionTime(void); /* O  time in usec*/
 
 /* Flag for using timers */
 #define SILK_TIC_TOC    0
-
-
 #if SILK_TIC_TOC
 
 #if (defined(_WIN32) || defined(_WINCE))
@@ -217,10 +212,7 @@ extern opus_int64    silk_Timer_depth[silk_NUM_TIMERS_MAX];
 #define TIC(TAG_NAME)
 #define TOC(TAG_NAME)
 #define silk_TimerSave(FILE_NAME)
-
 #endif /* SILK_TIC_TOC */
-
-
 #if SILK_DEBUG
 /************************************/
 /* write data to file for debugging */
@@ -256,11 +248,8 @@ extern int silk_debug_store_count;
 /* define macros as empty strings */
 #define DEBUG_STORE_DATA(FILE_NAME, DATA_PTR, N_BYTES)
 #define SILK_DEBUG_STORE_CLOSE_FILES
-
 #endif /* SILK_DEBUG */
-
 #ifdef  __cplusplus
 }
 #endif
-
 #endif /* SILK_DEBUG_H */

@@ -24,7 +24,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_SSL_TICKET_C)
 
 #include "mbedtls/ssl_ticket.h"

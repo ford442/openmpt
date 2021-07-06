@@ -85,5 +85,4 @@
 
 /* A mask for changed sampling rate (version or rate bits). */
 #define HDR_SAMPMASK (HDR_VERSION|HDR_SAMPLERATE)
-
 #endif

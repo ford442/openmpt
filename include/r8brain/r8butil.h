@@ -15,11 +15,8 @@
 
 #ifndef R8BUTIL_INCLUDED
 #define R8BUTIL_INCLUDED
-
 #include "r8bbase.h"
-
 namespace r8b {
-
 /**
  * @param re Real part of the frequency response.
  * @param im Imaginary part of the frequency response.
@@ -27,11 +24,9 @@ namespace r8b {
  * logarithmic scale.
  */
 
-inline double convertResponseToLog( const double re, const double im )
-{
-	return( 4.34294481903251828 * log( re * re + im * im + 1e-100 ));
+inline double convertResponseToLog(const double re, const double im) {
+return (4.34294481903251828 * log(re * re + im * im + 1e-100));
 }
-
 /**
  * An utility function that performs frequency response scanning step update
  * based on the current magnitude response's slope.
@@ -46,23 +41,18 @@ inline double convertResponseToLog( const double re, const double im )
  * @param minstep The minimal allowed step.
  */
 
-inline void updateScanStep( double& step, const double curg,
-	double& prevg_log, const double prec, const double maxstep,
-	const double minstep = 1e-11 )
-{
-	double curg_log = 4.34294481903251828 * log( curg + 1e-100 );
-	curg_log += ( prevg_log - curg_log ) * 0.7;
-
-	const double slope = fabs( curg_log - prevg_log );
-	prevg_log = curg_log;
-
-	if( slope > 0.0 )
-	{
-		step /= prec * slope;
-		step = max( min( step, maxstep ), minstep );
-	}
+inline void updateScanStep(double &step, const double curg,
+                           double &prevg_log, const double prec, const double maxstep,
+                           const double minstep = 1e-11) {
+double curg_log = 4.34294481903251828 * log(curg + 1e-100);
+curg_log += (prevg_log - curg_log) * 0.7;
+const double slope = fabs(curg_log - prevg_log);
+prevg_log = curg_log;
+if(slope > 0.0) {
+step /= prec * slope;
+step = max(min(step, maxstep), minstep);
 }
-
+}
 /**
  * Function locates normalized frequency at which the minimum filter gain
  * is reached. The scanning is performed from lower (left) to higher
@@ -81,43 +71,32 @@ inline void updateScanStep( double& step, const double curg,
  * @param thend The ending frequency, inclusive.
  */
 
-inline void findFIRFilterResponseMinLtoR( const double* const flt,
-	const int fltlen, double& ming, double& minth, const double thend )
-{
-	const double maxstep = minth * 2e-3;
-	double curth = minth;
-	double re;
-	double im;
-	calcFIRFilterResponse( flt, fltlen, M_PI * curth, re, im );
-	double prevg_log = convertResponseToLog( re, im );
-	double step = 1e-11;
-
-	while( true )
-	{
-		curth += step;
-
-		if( curth > thend )
-		{
-			break;
-		}
-
-		calcFIRFilterResponse( flt, fltlen, M_PI * curth, re, im );
-		const double curg = re * re + im * im;
-
-		if( curg > ming )
-		{
-			ming = curg;
-			minth = curth;
-			break;
-		}
-
-		ming = curg;
-		minth = curth;
-
-		updateScanStep( step, curg, prevg_log, 0.31, maxstep );
-	}
+inline void findFIRFilterResponseMinLtoR(const double *const flt,
+                                         const int fltlen, double &ming, double &minth, const double thend) {
+const double maxstep = minth * 2e-3;
+double curth = minth;
+double re;
+double im;
+calcFIRFilterResponse(flt, fltlen, M_PI * curth, re, im);
+double prevg_log = convertResponseToLog(re, im);
+double step = 1e-11;
+while (true) {
+curth += step;
+if(curth > thend) {
+break;
 }
-
+calcFIRFilterResponse(flt, fltlen, M_PI * curth, re, im);
+const double curg = re * re + im * im;
+if(curg > ming) {
+ming = curg;
+minth = curth;
+break;
+}
+ming = curg;
+minth = curth;
+updateScanStep(step, curg, prevg_log, 0.31, maxstep);
+}
+}
 /**
  * Function locates normalized frequency at which the maximal filter gain
  * is reached. The scanning is performed from lower (left) to higher
@@ -137,120 +116,84 @@ inline void findFIRFilterResponseMinLtoR( const double* const flt,
  * @param thend The ending frequency, inclusive.
  */
 
-inline void findFIRFilterResponseMaxLtoR( const double* const flt,
-	const int fltlen, double& maxg, double& maxth, const double thend )
-{
-	const double maxstep = maxth * 1e-4;
-	double premaxth = maxth;
-	double premaxg = maxg;
-	double postmaxth = maxth;
-	double postmaxg = maxg;
-
-	double prevth = maxth;
-	double prevg = maxg;
-	double curth = maxth;
-	double re;
-	double im;
-	calcFIRFilterResponse( flt, fltlen, M_PI * curth, re, im );
-	double prevg_log = convertResponseToLog( re, im );
-	double step = 1e-11;
-
-	bool WasPeak = false;
-	int AfterPeakCount = 0;
-
-	while( true )
-	{
-		curth += step;
-
-		if( curth > thend )
-		{
-			break;
-		}
-
-		calcFIRFilterResponse( flt, fltlen, M_PI * curth, re, im );
-		const double curg = re * re + im * im;
-
-		if( curg > maxg )
-		{
-			premaxth = prevth;
-			premaxg = prevg;
-			maxg = curg;
-			maxth = curth;
-			WasPeak = true;
-			AfterPeakCount = 0;
-		}
-		else
-		if( WasPeak )
-		{
-			if( AfterPeakCount == 0 )
-			{
-				postmaxth = curth;
-				postmaxg = curg;
-			}
-
-			if( AfterPeakCount == 5 )
-			{
-				// Perform 2 approximate binary searches.
-
-				int k;
-
-				for( k = 0; k < 2; k++ )
-				{
-					double l = ( k == 0 ? premaxth : maxth );
-					double curgl = ( k == 0 ? premaxg : maxg );
-					double r = ( k == 0 ? maxth : postmaxth );
-					double curgr = ( k == 0 ? maxg : postmaxg );
-
-					while( true )
-					{
-						const double c = ( l + r ) * 0.5;
-						calcFIRFilterResponse( flt, fltlen, M_PI * c,
-							re, im );
-
-						const double curg = re * re + im * im;
-
-						if( curgl > curgr )
-						{
-							r = c;
-							curgr = curg;
-						}
-						else
-						{
-							l = c;
-							curgl = curg;
-						}
-
-						if( r - l < 1e-11 )
-						{
-							if( curgl > curgr )
-							{
-								maxth = l;
-								maxg = curgl;
-							}
-							else
-							{
-								maxth = r;
-								maxg = curgr;
-							}
-
-							break;
-						}
-					}
-				}
-
-				break;
-			}
-
-			AfterPeakCount++;
-		}
-
-		prevth = curth;
-		prevg = curg;
-
-		updateScanStep( step, curg, prevg_log, 1.0, maxstep );
-	}
+inline void findFIRFilterResponseMaxLtoR(const double *const flt,
+                                         const int fltlen, double &maxg, double &maxth, const double thend) {
+const double maxstep = maxth * 1e-4;
+double premaxth = maxth;
+double premaxg = maxg;
+double postmaxth = maxth;
+double postmaxg = maxg;
+double prevth = maxth;
+double prevg = maxg;
+double curth = maxth;
+double re;
+double im;
+calcFIRFilterResponse(flt, fltlen, M_PI * curth, re, im);
+double prevg_log = convertResponseToLog(re, im);
+double step = 1e-11;
+bool WasPeak = false;
+int AfterPeakCount = 0;
+while (true) {
+curth += step;
+if(curth > thend) {
+break;
 }
+calcFIRFilterResponse(flt, fltlen, M_PI * curth, re, im);
+const double curg = re * re + im * im;
+if(curg > maxg) {
+premaxth = prevth;
+premaxg = prevg;
+maxg = curg;
+maxth = curth;
+WasPeak = true;
+AfterPeakCount = 0;
+} else if(WasPeak) {
+if(AfterPeakCount == 0) {
+postmaxth = curth;
+postmaxg = curg;
+}
+if(AfterPeakCount == 5) {
+// Perform 2 approximate binary searches.
 
+int k;
+for(k = 0; k < 2; k++) {
+double l = (k == 0 ? premaxth : maxth);
+double curgl = (k == 0 ? premaxg : maxg);
+double r = (k == 0 ? maxth : postmaxth);
+double curgr = (k == 0 ? maxg : postmaxg);
+while (true) {
+const double c = (l + r) * 0.5;
+calcFIRFilterResponse(flt, fltlen, M_PI * c,
+                      re, im);
+const double curg = re * re + im * im;
+if(curgl > curgr) {
+r = c;
+curgr = curg;
+} else {
+l = c;
+curgl = curg;
+}
+if(r - l < 1e-11) {
+if(curgl > curgr) {
+maxth = l;
+maxg = curgl;
+} else {
+maxth = r;
+maxg = curgr;
+}
+break;
+}
+}
+}
+break;
+}
+AfterPeakCount++;
+}
+prevth = curth;
+prevg = curg;
+updateScanStep(step, curg, prevg_log, 1.0, maxstep);
+}
+}
 /**
  * Function locates normalized frequency at which the specified maximum
  * filter gain is reached. The scanning is performed from higher (right)
@@ -267,40 +210,29 @@ inline void findFIRFilterResponseMaxLtoR( const double* const flt,
  * @param thend The leftmost frequency to scan, inclusive.
  */
 
-inline void findFIRFilterResponseLevelRtoL( const double* const flt,
-	const int fltlen, const double maxg, double& th, const double thend )
-{
-	// Perform exact binary search.
+inline void findFIRFilterResponseLevelRtoL(const double *const flt,
+                                           const int fltlen, const double maxg, double &th, const double thend) {
+// Perform exact binary search.
 
-	double l = thend;
-	double r = th;
-
-	while( true )
-	{
-		const double c = ( l + r ) * 0.5;
-
-		if( r - l < 1e-14 )
-		{
-			th = c;
-			break;
-		}
-
-		double re;
-		double im;
-		calcFIRFilterResponse( flt, fltlen, M_PI * c, re, im );
-		const double curg = re * re + im * im;
-
-		if( curg > maxg )
-		{
-			l = c;
-		}
-		else
-		{
-			r = c;
-		}
-	}
+double l = thend;
+double r = th;
+while (true) {
+const double c = (l + r) * 0.5;
+if(r - l < 1e-14) {
+th = c;
+break;
 }
-
+double re;
+double im;
+calcFIRFilterResponse(flt, fltlen, M_PI * c, re, im);
+const double curg = re * re + im * im;
+if(curg > maxg) {
+l = c;
+} else {
+r = c;
+}
+}
+}
 } // namespace r8b
 
 #endif // R8BUTIL_INCLUDED

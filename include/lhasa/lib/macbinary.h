@@ -20,10 +20,8 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_MACBINARY_H
 #define LHASA_MACBINARY_H
-
 #include "lha_decoder.h"
 #include "lha_file_header.h"
-
 /**
  * Create a passthrough decoder to handle MacBinary headers added
  * by MacLHA.
@@ -44,6 +42,5 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 LHADecoder *lha_macbinary_passthrough(LHADecoder *decoder,
                                       LHAFileHeader *header);
-
 #endif /* #ifndef LHASA_MACBINARY_H */
 

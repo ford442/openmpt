@@ -21,7 +21,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #if defined(__AMIGA__) && !defined(__ixemul__)
 
 #include <amitcp/socketbasetags.h>

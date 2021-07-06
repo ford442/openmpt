@@ -27,7 +27,6 @@
  */
 
 #include "curl_setup.h"
-
 #ifdef USE_CYASSL
 
 #define WOLFSSL_OPTIONS_IGNORE_SYS

@@ -23,7 +23,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef USE_NGHTTP2
 #include "http.h"
 
@@ -61,19 +60,18 @@ void Curl_http2_cleanup_dependencies(struct Curl_easy *data);
 #else /* USE_NGHTTP2 */
 #define Curl_http2_init(x) CURLE_UNSUPPORTED_PROTOCOL
 #define Curl_http2_send_request(x) CURLE_UNSUPPORTED_PROTOCOL
-#define Curl_http2_request_upgrade(x,y) CURLE_UNSUPPORTED_PROTOCOL
+#define Curl_http2_request_upgrade(x, y) CURLE_UNSUPPORTED_PROTOCOL
 #define Curl_http2_setup(x) CURLE_UNSUPPORTED_PROTOCOL
-#define Curl_http2_switched(x,y,z) CURLE_UNSUPPORTED_PROTOCOL
+#define Curl_http2_switched(x, y, z) CURLE_UNSUPPORTED_PROTOCOL
 #define Curl_http2_setup_conn(x)
 #define Curl_http2_setup_req(x)
 #define Curl_http2_init_state(x)
 #define Curl_http2_init_userset(x)
-#define Curl_http2_done(x,y)
+#define Curl_http2_done(x, y)
 #define Curl_http2_done_sending(x)
 #define Curl_http2_add_child(x, y, z)
 #define Curl_http2_remove_child(x, y)
 #define Curl_http2_cleanup_dependencies(x)
 #endif
-
 #endif /* HEADER_CURL_HTTP2_H */
 

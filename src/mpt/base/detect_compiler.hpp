@@ -2,14 +2,8 @@
 
 #ifndef MPT_BASE_DETECT_COMPILER_HPP
 #define MPT_BASE_DETECT_COMPILER_HPP
-
-
-
 #define MPT_COMPILER_MAKE_VERSION2(version, sp)         ((version)*100 + (sp))
 #define MPT_COMPILER_MAKE_VERSION3(major, minor, patch) ((major)*10000 + (minor)*100 + (patch))
-
-
-
 #if defined(MPT_COMPILER_GENERIC)
 
 #undef MPT_COMPILER_GENERIC
@@ -113,13 +107,8 @@
 #endif
 
 #else
-
 #define MPT_COMPILER_GENERIC 1
-
 #endif
-
-
-
 #ifndef MPT_COMPILER_GENERIC
 #define MPT_COMPILER_GENERIC 0
 #endif
@@ -138,17 +127,12 @@
 #define MPT_MSVC_AT_LEAST(version, sp) 0
 #define MPT_MSVC_BEFORE(version, sp)   0
 #endif
-
-
-
 #if MPT_COMPILER_GENERIC || MPT_COMPILER_GCC || MPT_COMPILER_CLANG
-
 #if (__cplusplus >= 201703)
 #define MPT_CXX 17
 #else
 #define MPT_CXX 17
 #endif
-
 #elif MPT_COMPILER_MSVC
 
 #if MPT_MSVC_AT_LEAST(2019, 10) && (_MSVC_LANG >= 201705)
@@ -172,7 +156,4 @@
 
 #define MPT_CXX_AT_LEAST(version) (MPT_CXX >= (version))
 #define MPT_CXX_BEFORE(version)   (MPT_CXX < (version))
-
-
-
 #endif // MPT_BASE_DETECT_COMPILER_HPP

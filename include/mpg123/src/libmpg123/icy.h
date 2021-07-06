@@ -7,23 +7,17 @@
 */
 #ifndef MPG123_ICY_H
 #define MPG123_ICY_H
-
 #ifndef NO_ICY
-
 #include "compat.h"
 #include "mpg123.h"
-
-struct icy_meta
-{
-	char* data;
-	off_t interval;
-	off_t next;
+struct icy_meta {
+char *data;
+off_t interval;
+off_t next;
 };
-
 void init_icy(struct icy_meta *);
 void clear_icy(struct icy_meta *);
 void reset_icy(struct icy_meta *);
-
 #else
 
 #undef init_icy
@@ -34,5 +28,4 @@ void reset_icy(struct icy_meta *);
 #define reset_icy(a)
 
 #endif /* NO_ICY */
-
 #endif

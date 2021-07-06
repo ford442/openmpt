@@ -1,6 +1,6 @@
 /* GSSAPI/krb5 support for FTP - loosely based on old krb4.c
  *
- * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Högskolan
+ * Copyright (c) 1995, 1996, 1997, 1998, 1999 Kungliga Tekniska Hï¿½gskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
  * Copyright (c) 2004 - 2016 Daniel Stenberg
  * All rights reserved.
@@ -33,7 +33,6 @@
  * SUCH DAMAGE.  */
 
 #include "curl_setup.h"
-
 #if defined(HAVE_GSSAPI) && !defined(CURL_DISABLE_FTP)
 
 #ifdef HAVE_NETDB_H

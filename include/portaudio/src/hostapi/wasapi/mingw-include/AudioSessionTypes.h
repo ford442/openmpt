@@ -4,11 +4,9 @@
  */
 
 #include <winapifamily.h>
-
 #ifndef __AUDIOSESSIONTYPES__
 #define __AUDIOSESSIONTYPES__
-
-#if WINAPI_FAMILY_PARTITION (WINAPI_PARTITION_APP)
+#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP)
 #if defined (__WIDL__)
 #define MIDL_SIZE_IS(x) [size_is (x)]
 #define MIDL_STRING [string]

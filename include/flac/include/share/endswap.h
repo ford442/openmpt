@@ -31,13 +31,13 @@
 
 /* It is assumed that this header will be included after "config.h". */
 
-#if HAVE_BSWAP32			/* GCC and Clang */
+#if HAVE_BSWAP32            /* GCC and Clang */
 
 /* GCC prior to 4.8 didn't provide bswap16 on x86_64 */
 #if ! HAVE_BSWAP16
 static inline unsigned short __builtin_bswap16(unsigned short a)
 {
-	return (a<<8)|(a>>8);
+    return (a<<8)|(a>>8);
 }
 #endif
 
@@ -62,11 +62,9 @@ static inline unsigned short __builtin_bswap16(unsigned short a)
 #define	ENDSWAP_64(x)		(bswap_64 (x))
 
 #else
-
-#define	ENDSWAP_16(x)		((((x) >> 8) & 0xFF) | (((x) & 0xFF) << 8))
-#define	ENDSWAP_32(x)		((((x) >> 24) & 0xFF) | (((x) >> 8) & 0xFF00) | (((x) & 0xFF00) << 8) | (((x) & 0xFF) << 24))
-#define	ENDSWAP_64(x)		((ENDSWAP_32(((x) >> 32) & 0xFFFFFFFF)) | (ENDSWAP_32((x) & 0xFFFFFFFF) << 32))
-
+#define    ENDSWAP_16(x)        ((((x) >> 8) & 0xFF) | (((x) & 0xFF) << 8))
+#define    ENDSWAP_32(x)        ((((x) >> 24) & 0xFF) | (((x) >> 8) & 0xFF00) | (((x) & 0xFF00) << 8) | (((x) & 0xFF) << 24))
+#define    ENDSWAP_64(x)        ((ENDSWAP_32(((x) >> 32) & 0xFFFFFFFF)) | (ENDSWAP_32((x) & 0xFFFFFFFF) << 32))
 #endif
 
 
@@ -77,8 +75,6 @@ static inline unsigned short __builtin_bswap16(unsigned short a)
 #define H2LE_32(x)		ENDSWAP_32 (x)
 
 #else
-
-#define H2LE_16(x)		(x)
-#define H2LE_32(x)		(x)
-
+#define H2LE_16(x)        (x)
+#define H2LE_32(x)        (x)
 #endif

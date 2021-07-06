@@ -28,13 +28,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include "macros.h"
 #include "celt_lpc.h"
 #include "stack_alloc.h"
 #include "mathops.h"
 #include "pitch.h"
-
 #if defined(OPUS_X86_MAY_HAVE_SSE) && !defined(FIXED_POINT)
 
 #include <xmmintrin.h>

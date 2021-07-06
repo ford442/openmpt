@@ -3,44 +3,28 @@
 
 
 #pragma once
-
-
-
 #include "mpt/base/detect_compiler.hpp"
 #include "mpt/base/detect_os.hpp"
 #include "mpt/base/detect_quirks.hpp"
-
-
-
 #if defined(MODPLUG_TRACKER) || defined(LIBOPENMPT_BUILD)
 #include "BuildSettings.h"
 #else
-
-
-
 #include "mpt/base/namespace.hpp"
-
-
-
 #ifndef OPENMPT_NAMESPACE
 #define OPENMPT_NAMESPACE OpenMPT
 #endif
-
 #ifndef OPENMPT_NAMESPACE_BEGIN
 #define OPENMPT_NAMESPACE_BEGIN \
-	namespace OPENMPT_NAMESPACE \
-	{ \
-	inline namespace MPT_INLINE_NS \
-	{
+    namespace OPENMPT_NAMESPACE \
+    { \
+    inline namespace MPT_INLINE_NS \
+    {
 #endif
 #ifndef OPENMPT_NAMESPACE_END
 #define OPENMPT_NAMESPACE_END \
-	} \
-	}
+    } \
+    }
 #endif
-
-
-
 #ifdef __cplusplus
 OPENMPT_NAMESPACE_BEGIN
 namespace mpt
@@ -51,7 +35,4 @@ using namespace ::mpt;
 }  // namespace mpt
 OPENMPT_NAMESPACE_END
 #endif
-
-
-
 #endif

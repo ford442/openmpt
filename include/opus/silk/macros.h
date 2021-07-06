@@ -27,11 +27,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef SILK_MACROS_H
 #define SILK_MACROS_H
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #include "opus_types.h"
 #include "opus_defines.h"
 #include "arch.h"
@@ -99,27 +97,31 @@ POSSIBILITY OF SUCH DAMAGE.
 #define silk_ADD_SAT32(a, b)             ((((opus_uint32)(a) + (opus_uint32)(b)) & 0x80000000) == 0 ?                              \
                                         ((((a) & (b)) & 0x80000000) != 0 ? silk_int32_MIN : (a)+(b)) :   \
                                         ((((a) | (b)) & 0x80000000) == 0 ? silk_int32_MAX : (a)+(b)) )
-
 #define silk_SUB_SAT32(a, b)             ((((opus_uint32)(a)-(opus_uint32)(b)) & 0x80000000) == 0 ?                                        \
                                         (( (a) & ((b)^0x80000000) & 0x80000000) ? silk_int32_MIN : (a)-(b)) :    \
                                         ((((a)^0x80000000) & (b)  & 0x80000000) ? silk_int32_MAX : (a)-(b)) )
-
 #if defined(MIPSr1_ASM)
 #include "mips/macros_mipsr1.h"
 #endif
-
 #include "ecintrin.h"
 #ifndef OVERRIDE_silk_CLZ16
-static OPUS_INLINE opus_int32 silk_CLZ16(opus_int16 in16)
+static OPUS_INLINE opus_int32
+silk_CLZ16(opus_int16
+in16)
 {
-    return 32 - EC_ILOG(in16<<16|0x8000);
+return 32 -
+EC_ILOG(in16
+<<16|0x8000);
 }
 #endif
-
 #ifndef OVERRIDE_silk_CLZ32
-static OPUS_INLINE opus_int32 silk_CLZ32(opus_int32 in32)
+static OPUS_INLINE opus_int32
+silk_CLZ32(opus_int32
+in32)
 {
-    return in32 ? 32 - EC_ILOG(in32) : 32;
+return in32 ? 32 -
+EC_ILOG(in32)
+: 32;
 }
 #endif
 
@@ -134,18 +136,14 @@ static OPUS_INLINE opus_int32 silk_CLZ32(opus_int32 in32)
 #   define matrix_c_ptr(Matrix_base_adr, row, column, M) \
     (*((Matrix_base_adr) + ((row)+(M)*(column))))
 #endif
-
 #ifdef OPUS_ARM_INLINE_ASM
 #include "arm/macros_armv4.h"
 #endif
-
 #ifdef OPUS_ARM_INLINE_EDSP
 #include "arm/macros_armv5e.h"
 #endif
-
 #ifdef OPUS_ARM_PRESUME_AARCH64_NEON_INTR
 #include "arm/macros_arm64.h"
 #endif
-
 #endif /* SILK_MACROS_H */
 

@@ -20,27 +20,22 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_LHA_ARCH_H
 #define LHASA_LHA_ARCH_H
-
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
-
 #define LHA_ARCH_UNIX     1
 #define LHA_ARCH_WINDOWS  2
-
 #ifdef _WIN32
 #define LHA_ARCH LHA_ARCH_WINDOWS
 #else
 #define LHA_ARCH LHA_ARCH_UNIX
 #endif
-
 typedef enum {
-	LHA_FILE_NONE,
-	LHA_FILE_FILE,
-	LHA_FILE_DIRECTORY,
-	LHA_FILE_ERROR,
+LHA_FILE_NONE,
+LHA_FILE_FILE,
+LHA_FILE_DIRECTORY,
+LHA_FILE_ERROR,
 } LHAFileType;
-
 /**
  * Cross-platform version of vasprintf().
  *
@@ -52,7 +47,6 @@ typedef enum {
  */
 
 int lha_arch_vasprintf(char **result, char *fmt, va_list args);
-
 /**
  * Change the mode of the specified FILE handle to be binary mode.
  *
@@ -60,7 +54,6 @@ int lha_arch_vasprintf(char **result, char *fmt, va_list args);
  */
 
 void lha_arch_set_binary(FILE *handle);
-
 /**
  * Create a directory.
  *
@@ -70,7 +63,6 @@ void lha_arch_set_binary(FILE *handle);
  */
 
 int lha_arch_mkdir(char *path, unsigned int unix_perms);
-
 /**
  * Change the Unix ownership of the specified file or directory.
  * If this is not a Unix system, do nothing.
@@ -82,7 +74,6 @@ int lha_arch_mkdir(char *path, unsigned int unix_perms);
  */
 
 int lha_arch_chown(char *filename, int unix_uid, int unix_gid);
-
 /**
  * Change the Unix permissions on the specified file or directory.
  *
@@ -92,7 +83,6 @@ int lha_arch_chown(char *filename, int unix_uid, int unix_gid);
  */
 
 int lha_arch_chmod(char *filename, int unix_perms);
-
 /**
  * Set the file creation / modification time on the specified file or
  * directory.
@@ -103,7 +93,6 @@ int lha_arch_chmod(char *filename, int unix_perms);
  */
 
 int lha_arch_utime(char *filename, unsigned int timestamp);
-
 /**
  * Set the file creation, modification and access times for the
  * specified file or directory, using 64-bit Windows timestamps.
@@ -133,7 +122,6 @@ int lha_arch_set_windows_timestamps(char *filename,
 
 FILE *lha_arch_fopen(char *filename, int unix_uid,
                      int unix_gid, int unix_perms);
-
 /**
  * Query whether the specified file exists.
  *
@@ -142,7 +130,6 @@ FILE *lha_arch_fopen(char *filename, int unix_uid,
  */
 
 LHAFileType lha_arch_exists(char *filename);
-
 /**
  * Create a symbolic link.
  *
@@ -155,6 +142,5 @@ LHAFileType lha_arch_exists(char *filename);
  */
 
 int lha_arch_symlink(char *path, char *target);
-
 #endif /* ifndef LHASA_LHA_ARCH_H */
 

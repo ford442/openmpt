@@ -5,67 +5,49 @@
  */
 #ifndef __KSPROXY__
 #define __KSPROXY__
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 #undef KSDDKAPI
 #ifdef _KSDDK_
 #define KSDDKAPI
 #else
 #define KSDDKAPI DECLSPEC_IMPORT
 #endif
-
-#define STATIC_IID_IKsObject						\
-	0x423c13a2L,0x2070,0x11d0,0x9e,0xf7,0x00,0xaa,0x00,0xa2,0x16,0xa1
-
-#define STATIC_IID_IKsPinEx						\
-	0x7bb38260L,0xd19c,0x11d2,0xb3,0x8a,0x00,0xa0,0xc9,0x5e,0xc2,0x2e
-
-#define STATIC_IID_IKsPin						\
-	0xb61178d1L,0xa2d9,0x11cf,0x9e,0x53,0x00,0xaa,0x00,0xa2,0x16,0xa1
-
-#define STATIC_IID_IKsPinPipe						\
-	0xe539cd90L,0xa8b4,0x11d1,0x81,0x89,0x00,0xa0,0xc9,0x06,0x28,0x02
-
-#define STATIC_IID_IKsDataTypeHandler					\
-	0x5ffbaa02L,0x49a3,0x11d0,0x9f,0x36,0x00,0xaa,0x00,0xa2,0x16,0xa1
-
-#define STATIC_IID_IKsDataTypeCompletion				\
-	0x827D1A0EL,0x0F73,0x11D2,0xB2,0x7A,0x00,0xA0,0xC9,0x22,0x31,0x96
-
-#define STATIC_IID_IKsInterfaceHandler					\
-	0xD3ABC7E0L,0x9A61,0x11D0,0xA4,0x0D,0x00,0xA0,0xC9,0x22,0x31,0x96
-
-#define STATIC_IID_IKsClockPropertySet					\
-	0x5C5CBD84L,0xE755,0x11D0,0xAC,0x18,0x00,0xA0,0xC9,0x22,0x31,0x96
-
-#define STATIC_IID_IKsAllocator						\
-	0x8da64899L,0xc0d9,0x11d0,0x84,0x13,0x00,0x00,0xf8,0x22,0xfe,0x8a
-
-#define STATIC_IID_IKsAllocatorEx					\
-	0x091bb63aL,0x603f,0x11d1,0xb0,0x67,0x00,0xa0,0xc9,0x06,0x28,0x02
-
+#define STATIC_IID_IKsObject                        \
+    0x423c13a2L,0x2070,0x11d0,0x9e,0xf7,0x00,0xaa,0x00,0xa2,0x16,0xa1
+#define STATIC_IID_IKsPinEx                        \
+    0x7bb38260L,0xd19c,0x11d2,0xb3,0x8a,0x00,0xa0,0xc9,0x5e,0xc2,0x2e
+#define STATIC_IID_IKsPin                        \
+    0xb61178d1L,0xa2d9,0x11cf,0x9e,0x53,0x00,0xaa,0x00,0xa2,0x16,0xa1
+#define STATIC_IID_IKsPinPipe                        \
+    0xe539cd90L,0xa8b4,0x11d1,0x81,0x89,0x00,0xa0,0xc9,0x06,0x28,0x02
+#define STATIC_IID_IKsDataTypeHandler                    \
+    0x5ffbaa02L,0x49a3,0x11d0,0x9f,0x36,0x00,0xaa,0x00,0xa2,0x16,0xa1
+#define STATIC_IID_IKsDataTypeCompletion                \
+    0x827D1A0EL,0x0F73,0x11D2,0xB2,0x7A,0x00,0xA0,0xC9,0x22,0x31,0x96
+#define STATIC_IID_IKsInterfaceHandler                    \
+    0xD3ABC7E0L,0x9A61,0x11D0,0xA4,0x0D,0x00,0xA0,0xC9,0x22,0x31,0x96
+#define STATIC_IID_IKsClockPropertySet                    \
+    0x5C5CBD84L,0xE755,0x11D0,0xAC,0x18,0x00,0xA0,0xC9,0x22,0x31,0x96
+#define STATIC_IID_IKsAllocator                        \
+    0x8da64899L,0xc0d9,0x11d0,0x84,0x13,0x00,0x00,0xf8,0x22,0xfe,0x8a
+#define STATIC_IID_IKsAllocatorEx                    \
+    0x091bb63aL,0x603f,0x11d1,0xb0,0x67,0x00,0xa0,0xc9,0x06,0x28,0x02
 #ifndef STATIC_IID_IKsPropertySet
-#define STATIC_IID_IKsPropertySet					\
-	0x31EFAC30L,0x515C,0x11d0,0xA9,0xAA,0x00,0xAA,0x00,0x61,0xBE,0x93
+#define STATIC_IID_IKsPropertySet                    \
+    0x31EFAC30L,0x515C,0x11d0,0xA9,0xAA,0x00,0xAA,0x00,0x61,0xBE,0x93
 #endif
-
-#define STATIC_IID_IKsTopology						\
-	0x28F54683L,0x06FD,0x11D2,0xB2,0x7A,0x00,0xA0,0xC9,0x22,0x31,0x96
-
+#define STATIC_IID_IKsTopology                        \
+    0x28F54683L,0x06FD,0x11D2,0xB2,0x7A,0x00,0xA0,0xC9,0x22,0x31,0x96
 #ifndef STATIC_IID_IKsControl
-#define STATIC_IID_IKsControl						\
-	0x28F54685L,0x06FD,0x11D2,0xB2,0x7A,0x00,0xA0,0xC9,0x22,0x31,0x96
+#define STATIC_IID_IKsControl                        \
+    0x28F54685L,0x06FD,0x11D2,0xB2,0x7A,0x00,0xA0,0xC9,0x22,0x31,0x96
 #endif
-
-#define STATIC_IID_IKsAggregateControl					\
-	0x7F40EAC0L,0x3947,0x11D2,0x87,0x4E,0x00,0xA0,0xC9,0x22,0x31,0x96
-
-#define STATIC_CLSID_Proxy						\
-	0x17CCA71BL,0xECD7,0x11D0,0xB9,0x08,0x00,0xA0,0xC9,0x22,0x31,0x96
-
+#define STATIC_IID_IKsAggregateControl                    \
+    0x7F40EAC0L,0x3947,0x11D2,0x87,0x4E,0x00,0xA0,0xC9,0x22,0x31,0x96
+#define STATIC_CLSID_Proxy                        \
+    0x17CCA71BL,0xECD7,0x11D0,0xB9,0x08,0x00,0xA0,0xC9,0x22,0x31,0x96
 #ifdef _KS_
 
 DEFINE_GUIDEX(IID_IKsObject);
@@ -224,35 +206,35 @@ struct IKsClockPropertySet;
 DECLARE_INTERFACE_(IKsClockPropertySet,IUnknown)
 {
   STDMETHOD(KsGetTime)			(THIS_
-						LONGLONG *Time
-					) PURE;
+                        LONGLONG *Time
+                    ) PURE;
   STDMETHOD(KsSetTime)			(THIS_
-						LONGLONG Time
-					) PURE;
+                        LONGLONG Time
+                    ) PURE;
   STDMETHOD(KsGetPhysicalTime)		(THIS_
-						LONGLONG *Time
-					) PURE;
+                        LONGLONG *Time
+                    ) PURE;
   STDMETHOD(KsSetPhysicalTime)		(THIS_
-						LONGLONG Time
-					) PURE;
+                        LONGLONG Time
+                    ) PURE;
   STDMETHOD(KsGetCorrelatedTime)	(THIS_
-						KSCORRELATED_TIME *CorrelatedTime
-					) PURE;
+                        KSCORRELATED_TIME *CorrelatedTime
+                    ) PURE;
   STDMETHOD(KsSetCorrelatedTime)	(THIS_
-						KSCORRELATED_TIME *CorrelatedTime
-					) PURE;
+                        KSCORRELATED_TIME *CorrelatedTime
+                    ) PURE;
   STDMETHOD(KsGetCorrelatedPhysicalTime)(THIS_
-						KSCORRELATED_TIME *CorrelatedTime
-					) PURE;
+                        KSCORRELATED_TIME *CorrelatedTime
+                    ) PURE;
   STDMETHOD(KsSetCorrelatedPhysicalTime)(THIS_
-						KSCORRELATED_TIME *CorrelatedTime
-					) PURE;
+                        KSCORRELATED_TIME *CorrelatedTime
+                    ) PURE;
   STDMETHOD(KsGetResolution)		(THIS_
-						KSRESOLUTION *Resolution
-					) PURE;
+                        KSRESOLUTION *Resolution
+                    ) PURE;
   STDMETHOD(KsGetState)			(THIS_
-						KSSTATE *State
-					) PURE;
+                        KSSTATE *State
+                    ) PURE;
 };
 
 struct IKsAllocator;
@@ -263,11 +245,11 @@ DECLARE_INTERFACE_(IKsAllocator,IUnknown)
   STDMETHOD_(HANDLE,KsGetAllocatorHandle)(THIS) PURE;
   STDMETHOD_(KSALLOCATORMODE,KsGetAllocatorMode)(THIS) PURE;
   STDMETHOD(KsGetAllocatorStatus)	(THIS_
-						PKSSTREAMALLOCATOR_STATUS AllocatorStatus
-					) PURE;
+                        PKSSTREAMALLOCATOR_STATUS AllocatorStatus
+                    ) PURE;
   STDMETHOD_(VOID,KsSetAllocatorMode)	(THIS_
-						KSALLOCATORMODE Mode
-					) PURE;
+                        KSALLOCATORMODE Mode
+                    ) PURE;
 };
 
 struct IKsAllocatorEx;
@@ -277,14 +259,14 @@ DECLARE_INTERFACE_(IKsAllocatorEx,IKsAllocator)
 {
   STDMETHOD_(PALLOCATOR_PROPERTIES_EX,KsGetProperties)(THIS) PURE;
   STDMETHOD_(VOID,KsSetProperties)	(THIS_
-						PALLOCATOR_PROPERTIES_EX
-					) PURE;
+                        PALLOCATOR_PROPERTIES_EX
+                    ) PURE;
   STDMETHOD_(VOID,KsSetAllocatorHandle)	(THIS_
-						HANDLE AllocatorHandle
-					) PURE;
+                        HANDLE AllocatorHandle
+                    ) PURE;
   STDMETHOD_(HANDLE,KsCreateAllocatorAndGetHandle)(THIS_
-						IKsPin *KsPin
-					) PURE;
+                        IKsPin *KsPin
+                    ) PURE;
 };
 
 typedef enum {
@@ -300,41 +282,41 @@ struct IKsPin;
 DECLARE_INTERFACE_(IKsPin,IUnknown)
 {
   STDMETHOD(KsQueryMediums)		(THIS_
-						PKSMULTIPLE_ITEM *MediumList
-					) PURE;
+                        PKSMULTIPLE_ITEM *MediumList
+                    ) PURE;
   STDMETHOD(KsQueryInterfaces)		(THIS_
-						PKSMULTIPLE_ITEM *InterfaceList
-					) PURE;
+                        PKSMULTIPLE_ITEM *InterfaceList
+                    ) PURE;
   STDMETHOD(KsCreateSinkPinHandle)	(THIS_
-						KSPIN_INTERFACE& Interface,
-						KSPIN_MEDIUM& Medium
-					) PURE;
+                        KSPIN_INTERFACE& Interface,
+                        KSPIN_MEDIUM& Medium
+                    ) PURE;
   STDMETHOD(KsGetCurrentCommunication)	(THIS_
-						KSPIN_COMMUNICATION *Communication,
-						KSPIN_INTERFACE *Interface,
-						KSPIN_MEDIUM *Medium
-					) PURE;
+                        KSPIN_COMMUNICATION *Communication,
+                        KSPIN_INTERFACE *Interface,
+                        KSPIN_MEDIUM *Medium
+                    ) PURE;
   STDMETHOD(KsPropagateAcquire)		(THIS) PURE;
   STDMETHOD(KsDeliver)			(THIS_
-						IMediaSample *Sample,
-						ULONG Flags
-					) PURE;
+                        IMediaSample *Sample,
+                        ULONG Flags
+                    ) PURE;
   STDMETHOD(KsMediaSamplesCompleted)	(THIS_
-						PKSSTREAM_SEGMENT StreamSegment
-					) PURE;
+                        PKSSTREAM_SEGMENT StreamSegment
+                    ) PURE;
   STDMETHOD_(IMemAllocator *,KsPeekAllocator)(THIS_
-						KSPEEKOPERATION Operation
-					) PURE;
+                        KSPEEKOPERATION Operation
+                    ) PURE;
   STDMETHOD(KsReceiveAllocator)		(THIS_
-						IMemAllocator *MemAllocator
-					) PURE;
+                        IMemAllocator *MemAllocator
+                    ) PURE;
   STDMETHOD(KsRenegotiateAllocator)	(THIS) PURE;
   STDMETHOD_(LONG,KsIncrementPendingIoCount)(THIS) PURE;
   STDMETHOD_(LONG,KsDecrementPendingIoCount)(THIS) PURE;
   STDMETHOD(KsQualityNotify)		(THIS_
-						ULONG Proportion,
-						REFERENCE_TIME TimeDelta
-					) PURE;
+                        ULONG Proportion,
+                        REFERENCE_TIME TimeDelta
+                    ) PURE;
 };
 
 struct IKsPinEx;
@@ -343,9 +325,9 @@ struct IKsPinEx;
 DECLARE_INTERFACE_(IKsPinEx,IKsPin)
 {
   STDMETHOD_(VOID,KsNotifyError)	(THIS_
-						IMediaSample *Sample,
-						HRESULT hr
-					) PURE;
+                        IMediaSample *Sample,
+                        HRESULT hr
+                    ) PURE;
 };
 
 struct IKsPinPipe;
@@ -354,30 +336,30 @@ struct IKsPinPipe;
 DECLARE_INTERFACE_(IKsPinPipe,IUnknown)
 {
   STDMETHOD(KsGetPinFramingCache)	(THIS_
-						PKSALLOCATOR_FRAMING_EX *FramingEx,
-						PFRAMING_PROP FramingProp,
-						FRAMING_CACHE_OPS Option
-					) PURE;
+                        PKSALLOCATOR_FRAMING_EX *FramingEx,
+                        PFRAMING_PROP FramingProp,
+                        FRAMING_CACHE_OPS Option
+                    ) PURE;
   STDMETHOD(KsSetPinFramingCache)	(THIS_
-						PKSALLOCATOR_FRAMING_EX FramingEx,
-						PFRAMING_PROP FramingProp,
-						FRAMING_CACHE_OPS Option
-					) PURE;
+                        PKSALLOCATOR_FRAMING_EX FramingEx,
+                        PFRAMING_PROP FramingProp,
+                        FRAMING_CACHE_OPS Option
+                    ) PURE;
   STDMETHOD_(IPin*,KsGetConnectedPin)	(THIS) PURE;
   STDMETHOD_(IKsAllocatorEx*,KsGetPipe)	(THIS_
-						KSPEEKOPERATION Operation
-					) PURE;
+                        KSPEEKOPERATION Operation
+                    ) PURE;
   STDMETHOD(KsSetPipe)			(THIS_
-						IKsAllocatorEx *KsAllocator
-					) PURE;
+                        IKsAllocatorEx *KsAllocator
+                    ) PURE;
   STDMETHOD_(ULONG,KsGetPipeAllocatorFlag)(THIS) PURE;
   STDMETHOD(KsSetPipeAllocatorFlag)	(THIS_
-						ULONG Flag
-					) PURE;
+                        ULONG Flag
+                    ) PURE;
   STDMETHOD_(GUID,KsGetPinBusCache)	(THIS) PURE;
   STDMETHOD(KsSetPinBusCache)		(THIS_
-						GUID Bus
-					) PURE;
+                        GUID Bus
+                    ) PURE;
   STDMETHOD_(PWCHAR,KsGetPinName)	(THIS) PURE;
   STDMETHOD_(PWCHAR,KsGetFilterName)	(THIS) PURE;
 };
@@ -388,8 +370,8 @@ struct IKsPinFactory;
 DECLARE_INTERFACE_(IKsPinFactory,IUnknown)
 {
   STDMETHOD(KsPinFactory)		(THIS_
-						ULONG *PinFactory
-					) PURE;
+                        ULONG *PinFactory
+                    ) PURE;
 };
 
 typedef enum {
@@ -403,25 +385,25 @@ struct IKsDataTypeHandler;
 DECLARE_INTERFACE_(IKsDataTypeHandler,IUnknown)
 {
   STDMETHOD(KsCompleteIoOperation)	(THIS_
-						IMediaSample *Sample,
-						PVOID StreamHeader,
-						KSIOOPERATION IoOperation,
-						WINBOOL Cancelled
-					) PURE;
+                        IMediaSample *Sample,
+                        PVOID StreamHeader,
+                        KSIOOPERATION IoOperation,
+                        WINBOOL Cancelled
+                    ) PURE;
   STDMETHOD(KsIsMediaTypeInRanges)	(THIS_
-						PVOID DataRanges
-					) PURE;
+                        PVOID DataRanges
+                    ) PURE;
   STDMETHOD(KsPrepareIoOperation)	(THIS_
-						IMediaSample *Sample,
-						PVOID StreamHeader,
-						KSIOOPERATION IoOperation
-					) PURE;
+                        IMediaSample *Sample,
+                        PVOID StreamHeader,
+                        KSIOOPERATION IoOperation
+                    ) PURE;
   STDMETHOD(KsQueryExtendedSize)	(THIS_
-						ULONG *ExtendedSize
-					) PURE;
+                        ULONG *ExtendedSize
+                    ) PURE;
   STDMETHOD(KsSetMediaType)		(THIS_
-						const AM_MEDIA_TYPE *AmMediaType
-					) PURE;
+                        const AM_MEDIA_TYPE *AmMediaType
+                    ) PURE;
 };
 
 struct IKsDataTypeCompletion;
@@ -430,10 +412,10 @@ struct IKsDataTypeCompletion;
 DECLARE_INTERFACE_(IKsDataTypeCompletion,IUnknown)
 {
   STDMETHOD(KsCompleteMediaType)	(THIS_
-						HANDLE FilterHandle,
-						ULONG PinFactoryId,
-						AM_MEDIA_TYPE *AmMediaType
-					) PURE;
+                        HANDLE FilterHandle,
+                        ULONG PinFactoryId,
+                        AM_MEDIA_TYPE *AmMediaType
+                    ) PURE;
 };
 
 struct IKsInterfaceHandler;
@@ -442,18 +424,18 @@ struct IKsInterfaceHandler;
 DECLARE_INTERFACE_(IKsInterfaceHandler,IUnknown)
 {
   STDMETHOD(KsSetPin)			(THIS_
-						IKsPin *KsPin
-					) PURE;
+                        IKsPin *KsPin
+                    ) PURE;
   STDMETHOD(KsProcessMediaSamples)	(THIS_
-						IKsDataTypeHandler *KsDataTypeHandler,
-						IMediaSample **SampleList,
-						PLONG SampleCount,
-						KSIOOPERATION IoOperation,
-						PKSSTREAM_SEGMENT *StreamSegment
-					) PURE;
+                        IKsDataTypeHandler *KsDataTypeHandler,
+                        IMediaSample **SampleList,
+                        PLONG SampleCount,
+                        KSIOOPERATION IoOperation,
+                        PKSSTREAM_SEGMENT *StreamSegment
+                    ) PURE;
   STDMETHOD(KsCompleteIo)		(THIS_
-						PKSSTREAM_SEGMENT StreamSegment
-					) PURE;
+                        PKSSTREAM_SEGMENT StreamSegment
+                    ) PURE;
 };
 
 typedef struct _KSSTREAM_SEGMENT {
@@ -477,8 +459,8 @@ struct IKsQualityForwarder;
 DECLARE_INTERFACE_(IKsQualityForwarder,IKsObject)
 {
   STDMETHOD_(VOID,KsFlushClient)	(THIS_
-						IKsPin *Pin
-					) PURE;
+                        IKsPin *Pin
+                    ) PURE;
 };
 
 struct IKsNotifyEvent;
@@ -487,10 +469,10 @@ struct IKsNotifyEvent;
 DECLARE_INTERFACE_(IKsNotifyEvent,IUnknown)
 {
   STDMETHOD(KsNotifyEvent)		(THIS_
-						ULONG Event,
-						ULONG_PTR lParam1,
-						ULONG_PTR lParam2
-					) PURE;
+                        ULONG Event,
+                        ULONG_PTR lParam1,
+                        ULONG_PTR lParam2
+                    ) PURE;
 };
 
 KSDDKAPI HRESULT WINAPI KsResolveRequiredAttributes(PKSDATARANGE DataRange,PKSMULTIPLE_ITEM Attributes);
@@ -517,20 +499,15 @@ DEFINE_GUIDSTRUCT("17CCA71B-ECD7-11D0-B908-00A0C9223196",CLSID_Proxy);
 #define CLSID_Proxy DEFINE_GUIDNAMED(CLSID_Proxy)
 
 #else /* _KS_ */
-
 #ifndef _IKsPropertySet_
 DEFINE_GUID(IID_IKsPropertySet,STATIC_IID_IKsPropertySet);
 #endif
-
 DEFINE_GUID(CLSID_Proxy,STATIC_CLSID_Proxy);
-
 #endif /* _KS_ */
-
 #ifndef _IKsPropertySet_
 #define _IKsPropertySet_
 #define KSPROPERTY_SUPPORT_GET 1
 #define KSPROPERTY_SUPPORT_SET 2
-
 #ifdef DECLARE_INTERFACE_
 struct IKsPropertySet;
 #undef INTERFACE
@@ -538,31 +515,30 @@ struct IKsPropertySet;
 DECLARE_INTERFACE_(IKsPropertySet,IUnknown)
 {
   STDMETHOD(Set)			(THIS_
-						REFGUID PropSet,
-						ULONG Id,
-						LPVOID InstanceData,
-						ULONG InstanceLength,
-						LPVOID PropertyData,
-						ULONG DataLength
-					) PURE;
+                        REFGUID PropSet,
+                        ULONG Id,
+                        LPVOID InstanceData,
+                        ULONG InstanceLength,
+                        LPVOID PropertyData,
+                        ULONG DataLength
+                    ) PURE;
   STDMETHOD(Get)			(THIS_
-						REFGUID PropSet,
-						ULONG Id,
-						LPVOID InstanceData,
-						ULONG InstanceLength,
-						LPVOID PropertyData,
-						ULONG DataLength,
-						ULONG *BytesReturned
-					) PURE;
+                        REFGUID PropSet,
+                        ULONG Id,
+                        LPVOID InstanceData,
+                        ULONG InstanceLength,
+                        LPVOID PropertyData,
+                        ULONG DataLength,
+                        ULONG *BytesReturned
+                    ) PURE;
   STDMETHOD(QuerySupported)		(THIS_
-						REFGUID PropSet,
-						ULONG Id,
-						ULONG *TypeSupport
-					) PURE;
+                        REFGUID PropSet,
+                        ULONG Id,
+                        ULONG *TypeSupport
+                    ) PURE;
 };
 #endif /* DECLARE_INTERFACE_ */
 #endif /* _IKsPropertySet_ */
-
 #ifndef _IKsControl_
 #define _IKsControl_
 #ifdef DECLARE_INTERFACE_
@@ -572,30 +548,29 @@ struct IKsControl;
 DECLARE_INTERFACE_(IKsControl,IUnknown)
 {
   STDMETHOD(KsProperty)			(THIS_
-						PKSPROPERTY Property,
-						ULONG PropertyLength,
-						LPVOID PropertyData,
-						ULONG DataLength,
-						ULONG *BytesReturned
-					) PURE;
+                        PKSPROPERTY Property,
+                        ULONG PropertyLength,
+                        LPVOID PropertyData,
+                        ULONG DataLength,
+                        ULONG *BytesReturned
+                    ) PURE;
   STDMETHOD(KsMethod)			(THIS_
-						PKSMETHOD Method,
-						ULONG MethodLength,
-						LPVOID MethodData,
-						ULONG DataLength,
-						ULONG *BytesReturned
-					) PURE;
+                        PKSMETHOD Method,
+                        ULONG MethodLength,
+                        LPVOID MethodData,
+                        ULONG DataLength,
+                        ULONG *BytesReturned
+                    ) PURE;
   STDMETHOD(KsEvent)			(THIS_
-						PKSEVENT Event,
-						ULONG EventLength,
-						LPVOID EventData,
-						ULONG DataLength,
-						ULONG *BytesReturned
-					) PURE;
+                        PKSEVENT Event,
+                        ULONG EventLength,
+                        LPVOID EventData,
+                        ULONG DataLength,
+                        ULONG *BytesReturned
+                    ) PURE;
 };
 #endif /* DECLARE_INTERFACE_ */
 #endif /* _IKsControl_ */
-
 #ifdef DECLARE_INTERFACE_
 struct IKsAggregateControl;
 #undef INTERFACE
@@ -603,14 +578,13 @@ struct IKsAggregateControl;
 DECLARE_INTERFACE_(IKsAggregateControl,IUnknown)
 {
   STDMETHOD(KsAddAggregate)		(THIS_
-						REFGUID AggregateClass
-					) PURE;
+                        REFGUID AggregateClass
+                    ) PURE;
   STDMETHOD(KsRemoveAggregate)		(THIS_
-						REFGUID AggregateClass
-					) PURE;
+                        REFGUID AggregateClass
+                    ) PURE;
 };
 #endif /* DECLARE_INTERFACE_ */
-
 #ifndef _IKsTopology_
 #define _IKsTopology_
 #ifdef DECLARE_INTERFACE_
@@ -620,19 +594,17 @@ struct IKsTopology;
 DECLARE_INTERFACE_(IKsTopology,IUnknown)
 {
   STDMETHOD(CreateNodeInstance)		(THIS_
-						ULONG NodeId,
-						ULONG Flags,
-						ACCESS_MASK DesiredAccess,
-						IUnknown *UnkOuter,
-						REFGUID InterfaceId,
-						LPVOID *Interface
-					) PURE;
+                        ULONG NodeId,
+                        ULONG Flags,
+                        ACCESS_MASK DesiredAccess,
+                        IUnknown *UnkOuter,
+                        REFGUID InterfaceId,
+                        LPVOID *Interface
+                    ) PURE;
 };
 #endif /* DECLARE_INTERFACE_ */
 #endif /* _IKsTopology_ */
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* __KSPROXY__ */

@@ -36,18 +36,15 @@
  */
 #ifndef MBEDTLS_BN_MUL_H
 #define MBEDTLS_BN_MUL_H
-
 #include "bignum.h"
-
 #if defined(MBEDTLS_HAVE_ASM)
-
 #ifndef asm
 #define asm __asm
 #endif
 
 /* armcc5 --gnu defines __GNUC__ but doesn't support GNU's extended asm */
 #if defined(__GNUC__) && \
-    ( !defined(__ARMCC_VERSION) || __ARMCC_VERSION >= 6000000 )
+    (!defined(__ARMCC_VERSION) || __ARMCC_VERSION >= 6000000)
 #if defined(__i386__)
 
 #define MULADDC_INIT                        \
@@ -438,7 +435,7 @@
                 "addx    %%g1, 0, %%o2          \n\t"   \
                 "inc     4, %%o1                \n\t"
 
-        #define MULADDC_STOP                            \
+#define MULADDC_STOP                            \
                 "st      %%o2, %0               \n\t"   \
                 "stx     %%o1, %1               \n\t"   \
                 "stx     %%o0, %2               \n\t"   \
@@ -722,7 +719,6 @@
 
 #endif /* MIPS */
 #endif /* GNUC */
-
 #if (defined(_MSC_VER) && defined(_M_IX86)) || defined(__WATCOMC__)
 
 #define MULADDC_INIT                            \
@@ -823,17 +819,13 @@
 
 #endif /* SSE2 */
 #endif /* MSVC */
-
 #endif /* MBEDTLS_HAVE_ASM */
-
 #if !defined(MULADDC_CORE)
 #if defined(MBEDTLS_HAVE_UDBL)
-
 #define MULADDC_INIT                    \
 {                                       \
     mbedtls_t_udbl r;                           \
     mbedtls_mpi_uint r0, r1;
-
 #define MULADDC_CORE                    \
     r   = *(s++) * (mbedtls_t_udbl) b;          \
     r0  = (mbedtls_mpi_uint) r;                   \
@@ -841,10 +833,8 @@
     r0 += c;  r1 += (r0 <  c);          \
     r0 += *d; r1 += (r0 < *d);          \
     c = r1; *(d++) = r0;
-
 #define MULADDC_STOP                    \
 }
-
 #else
 #define MULADDC_INIT                    \
 {                                       \
@@ -872,5 +862,4 @@
 
 #endif /* C (generic)  */
 #endif /* C (longlong) */
-
 #endif /* bn_mul.h */

@@ -43,7 +43,6 @@
 /* END DEFINES */
 #define PACKAGE "libzip"
 #define VERSION "0.11.2"
-
 #ifndef HAVE_SSIZE_T_LIBZIP
 #  if SIZE_T_LIBZIP == INT_LIBZIP
 typedef int ssize_t;
@@ -55,5 +54,4 @@ typedef long long ssize_t;
 #error no suitable type for ssize_t found
 #  endif
 #endif
-
 #endif /* HAD_CONFIG_H */

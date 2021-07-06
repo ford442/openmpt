@@ -21,15 +21,11 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifndef CURL_DISABLE_CRYPTO_AUTH
-
 #include <curl/curl.h>
-
 #include "curl_md5.h"
 #include "curl_hmac.h"
 #include "warnless.h"
-
 #if defined(USE_GNUTLS_NETTLE)
 
 #include <nettle/md5.h>
@@ -214,17 +210,14 @@ static void MD5_Final(unsigned char digest[16], MD5_CTX *ctx)
 /* The last #include files should be: */
 #include "curl_memory.h"
 #include "memdebug.h"
-
 /* Any 32-bit or wider unsigned integer data type will do */
 typedef unsigned int MD5_u32plus;
-
 typedef struct {
-  MD5_u32plus lo, hi;
-  MD5_u32plus a, b, c, d;
-  unsigned char buffer[64];
-  MD5_u32plus block[16];
+MD5_u32plus lo, hi;
+MD5_u32plus a, b, c, d;
+unsigned char buffer[64];
+MD5_u32plus block[16];
 } MD5_CTX;
-
 static void MD5_Init(MD5_CTX *ctx);
 static void MD5_Update(MD5_CTX *ctx, const void *data, unsigned long size);
 static void MD5_Final(unsigned char *result, MD5_CTX *ctx);
@@ -273,291 +266,238 @@ static void MD5_Final(unsigned char *result, MD5_CTX *ctx);
 #define GET(n) \
         (ctx->block[(n)])
 #endif
-
 /*
  * This processes one or more 64-byte data blocks, but does NOT update
  * the bit counters.  There are no alignment requirements.
  */
-static const void *body(MD5_CTX *ctx, const void *data, unsigned long size)
-{
-  const unsigned char *ptr;
-  MD5_u32plus a, b, c, d;
-  MD5_u32plus saved_a, saved_b, saved_c, saved_d;
-
-  ptr = (const unsigned char *)data;
-
-  a = ctx->a;
-  b = ctx->b;
-  c = ctx->c;
-  d = ctx->d;
-
-  do {
-    saved_a = a;
-    saved_b = b;
-    saved_c = c;
-    saved_d = d;
+static const void *body(MD5_CTX *ctx, const void *data, unsigned long size) {
+const unsigned char *ptr;
+MD5_u32plus a, b, c, d;
+MD5_u32plus saved_a, saved_b, saved_c, saved_d;
+ptr = (const unsigned char *) data;
+a = ctx->a;
+b = ctx->b;
+c = ctx->c;
+d = ctx->d;
+do {
+saved_a = a;
+saved_b = b;
+saved_c = c;
+saved_d = d;
 
 /* Round 1 */
-    STEP(F, a, b, c, d, SET(0), 0xd76aa478, 7)
-      STEP(F, d, a, b, c, SET(1), 0xe8c7b756, 12)
-      STEP(F, c, d, a, b, SET(2), 0x242070db, 17)
-      STEP(F, b, c, d, a, SET(3), 0xc1bdceee, 22)
-      STEP(F, a, b, c, d, SET(4), 0xf57c0faf, 7)
-      STEP(F, d, a, b, c, SET(5), 0x4787c62a, 12)
-      STEP(F, c, d, a, b, SET(6), 0xa8304613, 17)
-      STEP(F, b, c, d, a, SET(7), 0xfd469501, 22)
-      STEP(F, a, b, c, d, SET(8), 0x698098d8, 7)
-      STEP(F, d, a, b, c, SET(9), 0x8b44f7af, 12)
-      STEP(F, c, d, a, b, SET(10), 0xffff5bb1, 17)
-      STEP(F, b, c, d, a, SET(11), 0x895cd7be, 22)
-      STEP(F, a, b, c, d, SET(12), 0x6b901122, 7)
-      STEP(F, d, a, b, c, SET(13), 0xfd987193, 12)
-      STEP(F, c, d, a, b, SET(14), 0xa679438e, 17)
-      STEP(F, b, c, d, a, SET(15), 0x49b40821, 22)
+STEP(F, a, b, c, d, SET(0), 0xd76aa478, 7)
+STEP(F, d, a, b, c, SET(1), 0xe8c7b756, 12)
+STEP(F, c, d, a, b, SET(2), 0x242070db, 17)
+STEP(F, b, c, d, a, SET(3), 0xc1bdceee, 22)
+STEP(F, a, b, c, d, SET(4), 0xf57c0faf, 7)
+STEP(F, d, a, b, c, SET(5), 0x4787c62a, 12)
+STEP(F, c, d, a, b, SET(6), 0xa8304613, 17)
+STEP(F, b, c, d, a, SET(7), 0xfd469501, 22)
+STEP(F, a, b, c, d, SET(8), 0x698098d8, 7)
+STEP(F, d, a, b, c, SET(9), 0x8b44f7af, 12)
+STEP(F, c, d, a, b, SET(10), 0xffff5bb1, 17)
+STEP(F, b, c, d, a, SET(11), 0x895cd7be, 22)
+STEP(F, a, b, c, d, SET(12), 0x6b901122, 7)
+STEP(F, d, a, b, c, SET(13), 0xfd987193, 12)
+STEP(F, c, d, a, b, SET(14), 0xa679438e, 17)
+STEP(F, b, c, d, a, SET(15), 0x49b40821, 22)
 
 /* Round 2 */
-      STEP(G, a, b, c, d, GET(1), 0xf61e2562, 5)
-      STEP(G, d, a, b, c, GET(6), 0xc040b340, 9)
-      STEP(G, c, d, a, b, GET(11), 0x265e5a51, 14)
-      STEP(G, b, c, d, a, GET(0), 0xe9b6c7aa, 20)
-      STEP(G, a, b, c, d, GET(5), 0xd62f105d, 5)
-      STEP(G, d, a, b, c, GET(10), 0x02441453, 9)
-      STEP(G, c, d, a, b, GET(15), 0xd8a1e681, 14)
-      STEP(G, b, c, d, a, GET(4), 0xe7d3fbc8, 20)
-      STEP(G, a, b, c, d, GET(9), 0x21e1cde6, 5)
-      STEP(G, d, a, b, c, GET(14), 0xc33707d6, 9)
-      STEP(G, c, d, a, b, GET(3), 0xf4d50d87, 14)
-      STEP(G, b, c, d, a, GET(8), 0x455a14ed, 20)
-      STEP(G, a, b, c, d, GET(13), 0xa9e3e905, 5)
-      STEP(G, d, a, b, c, GET(2), 0xfcefa3f8, 9)
-      STEP(G, c, d, a, b, GET(7), 0x676f02d9, 14)
-      STEP(G, b, c, d, a, GET(12), 0x8d2a4c8a, 20)
+STEP(G, a, b, c, d, GET(1), 0xf61e2562, 5)
+STEP(G, d, a, b, c, GET(6), 0xc040b340, 9)
+STEP(G, c, d, a, b, GET(11), 0x265e5a51, 14)
+STEP(G, b, c, d, a, GET(0), 0xe9b6c7aa, 20)
+STEP(G, a, b, c, d, GET(5), 0xd62f105d, 5)
+STEP(G, d, a, b, c, GET(10), 0x02441453, 9)
+STEP(G, c, d, a, b, GET(15), 0xd8a1e681, 14)
+STEP(G, b, c, d, a, GET(4), 0xe7d3fbc8, 20)
+STEP(G, a, b, c, d, GET(9), 0x21e1cde6, 5)
+STEP(G, d, a, b, c, GET(14), 0xc33707d6, 9)
+STEP(G, c, d, a, b, GET(3), 0xf4d50d87, 14)
+STEP(G, b, c, d, a, GET(8), 0x455a14ed, 20)
+STEP(G, a, b, c, d, GET(13), 0xa9e3e905, 5)
+STEP(G, d, a, b, c, GET(2), 0xfcefa3f8, 9)
+STEP(G, c, d, a, b, GET(7), 0x676f02d9, 14)
+STEP(G, b, c, d, a, GET(12), 0x8d2a4c8a, 20)
 
 /* Round 3 */
-      STEP(H, a, b, c, d, GET(5), 0xfffa3942, 4)
-      STEP(H2, d, a, b, c, GET(8), 0x8771f681, 11)
-      STEP(H, c, d, a, b, GET(11), 0x6d9d6122, 16)
-      STEP(H2, b, c, d, a, GET(14), 0xfde5380c, 23)
-      STEP(H, a, b, c, d, GET(1), 0xa4beea44, 4)
-      STEP(H2, d, a, b, c, GET(4), 0x4bdecfa9, 11)
-      STEP(H, c, d, a, b, GET(7), 0xf6bb4b60, 16)
-      STEP(H2, b, c, d, a, GET(10), 0xbebfbc70, 23)
-      STEP(H, a, b, c, d, GET(13), 0x289b7ec6, 4)
-      STEP(H2, d, a, b, c, GET(0), 0xeaa127fa, 11)
-      STEP(H, c, d, a, b, GET(3), 0xd4ef3085, 16)
-      STEP(H2, b, c, d, a, GET(6), 0x04881d05, 23)
-      STEP(H, a, b, c, d, GET(9), 0xd9d4d039, 4)
-      STEP(H2, d, a, b, c, GET(12), 0xe6db99e5, 11)
-      STEP(H, c, d, a, b, GET(15), 0x1fa27cf8, 16)
-      STEP(H2, b, c, d, a, GET(2), 0xc4ac5665, 23)
+STEP(H, a, b, c, d, GET(5), 0xfffa3942, 4)
+STEP(H2, d, a, b, c, GET(8), 0x8771f681, 11)
+STEP(H, c, d, a, b, GET(11), 0x6d9d6122, 16)
+STEP(H2, b, c, d, a, GET(14), 0xfde5380c, 23)
+STEP(H, a, b, c, d, GET(1), 0xa4beea44, 4)
+STEP(H2, d, a, b, c, GET(4), 0x4bdecfa9, 11)
+STEP(H, c, d, a, b, GET(7), 0xf6bb4b60, 16)
+STEP(H2, b, c, d, a, GET(10), 0xbebfbc70, 23)
+STEP(H, a, b, c, d, GET(13), 0x289b7ec6, 4)
+STEP(H2, d, a, b, c, GET(0), 0xeaa127fa, 11)
+STEP(H, c, d, a, b, GET(3), 0xd4ef3085, 16)
+STEP(H2, b, c, d, a, GET(6), 0x04881d05, 23)
+STEP(H, a, b, c, d, GET(9), 0xd9d4d039, 4)
+STEP(H2, d, a, b, c, GET(12), 0xe6db99e5, 11)
+STEP(H, c, d, a, b, GET(15), 0x1fa27cf8, 16)
+STEP(H2, b, c, d, a, GET(2), 0xc4ac5665, 23)
 
 /* Round 4 */
-      STEP(I, a, b, c, d, GET(0), 0xf4292244, 6)
-      STEP(I, d, a, b, c, GET(7), 0x432aff97, 10)
-      STEP(I, c, d, a, b, GET(14), 0xab9423a7, 15)
-      STEP(I, b, c, d, a, GET(5), 0xfc93a039, 21)
-      STEP(I, a, b, c, d, GET(12), 0x655b59c3, 6)
-      STEP(I, d, a, b, c, GET(3), 0x8f0ccc92, 10)
-      STEP(I, c, d, a, b, GET(10), 0xffeff47d, 15)
-      STEP(I, b, c, d, a, GET(1), 0x85845dd1, 21)
-      STEP(I, a, b, c, d, GET(8), 0x6fa87e4f, 6)
-      STEP(I, d, a, b, c, GET(15), 0xfe2ce6e0, 10)
-      STEP(I, c, d, a, b, GET(6), 0xa3014314, 15)
-      STEP(I, b, c, d, a, GET(13), 0x4e0811a1, 21)
-      STEP(I, a, b, c, d, GET(4), 0xf7537e82, 6)
-      STEP(I, d, a, b, c, GET(11), 0xbd3af235, 10)
-      STEP(I, c, d, a, b, GET(2), 0x2ad7d2bb, 15)
-      STEP(I, b, c, d, a, GET(9), 0xeb86d391, 21)
-
-      a += saved_a;
-    b += saved_b;
-    c += saved_c;
-    d += saved_d;
-
-    ptr += 64;
-  } while(size -= 64);
-
-  ctx->a = a;
-  ctx->b = b;
-  ctx->c = c;
-  ctx->d = d;
-
-  return ptr;
+STEP(I, a, b, c, d, GET(0), 0xf4292244, 6)
+STEP(I, d, a, b, c, GET(7), 0x432aff97, 10)
+STEP(I, c, d, a, b, GET(14), 0xab9423a7, 15)
+STEP(I, b, c, d, a, GET(5), 0xfc93a039, 21)
+STEP(I, a, b, c, d, GET(12), 0x655b59c3, 6)
+STEP(I, d, a, b, c, GET(3), 0x8f0ccc92, 10)
+STEP(I, c, d, a, b, GET(10), 0xffeff47d, 15)
+STEP(I, b, c, d, a, GET(1), 0x85845dd1, 21)
+STEP(I, a, b, c, d, GET(8), 0x6fa87e4f, 6)
+STEP(I, d, a, b, c, GET(15), 0xfe2ce6e0, 10)
+STEP(I, c, d, a, b, GET(6), 0xa3014314, 15)
+STEP(I, b, c, d, a, GET(13), 0x4e0811a1, 21)
+STEP(I, a, b, c, d, GET(4), 0xf7537e82, 6)
+STEP(I, d, a, b, c, GET(11), 0xbd3af235, 10)
+STEP(I, c, d, a, b, GET(2), 0x2ad7d2bb, 15)
+STEP(I, b, c, d, a, GET(9), 0xeb86d391, 21)
+a += saved_a;
+b += saved_b;
+c += saved_c;
+d += saved_d;
+ptr += 64;
+} while (size -= 64);
+ctx->a = a;
+ctx->b = b;
+ctx->c = c;
+ctx->d = d;
+return ptr;
 }
-
-static void MD5_Init(MD5_CTX *ctx)
-{
-  ctx->a = 0x67452301;
-  ctx->b = 0xefcdab89;
-  ctx->c = 0x98badcfe;
-  ctx->d = 0x10325476;
-
-  ctx->lo = 0;
-  ctx->hi = 0;
+static void MD5_Init(MD5_CTX *ctx) {
+ctx->a = 0x67452301;
+ctx->b = 0xefcdab89;
+ctx->c = 0x98badcfe;
+ctx->d = 0x10325476;
+ctx->lo = 0;
+ctx->hi = 0;
 }
-
-static void MD5_Update(MD5_CTX *ctx, const void *data, unsigned long size)
-{
-  MD5_u32plus saved_lo;
-  unsigned long used, available;
-
-  saved_lo = ctx->lo;
-  ctx->lo = (saved_lo + size) & 0x1fffffff;
-  if(ctx->lo < saved_lo)
-    ctx->hi++;
-  ctx->hi += (MD5_u32plus)size >> 29;
-
-  used = saved_lo & 0x3f;
-
-  if(used) {
-    available = 64 - used;
-
-    if(size < available) {
-      memcpy(&ctx->buffer[used], data, size);
-      return;
-    }
-
-    memcpy(&ctx->buffer[used], data, available);
-    data = (const unsigned char *)data + available;
-    size -= available;
-    body(ctx, ctx->buffer, 64);
-  }
-
-  if(size >= 64) {
-    data = body(ctx, data, size & ~(unsigned long)0x3f);
-    size &= 0x3f;
-  }
-
-  memcpy(ctx->buffer, data, size);
+static void MD5_Update(MD5_CTX *ctx, const void *data, unsigned long size) {
+MD5_u32plus saved_lo;
+unsigned long used, available;
+saved_lo = ctx->lo;
+ctx->lo = (saved_lo + size) & 0x1fffffff;
+if(ctx->lo < saved_lo)
+ctx->hi++;
+ctx->hi += (MD5_u32plus) size >> 29;
+used = saved_lo & 0x3f;
+if(used) {
+available = 64 - used;
+if(size < available) {
+memcpy(&ctx->buffer[used], data, size);
+return;
 }
-
-static void MD5_Final(unsigned char *result, MD5_CTX *ctx)
-{
-  unsigned long used, available;
-
-  used = ctx->lo & 0x3f;
-
-  ctx->buffer[used++] = 0x80;
-
-  available = 64 - used;
-
-  if(available < 8) {
-    memset(&ctx->buffer[used], 0, available);
-    body(ctx, ctx->buffer, 64);
-    used = 0;
-    available = 64;
-  }
-
-  memset(&ctx->buffer[used], 0, available - 8);
-
-  ctx->lo <<= 3;
-  ctx->buffer[56] = curlx_ultouc((ctx->lo)&0xff);
-  ctx->buffer[57] = curlx_ultouc((ctx->lo >> 8)&0xff);
-  ctx->buffer[58] = curlx_ultouc((ctx->lo >> 16)&0xff);
-  ctx->buffer[59] = curlx_ultouc(ctx->lo >> 24);
-  ctx->buffer[60] = curlx_ultouc((ctx->hi)&0xff);
-  ctx->buffer[61] = curlx_ultouc((ctx->hi >> 8)&0xff);
-  ctx->buffer[62] = curlx_ultouc((ctx->hi >> 16)&0xff);
-  ctx->buffer[63] = curlx_ultouc(ctx->hi >> 24);
-
-  body(ctx, ctx->buffer, 64);
-
-  result[0] = curlx_ultouc((ctx->a)&0xff);
-  result[1] = curlx_ultouc((ctx->a >> 8)&0xff);
-  result[2] = curlx_ultouc((ctx->a >> 16)&0xff);
-  result[3] = curlx_ultouc(ctx->a >> 24);
-  result[4] = curlx_ultouc((ctx->b)&0xff);
-  result[5] = curlx_ultouc((ctx->b >> 8)&0xff);
-  result[6] = curlx_ultouc((ctx->b >> 16)&0xff);
-  result[7] = curlx_ultouc(ctx->b >> 24);
-  result[8] = curlx_ultouc((ctx->c)&0xff);
-  result[9] = curlx_ultouc((ctx->c >> 8)&0xff);
-  result[10] = curlx_ultouc((ctx->c >> 16)&0xff);
-  result[11] = curlx_ultouc(ctx->c >> 24);
-  result[12] = curlx_ultouc((ctx->d)&0xff);
-  result[13] = curlx_ultouc((ctx->d >> 8)&0xff);
-  result[14] = curlx_ultouc((ctx->d >> 16)&0xff);
-  result[15] = curlx_ultouc(ctx->d >> 24);
-
-  memset(ctx, 0, sizeof(*ctx));
+memcpy(&ctx->buffer[used], data, available);
+data = (const unsigned char *) data + available;
+size -= available;
+body(ctx, ctx->buffer, 64);
 }
-
+if(size >= 64) {
+data = body(ctx, data, size & ~(unsigned long) 0x3f);
+size &= 0x3f;
+}
+memcpy(ctx->buffer, data, size);
+}
+static void MD5_Final(unsigned char *result, MD5_CTX *ctx) {
+unsigned long used, available;
+used = ctx->lo & 0x3f;
+ctx->buffer[used++] = 0x80;
+available = 64 - used;
+if(available < 8) {
+memset(&ctx->buffer[used], 0, available);
+body(ctx, ctx->buffer, 64);
+used = 0;
+available = 64;
+}
+memset(&ctx->buffer[used], 0, available - 8);
+ctx->lo <<= 3;
+ctx->buffer[56] = curlx_ultouc((ctx->lo) & 0xff);
+ctx->buffer[57] = curlx_ultouc((ctx->lo >> 8) & 0xff);
+ctx->buffer[58] = curlx_ultouc((ctx->lo >> 16) & 0xff);
+ctx->buffer[59] = curlx_ultouc(ctx->lo >> 24);
+ctx->buffer[60] = curlx_ultouc((ctx->hi) & 0xff);
+ctx->buffer[61] = curlx_ultouc((ctx->hi >> 8) & 0xff);
+ctx->buffer[62] = curlx_ultouc((ctx->hi >> 16) & 0xff);
+ctx->buffer[63] = curlx_ultouc(ctx->hi >> 24);
+body(ctx, ctx->buffer, 64);
+result[0] = curlx_ultouc((ctx->a) & 0xff);
+result[1] = curlx_ultouc((ctx->a >> 8) & 0xff);
+result[2] = curlx_ultouc((ctx->a >> 16) & 0xff);
+result[3] = curlx_ultouc(ctx->a >> 24);
+result[4] = curlx_ultouc((ctx->b) & 0xff);
+result[5] = curlx_ultouc((ctx->b >> 8) & 0xff);
+result[6] = curlx_ultouc((ctx->b >> 16) & 0xff);
+result[7] = curlx_ultouc(ctx->b >> 24);
+result[8] = curlx_ultouc((ctx->c) & 0xff);
+result[9] = curlx_ultouc((ctx->c >> 8) & 0xff);
+result[10] = curlx_ultouc((ctx->c >> 16) & 0xff);
+result[11] = curlx_ultouc(ctx->c >> 24);
+result[12] = curlx_ultouc((ctx->d) & 0xff);
+result[13] = curlx_ultouc((ctx->d >> 8) & 0xff);
+result[14] = curlx_ultouc((ctx->d >> 16) & 0xff);
+result[15] = curlx_ultouc(ctx->d >> 24);
+memset(ctx, 0, sizeof(*ctx));
+}
 #endif /* CRYPTO LIBS */
-
 const HMAC_params Curl_HMAC_MD5[] = {
-  {
-    (HMAC_hinit_func) MD5_Init,           /* Hash initialization function. */
-    (HMAC_hupdate_func) MD5_Update,       /* Hash update function. */
-    (HMAC_hfinal_func) MD5_Final,         /* Hash computation end function. */
-    sizeof(MD5_CTX),                      /* Size of hash context structure. */
-    64,                                   /* Maximum key length. */
-    16                                    /* Result size. */
-  }
+        {
+                (HMAC_hinit_func) MD5_Init,           /* Hash initialization function. */
+                (HMAC_hupdate_func) MD5_Update,       /* Hash update function. */
+                (HMAC_hfinal_func) MD5_Final,         /* Hash computation end function. */
+                sizeof(MD5_CTX),                      /* Size of hash context structure. */
+                64,                                   /* Maximum key length. */
+                16                                    /* Result size. */
+        }
 };
-
 const MD5_params Curl_DIGEST_MD5[] = {
-  {
-    (Curl_MD5_init_func) MD5_Init,      /* Digest initialization function */
-    (Curl_MD5_update_func) MD5_Update,  /* Digest update function */
-    (Curl_MD5_final_func) MD5_Final,    /* Digest computation end function */
-    sizeof(MD5_CTX),                    /* Size of digest context struct */
-    16                                  /* Result size */
-  }
+        {
+                (Curl_MD5_init_func) MD5_Init,      /* Digest initialization function */
+                (Curl_MD5_update_func) MD5_Update,  /* Digest update function */
+                (Curl_MD5_final_func) MD5_Final,    /* Digest computation end function */
+                sizeof(MD5_CTX),                    /* Size of digest context struct */
+                16                                  /* Result size */
+        }
 };
-
 /*
  * @unittest: 1601
  */
 void Curl_md5it(unsigned char *outbuffer, /* 16 bytes */
-                const unsigned char *input)
-{
-  MD5_CTX ctx;
-  MD5_Init(&ctx);
-  MD5_Update(&ctx, input, curlx_uztoui(strlen((char *)input)));
-  MD5_Final(outbuffer, &ctx);
+                const unsigned char *input) {
+MD5_CTX ctx;
+MD5_Init(&ctx);
+MD5_Update(&ctx, input, curlx_uztoui(strlen((char *) input)));
+MD5_Final(outbuffer, &ctx);
 }
+MD5_context *Curl_MD5_init(const MD5_params *md5params) {
+MD5_context *ctxt;
 
-MD5_context *Curl_MD5_init(const MD5_params *md5params)
-{
-  MD5_context *ctxt;
-
-  /* Create MD5 context */
-  ctxt = malloc(sizeof *ctxt);
-
-  if(!ctxt)
-    return ctxt;
-
-  ctxt->md5_hashctx = malloc(md5params->md5_ctxtsize);
-
-  if(!ctxt->md5_hashctx) {
-    free(ctxt);
-    return NULL;
-  }
-
-  ctxt->md5_hash = md5params;
-
-  (*md5params->md5_init_func)(ctxt->md5_hashctx);
-
-  return ctxt;
+/* Create MD5 context */
+ctxt = malloc(sizeof *ctxt);
+if(!ctxt)
+return ctxt;
+ctxt->md5_hashctx = malloc(md5params->md5_ctxtsize);
+if(!ctxt->md5_hashctx) {
+free(ctxt);
+return NULL;
 }
-
+ctxt->md5_hash = md5params;
+(*md5params->md5_init_func)(ctxt->md5_hashctx);
+return ctxt;
+}
 int Curl_MD5_update(MD5_context *context,
                     const unsigned char *data,
-                    unsigned int len)
-{
-  (*context->md5_hash->md5_update_func)(context->md5_hashctx, data, len);
-
-  return 0;
+                    unsigned int len) {
+(*context->md5_hash->md5_update_func)(context->md5_hashctx, data, len);
+return 0;
 }
-
-int Curl_MD5_final(MD5_context *context, unsigned char *result)
-{
-  (*context->md5_hash->md5_final_func)(result, context->md5_hashctx);
-
-  free(context->md5_hashctx);
-  free(context);
-
-  return 0;
+int Curl_MD5_final(MD5_context *context, unsigned char *result) {
+(*context->md5_hash->md5_final_func)(result, context->md5_hashctx);
+free(context->md5_hashctx);
+free(context);
+return 0;
 }
-
 #endif /* CURL_DISABLE_CRYPTO_AUTH */

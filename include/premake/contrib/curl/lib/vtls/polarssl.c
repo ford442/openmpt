@@ -28,7 +28,6 @@
  */
 
 #include "curl_setup.h"
-
 #ifdef USE_POLARSSL
 
 #include <polarssl/net.h>

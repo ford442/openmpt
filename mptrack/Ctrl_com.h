@@ -10,39 +10,33 @@
 
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
 OPENMPT_NAMESPACE_BEGIN
 
-class CCtrlComments final : public CModControlDlg
-{
+class CCtrlComments final : public CModControlDlg {
 protected:
-	CEdit m_EditComments;
-	int charWidth = 0;
-	bool m_Reformatting = false;
-
+CEdit m_EditComments;
+int charWidth = 0;
+bool m_Reformatting = false;
 public:
-	CCtrlComments(CModControlView &parent, CModDoc &document);
-
-	//{{AFX_VIRTUAL(CCtrlComments)
-	Setting<LONG> &GetSplitPosRef() override { return TrackerSettings::Instance().glCommentsWindowHeight; }
-	BOOL OnInitDialog() override;
-	void DoDataExchange(CDataExchange *pDX) override;  // DDX/DDV support
-	void RecalcLayout() override;
-	void UpdateView(UpdateHint hint, CObject *pObj = nullptr) override;
-	CRuntimeClass *GetAssociatedViewClass() override;
-	void OnActivatePage(LPARAM) override;
-	void OnDeactivatePage() override;
-	BOOL PreTranslateMessage(MSG *pMsg) override;
-	//}}AFX_VIRTUAL
+CCtrlComments(CModControlView &parent, CModDoc &document);
+//{{AFX_VIRTUAL(CCtrlComments)
+Setting <LONG> &GetSplitPosRef() override { return TrackerSettings::Instance().glCommentsWindowHeight; }
+BOOL OnInitDialog() override;
+void DoDataExchange(CDataExchange *pDX) override;  // DDX/DDV support
+void RecalcLayout() override;
+void UpdateView(UpdateHint hint, CObject *pObj = nullptr) override;
+CRuntimeClass *GetAssociatedViewClass() override;
+void OnActivatePage(LPARAM) override;
+void OnDeactivatePage() override;
+BOOL PreTranslateMessage(MSG *pMsg) override;
+//}}AFX_VIRTUAL
 
 protected:
-	//{{AFX_MSG(CCtrlComments)
-	afx_msg void OnCommentsUpdated();
-	afx_msg void OnCommentsChanged();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
+//{{AFX_MSG(CCtrlComments)
+afx_msg void OnCommentsUpdated();
+afx_msg void OnCommentsChanged();
+//}}AFX_MSG
+DECLARE_MESSAGE_MAP()
 };
-
 OPENMPT_NAMESPACE_END

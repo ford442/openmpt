@@ -32,7 +32,6 @@
 
 #ifndef FLAC__ORDINALS_H
 #define FLAC__ORDINALS_H
-
 #if defined(_MSC_VER) && _MSC_VER < 1600
 
 /* Microsoft Visual Studio earlier than the 2010 version did not provide
@@ -53,24 +52,17 @@ typedef unsigned __int64 FLAC__uint64;
 /* For MSVC 2010 and everything else which provides <stdint.h>. */
 
 #include <stdint.h>
-
 typedef int8_t FLAC__int8;
 typedef uint8_t FLAC__uint8;
-
 typedef int16_t FLAC__int16;
 typedef int32_t FLAC__int32;
 typedef int64_t FLAC__int64;
 typedef uint16_t FLAC__uint16;
 typedef uint32_t FLAC__uint32;
 typedef uint64_t FLAC__uint64;
-
 #endif
-
 typedef int FLAC__bool;
-
 typedef FLAC__uint8 FLAC__byte;
-
-
 #ifdef true
 #undef true
 #endif
@@ -81,5 +73,4 @@ typedef FLAC__uint8 FLAC__byte;
 #define true 1
 #define false 0
 #endif
-
 #endif

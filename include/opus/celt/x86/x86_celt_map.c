@@ -28,13 +28,11 @@
 #if defined(HAVE_CONFIG_H)
 #include "config.h"
 #endif
-
 #include "x86/x86cpu.h"
 #include "celt_lpc.h"
 #include "pitch.h"
 #include "pitch_sse.h"
 #include "vq.h"
-
 #if defined(OPUS_HAVE_RTCD)
 
 # if defined(FIXED_POINT)

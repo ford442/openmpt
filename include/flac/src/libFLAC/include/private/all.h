@@ -32,7 +32,6 @@
 
 #ifndef FLAC__PRIVATE__ALL_H
 #define FLAC__PRIVATE__ALL_H
-
 #include "bitmath.h"
 #include "bitreader.h"
 #include "bitwriter.h"
@@ -46,5 +45,4 @@
 #include "memory.h"
 #include "metadata.h"
 #include "stream_encoder_framing.h"
-
 #endif

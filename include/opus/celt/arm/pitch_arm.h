@@ -27,9 +27,7 @@
 
 #if !defined(PITCH_ARM_H)
 # define PITCH_ARM_H
-
 # include "armcpu.h"
-
 # if defined(OPUS_ARM_MAY_HAVE_NEON_INTR)
 opus_val32 celt_inner_prod_neon(const opus_val16 *x, const opus_val16 *y, int N);
 void dual_inner_prod_neon(const opus_val16 *x, const opus_val16 *y01,
@@ -42,7 +40,6 @@ void dual_inner_prod_neon(const opus_val16 *x, const opus_val16 *y01,
 #   define dual_inner_prod(x, y01, y02, N, xy1, xy2, arch) ((void)(arch), PRESUME_NEON(dual_inner_prod)(x, y01, y02, N, xy1, xy2))
 #  endif
 # endif
-
 # if !defined(OVERRIDE_CELT_INNER_PROD)
 #  if defined(OPUS_HAVE_RTCD) && (defined(OPUS_ARM_MAY_HAVE_NEON_INTR) && !defined(OPUS_ARM_PRESUME_NEON_INTR))
 extern opus_val32 (*const CELT_INNER_PROD_IMPL[OPUS_ARCHMASK+1])(const opus_val16 *x, const opus_val16 *y, int N);
@@ -53,7 +50,6 @@ extern opus_val32 (*const CELT_INNER_PROD_IMPL[OPUS_ARCHMASK+1])(const opus_val1
 #   define celt_inner_prod(x, y, N, arch) ((void)(arch), celt_inner_prod_neon(x, y, N))
 #  endif
 # endif
-
 # if !defined(OVERRIDE_DUAL_INNER_PROD)
 #  if defined(OPUS_HAVE_RTCD) && (defined(OPUS_ARM_MAY_HAVE_NEON_INTR) && !defined(OPUS_ARM_PRESUME_NEON_INTR))
 extern void (*const DUAL_INNER_PROD_IMPL[OPUS_ARCHMASK+1])(const opus_val16 *x,
@@ -65,7 +61,6 @@ extern void (*const DUAL_INNER_PROD_IMPL[OPUS_ARCHMASK+1])(const opus_val16 *x,
 #   define dual_inner_prod(x, y01, y02, N, xy1, xy2, arch) ((void)(arch), dual_inner_prod_neon(x, y01, y02, N, xy1, xy2))
 #  endif
 # endif
-
 # if defined(FIXED_POINT)
 
 #  if defined(OPUS_ARM_MAY_HAVE_NEON)
@@ -136,7 +131,6 @@ extern void (*const XCORR_KERNEL_IMPL[OPUS_ARCHMASK + 1])(
 void celt_pitch_xcorr_float_neon(const opus_val16 *_x, const opus_val16 *_y,
                                  opus_val32 *xcorr, int len, int max_pitch, int arch);
 #endif
-
 #  if defined(OPUS_HAVE_RTCD) && \
     (defined(OPUS_ARM_MAY_HAVE_NEON_INTR) && !defined(OPUS_ARM_PRESUME_NEON_INTR))
 extern void
@@ -154,7 +148,5 @@ extern void
 #   define celt_pitch_xcorr celt_pitch_xcorr_float_neon
 
 #  endif
-
 #endif /* end !FIXED_POINT */
-
 #endif

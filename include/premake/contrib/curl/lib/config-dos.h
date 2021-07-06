@@ -28,17 +28,15 @@
 /* ================================================================ */
 
 #if defined(DJGPP)
-  #define OS  "MSDOS/djgpp"
+#define OS  "MSDOS/djgpp"
 #elif defined(__HIGHC__)
-  #define OS  "MSDOS/HighC"
+#define OS  "MSDOS/HighC"
 #elif defined(__WATCOMC__)
-  #define OS  "MSDOS/Watcom"
+#define OS  "MSDOS/Watcom"
 #else
-  #define OS  "MSDOS/?"
+#define OS  "MSDOS/?"
 #endif
-
 #define PACKAGE  "curl"
-
 #define HAVE_ARPA_INET_H       1
 #define HAVE_ERRNO_H           1
 #define HAVE_FCNTL_H           1
@@ -80,9 +78,7 @@
 #define HAVE_SYS_TYPES_H       1
 #define HAVE_TIME_H            1
 #define HAVE_UNISTD_H          1
-
 #define NEED_MALLOC_H          1
-
 #define RETSIGTYPE             void
 #define SIZEOF_INT             4
 #define SIZEOF_LONG_DOUBLE     16
@@ -99,13 +95,11 @@
 #define SEND_TYPE_ARG3         int
 #define SEND_TYPE_ARG4         int
 #define SEND_TYPE_RETV         int
-
 #define RECV_TYPE_ARG1         int
 #define RECV_TYPE_ARG2         void *
 #define RECV_TYPE_ARG3         int
 #define RECV_TYPE_ARG4         int
 #define RECV_TYPE_RETV         int
-
 #define RECVFROM_TYPE_ARG1     int
 #define RECVFROM_TYPE_ARG2     void
 #define RECVFROM_TYPE_ARG3     int
@@ -114,13 +108,11 @@
 #define RECVFROM_TYPE_ARG6     int
 #define RECVFROM_TYPE_RETV     int
 #define RECVFROM_TYPE_ARG2_IS_VOID 1
-
 #define GETNAMEINFO_QUAL_ARG1  const
 #define GETNAMEINFO_TYPE_ARG1  struct sockaddr *
 #define GETNAMEINFO_TYPE_ARG2  int
 #define GETNAMEINFO_TYPE_ARG46 int
 #define GETNAMEINFO_TYPE_ARG7  int
-
 #define BSD
 
 /* CURLDEBUG definition enables memory tracking */
@@ -128,54 +120,48 @@
 
 /* USE_ZLIB on cmd-line */
 #ifdef USE_ZLIB
-  #define HAVE_ZLIB_H            1
-  #define HAVE_LIBZ              1
+#define HAVE_ZLIB_H            1
+#define HAVE_LIBZ              1
 #endif
 
 /* USE_OPENSSL on cmd-line */
 #ifdef USE_OPENSSL
-  #define HAVE_CRYPTO_CLEANUP_ALL_EX_DATA 1
-  #define HAVE_OPENSSL_ENGINE_H  1
-  #define OPENSSL_NO_KRB5        1
+#define HAVE_CRYPTO_CLEANUP_ALL_EX_DATA 1
+#define HAVE_OPENSSL_ENGINE_H  1
+#define OPENSSL_NO_KRB5        1
 #endif
 
 /* to disable LDAP */
 #define CURL_DISABLE_LDAP        1
-
 #define in_addr_t  u_long
-
 #if defined(__HIGHC__) || \
     (defined(__GNUC__) && (__GNUC__ < 4))
-  #define ssize_t  int
+#define ssize_t  int
 #endif
-
 #define CURL_CA_BUNDLE  getenv("CURL_CA_BUNDLE")
 
 /* Target HAVE_x section */
 
 #if defined(DJGPP)
-  #define HAVE_BASENAME   1
-  #define HAVE_STRCASECMP 1
-  #define HAVE_SIGACTION  1
-  #define HAVE_SIGSETJMP  1
-  #define HAVE_SYS_TIME_H 1
-  #define HAVE_TERMIOS_H  1
-  #define HAVE_VARIADIC_MACROS_GCC 1
+#define HAVE_BASENAME   1
+#define HAVE_STRCASECMP 1
+#define HAVE_SIGACTION  1
+#define HAVE_SIGSETJMP  1
+#define HAVE_SYS_TIME_H 1
+#define HAVE_TERMIOS_H  1
+#define HAVE_VARIADIC_MACROS_GCC 1
 
 #elif defined(__WATCOMC__)
-  #define HAVE_STRCASECMP 1
+#define HAVE_STRCASECMP 1
 
 #elif defined(__HIGHC__)
-  #define HAVE_SYS_TIME_H 1
-  #define strerror(e) strerror_s_((e))
+#define HAVE_SYS_TIME_H 1
+#define strerror(e) strerror_s_((e))
 #endif
-
 #ifdef MSDOS  /* Watt-32 */
-  #define HAVE_CLOSE_S    1
+#define HAVE_CLOSE_S    1
 #endif
-
 #undef word
 #undef byte
-
 #endif /* HEADER_CURL_CONFIG_DOS_H */
 

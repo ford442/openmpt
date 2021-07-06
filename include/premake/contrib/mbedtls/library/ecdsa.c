@@ -30,7 +30,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_ECDSA_C)
 
 #include "mbedtls/ecdsa.h"

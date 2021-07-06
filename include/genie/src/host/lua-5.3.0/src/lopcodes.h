@@ -6,10 +6,7 @@
 
 #ifndef lopcodes_h
 #define lopcodes_h
-
 #include "llimits.h"
-
-
 /*===========================================================================
   We assume that instructions are unsigned numbers.
   All instructions have an opcode in the first 6 bits.
@@ -29,26 +26,26 @@
 ===========================================================================*/
 
 
-enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
+enum OpMode {
+iABC, iABx, iAsBx, iAx
+};  /* basic instruction format */
 
 
 /*
 ** size and position of opcode arguments.
 */
-#define SIZE_C		9
-#define SIZE_B		9
-#define SIZE_Bx		(SIZE_C + SIZE_B)
-#define SIZE_A		8
-#define SIZE_Ax		(SIZE_C + SIZE_B + SIZE_A)
-
-#define SIZE_OP		6
-
-#define POS_OP		0
-#define POS_A		(POS_OP + SIZE_OP)
-#define POS_C		(POS_A + SIZE_A)
-#define POS_B		(POS_C + SIZE_C)
-#define POS_Bx		POS_C
-#define POS_Ax		POS_A
+#define SIZE_C        9
+#define SIZE_B        9
+#define SIZE_Bx        (SIZE_C + SIZE_B)
+#define SIZE_A        8
+#define SIZE_Ax        (SIZE_C + SIZE_B + SIZE_A)
+#define SIZE_OP        6
+#define POS_OP        0
+#define POS_A        (POS_OP + SIZE_OP)
+#define POS_C        (POS_A + SIZE_A)
+#define POS_B        (POS_C + SIZE_C)
+#define POS_Bx        POS_C
+#define POS_Ax        POS_A
 
 
 /*
@@ -56,74 +53,60 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 ** we use (signed) int to manipulate most arguments,
 ** so they must fit in LUAI_BITSINT-1 bits (-1 for sign)
 */
-#if SIZE_Bx < LUAI_BITSINT-1
+#if SIZE_Bx < LUAI_BITSINT - 1
 #define MAXARG_Bx        ((1<<SIZE_Bx)-1)
 #define MAXARG_sBx        (MAXARG_Bx>>1)         /* 'sBx' is signed */
 #else
 #define MAXARG_Bx        MAX_INT
 #define MAXARG_sBx        MAX_INT
 #endif
-
-#if SIZE_Ax < LUAI_BITSINT-1
+#if SIZE_Ax < LUAI_BITSINT - 1
 #define MAXARG_Ax	((1<<SIZE_Ax)-1)
 #else
-#define MAXARG_Ax	MAX_INT
+#define MAXARG_Ax    MAX_INT
 #endif
-
-
 #define MAXARG_A        ((1<<SIZE_A)-1)
 #define MAXARG_B        ((1<<SIZE_B)-1)
 #define MAXARG_C        ((1<<SIZE_C)-1)
 
 
 /* creates a mask with 'n' 1 bits at position 'p' */
-#define MASK1(n,p)	((~((~(Instruction)0)<<(n)))<<(p))
+#define MASK1(n, p)    ((~((~(Instruction)0)<<(n)))<<(p))
 
 /* creates a mask with 'n' 0 bits at position 'p' */
-#define MASK0(n,p)	(~MASK1(n,p))
+#define MASK0(n, p)    (~MASK1(n,p))
 
 /*
 ** the following macros help to manipulate instructions
 */
 
-#define GET_OPCODE(i)	(cast(OpCode, ((i)>>POS_OP) & MASK1(SIZE_OP,0)))
-#define SET_OPCODE(i,o)	((i) = (((i)&MASK0(SIZE_OP,POS_OP)) | \
-		((cast(Instruction, o)<<POS_OP)&MASK1(SIZE_OP,POS_OP))))
-
-#define getarg(i,pos,size)	(cast(int, ((i)>>pos) & MASK1(size,0)))
-#define setarg(i,v,pos,size)	((i) = (((i)&MASK0(size,pos)) | \
+#define GET_OPCODE(i)    (cast(OpCode, ((i)>>POS_OP) & MASK1(SIZE_OP,0)))
+#define SET_OPCODE(i, o)    ((i) = (((i)&MASK0(SIZE_OP,POS_OP)) | \
+        ((cast(Instruction, o)<<POS_OP)&MASK1(SIZE_OP,POS_OP))))
+#define getarg(i, pos, size)    (cast(int, ((i)>>pos) & MASK1(size,0)))
+#define setarg(i, v, pos, size)    ((i) = (((i)&MASK0(size,pos)) | \
                 ((cast(Instruction, v)<<pos)&MASK1(size,pos))))
-
-#define GETARG_A(i)	getarg(i, POS_A, SIZE_A)
-#define SETARG_A(i,v)	setarg(i, v, POS_A, SIZE_A)
-
-#define GETARG_B(i)	getarg(i, POS_B, SIZE_B)
-#define SETARG_B(i,v)	setarg(i, v, POS_B, SIZE_B)
-
-#define GETARG_C(i)	getarg(i, POS_C, SIZE_C)
-#define SETARG_C(i,v)	setarg(i, v, POS_C, SIZE_C)
-
-#define GETARG_Bx(i)	getarg(i, POS_Bx, SIZE_Bx)
-#define SETARG_Bx(i,v)	setarg(i, v, POS_Bx, SIZE_Bx)
-
-#define GETARG_Ax(i)	getarg(i, POS_Ax, SIZE_Ax)
-#define SETARG_Ax(i,v)	setarg(i, v, POS_Ax, SIZE_Ax)
-
-#define GETARG_sBx(i)	(GETARG_Bx(i)-MAXARG_sBx)
-#define SETARG_sBx(i,b)	SETARG_Bx((i),cast(unsigned int, (b)+MAXARG_sBx))
-
-
-#define CREATE_ABC(o,a,b,c)	((cast(Instruction, o)<<POS_OP) \
-			| (cast(Instruction, a)<<POS_A) \
-			| (cast(Instruction, b)<<POS_B) \
-			| (cast(Instruction, c)<<POS_C))
-
-#define CREATE_ABx(o,a,bc)	((cast(Instruction, o)<<POS_OP) \
-			| (cast(Instruction, a)<<POS_A) \
-			| (cast(Instruction, bc)<<POS_Bx))
-
-#define CREATE_Ax(o,a)		((cast(Instruction, o)<<POS_OP) \
-			| (cast(Instruction, a)<<POS_Ax))
+#define GETARG_A(i)    getarg(i, POS_A, SIZE_A)
+#define SETARG_A(i, v)    setarg(i, v, POS_A, SIZE_A)
+#define GETARG_B(i)    getarg(i, POS_B, SIZE_B)
+#define SETARG_B(i, v)    setarg(i, v, POS_B, SIZE_B)
+#define GETARG_C(i)    getarg(i, POS_C, SIZE_C)
+#define SETARG_C(i, v)    setarg(i, v, POS_C, SIZE_C)
+#define GETARG_Bx(i)    getarg(i, POS_Bx, SIZE_Bx)
+#define SETARG_Bx(i, v)    setarg(i, v, POS_Bx, SIZE_Bx)
+#define GETARG_Ax(i)    getarg(i, POS_Ax, SIZE_Ax)
+#define SETARG_Ax(i, v)    setarg(i, v, POS_Ax, SIZE_Ax)
+#define GETARG_sBx(i)    (GETARG_Bx(i)-MAXARG_sBx)
+#define SETARG_sBx(i, b)    SETARG_Bx((i),cast(unsigned int, (b)+MAXARG_sBx))
+#define CREATE_ABC(o, a, b, c)    ((cast(Instruction, o)<<POS_OP) \
+            | (cast(Instruction, a)<<POS_A) \
+            | (cast(Instruction, b)<<POS_B) \
+            | (cast(Instruction, c)<<POS_C))
+#define CREATE_ABx(o, a, bc)    ((cast(Instruction, o)<<POS_OP) \
+            | (cast(Instruction, a)<<POS_A) \
+            | (cast(Instruction, bc)<<POS_Bx))
+#define CREATE_Ax(o, a)        ((cast(Instruction, o)<<POS_OP) \
+            | (cast(Instruction, a)<<POS_Ax))
 
 
 /*
@@ -131,24 +114,23 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 */
 
 /* this bit 1 means constant (0 means register) */
-#define BITRK		(1 << (SIZE_B - 1))
+#define BITRK        (1 << (SIZE_B - 1))
 
 /* test whether value is a constant */
-#define ISK(x)		((x) & BITRK)
+#define ISK(x)        ((x) & BITRK)
 
 /* gets the index of the constant */
-#define INDEXK(r)	((int)(r) & ~BITRK)
-
-#define MAXINDEXRK	(BITRK - 1)
+#define INDEXK(r)    ((int)(r) & ~BITRK)
+#define MAXINDEXRK    (BITRK - 1)
 
 /* code a constant index as a RK value */
-#define RKASK(x)	((x) | BITRK)
+#define RKASK(x)    ((x) | BITRK)
 
 
 /*
 ** invalid register that fits in 8 bits
 */
-#define NO_REG		MAXARG_A
+#define NO_REG        MAXARG_A
 
 
 /*
@@ -230,9 +212,7 @@ OP_VARARG,/*	A B	R(A), R(A+1), ..., R(A+B-2) = vararg		*/
 
 OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
 } OpCode;
-
-
-#define NUM_OPCODES	(cast(int, OP_EXTRAARG) + 1)
+#define NUM_OPCODES    (cast(int, OP_EXTRAARG) + 1)
 
 
 
@@ -270,26 +250,20 @@ OP_EXTRAARG/*	Ax	extra (larger) argument for previous opcode	*/
 */
 
 enum OpArgMask {
-  OpArgN,  /* argument is not used */
-  OpArgU,  /* argument is used */
-  OpArgR,  /* argument is a register or a jump offset */
-  OpArgK   /* argument is a constant or register/constant */
+OpArgN,  /* argument is not used */
+OpArgU,  /* argument is used */
+OpArgR,  /* argument is a register or a jump offset */
+OpArgK   /* argument is a constant or register/constant */
 };
-
 LUAI_DDEC const lu_byte luaP_opmodes[NUM_OPCODES];
-
-#define getOpMode(m)	(cast(enum OpMode, luaP_opmodes[m] & 3))
-#define getBMode(m)	(cast(enum OpArgMask, (luaP_opmodes[m] >> 4) & 3))
-#define getCMode(m)	(cast(enum OpArgMask, (luaP_opmodes[m] >> 2) & 3))
-#define testAMode(m)	(luaP_opmodes[m] & (1 << 6))
-#define testTMode(m)	(luaP_opmodes[m] & (1 << 7))
-
-
-LUAI_DDEC const char *const luaP_opnames[NUM_OPCODES+1];  /* opcode names */
+#define getOpMode(m)    (cast(enum OpMode, luaP_opmodes[m] & 3))
+#define getBMode(m)    (cast(enum OpArgMask, (luaP_opmodes[m] >> 4) & 3))
+#define getCMode(m)    (cast(enum OpArgMask, (luaP_opmodes[m] >> 2) & 3))
+#define testAMode(m)    (luaP_opmodes[m] & (1 << 6))
+#define testTMode(m)    (luaP_opmodes[m] & (1 << 7))
+LUAI_DDEC const char *const luaP_opnames[NUM_OPCODES + 1];  /* opcode names */
 
 
 /* number of list items to accumulate before a SETLIST instruction */
-#define LFIELDS_PER_FLUSH	50
-
-
+#define LFIELDS_PER_FLUSH    50
 #endif

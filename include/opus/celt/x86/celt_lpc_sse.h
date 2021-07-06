@@ -27,11 +27,9 @@
 
 #ifndef CELT_LPC_SSE_H
 #define CELT_LPC_SSE_H
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
 #if defined(OPUS_X86_MAY_HAVE_SSE4_1) && defined(FIXED_POINT)
 #define OVERRIDE_CELT_FIR
 
@@ -62,5 +60,4 @@ extern void (*const CELT_FIR_IMPL[OPUS_ARCHMASK + 1])(
 
 #endif
 #endif
-
 #endif

@@ -23,10 +23,8 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #include <curl/curl.h>
 #include "urldata.h"
-
 #include "vauth/vauth.h"
 #include "curl_base64.h"
 #include "warnless.h"
@@ -35,7 +33,6 @@
 /* The last #include files should be: */
 #include "curl_memory.h"
 #include "memdebug.h"
-
 /*
  * Curl_auth_create_oauth_bearer_message()
  *
@@ -60,27 +57,24 @@ CURLcode Curl_auth_create_oauth_bearer_message(struct Curl_easy *data,
                                                const char *host,
                                                const long port,
                                                const char *bearer,
-                                               char **outptr, size_t *outlen)
-{
-  CURLcode result = CURLE_OK;
-  char *oauth = NULL;
+                                               char **outptr, size_t *outlen) {
+CURLcode result = CURLE_OK;
+char *oauth = NULL;
 
-  /* Generate the message */
-  if(host == NULL && (port == 0 || port == 80))
-    oauth = aprintf("user=%s\1auth=Bearer %s\1\1", user, bearer);
-  else if(port == 0 || port == 80)
-    oauth = aprintf("user=%s\1host=%s\1auth=Bearer %s\1\1", user, host,
-                    bearer);
-  else
-    oauth = aprintf("user=%s\1host=%s\1port=%ld\1auth=Bearer %s\1\1", user,
-                    host, port, bearer);
-  if(!oauth)
-    return CURLE_OUT_OF_MEMORY;
+/* Generate the message */
+if(host == NULL && (port == 0 || port == 80))
+oauth = aprintf("user=%s\1auth=Bearer %s\1\1", user, bearer);
+else if(port == 0 || port == 80)
+oauth = aprintf("user=%s\1host=%s\1auth=Bearer %s\1\1", user, host,
+                bearer);
+else
+oauth = aprintf("user=%s\1host=%s\1port=%ld\1auth=Bearer %s\1\1", user,
+                host, port, bearer);
+if(!oauth)
+return CURLE_OUT_OF_MEMORY;
 
-  /* Base64 encode the reply */
-  result = Curl_base64_encode(data, oauth, strlen(oauth), outptr, outlen);
-
-  free(oauth);
-
-  return result;
+/* Base64 encode the reply */
+result = Curl_base64_encode(data, oauth, strlen(oauth), outptr, outlen);
+free(oauth);
+return result;
 }

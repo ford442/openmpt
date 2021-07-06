@@ -24,44 +24,39 @@
 #include "scales.h"
 #include "os.h"
 #include "misc.h"
-
 /* decides between modes, dispatches to the appropriate mapping. */
-int vorbis_analysis(vorbis_block *vb, ogg_packet *op){
-  int ret,i;
-  vorbis_block_internal *vbi=vb->internal;
+int vorbis_analysis(vorbis_block *vb, ogg_packet *op) {
+int ret, i;
+vorbis_block_internal *vbi = vb->internal;
+vb->glue_bits = 0;
+vb->time_bits = 0;
+vb->floor_bits = 0;
+vb->res_bits = 0;
 
-  vb->glue_bits=0;
-  vb->time_bits=0;
-  vb->floor_bits=0;
-  vb->res_bits=0;
+/* first things first.  Make sure encode is ready */
+for(i = 0; i < PACKETBLOBS; i++)
+oggpack_reset(vbi->packetblob[i]);
 
-  /* first things first.  Make sure encode is ready */
-  for(i=0;i<PACKETBLOBS;i++)
-    oggpack_reset(vbi->packetblob[i]);
+/* we only have one mapping type (0), and we let the mapping code
+   itself figure out what soft mode to use.  This allows easier
+   bitrate management */
 
-  /* we only have one mapping type (0), and we let the mapping code
-     itself figure out what soft mode to use.  This allows easier
-     bitrate management */
-
-  if((ret=_mapping_P[0]->forward(vb)))
-    return(ret);
-
-  if(op){
-    if(vorbis_bitrate_managed(vb))
-      /* The app is using a bitmanaged mode... but not using the
-         bitrate management interface. */
-      return(OV_EINVAL);
-
-    op->packet=oggpack_get_buffer(&vb->opb);
-    op->bytes=oggpack_bytes(&vb->opb);
-    op->b_o_s=0;
-    op->e_o_s=vb->eofflag;
-    op->granulepos=vb->granulepos;
-    op->packetno=vb->sequence; /* for sake of completeness */
-  }
-  return(0);
+if((ret = _mapping_P[0]->forward(vb)))
+return (ret);
+if(op) {
+if(vorbis_bitrate_managed(vb))
+/* The app is using a bitmanaged mode... but not using the
+   bitrate management interface. */
+return (OV_EINVAL);
+op->packet = oggpack_get_buffer(&vb->opb);
+op->bytes = oggpack_bytes(&vb->opb);
+op->b_o_s = 0;
+op->e_o_s = vb->eofflag;
+op->granulepos = vb->granulepos;
+op->packetno = vb->sequence; /* for sake of completeness */
 }
-
+return (0);
+}
 #ifdef ANALYSIS
 int analysis_noisy=1;
 

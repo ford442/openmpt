@@ -26,7 +26,6 @@
 
 #ifndef VQ_SSE_H
 #define VQ_SSE_H
-
 #if defined(OPUS_X86_MAY_HAVE_SSE2) && !defined(FIXED_POINT)
 #define OVERRIDE_OP_PVQ_SEARCH
 
@@ -46,5 +45,4 @@ extern opus_val16 (*const OP_PVQ_SEARCH_IMPL[OPUS_ARCHMASK + 1])(
 
 #endif
 #endif
-
 #endif

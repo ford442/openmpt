@@ -27,10 +27,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef SILK_DEFINE_H
 #define SILK_DEFINE_H
-
 #include "errors.h"
 #include "typedef.h"
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -40,7 +38,6 @@ extern "C"
 #define ENCODER_NUM_CHANNELS                    2
 /* Number of decoder channels (1/2) */
 #define DECODER_NUM_CHANNELS                    2
-
 #define MAX_FRAMES_PER_PACKET                   3
 
 /* Limits on bitrate */
@@ -131,14 +128,12 @@ extern "C"
 #define OFFSET_VH_Q10                           100
 #define OFFSET_UVL_Q10                          100
 #define OFFSET_UVH_Q10                          240
-
 #define QUANT_LEVEL_ADJUST_Q10                  80
 
 /* Maximum numbers of iterations used to stabilize an LPC vector */
 #define MAX_LPC_STABILIZE_ITERATIONS            16
 #define MAX_PREDICTION_POWER_GAIN               1e4f
 #define MAX_PREDICTION_POWER_GAIN_AFTER_RESET   1e2f
-
 #define MAX_LPC_ORDER                           16
 #define MIN_LPC_ORDER                           10
 
@@ -153,15 +148,12 @@ extern "C"
 
 /* Max LPC order of noise shaping filters */
 #define MAX_SHAPE_LPC_ORDER                     24
-
 #define HARM_SHAPE_FIR_TAPS                     3
 
 /* Maximum number of delayed decision states */
 #define MAX_DEL_DEC_STATES                      4
-
 #define LTP_BUF_LENGTH                          512
 #define LTP_MASK                                ( LTP_BUF_LENGTH - 1 )
-
 #define DECISION_DELAY                          40
 
 /* Number of subframes for excitation entropy coding */
@@ -174,19 +166,15 @@ extern "C"
 
 /* Maximum sum of pulses per shell coding frame */
 #define SILK_MAX_PULSES                         16
-
 #define MAX_MATRIX_SIZE                         MAX_LPC_ORDER /* Max of LPC Order and LTP order */
-
 # define NSQ_LPC_BUF_LENGTH                     MAX_LPC_ORDER
 
 /***************************/
 /* Voice activity detector */
 /***************************/
 #define VAD_N_BANDS                             4
-
 #define VAD_INTERNAL_SUBFRAMES_LOG2             2
 #define VAD_INTERNAL_SUBFRAMES                  ( 1 << VAD_INTERNAL_SUBFRAMES_LOG2 )
-
 #define VAD_NOISE_LEVEL_SMOOTH_COEF_Q16         1024    /* Must be <  4096 */
 #define VAD_NOISE_LEVELS_BIAS                   50
 
@@ -226,9 +214,7 @@ extern "C"
 #define CNG_BUF_MASK_MAX                        255     /* 2^floor(log2(MAX_FRAME_LENGTH))-1    */
 #define CNG_GAIN_SMTH_Q16                       4634    /* 0.25^(1/4)                           */
 #define CNG_NLSF_SMTH_Q16                       16348   /* 0.25                                 */
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif

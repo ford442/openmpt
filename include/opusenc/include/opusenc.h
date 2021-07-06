@@ -53,10 +53,8 @@
 # if defined(__cplusplus)
 extern "C" {
 # endif
-
 #include <stddef.h>
 #include <opus.h>
-
 #ifndef OPE_EXPORT
 # if defined(WIN32)
 #  if defined(OPE_BUILD) && defined(DLL_EXPORT)
@@ -85,7 +83,6 @@ extern "C" {
 /* Bump this when we change the API. */
 /** API version for this header. Can be used to check for features at compile time. */
 #define OPE_API_VERSION 0
-
 #define OPE_OK 0
 /* Based on the relevant libopus code minus 10. */
 #define OPE_BAD_ARG -11
@@ -138,7 +135,7 @@ extern "C" {
 #define OPE_SET_SERIALNO(x) OPE_SET_SERIALNO_REQUEST, __opus_check_int(x)
 #define OPE_GET_SERIALNO(x) OPE_GET_SERIALNO_REQUEST, __opus_check_int_ptr(x)
 /* FIXME: Add type-checking macros to these. */
-#define OPE_SET_PACKET_CALLBACK(x,u) OPE_SET_PACKET_CALLBACK_REQUEST, (x), (u)
+#define OPE_SET_PACKET_CALLBACK(x, u) OPE_SET_PACKET_CALLBACK_REQUEST, (x), (u)
 /*#define OPE_GET_PACKET_CALLBACK(x,u) OPE_GET_PACKET_CALLBACK_REQUEST, (x), (u)*/
 #define OPE_SET_HEADER_GAIN(x) OPE_SET_HEADER_GAIN_REQUEST, __opus_check_int(x)
 #define OPE_GET_HEADER_GAIN(x) OPE_GET_HEADER_GAIN_REQUEST, __opus_check_int_ptr(x)
@@ -164,7 +161,6 @@ extern "C" {
  \retval 1        failure
  */
 typedef int (*ope_write_func)(void *user_data, const unsigned char *ptr, opus_int32 len);
-
 /** Called for closing a stream.
  \param user_data user-defined data passed to the callback
  \return          error code
@@ -172,28 +168,26 @@ typedef int (*ope_write_func)(void *user_data, const unsigned char *ptr, opus_in
  \retval 1        failure
  */
 typedef int (*ope_close_func)(void *user_data);
-
 /** Called on every packet encoded (including header).
  \param user_data   user-defined data passed to the callback
  \param packet_ptr  packet data
  \param packet_len  number of bytes in the packet
  \param flags       optional flags (none defined for now so zero)
  */
-typedef void (*ope_packet_func)(void *user_data, const unsigned char *packet_ptr, opus_int32 packet_len, opus_uint32 flags);
-
+typedef void (*ope_packet_func)(void *user_data, const unsigned char *packet_ptr, opus_int32 packet_len,
+                                opus_uint32 flags);
 /** Callback functions for accessing the stream. */
 typedef struct {
-  /** Callback for writing to the stream. */
-  ope_write_func write;
-  /** Callback for closing the stream. */
-  ope_close_func close;
+/** Callback for writing to the stream. */
+ope_write_func write;
+/** Callback for closing the stream. */
+ope_close_func close;
 } OpusEncCallbacks;
 /*@}*/
 /*@}*/
 
 /** Opaque comments struct. */
 typedef struct OggOpusComments OggOpusComments;
-
 /** Opaque encoder struct. */
 typedef struct OggOpusEnc OggOpusEnc;
 
@@ -240,7 +234,8 @@ OPE_EXPORT int ope_comments_add_string(OggOpusComments *comments, const char *ta
     \param         description  Description (NULL means no comment)
     \return Error code
  */
-OPE_EXPORT int ope_comments_add_picture(OggOpusComments *comments, const char *filename, int picture_type, const char *description);
+OPE_EXPORT int
+ope_comments_add_picture(OggOpusComments *comments, const char *filename, int picture_type, const char *description);
 
 /** Add a picture already in memory.
     \param[in,out] comments     Where to add the comments
@@ -250,7 +245,9 @@ OPE_EXPORT int ope_comments_add_picture(OggOpusComments *comments, const char *f
     \param         description  Description (NULL means no comment)
     \return Error code
  */
-OPE_EXPORT int ope_comments_add_picture_from_memory(OggOpusComments *comments, const char *ptr, size_t size, int picture_type, const char *description);
+OPE_EXPORT int
+ope_comments_add_picture_from_memory(OggOpusComments *comments, const char *ptr, size_t size, int picture_type,
+                                     const char *description);
 
 /*@}*/
 /*@}*/
@@ -272,7 +269,9 @@ OPE_EXPORT int ope_comments_add_picture_from_memory(OggOpusComments *comments, c
     \param[out] error Error code (NULL if no error is to be returned)
     \return Newly-created encoder.
     */
-OPE_EXPORT OggOpusEnc *ope_encoder_create_file(const char *path, OggOpusComments *comments, opus_int32 rate, int channels, int family, int *error);
+OPE_EXPORT OggOpusEnc *
+ope_encoder_create_file(const char *path, OggOpusComments *comments, opus_int32 rate, int channels, int family,
+                        int *error);
 
 /** Create a new OggOpus stream to be handled using callbacks
     \param callbacks  Callback functions
@@ -285,7 +284,8 @@ OPE_EXPORT OggOpusEnc *ope_encoder_create_file(const char *path, OggOpusComments
     \return Newly-created encoder.
     */
 OPE_EXPORT OggOpusEnc *ope_encoder_create_callbacks(const OpusEncCallbacks *callbacks, void *user_data,
-    OggOpusComments *comments, opus_int32 rate, int channels, int family, int *error);
+                                                    OggOpusComments *comments, opus_int32 rate, int channels,
+                                                    int family, int *error);
 
 /** Create a new OggOpus stream to be used along with.ope_encoder_get_page().
   This is mostly useful for muxing with other streams.
@@ -296,7 +296,8 @@ OPE_EXPORT OggOpusEnc *ope_encoder_create_callbacks(const OpusEncCallbacks *call
     \param[out] error Error code (NULL if no error is to be returned)
     \return Newly-created encoder.
     */
-OPE_EXPORT OggOpusEnc *ope_encoder_create_pull(OggOpusComments *comments, opus_int32 rate, int channels, int family, int *error);
+OPE_EXPORT OggOpusEnc *
+ope_encoder_create_pull(OggOpusComments *comments, opus_int32 rate, int channels, int family, int *error);
 
 /** Deferred initialization of the encoder to force an explicit channel mapping. This can be used to override the default channel coupling,
     but using it for regular surround will almost certainly lead to worse quality.
@@ -308,7 +309,7 @@ OPE_EXPORT OggOpusEnc *ope_encoder_create_pull(OggOpusComments *comments, opus_i
     \return Error code
  */
 OPE_EXPORT int ope_encoder_deferred_init_with_mapping(OggOpusEnc *enc, int family, int streams,
-    int coupled_streams, const unsigned char *mapping);
+                                                      int coupled_streams, const unsigned char *mapping);
 
 /** Add/encode any number of float samples to the stream.
     \param[in,out] enc         Encoder
@@ -400,5 +401,4 @@ OPE_EXPORT int ope_get_abi_version(void);
 # if defined(__cplusplus)
 }
 # endif
-
 #endif

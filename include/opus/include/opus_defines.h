@@ -32,9 +32,7 @@
 
 #ifndef OPUS_DEFINES_H
 #define OPUS_DEFINES_H
-
 #include "opus_types.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -76,18 +74,16 @@ extern "C" {
 #  define OPUS_EXPORT
 # endif
 #endif
-
 # if !defined(OPUS_GNUC_PREREQ)
-#  if defined(__GNUC__)&&defined(__GNUC_MINOR__)
+#  if defined(__GNUC__) && defined(__GNUC_MINOR__)
 #   define OPUS_GNUC_PREREQ(_maj,_min) \
  ((__GNUC__<<16)+__GNUC_MINOR__>=((_maj)<<16)+(_min))
 #  else
-#   define OPUS_GNUC_PREREQ(_maj,_min) 0
+#   define OPUS_GNUC_PREREQ(_maj, _min) 0
 #  endif
 # endif
-
-#if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L) )
-# if OPUS_GNUC_PREREQ(3,0)
+#if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L))
+# if OPUS_GNUC_PREREQ(3, 0)
 #  define OPUS_RESTRICT __restrict__
 # elif (defined(_MSC_VER) && _MSC_VER >= 1400)
 #  define OPUS_RESTRICT __restrict
@@ -97,9 +93,8 @@ extern "C" {
 #else
 # define OPUS_RESTRICT restrict
 #endif
-
-#if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L) )
-# if OPUS_GNUC_PREREQ(2,7)
+#if (!defined(__STDC_VERSION__) || (__STDC_VERSION__ < 199901L))
+# if OPUS_GNUC_PREREQ(2, 7)
 #  define OPUS_INLINE __inline__
 # elif (defined(_MSC_VER))
 #  define OPUS_INLINE __inline
@@ -197,7 +192,6 @@ extern "C" {
 /** Only use when lowest-achievable latency is what matters most. Voice-optimized modes cannot be used.
  * @hideinitializer */
 #define OPUS_APPLICATION_RESTRICTED_LOWDELAY 2051
-
 #define OPUS_SIGNAL_VOICE                    3001 /**< Signal being encoded is voice */
 #define OPUS_SIGNAL_MUSIC                    3002 /**< Signal being encoded is music */
 #define OPUS_BANDWIDTH_NARROWBAND            1101 /**< 4 kHz bandpass @hideinitializer*/
@@ -205,7 +199,6 @@ extern "C" {
 #define OPUS_BANDWIDTH_WIDEBAND              1103 /**< 8 kHz bandpass @hideinitializer*/
 #define OPUS_BANDWIDTH_SUPERWIDEBAND         1104 /**<12 kHz bandpass @hideinitializer*/
 #define OPUS_BANDWIDTH_FULLBAND              1105 /**<20 kHz bandpass @hideinitializer*/
-
 #define OPUS_FRAMESIZE_ARG                   5000 /**< Select frame size from the argument (default) */
 #define OPUS_FRAMESIZE_2_5_MS                5001 /**< Use 2.5 ms frames */
 #define OPUS_FRAMESIZE_5_MS                  5002 /**< Use 5 ms frames */
@@ -795,5 +788,4 @@ OPUS_EXPORT const char *opus_get_version_string(void);
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* OPUS_DEFINES_H */

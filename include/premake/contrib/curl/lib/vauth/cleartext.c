@@ -24,10 +24,8 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #include <curl/curl.h>
 #include "urldata.h"
-
 #include "vauth/vauth.h"
 #include "curl_base64.h"
 #include "curl_md5.h"
@@ -39,7 +37,6 @@
 /* The last #include files should be: */
 #include "curl_memory.h"
 #include "memdebug.h"
-
 /*
  * Curl_auth_create_plain_message()
  *
@@ -60,48 +57,43 @@
 CURLcode Curl_auth_create_plain_message(struct Curl_easy *data,
                                         const char *userp,
                                         const char *passwdp,
-                                        char **outptr, size_t *outlen)
-{
-  CURLcode result;
-  char *plainauth;
-  size_t ulen;
-  size_t plen;
-  size_t plainlen;
+                                        char **outptr, size_t *outlen) {
+CURLcode result;
+char *plainauth;
+size_t ulen;
+size_t plen;
+size_t plainlen;
+*outlen = 0;
+*outptr = NULL;
+ulen = strlen(userp);
+plen = strlen(passwdp);
 
-  *outlen = 0;
-  *outptr = NULL;
-  ulen = strlen(userp);
-  plen = strlen(passwdp);
+/* Compute binary message length, checking for overflows. */
+plainlen = 2 * ulen;
+if(plainlen < ulen)
+return CURLE_OUT_OF_MEMORY;
+plainlen += plen;
+if(plainlen < plen)
+return CURLE_OUT_OF_MEMORY;
+plainlen += 2;
+if(plainlen < 2)
+return CURLE_OUT_OF_MEMORY;
+plainauth = malloc(plainlen);
+if(!plainauth)
+return CURLE_OUT_OF_MEMORY;
 
-  /* Compute binary message length, checking for overflows. */
-  plainlen = 2 * ulen;
-  if(plainlen < ulen)
-    return CURLE_OUT_OF_MEMORY;
-  plainlen += plen;
-  if(plainlen < plen)
-    return CURLE_OUT_OF_MEMORY;
-  plainlen += 2;
-  if(plainlen < 2)
-    return CURLE_OUT_OF_MEMORY;
+/* Calculate the reply */
+memcpy(plainauth, userp, ulen);
+plainauth[ulen] = '\0';
+memcpy(plainauth + ulen + 1, userp, ulen);
+plainauth[2 * ulen + 1] = '\0';
+memcpy(plainauth + 2 * ulen + 2, passwdp, plen);
 
-  plainauth = malloc(plainlen);
-  if(!plainauth)
-    return CURLE_OUT_OF_MEMORY;
-
-  /* Calculate the reply */
-  memcpy(plainauth, userp, ulen);
-  plainauth[ulen] = '\0';
-  memcpy(plainauth + ulen + 1, userp, ulen);
-  plainauth[2 * ulen + 1] = '\0';
-  memcpy(plainauth + 2 * ulen + 2, passwdp, plen);
-
-  /* Base64 encode the reply */
-  result = Curl_base64_encode(data, plainauth, plainlen, outptr, outlen);
-  free(plainauth);
-
-  return result;
+/* Base64 encode the reply */
+result = Curl_base64_encode(data, plainauth, plainlen, outptr, outlen);
+free(plainauth);
+return result;
 }
-
 /*
  * Curl_auth_create_login_message()
  *
@@ -120,26 +112,22 @@ CURLcode Curl_auth_create_plain_message(struct Curl_easy *data,
  */
 CURLcode Curl_auth_create_login_message(struct Curl_easy *data,
                                         const char *valuep, char **outptr,
-                                        size_t *outlen)
-{
-  size_t vlen = strlen(valuep);
-
-  if(!vlen) {
-    /* Calculate an empty reply */
-    *outptr = strdup("=");
-    if(*outptr) {
-      *outlen = (size_t) 1;
-      return CURLE_OK;
-    }
-
-    *outlen = 0;
-    return CURLE_OUT_OF_MEMORY;
-  }
-
-  /* Base64 encode the value */
-  return Curl_base64_encode(data, valuep, vlen, outptr, outlen);
+                                        size_t *outlen) {
+size_t vlen = strlen(valuep);
+if(!vlen) {
+/* Calculate an empty reply */
+*outptr = strdup("=");
+if(*outptr) {
+*outlen = (size_t) 1;
+return CURLE_OK;
+}
+*outlen = 0;
+return CURLE_OUT_OF_MEMORY;
 }
 
+/* Base64 encode the value */
+return Curl_base64_encode(data, valuep, vlen, outptr, outlen);
+}
 /*
  * Curl_auth_create_external_message()
  *
@@ -158,8 +146,7 @@ CURLcode Curl_auth_create_login_message(struct Curl_easy *data,
  */
 CURLcode Curl_auth_create_external_message(struct Curl_easy *data,
                                            const char *user, char **outptr,
-                                           size_t *outlen)
-{
-  /* This is the same formatting as the login message */
-  return Curl_auth_create_login_message(data, user, outptr, outlen);
+                                           size_t *outlen) {
+/* This is the same formatting as the login message */
+return Curl_auth_create_login_message(data, user, outptr, outlen);
 }

@@ -3,17 +3,12 @@
 
 
 #pragma once
-
 #include "openmpt/all/BuildSettings.hpp"
-
 #include "mpt/base/bit.hpp"
 #include "mpt/base/memory.hpp"
 #include "mpt/endian/floatingpoint.hpp"
 #include "mpt/endian/integer.hpp"
 #include "openmpt/base/Types.hpp"
-
-
-
 OPENMPT_NAMESPACE_BEGIN
 
 
@@ -58,14 +53,8 @@ using float32le_fast = mpt::IEEE754binary32LE;
 using float32be_fast = mpt::IEEE754binary32BE;
 using float64le_fast = mpt::IEEE754binary64LE;
 using float64be_fast = mpt::IEEE754binary64BE;
-
-
-
 #define MPT_BINARY_STRUCT(type, size) \
-	constexpr bool declare_binary_safe(const type &) { return true; } \
-	static_assert(mpt::check_binary_size<type>(size)); \
-	/**/
-
-
-
+    constexpr bool declare_binary_safe(const type &) { return true; } \
+    static_assert(mpt::check_binary_size<type>(size)); \
+    /**/
 OPENMPT_NAMESPACE_END

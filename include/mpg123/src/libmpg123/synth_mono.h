@@ -18,47 +18,38 @@
 */
 
 /* Mono synth, wrapping over SYNTH_NAME */
-int MONO_NAME(real *bandPtr, mpg123_handle *fr)
-{
-	SAMPLE_T samples_tmp[BLOCK];
-	SAMPLE_T *tmp1 = samples_tmp;
-	int i,ret;
+int MONO_NAME(real *bandPtr, mpg123_handle *fr) {
+SAMPLE_T samples_tmp[BLOCK];
+SAMPLE_T *tmp1 = samples_tmp;
+int i, ret;
 
-	/* save buffer stuff, trick samples_tmp into there, decode, restore */
-	unsigned char *samples = fr->buffer.data;
-	int pnt = fr->buffer.fill;
-	fr->buffer.data = (unsigned char*) samples_tmp;
-	fr->buffer.fill = 0;
-	ret = SYNTH_NAME(bandPtr, 0, fr, 0); /* decode into samples_tmp */
-	fr->buffer.data = samples; /* restore original value */
+/* save buffer stuff, trick samples_tmp into there, decode, restore */
+unsigned char *samples = fr->buffer.data;
+int pnt = fr->buffer.fill;
+fr->buffer.data = (unsigned char *) samples_tmp;
+fr->buffer.fill = 0;
+ret = SYNTH_NAME(bandPtr, 0, fr, 0); /* decode into samples_tmp */
+fr->buffer.data = samples; /* restore original value */
 
-	/* now append samples from samples_tmp */
-	samples += pnt; /* just the next mem in frame buffer */
-	for(i=0;i<(BLOCK/2);i++)
-	{
-		*( (SAMPLE_T *)samples) = *tmp1;
-		samples += sizeof(SAMPLE_T);
-		tmp1 += 2;
-	}
-	fr->buffer.fill = pnt + (BLOCK/2)*sizeof(SAMPLE_T);
-
-	return ret;
+/* now append samples from samples_tmp */
+samples += pnt; /* just the next mem in frame buffer */
+for(i = 0; i < (BLOCK / 2); i++) {
+*((SAMPLE_T *) samples) = *tmp1;
+samples += sizeof(SAMPLE_T);
+tmp1 += 2;
 }
-
+fr->buffer.fill = pnt + (BLOCK / 2) * sizeof(SAMPLE_T);
+return ret;
+}
 /* Mono to stereo synth, wrapping over SYNTH_NAME */
-int MONO2STEREO_NAME(real *bandPtr, mpg123_handle *fr)
-{
-	int i,ret;
-	unsigned char *samples = fr->buffer.data;
-
-	ret = SYNTH_NAME(bandPtr,0,fr,1);
-	samples += fr->buffer.fill - BLOCK*sizeof(SAMPLE_T);
-
-	for(i=0;i<(BLOCK/2);i++)
-	{
-		((SAMPLE_T *)samples)[1] = ((SAMPLE_T *)samples)[0];
-		samples+=2*sizeof(SAMPLE_T);
-	}
-
-	return ret;
+int MONO2STEREO_NAME(real *bandPtr, mpg123_handle *fr) {
+int i, ret;
+unsigned char *samples = fr->buffer.data;
+ret = SYNTH_NAME(bandPtr, 0, fr, 1);
+samples += fr->buffer.fill - BLOCK * sizeof(SAMPLE_T);
+for(i = 0; i < (BLOCK / 2); i++) {
+((SAMPLE_T *) samples)[1] = ((SAMPLE_T *) samples)[0];
+samples += 2 * sizeof(SAMPLE_T);
+}
+return ret;
 }

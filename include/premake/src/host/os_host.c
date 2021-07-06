@@ -5,9 +5,7 @@
  */
 
 #include "premake.h"
-
-int os_host(lua_State* L)
-{
-	lua_pushstring(L, PLATFORM_STRING);
-	return 1;
+int os_host(lua_State *L) {
+lua_pushstring(L, PLATFORM_STRING);
+return 1;
 }

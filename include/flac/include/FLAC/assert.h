@@ -42,5 +42,4 @@
 #define FLAC__ASSERT(x)
 #define FLAC__ASSERT_DECLARATION(x)
 #endif
-
 #endif

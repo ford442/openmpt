@@ -19,7 +19,6 @@
 #include "lookup_data.h"
 #include "os.h"
 #include "misc.h"
-
 #ifdef FLOAT_LOOKUP
 
 /* interpolated lookup based cos function, domain 0 to PI only */
@@ -52,7 +51,6 @@ float vorbis_fromdBlook(float a){
 }
 
 #endif
-
 #ifdef INT_LOOKUP
 /* interpolated 1./sqrt(p) where .5 <= a < 1. (.100000... to .111111...) in
    16.16 format

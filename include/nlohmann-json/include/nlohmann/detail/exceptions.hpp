@@ -1,16 +1,11 @@
 #pragma once
-
 #include <exception> // exception
 #include <stdexcept> // runtime_error
 #include <string> // to_string
-
 #include <nlohmann/detail/input/position_t.hpp>
 #include <nlohmann/detail/macro_scope.hpp>
-
-namespace nlohmann
-{
-namespace detail
-{
+namespace nlohmann {
+namespace detail {
 ////////////////
 // exceptions //
 ////////////////
@@ -43,33 +38,27 @@ caught.,exception}
 
 @since version 3.0.0
 */
-class exception : public std::exception
-{
-  public:
-    /// returns the explanatory string
-    JSON_HEDLEY_RETURNS_NON_NULL
-    const char* what() const noexcept override
-    {
-        return m.what();
-    }
-
-    /// the id of the exception
-    const int id;
-
-  protected:
-    JSON_HEDLEY_NON_NULL(3)
-    exception(int id_, const char* what_arg) : id(id_), m(what_arg) {}
-
-    static std::string name(const std::string& ename, int id_)
-    {
-        return "[json.exception." + ename + "." + std::to_string(id_) + "] ";
-    }
-
-  private:
-    /// an exception object as storage for error messages
-    std::runtime_error m;
+class exception : public std::exception {
+public:
+/// returns the explanatory string
+JSON_HEDLEY_RETURNS_NON_NULL
+const char *what() const
+noexcept override
+        {
+                return m.what();
+        }
+/// the id of the exception
+const int id;
+protected:
+JSON_HEDLEY_NON_NULL(3)
+exception(int id_, const char *what_arg) : id(id_), m(what_arg) {}
+static std::string name(const std::string &ename, int id_) {
+return "[json.exception." + ename + "." + std::to_string(id_) + "] ";
+}
+private:
+/// an exception object as storage for error messages
+std::runtime_error m;
 };
-
 /*!
 @brief exception indicating a parse error
 
@@ -115,55 +104,46 @@ caught.,parse_error}
 
 @since version 3.0.0
 */
-class parse_error : public exception
-{
-  public:
-    /*!
-    @brief create a parse error exception
-    @param[in] id_       the id of the exception
-    @param[in] pos       the position where the error occurred (or with
-                         chars_read_total=0 if the position cannot be
-                         determined)
-    @param[in] what_arg  the explanatory string
-    @return parse_error object
-    */
-    static parse_error create(int id_, const position_t& pos, const std::string& what_arg)
-    {
-        std::string w = exception::name("parse_error", id_) + "parse error" +
-                        position_string(pos) + ": " + what_arg;
-        return parse_error(id_, pos.chars_read_total, w.c_str());
-    }
+class parse_error : public exception {
+public:
+/*!
+@brief create a parse error exception
+@param[in] id_       the id of the exception
+@param[in] pos       the position where the error occurred (or with
+                     chars_read_total=0 if the position cannot be
+                     determined)
+@param[in] what_arg  the explanatory string
+@return parse_error object
+*/
+static parse_error create(int id_, const position_t &pos, const std::string &what_arg) {
+std::string w = exception::name("parse_error", id_) + "parse error" +
+                position_string(pos) + ": " + what_arg;
+return parse_error(id_, pos.chars_read_total, w.c_str());
+}
+static parse_error create(int id_, std::size_t byte_, const std::string &what_arg) {
+std::string w = exception::name("parse_error", id_) + "parse error" +
+                (byte_ != 0 ? (" at byte " + std::to_string(byte_)) : "") +
+                ": " + what_arg;
+return parse_error(id_, byte_, w.c_str());
+}
+/*!
+@brief byte index of the parse error
 
-    static parse_error create(int id_, std::size_t byte_, const std::string& what_arg)
-    {
-        std::string w = exception::name("parse_error", id_) + "parse error" +
-                        (byte_ != 0 ? (" at byte " + std::to_string(byte_)) : "") +
-                        ": " + what_arg;
-        return parse_error(id_, byte_, w.c_str());
-    }
+The byte index of the last read character in the input file.
 
-    /*!
-    @brief byte index of the parse error
-
-    The byte index of the last read character in the input file.
-
-    @note For an input with n bytes, 1 is the index of the first character and
-          n+1 is the index of the terminating null byte or the end of file.
-          This also holds true when reading a byte vector (CBOR or MessagePack).
-    */
-    const std::size_t byte;
-
-  private:
-    parse_error(int id_, std::size_t byte_, const char* what_arg)
+@note For an input with n bytes, 1 is the index of the first character and
+      n+1 is the index of the terminating null byte or the end of file.
+      This also holds true when reading a byte vector (CBOR or MessagePack).
+*/
+const std::size_t byte;
+private:
+parse_error(int id_, std::size_t byte_, const char *what_arg)
         : exception(id_, what_arg), byte(byte_) {}
-
-    static std::string position_string(const position_t& pos)
-    {
-        return " at line " + std::to_string(pos.lines_read + 1) +
-               ", column " + std::to_string(pos.chars_read_current_line);
-    }
+static std::string position_string(const position_t &pos) {
+return " at line " + std::to_string(pos.lines_read + 1) +
+       ", column " + std::to_string(pos.chars_read_current_line);
+}
 };
-
 /*!
 @brief exception indicating errors with iterators
 
@@ -201,21 +181,17 @@ caught.,invalid_iterator}
 
 @since version 3.0.0
 */
-class invalid_iterator : public exception
-{
-  public:
-    static invalid_iterator create(int id_, const std::string& what_arg)
-    {
-        std::string w = exception::name("invalid_iterator", id_) + what_arg;
-        return invalid_iterator(id_, w.c_str());
-    }
-
-  private:
-    JSON_HEDLEY_NON_NULL(3)
-    invalid_iterator(int id_, const char* what_arg)
+class invalid_iterator : public exception {
+public:
+static invalid_iterator create(int id_, const std::string &what_arg) {
+std::string w = exception::name("invalid_iterator", id_) + what_arg;
+return invalid_iterator(id_, w.c_str());
+}
+private:
+JSON_HEDLEY_NON_NULL(3)
+invalid_iterator(int id_, const char *what_arg)
         : exception(id_, what_arg) {}
 };
-
 /*!
 @brief exception indicating executing a member function with a wrong type
 
@@ -255,20 +231,16 @@ caught.,type_error}
 
 @since version 3.0.0
 */
-class type_error : public exception
-{
-  public:
-    static type_error create(int id_, const std::string& what_arg)
-    {
-        std::string w = exception::name("type_error", id_) + what_arg;
-        return type_error(id_, w.c_str());
-    }
-
-  private:
-    JSON_HEDLEY_NON_NULL(3)
-    type_error(int id_, const char* what_arg) : exception(id_, what_arg) {}
+class type_error : public exception {
+public:
+static type_error create(int id_, const std::string &what_arg) {
+std::string w = exception::name("type_error", id_) + what_arg;
+return type_error(id_, w.c_str());
+}
+private:
+JSON_HEDLEY_NON_NULL(3)
+type_error(int id_, const char *what_arg) : exception(id_, what_arg) {}
 };
-
 /*!
 @brief exception indicating access out of the defined range
 
@@ -302,20 +274,16 @@ caught.,out_of_range}
 
 @since version 3.0.0
 */
-class out_of_range : public exception
-{
-  public:
-    static out_of_range create(int id_, const std::string& what_arg)
-    {
-        std::string w = exception::name("out_of_range", id_) + what_arg;
-        return out_of_range(id_, w.c_str());
-    }
-
-  private:
-    JSON_HEDLEY_NON_NULL(3)
-    out_of_range(int id_, const char* what_arg) : exception(id_, what_arg) {}
+class out_of_range : public exception {
+public:
+static out_of_range create(int id_, const std::string &what_arg) {
+std::string w = exception::name("out_of_range", id_) + what_arg;
+return out_of_range(id_, w.c_str());
+}
+private:
+JSON_HEDLEY_NON_NULL(3)
+out_of_range(int id_, const char *what_arg) : exception(id_, what_arg) {}
 };
-
 /*!
 @brief exception indicating other library errors
 
@@ -340,18 +308,15 @@ caught.,other_error}
 
 @since version 3.0.0
 */
-class other_error : public exception
-{
-  public:
-    static other_error create(int id_, const std::string& what_arg)
-    {
-        std::string w = exception::name("other_error", id_) + what_arg;
-        return other_error(id_, w.c_str());
-    }
-
-  private:
-    JSON_HEDLEY_NON_NULL(3)
-    other_error(int id_, const char* what_arg) : exception(id_, what_arg) {}
+class other_error : public exception {
+public:
+static other_error create(int id_, const std::string &what_arg) {
+std::string w = exception::name("other_error", id_) + what_arg;
+return other_error(id_, w.c_str());
+}
+private:
+JSON_HEDLEY_NON_NULL(3)
+other_error(int id_, const char *what_arg) : exception(id_, what_arg) {}
 };
 }  // namespace detail
 }  // namespace nlohmann

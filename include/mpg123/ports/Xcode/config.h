@@ -1,65 +1,64 @@
 #include "TargetConditionals.h"
-
 #if TARGET_IPHONE_SIMULATOR
-	#define DEFAULT_OUTPUT_MODULE "dummy"
-	/* #undef HAVE_AUDIOTOOLBOX_AUDIOTOOLBOX_H */
-	/* #undef HAVE_AUDIOUNIT_AUDIOUNIT_H */
-	/* #undef HAVE_CORESERVICES_CORESERVICES_H */
-	/* #undef HAVE_OPENAL_ALC_H */
-	/* #undef HAVE_OPENAL_AL_H */
-    #define ABI_ALIGN_FUN 1
-    #define HAVE_GAI_ADDRCONFIG 1
-	#define LFS_ALIAS_BITS 32
-	/* #undef HAVE_LIBMX */
-    #define HAVE_MMAP 1
-    #define IEEE_FLOAT 1
-	#define SIZEOF_INT32_T 4
-	#define SIZEOF_LONG 4
-	#define SIZEOF_OFF_T 8
-	#define SIZEOF_SIZE_T 4
-	#define SIZEOF_SSIZE_T 4
-    #define OPT_GENERIC
+#define DEFAULT_OUTPUT_MODULE "dummy"
+/* #undef HAVE_AUDIOTOOLBOX_AUDIOTOOLBOX_H */
+/* #undef HAVE_AUDIOUNIT_AUDIOUNIT_H */
+/* #undef HAVE_CORESERVICES_CORESERVICES_H */
+/* #undef HAVE_OPENAL_ALC_H */
+/* #undef HAVE_OPENAL_AL_H */
+#define ABI_ALIGN_FUN 1
+#define HAVE_GAI_ADDRCONFIG 1
+#define LFS_ALIAS_BITS 32
+/* #undef HAVE_LIBMX */
+#define HAVE_MMAP 1
+#define IEEE_FLOAT 1
+#define SIZEOF_INT32_T 4
+#define SIZEOF_LONG 4
+#define SIZEOF_OFF_T 8
+#define SIZEOF_SIZE_T 4
+#define SIZEOF_SSIZE_T 4
+#define OPT_GENERIC
 #elif TARGET_OS_IPHONE
-	#define DEFAULT_OUTPUT_MODULE "dummy"
-	/* #undef HAVE_AUDIOTOOLBOX_AUDIOTOOLBOX_H */
-	/* #undef HAVE_AUDIOUNIT_AUDIOUNIT_H */
-	/* #undef HAVE_CORESERVICES_CORESERVICES_H */
-	/* #undef HAVE_OPENAL_ALC_H */
-	/* #undef HAVE_OPENAL_AL_H */
-    /* #undef ABI_ALIGN_FUN */
-    /* #undef HAVE_GAI_ADDRCONFIG */
-	#define LFS_ALIAS_BITS 32
-	/* #undef HAVE_LIBMX */
-    /* #undef HAVE_MMAP */
-    /* #undef IEEE_FLOAT */
-	#define SIZEOF_INT32_T 4
-	#define SIZEOF_LONG 4
-	#define SIZEOF_OFF_T 8
-	#define SIZEOF_SIZE_T 4
-	#define SIZEOF_SSIZE_T 4
-    #define OPT_NEON
+#define DEFAULT_OUTPUT_MODULE "dummy"
+/* #undef HAVE_AUDIOTOOLBOX_AUDIOTOOLBOX_H */
+/* #undef HAVE_AUDIOUNIT_AUDIOUNIT_H */
+/* #undef HAVE_CORESERVICES_CORESERVICES_H */
+/* #undef HAVE_OPENAL_ALC_H */
+/* #undef HAVE_OPENAL_AL_H */
+/* #undef ABI_ALIGN_FUN */
+/* #undef HAVE_GAI_ADDRCONFIG */
+#define LFS_ALIAS_BITS 32
+/* #undef HAVE_LIBMX */
+/* #undef HAVE_MMAP */
+/* #undef IEEE_FLOAT */
+#define SIZEOF_INT32_T 4
+#define SIZEOF_LONG 4
+#define SIZEOF_OFF_T 8
+#define SIZEOF_SIZE_T 4
+#define SIZEOF_SSIZE_T 4
+#define OPT_NEON
 #elif TARGET_OS_MAC
-	#define DEFAULT_OUTPUT_MODULE "coreaudio"
-	#define HAVE_AUDIOTOOLBOX_AUDIOTOOLBOX_H 1
-	#define HAVE_AUDIOUNIT_AUDIOUNIT_H 1
-	#define HAVE_CORESERVICES_CORESERVICES_H 1
-	#define HAVE_OPENAL_ALC_H 1
-	#define HAVE_OPENAL_AL_H 1
-	/* #undef ABI_ALIGN_FUN */
-	#define HAVE_GAI_ADDRCONFIG 1
-	#define LFS_ALIAS_BITS 64
-	#define HAVE_LIBMX 1
-	#define HAVE_MMAP 1
-	#define IEEE_FLOAT 1
-	#define SIZEOF_INT32_T 4
-	#define SIZEOF_LONG 8
-	#define SIZEOF_OFF_T 8
-	#define SIZEOF_SIZE_T 8
-	#define SIZEOF_SIZE_T 8
-	#define SIZEOF_SSIZE_T 8
-    #define OPT_GENERIC
+#define DEFAULT_OUTPUT_MODULE "coreaudio"
+#define HAVE_AUDIOTOOLBOX_AUDIOTOOLBOX_H 1
+#define HAVE_AUDIOUNIT_AUDIOUNIT_H 1
+#define HAVE_CORESERVICES_CORESERVICES_H 1
+#define HAVE_OPENAL_ALC_H 1
+#define HAVE_OPENAL_AL_H 1
+/* #undef ABI_ALIGN_FUN */
+#define HAVE_GAI_ADDRCONFIG 1
+#define LFS_ALIAS_BITS 64
+#define HAVE_LIBMX 1
+#define HAVE_MMAP 1
+#define IEEE_FLOAT 1
+#define SIZEOF_INT32_T 4
+#define SIZEOF_LONG 8
+#define SIZEOF_OFF_T 8
+#define SIZEOF_SIZE_T 8
+#define SIZEOF_SIZE_T 8
+#define SIZEOF_SSIZE_T 8
+#define OPT_GENERIC
 #else
-    #error "Unknown target."
+#error "Unknown target."
 #endif
 
 /* #undef ACCURATE_ROUNDING */

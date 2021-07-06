@@ -23,7 +23,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #if defined(USE_WINDOWS_SSPI) && defined(USE_KERBEROS5)
 
 #include <curl/curl.h>

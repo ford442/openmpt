@@ -33,19 +33,16 @@
 
 #ifndef ARCH_H
 #define ARCH_H
-
 #include "opus_types.h"
 #include "opus_defines.h"
-
 # if !defined(__GNUC_PREREQ)
-#  if defined(__GNUC__)&&defined(__GNUC_MINOR__)
+#  if defined(__GNUC__) && defined(__GNUC_MINOR__)
 #   define __GNUC_PREREQ(_maj,_min) \
  ((__GNUC__<<16)+__GNUC_MINOR__>=((_maj)<<16)+(_min))
 #  else
-#   define __GNUC_PREREQ(_maj,_min) 0
+#   define __GNUC_PREREQ(_maj, _min) 0
 #  endif
 # endif
-
 #if OPUS_GNUC_PREREQ(3, 0)
 #define opus_likely(x)       (__builtin_expect(!!(x), 1))
 #define opus_unlikely(x)     (__builtin_expect(!!(x), 0))
@@ -53,11 +50,8 @@
 #define opus_likely(x)       (!!(x))
 #define opus_unlikely(x)     (!!(x))
 #endif
-
 #define CELT_SIG_SCALE 32768.f
-
 #define CELT_FATAL(str) celt_fatal(str, __FILE__, __LINE__);
-
 #if defined(ENABLE_ASSERTIONS) || defined(ENABLE_HARDENING)
 #ifdef __GNUC__
 __attribute__((noreturn))
@@ -85,23 +79,20 @@ void celt_fatal(const char *str, const char *file, int line)
 #define celt_assert2(cond, message)
 #define MUST_SUCCEED(call) do {if((call) != OPUS_OK) {RESTORE_STACK; return OPUS_INTERNAL_ERROR;} } while (0)
 #endif
-
 #if defined(ENABLE_ASSERTIONS)
 #define celt_sig_assert(cond) {if (!(cond)) {CELT_FATAL("signal assertion failed: " #cond);}}
 #else
 #define celt_sig_assert(cond)
 #endif
-
-#define IMUL32(a,b) ((a)*(b))
-
-#define MIN16(a,b) ((a) < (b) ? (a) : (b))   /**< Minimum 16-bit value.   */
-#define MAX16(a,b) ((a) > (b) ? (a) : (b))   /**< Maximum 16-bit value.   */
-#define MIN32(a,b) ((a) < (b) ? (a) : (b))   /**< Minimum 32-bit value.   */
-#define MAX32(a,b) ((a) > (b) ? (a) : (b))   /**< Maximum 32-bit value.   */
-#define IMIN(a,b) ((a) < (b) ? (a) : (b))   /**< Minimum int value.   */
-#define IMAX(a,b) ((a) > (b) ? (a) : (b))   /**< Maximum int value.   */
-#define UADD32(a,b) ((a)+(b))
-#define USUB32(a,b) ((a)-(b))
+#define IMUL32(a, b) ((a)*(b))
+#define MIN16(a, b) ((a) < (b) ? (a) : (b))   /**< Minimum 16-bit value.   */
+#define MAX16(a, b) ((a) > (b) ? (a) : (b))   /**< Maximum 16-bit value.   */
+#define MIN32(a, b) ((a) < (b) ? (a) : (b))   /**< Minimum 32-bit value.   */
+#define MAX32(a, b) ((a) > (b) ? (a) : (b))   /**< Maximum 32-bit value.   */
+#define IMIN(a, b) ((a) < (b) ? (a) : (b))   /**< Minimum int value.   */
+#define IMAX(a, b) ((a) > (b) ? (a) : (b))   /**< Maximum int value.   */
+#define UADD32(a, b) ((a)+(b))
+#define USUB32(a, b) ((a)-(b))
 
 /* Set this if opus_int64 is a native type of the CPU. */
 /* Assume that all LP64 architectures have fast 64-bit types; also x86_64
@@ -111,9 +102,7 @@ void celt_fatal(const char *str, const char *file, int line)
 #else
 #define OPUS_FAST_INT64 0
 #endif
-
 #define PRINT_MIPS(file)
-
 #ifdef FIXED_POINT
 
 typedef opus_int16 opus_val16;
@@ -175,15 +164,12 @@ static OPUS_INLINE opus_int16 SAT16(opus_int32 x) {
 #endif
 
 #else /* FIXED_POINT */
-
 typedef float opus_val16;
 typedef float opus_val32;
 typedef float opus_val64;
-
 typedef float celt_sig;
 typedef float celt_norm;
 typedef float celt_ener;
-
 #ifdef FLOAT_APPROX
 /* This code should reliably detect NaN/inf even when -ffast-math is used.
    Assumes IEEE 754 format. */
@@ -199,11 +185,8 @@ static OPUS_INLINE int celt_isnan(float x)
 #endif
 #define celt_isnan(x) ((x)!=(x))
 #endif
-
 #define Q15ONE 1.0f
-
 #define NORM_SCALING 1.f
-
 #define EPSILON 1e-15f
 #define VERY_SMALL 1e-30f
 #define VERY_LARGE16 1e15f
@@ -212,71 +195,57 @@ static OPUS_INLINE int celt_isnan(float x)
 /* This appears to be the same speed as C99's fabsf() but it's more portable. */
 #define ABS16(x) ((float)fabs(x))
 #define ABS32(x) ((float)fabs(x))
-
-#define QCONST16(x,bits) (x)
-#define QCONST32(x,bits) (x)
-
+#define QCONST16(x, bits) (x)
+#define QCONST32(x, bits) (x)
 #define NEG16(x) (-(x))
 #define NEG32(x) (-(x))
 #define NEG32_ovflw(x) (-(x))
 #define EXTRACT16(x) (x)
 #define EXTEND32(x) (x)
-#define SHR16(a,shift) (a)
-#define SHL16(a,shift) (a)
-#define SHR32(a,shift) (a)
-#define SHL32(a,shift) (a)
-#define PSHR32(a,shift) (a)
-#define VSHR32(a,shift) (a)
-
-#define PSHR(a,shift)   (a)
-#define SHR(a,shift)    (a)
-#define SHL(a,shift)    (a)
-#define SATURATE(x,a)   (x)
+#define SHR16(a, shift) (a)
+#define SHL16(a, shift) (a)
+#define SHR32(a, shift) (a)
+#define SHL32(a, shift) (a)
+#define PSHR32(a, shift) (a)
+#define VSHR32(a, shift) (a)
+#define PSHR(a, shift)   (a)
+#define SHR(a, shift)    (a)
+#define SHL(a, shift)    (a)
+#define SATURATE(x, a)   (x)
 #define SATURATE16(x)   (x)
-
-#define ROUND16(a,shift)  (a)
-#define SROUND16(a,shift) (a)
+#define ROUND16(a, shift)  (a)
+#define SROUND16(a, shift) (a)
 #define HALF16(x)       (.5f*(x))
 #define HALF32(x)       (.5f*(x))
-
-#define ADD16(a,b) ((a)+(b))
-#define SUB16(a,b) ((a)-(b))
-#define ADD32(a,b) ((a)+(b))
-#define SUB32(a,b) ((a)-(b))
-#define ADD32_ovflw(a,b) ((a)+(b))
-#define SUB32_ovflw(a,b) ((a)-(b))
-#define MULT16_16_16(a,b)     ((a)*(b))
-#define MULT16_16(a,b)     ((opus_val32)(a)*(opus_val32)(b))
-#define MAC16_16(c,a,b)     ((c)+(opus_val32)(a)*(opus_val32)(b))
-
-#define MULT16_32_Q15(a,b)     ((a)*(b))
-#define MULT16_32_Q16(a,b)     ((a)*(b))
-
-#define MULT32_32_Q31(a,b)     ((a)*(b))
-
-#define MAC16_32_Q15(c,a,b)     ((c)+(a)*(b))
-#define MAC16_32_Q16(c,a,b)     ((c)+(a)*(b))
-
-#define MULT16_16_Q11_32(a,b)     ((a)*(b))
-#define MULT16_16_Q11(a,b)     ((a)*(b))
-#define MULT16_16_Q13(a,b)     ((a)*(b))
-#define MULT16_16_Q14(a,b)     ((a)*(b))
-#define MULT16_16_Q15(a,b)     ((a)*(b))
-#define MULT16_16_P15(a,b)     ((a)*(b))
-#define MULT16_16_P13(a,b)     ((a)*(b))
-#define MULT16_16_P14(a,b)     ((a)*(b))
-#define MULT16_32_P16(a,b)     ((a)*(b))
-
-#define DIV32_16(a,b)     (((opus_val32)(a))/(opus_val16)(b))
-#define DIV32(a,b)     (((opus_val32)(a))/(opus_val32)(b))
-
+#define ADD16(a, b) ((a)+(b))
+#define SUB16(a, b) ((a)-(b))
+#define ADD32(a, b) ((a)+(b))
+#define SUB32(a, b) ((a)-(b))
+#define ADD32_ovflw(a, b) ((a)+(b))
+#define SUB32_ovflw(a, b) ((a)-(b))
+#define MULT16_16_16(a, b)     ((a)*(b))
+#define MULT16_16(a, b)     ((opus_val32)(a)*(opus_val32)(b))
+#define MAC16_16(c, a, b)     ((c)+(opus_val32)(a)*(opus_val32)(b))
+#define MULT16_32_Q15(a, b)     ((a)*(b))
+#define MULT16_32_Q16(a, b)     ((a)*(b))
+#define MULT32_32_Q31(a, b)     ((a)*(b))
+#define MAC16_32_Q15(c, a, b)     ((c)+(a)*(b))
+#define MAC16_32_Q16(c, a, b)     ((c)+(a)*(b))
+#define MULT16_16_Q11_32(a, b)     ((a)*(b))
+#define MULT16_16_Q11(a, b)     ((a)*(b))
+#define MULT16_16_Q13(a, b)     ((a)*(b))
+#define MULT16_16_Q14(a, b)     ((a)*(b))
+#define MULT16_16_Q15(a, b)     ((a)*(b))
+#define MULT16_16_P15(a, b)     ((a)*(b))
+#define MULT16_16_P13(a, b)     ((a)*(b))
+#define MULT16_16_P14(a, b)     ((a)*(b))
+#define MULT16_32_P16(a, b)     ((a)*(b))
+#define DIV32_16(a, b)     (((opus_val32)(a))/(opus_val16)(b))
+#define DIV32(a, b)     (((opus_val32)(a))/(opus_val32)(b))
 #define SCALEIN(a)      ((a)*CELT_SIG_SCALE)
 #define SCALEOUT(a)     ((a)*(1/CELT_SIG_SCALE))
-
 #define SIG2WORD16(x) (x)
-
 #endif /* !FIXED_POINT */
-
 #ifndef GLOBAL_STACK_SIZE
 #ifdef FIXED_POINT
 #define GLOBAL_STACK_SIZE 120000
@@ -284,5 +253,4 @@ static OPUS_INLINE int celt_isnan(float x)
 #define GLOBAL_STACK_SIZE 120000
 #endif
 #endif
-
 #endif /* ARCH_H */

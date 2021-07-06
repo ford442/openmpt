@@ -1,10 +1,8 @@
 # PortAudio - portable audio I/O library
 
-PortAudio is a portable audio I/O library designed for cross-platform
-support of audio. It uses either a callback mechanism to request audio 
-processing, or blocking read/write calls to buffer data between the 
-native audio subsystem and the client. Audio can be processed in various 
-formats, including 32 bit floating point, and will be converted to the 
+PortAudio is a portable audio I/O library designed for cross-platform support of audio. It uses either a callback
+mechanism to request audio processing, or blocking read/write calls to buffer data between the native audio subsystem
+and the client. Audio can be processed in various formats, including 32 bit floating point, and will be converted to the
 native format internally.
 
 ## Documentation:
@@ -12,15 +10,15 @@ native format internally.
 * Documentation is available at http://www.portaudio.com/docs/
 * Or at `/doc/html/index.html` after running Doxygen.
 * Also see `src/common/portaudio.h` for the API spec.
-* And see the `examples/` and `test/` directories for many examples of usage. (We suggest `examples/paex_saw.c` for an example.)
+* And see the `examples/` and `test/` directories for many examples of usage. (We suggest `examples/paex_saw.c` for an
+  example.)
 
-For information on compiling programs with PortAudio, please see the
-tutorial at:
+For information on compiling programs with PortAudio, please see the tutorial at:
 
-  http://portaudio.com/docs/v19-doxydocs/tutorial_start.html
-  
-We have an active mailing list for user and developer discussions.
-Please feel free to join. See http://www.portaudio.com for details.
+http://portaudio.com/docs/v19-doxydocs/tutorial_start.html
+
+We have an active mailing list for user and developer discussions. Please feel free to join.
+See http://www.portaudio.com for details.
 
 ## Important Files and Folders:
 
@@ -29,7 +27,6 @@ Please feel free to join. See http://www.portaudio.com for details.
                               code for all implementations.
     src/os                  = os specific (but host api neutral) code
     src/hostapi             = implementations for different host apis
-
 
 ### Host API Implementations:
 
@@ -43,7 +40,6 @@ Please feel free to join. See http://www.portaudio.com for details.
     src/hostapi/wasapi      = Windows Vista WASAPI
     src/hostapi/wdmks       = Windows WDM Kernel Streaming
     src/hostapi/wmme        = Windows MultiMedia Extensions (MME)
-
 
 ### Test Programs:
 

@@ -22,8 +22,7 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
-#if !defined(CURL_DISABLE_SMB) && defined(USE_NTLM) &&  \
+#if !defined(CURL_DISABLE_SMB) && defined(USE_NTLM) && \
   (CURL_SIZEOF_CURL_OFF_T > 4)
 
 #if !defined(USE_WINDOWS_SSPI) || defined(USE_WIN32_CRYPTO)

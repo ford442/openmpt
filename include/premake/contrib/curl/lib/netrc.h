@@ -27,10 +27,10 @@ int Curl_parsenetrc(const char *host,
                     char **loginp,
                     char **passwordp,
                     char *filename);
-  /* Assume: (*passwordp)[0]=0, host[0] != 0.
-   * If (*loginp)[0] = 0, search for login and password within a machine
-   * section in the netrc.
-   * If (*loginp)[0] != 0, search for password within machine and login.
-   */
+/* Assume: (*passwordp)[0]=0, host[0] != 0.
+ * If (*loginp)[0] = 0, search for login and password within a machine
+ * section in the netrc.
+ * If (*loginp)[0] != 0, search for password within machine and login.
+ */
 
 #endif /* HEADER_CURL_NETRC_H */

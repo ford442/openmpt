@@ -8,17 +8,17 @@
 What is it?
 -----------
 
-**GENie** (pronounced as Jenny) is project generator tool. It automagically
-generates project from Lua script, making applying the same settings for
-multiple projects easy.
+**GENie** (pronounced as Jenny) is project generator tool. It automagically generates project from Lua script, making
+applying the same settings for multiple projects easy.
 
 Supported project generators:
- * GNU Makefile
- * [JSON Compilation Database][jcdb]
- * Ninja (experimental)
- * Qbs / QtCreator (experimental)
- * Visual Studio 2010, 2012, 2013, 2015, 2017, 2019
- * XCode
+
+* GNU Makefile
+* [JSON Compilation Database][jcdb]
+* Ninja (experimental)
+* Qbs / QtCreator (experimental)
+* Visual Studio 2010, 2012, 2013, 2015, 2017, 2019
+* XCode
 
 Download (stable)
 -----------------
@@ -52,112 +52,100 @@ Documentation
 History
 -------
 
-Initial version of **GENie** is [fork](https://github.com/bkaradzic/GENie/blob/c7e7da4aafe4210aa014a8ae8f6b01ce1d6802f0/README.md#why-fork)
+Initial version of **GENie**
+is [fork](https://github.com/bkaradzic/GENie/blob/c7e7da4aafe4210aa014a8ae8f6b01ce1d6802f0/README.md#why-fork)
 of Premake 4.4 beta 5, and there is no intention to keep it compatible with it.
 
 ## Changelog (since fork)
 
- - Added vs2013 support.
- - Added hash UUID support. `os.uuid(<string>)` should produce consistent UUID.
- - Added search for default script. Default script name is changed to genie.lua
-   (solution.lua and premake4.lua are also allowed), and it can be located in
-   `scripts` directory.
- - Updated Lua from 5.1.4 to 5.3.0.
- - Disabled `SmallerTypeCheck` VS option when `ExtraWarnings` is set (need to
-   move it into separate option).
- - New versioning scheme based on revision number from git.
- - Added `startproject "<project name>"` to set default project in VS.
- - Removed `NoMinimalRebuild` and added reversed logic to `EnableMinimalRebuild`.
- - Added `NoMultiProcessorCompilation` flag to disable multiprocessor
-   compilation in MSVC.
- - Added ability to configure Visual Studio toolset from GENie script.
- - Added `UnsignedChar` flag to force char to be unsigned.
- - Removed vs2002, vs2003, vs2005, Solaris, and Haiku support.
- - Allow source files in the same project to have the same name. Added 
-   `SingleOutputDir` flag to use single output directory (original behaviour).
- - Added WinRT support (Windows Phone 8.1, Windows Store, Universal Apps).
- - Added `removeflags`, `removelinks`.
- - Added vs2015 support.
- - Added `targetsubdir`.
- - Added support for solution folders `group`.
- - Added `options` section (and `ForceCpp` to enforce C++ compile even if
-   extension is for C files)
- - Added `msgcompile`, `msgresource`, `msglinking` and `msgarchiving` as
-   overrides for make messages.
- - Added `messageskip` list to disable some of compiler messages.
- - Added `buildoptions_c`, `buildoptions_cpp`, `buildoptions_objc`,
-   `buildoptions_objcpp`, `buildoptions_asm`, `buildoptions_swift` for
-   configuring language specific build options.
- - Split functionality of `excludes` in `removefiles` and `excludes`. With VS
-   `excludes` will exclude files from build but files will be added to project
-   file. `removefiles` removes files completely from project.
- - Added support for generating PS4/Orbis projects.
- - Fixed PCH race when using concurrent Makefile build.
- - Added Green Hills Software compiler support.
- - Added edit & continue support for 64-bit builds in vs2013 upwards.
- - Added `windowstargetplatformversion` to specify VS Windows target version.
- - Added `NoWinRT` flag to disable WinRT CX builds.
- - Added `NoBufferSecurityCheck` flag to disable security checks in VS.
- - Added `nopch` file list to exclude files from using PCH.
- - Added `EnableAVX` and `EnableAVX2` flags to enable enhanced instruction set.
- - Added FASTBuild (.bff) project generator.
- - Added Vala language support.
- - Added MASM support for Visual Studio projects.
- - Added `userincludedirs` for include header with angle brackets and quotes
-   search path control.
- - Detect when generated project files are not changing, and skip writing over
-   existing project files.
- - Added Ninja project generator.
- - Added ability to specify MSVC "Old Style" debug info format with
-   `C7DebugInfo`.
- - Added some support for per-configuration `files` lists.
- - Removed `clean` action.
- - Added support for QtCreator via Qbs build tool.
- - Added .natvis file type support for Visual Studio.
- - Added Swift language support for make and ninja build generators.
- - Removed CodeBlocks and CodeLite support.
- - Added vs2017 support.
- - Removed vs2008 support.
- - Added `removeplatforms` that removes VS build target platforms.
- - Added `PedanticWarnings` flag.
- - Added `ObjcARC` flag to enable automatic reference counting for Objective-C(++).
- - Added `iostargetplatformversion`, `macostargetplatformversion`, and
-   `tvostargetplatformversion` to specify XCode OS target version.
- - Removed the `xcode3`, and `xcode4` actions.
- - Added the `xcode8`, `xcode9`, `xcode10`, and `xcode11` actions.
- - Added `systemincludedirs` that are always searched after directories added
-   using `includedirs`.
- - Added `NoRuntimeChecks` flag to disable Basic Runtime Checks in non-optimized
-   Visual Studio builds.
- - Added support for Nintendo Switch projects.
- - Added flags for selecting C++ standard: `Cpp11`, `Cpp14`, `Cpp17`,
-   and `CppLatest`.
- - Added `xcodeprojectopts` and `xcodetargetopts`.
- - Added vs2019 support.
- - Added `UnitySupport` flag to enable Unity (Jumbo) builds in vs2019
- - Added the `jcdb` action for generating a [JSON compilation database][jcdb].
- - Added support for generating Switch/NX32 Switch/NX64 projects.
- - Removed FASTBuild.
+- Added vs2013 support.
+- Added hash UUID support. `os.uuid(<string>)` should produce consistent UUID.
+- Added search for default script. Default script name is changed to genie.lua
+  (solution.lua and premake4.lua are also allowed), and it can be located in
+  `scripts` directory.
+- Updated Lua from 5.1.4 to 5.3.0.
+- Disabled `SmallerTypeCheck` VS option when `ExtraWarnings` is set (need to move it into separate option).
+- New versioning scheme based on revision number from git.
+- Added `startproject "<project name>"` to set default project in VS.
+- Removed `NoMinimalRebuild` and added reversed logic to `EnableMinimalRebuild`.
+- Added `NoMultiProcessorCompilation` flag to disable multiprocessor compilation in MSVC.
+- Added ability to configure Visual Studio toolset from GENie script.
+- Added `UnsignedChar` flag to force char to be unsigned.
+- Removed vs2002, vs2003, vs2005, Solaris, and Haiku support.
+- Allow source files in the same project to have the same name. Added
+  `SingleOutputDir` flag to use single output directory (original behaviour).
+- Added WinRT support (Windows Phone 8.1, Windows Store, Universal Apps).
+- Added `removeflags`, `removelinks`.
+- Added vs2015 support.
+- Added `targetsubdir`.
+- Added support for solution folders `group`.
+- Added `options` section (and `ForceCpp` to enforce C++ compile even if extension is for C files)
+- Added `msgcompile`, `msgresource`, `msglinking` and `msgarchiving` as overrides for make messages.
+- Added `messageskip` list to disable some of compiler messages.
+- Added `buildoptions_c`, `buildoptions_cpp`, `buildoptions_objc`,
+  `buildoptions_objcpp`, `buildoptions_asm`, `buildoptions_swift` for configuring language specific build options.
+- Split functionality of `excludes` in `removefiles` and `excludes`. With VS
+  `excludes` will exclude files from build but files will be added to project file. `removefiles` removes files
+  completely from project.
+- Added support for generating PS4/Orbis projects.
+- Fixed PCH race when using concurrent Makefile build.
+- Added Green Hills Software compiler support.
+- Added edit & continue support for 64-bit builds in vs2013 upwards.
+- Added `windowstargetplatformversion` to specify VS Windows target version.
+- Added `NoWinRT` flag to disable WinRT CX builds.
+- Added `NoBufferSecurityCheck` flag to disable security checks in VS.
+- Added `nopch` file list to exclude files from using PCH.
+- Added `EnableAVX` and `EnableAVX2` flags to enable enhanced instruction set.
+- Added FASTBuild (.bff) project generator.
+- Added Vala language support.
+- Added MASM support for Visual Studio projects.
+- Added `userincludedirs` for include header with angle brackets and quotes search path control.
+- Detect when generated project files are not changing, and skip writing over existing project files.
+- Added Ninja project generator.
+- Added ability to specify MSVC "Old Style" debug info format with
+  `C7DebugInfo`.
+- Added some support for per-configuration `files` lists.
+- Removed `clean` action.
+- Added support for QtCreator via Qbs build tool.
+- Added .natvis file type support for Visual Studio.
+- Added Swift language support for make and ninja build generators.
+- Removed CodeBlocks and CodeLite support.
+- Added vs2017 support.
+- Removed vs2008 support.
+- Added `removeplatforms` that removes VS build target platforms.
+- Added `PedanticWarnings` flag.
+- Added `ObjcARC` flag to enable automatic reference counting for Objective-C(++).
+- Added `iostargetplatformversion`, `macostargetplatformversion`, and
+  `tvostargetplatformversion` to specify XCode OS target version.
+- Removed the `xcode3`, and `xcode4` actions.
+- Added the `xcode8`, `xcode9`, `xcode10`, and `xcode11` actions.
+- Added `systemincludedirs` that are always searched after directories added using `includedirs`.
+- Added `NoRuntimeChecks` flag to disable Basic Runtime Checks in non-optimized Visual Studio builds.
+- Added support for Nintendo Switch projects.
+- Added flags for selecting C++ standard: `Cpp11`, `Cpp14`, `Cpp17`, and `CppLatest`.
+- Added `xcodeprojectopts` and `xcodetargetopts`.
+- Added vs2019 support.
+- Added `UnitySupport` flag to enable Unity (Jumbo) builds in vs2019
+- Added the `jcdb` action for generating a [JSON compilation database][jcdb].
+- Added support for generating Switch/NX32 Switch/NX64 projects.
+- Removed FASTBuild.
 
 build - GENie build system scripts
 ----------------------------------
 
-build is a set of build system scripts and related tools, built around
-GENie project generator tool.
+build is a set of build system scripts and related tools, built around GENie project generator tool.
 
 https://milostosic.github.io/build/
 
 Debugging GENie scripts
 -----------------------
 
-It is possible to debug build scripts using [ZeroBrane Studio][zbs]. You must
-compile GENie in debug mode
+It is possible to debug build scripts using [ZeroBrane Studio][zbs]. You must compile GENie in debug mode
 
     $ make config=debug
 
-This ensures the core lua scripts are loaded from disk rather than compiled
-into the GENie binary. Create a file named `debug.lua` as a sibling to your
-main `genie.lua` script with the following content:
+This ensures the core lua scripts are loaded from disk rather than compiled into the GENie binary. Create a file
+named `debug.lua` as a sibling to your main `genie.lua` script with the following content:
 
     local zb_path = <path to ZeroBraneStudio>
     local cpaths = {
@@ -176,8 +164,8 @@ main `genie.lua` script with the following content:
 
     require('mobdebug').start()
 
-**NOTE:** update `zb_path` to refer to the root of your ZeroBrane Studio
-install. For reference, you should find `lualibs` in you `zb_path` folder
+**NOTE:** update `zb_path` to refer to the root of your ZeroBrane Studio install. For reference, you should
+find `lualibs` in you `zb_path` folder
 
 To debug, make sure ZBS is listening for debug connections and add
 `dofile("debug.lua")` to `genie.lua`
@@ -185,8 +173,8 @@ To debug, make sure ZBS is listening for debug connections and add
 Who is using it?
 ----------------
 
-https://github.com/bkaradzic/bgfx bgfx - Cross-platform, graphics API
-agnostic, "Bring Your Own Engine/Framework" style rendering library.
+https://github.com/bkaradzic/bgfx bgfx - Cross-platform, graphics API agnostic, "Bring Your Own Engine/Framework" style
+rendering library.
 
 https://github.com/Psybrus/Psybrus Psybrus Engine & Toolchain
 
@@ -194,15 +182,12 @@ https://github.com/dariomanesku/cmftstudio cmftStudio - cubemap filtering tool
 
 https://github.com/mamedev/mame MAME - Multiple Arcade Machine Emulator
 
-http://sol.gfxile.net/soloud SoLoud is an easy to use, free, 
-portable c/c++ audio engine for games.
+http://sol.gfxile.net/soloud SoLoud is an easy to use, free, portable c/c++ audio engine for games.
 
-https://github.com/andr3wmac/Torque6 Torque 6 is an MIT licensed 3D engine
-loosely based on Torque2D. Being neither Torque2D or Torque3D it is the 6th
-derivative of the original Torque Engine.
+https://github.com/andr3wmac/Torque6 Torque 6 is an MIT licensed 3D engine loosely based on Torque2D. Being neither
+Torque2D or Torque3D it is the 6th derivative of the original Torque Engine.
 
-https://milostosic.github.io/MTuner MTuner is a memory profiler and memory leak finder for Windows, PS4,
-PS3.
+https://milostosic.github.io/MTuner MTuner is a memory profiler and memory leak finder for Windows, PS4, PS3.
 
 Developer Crackshell used GENie for development of games
 [Heroes of Hammerwatch](http://store.steampowered.com/app/677120/Heroes_of_Hammerwatch/), and
@@ -247,5 +232,6 @@ Developer Crackshell used GENie for development of games
 	OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 	OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-  [jcdb]: https://clang.llvm.org/docs/JSONCompilationDatabase.html
-  [zbs]: https://studio.zerobrane.com
+[jcdb]: https://clang.llvm.org/docs/JSONCompilationDatabase.html
+
+[zbs]: https://studio.zerobrane.com

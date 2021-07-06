@@ -24,25 +24,18 @@
 
 #include "curl_setup.h"
 #include <stddef.h>
-
 typedef void (*curl_llist_dtor)(void *, void *);
-
 struct curl_llist_element {
-  void *ptr;
-
-  struct curl_llist_element *prev;
-  struct curl_llist_element *next;
+void *ptr;
+struct curl_llist_element *prev;
+struct curl_llist_element *next;
 };
-
 struct curl_llist {
-  struct curl_llist_element *head;
-  struct curl_llist_element *tail;
-
-  curl_llist_dtor dtor;
-
-  size_t size;
+struct curl_llist_element *head;
+struct curl_llist_element *tail;
+curl_llist_dtor dtor;
+size_t size;
 };
-
 struct curl_llist *Curl_llist_alloc(curl_llist_dtor);
 int Curl_llist_insert_next(struct curl_llist *, struct curl_llist_element *,
                            const void *);
@@ -52,6 +45,5 @@ size_t Curl_llist_count(struct curl_llist *);
 void Curl_llist_destroy(struct curl_llist *, void *);
 int Curl_llist_move(struct curl_llist *, struct curl_llist_element *,
                     struct curl_llist *, struct curl_llist_element *);
-
 #endif /* HEADER_CURL_LLIST_H */
 

@@ -20,17 +20,13 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_FILTER_H
 #define LHASA_FILTER_H
-
 #include "lha_reader.h"
-
 typedef struct _LHAFilter LHAFilter;
-
 struct _LHAFilter {
-	LHAReader *reader;
-	char **filters;
-	unsigned int num_filters;
+LHAReader *reader;
+char **filters;
+unsigned int num_filters;
 };
-
 /**
  * Initialize a @ref LHAFilter structure to read files from
  * the specified @ref LHAReader, applying the specified list of
@@ -45,7 +41,6 @@ struct _LHAFilter {
 
 void lha_filter_init(LHAFilter *filter, LHAReader *reader,
                      char **filters, unsigned int num_filters);
-
 /**
  * Read the next file from the input stream.
  *
@@ -56,6 +51,5 @@ void lha_filter_init(LHAFilter *filter, LHAReader *reader,
  */
 
 LHAFileHeader *lha_filter_next_file(LHAFilter *filter);
-
 #endif /* #ifndef LHASA_FILTER_H */
 

@@ -37,41 +37,38 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // Structure used to hold data needed to build the tree.
 
 typedef struct {
-	// The tree data and its size (must not be exceeded)
+// The tree data and its size (must not be exceeded)
 
-	TreeElement *tree;
-	unsigned int tree_len;
+TreeElement *tree;
+unsigned int tree_len;
 
-	// Counter used to allocate entries from the tree.
-	// Every time a new node is allocated, this increase by 2.
+// Counter used to allocate entries from the tree.
+// Every time a new node is allocated, this increase by 2.
 
-	unsigned int tree_allocated;
+unsigned int tree_allocated;
 
-	// The next tree entry.
-	// As entries are allocated sequentially, the range from
-	// next_entry..tree_allocated-1 constitutes the indices into
-	// the tree that are available to be filled in. By the
-	// end of the tree build, next_entry should = tree_allocated.
+// The next tree entry.
+// As entries are allocated sequentially, the range from
+// next_entry..tree_allocated-1 constitutes the indices into
+// the tree that are available to be filled in. By the
+// end of the tree build, next_entry should = tree_allocated.
 
-	unsigned int next_entry;
+unsigned int next_entry;
 } TreeBuildData;
 
 // Initialize all elements of the given tree to a good initial state.
 
-static void init_tree(TreeElement *tree, size_t tree_len)
-{
-	unsigned int i;
-
-	for (i = 0; i < tree_len; ++i) {
-		tree[i] = TREE_NODE_LEAF;
-	}
+static void init_tree(TreeElement *tree, size_t tree_len) {
+unsigned int i;
+for(i = 0; i < tree_len; ++i) {
+tree[i] = TREE_NODE_LEAF;
+}
 }
 
 // Set tree to always decode to a single code.
 
-static void set_tree_single(TreeElement *tree, TreeElement code)
-{
-	tree[0] = (TreeElement) code | TREE_NODE_LEAF;
+static void set_tree_single(TreeElement *tree, TreeElement code) {
+tree[0] = (TreeElement) code | TREE_NODE_LEAF;
 }
 
 // "Expand" the list of queue entries. This generates a new child
@@ -80,48 +77,42 @@ static void set_tree_single(TreeElement *tree, TreeElement code)
 // The effect of this is to add an extra level to the tree, and
 // to increase the tree depth of the indices in the queue.
 
-static void expand_queue(TreeBuildData *build)
-{
-	unsigned int end_offset;
-	unsigned int new_nodes;
+static void expand_queue(TreeBuildData *build) {
+unsigned int end_offset;
+unsigned int new_nodes;
 
-	// Sanity check that there is enough space in the tree for
-	// all the new nodes.
+// Sanity check that there is enough space in the tree for
+// all the new nodes.
 
-	new_nodes = (build->tree_allocated - build->next_entry) * 2;
+new_nodes = (build->tree_allocated - build->next_entry) * 2;
+if(build->tree_allocated + new_nodes > build->tree_len) {
+return;
+}
 
-	if (build->tree_allocated + new_nodes > build->tree_len) {
-		return;
-	}
+// Go through all entries currently in the allocated range, and
+// allocate a subnode for each.
 
-	// Go through all entries currently in the allocated range, and
-	// allocate a subnode for each.
-
-	end_offset = build->tree_allocated;
-
-	while (build->next_entry < end_offset) {
-		build->tree[build->next_entry] = build->tree_allocated;
-		build->tree_allocated += 2;
-		++build->next_entry;
-	}
+end_offset = build->tree_allocated;
+while (build->next_entry < end_offset) {
+build->tree[build->next_entry] = build->tree_allocated;
+build->tree_allocated += 2;
+++build->next_entry;
+}
 }
 
 // Read the next entry from the queue of entries waiting to be used.
 
-static unsigned int read_next_entry(TreeBuildData *build)
-{
-	unsigned int result;
+static unsigned int read_next_entry(TreeBuildData *build) {
+unsigned int result;
 
-	// Sanity check.
+// Sanity check.
 
-	if (build->next_entry >= build->tree_allocated) {
-		return 0;
-	}
-
-	result = build->next_entry;
-	++build->next_entry;
-
-	return result;
+if(build->next_entry >= build->tree_allocated) {
+return 0;
+}
+result = build->next_entry;
+++build->next_entry;
+return result;
 }
 
 // Add all codes to the tree that have the specified length.
@@ -131,32 +122,27 @@ static unsigned int read_next_entry(TreeBuildData *build)
 static int add_codes_with_length(TreeBuildData *build,
                                  uint8_t *code_lengths,
                                  unsigned int num_code_lengths,
-                                 unsigned int code_len)
-{
-	unsigned int i;
-	unsigned int node;
-	int codes_remaining;
+                                 unsigned int code_len) {
+unsigned int i;
+unsigned int node;
+int codes_remaining;
+codes_remaining = 0;
+for(i = 0; i < num_code_lengths; ++i) {
 
-	codes_remaining = 0;
+// Does this code belong at this depth in the tree?
 
-	for (i = 0; i < num_code_lengths; ++i) {
+if(code_lengths[i] == code_len) {
+node = read_next_entry(build);
+build->tree[node] = (TreeElement) i | TREE_NODE_LEAF;
+}
 
-		// Does this code belong at this depth in the tree?
+// More work to be done after this pass?
 
-		if (code_lengths[i] == code_len) {
-			node = read_next_entry(build);
-
-			build->tree[node] = (TreeElement) i | TREE_NODE_LEAF;
-		}
-
-		// More work to be done after this pass?
-
-		else if (code_lengths[i] > code_len) {
-			codes_remaining = 1;
-		}
-	}
-
-	return codes_remaining;
+else if(code_lengths[i] > code_len) {
+codes_remaining = 1;
+}
+}
+return codes_remaining;
 }
 
 // Build a tree, given the specified array of codes indicating the
@@ -164,42 +150,39 @@ static int add_codes_with_length(TreeBuildData *build,
 // located.
 
 static void build_tree(TreeElement *tree, size_t tree_len,
-                       uint8_t *code_lengths, unsigned int num_code_lengths)
-{
-	TreeBuildData build;
-	unsigned int code_len;
+                       uint8_t *code_lengths, unsigned int num_code_lengths) {
+TreeBuildData build;
+unsigned int code_len;
+build.tree = tree;
+build.tree_len = tree_len;
 
-	build.tree = tree;
-	build.tree_len = tree_len;
+// Start with a single entry in the queue - the root node
+// pointer.
 
-	// Start with a single entry in the queue - the root node
-	// pointer.
+build.next_entry = 0;
 
-	build.next_entry = 0;
+// We always have the root ...
 
-	// We always have the root ...
+build.tree_allocated = 1;
 
-	build.tree_allocated = 1;
+// Iterate over each possible code length.
+// Note: code_len == 0 is deliberately skipped over, as 0
+// indicates "not used".
 
-	// Iterate over each possible code length.
-	// Note: code_len == 0 is deliberately skipped over, as 0
-	// indicates "not used".
+code_len = 0;
+do {
+// Advance to the next code length by allocating extra
+// nodes to the tree - the slots waiting in the queue
+// will now be one level deeper in the tree (and the
+// codes 1 bit longer).
 
-	code_len = 0;
+expand_queue(&build);
+++code_len;
 
-	do {
-		// Advance to the next code length by allocating extra
-		// nodes to the tree - the slots waiting in the queue
-		// will now be one level deeper in the tree (and the
-		// codes 1 bit longer).
+// Add all codes that have this length.
 
-		expand_queue(&build);
-		++code_len;
-
-		// Add all codes that have this length.
-
-	} while (add_codes_with_length(&build, code_lengths,
-	                               num_code_lengths, code_len));
+} while (add_codes_with_length(&build, code_lengths,
+                               num_code_lengths, code_len));
 }
 
 /*
@@ -225,28 +208,23 @@ static void display_tree(TreeElement *tree, unsigned int node, int offset)
 // from the root node until we reach a leaf.  The leaf value is
 // returned.
 
-static int read_from_tree(BitStreamReader *reader, TreeElement *tree)
-{
-	TreeElement code;
-	int bit;
+static int read_from_tree(BitStreamReader *reader, TreeElement *tree) {
+TreeElement code;
+int bit;
 
-	// Start from root.
+// Start from root.
 
-	code = tree[0];
+code = tree[0];
+while ((code & TREE_NODE_LEAF) == 0) {
+bit = read_bit(reader);
+if(bit < 0) {
+return -1;
+}
+code = tree[code + (unsigned int) bit];
+}
 
-	while ((code & TREE_NODE_LEAF) == 0) {
+// Mask off leaf bit to get the plain code.
 
-		bit = read_bit(reader);
-
-		if (bit < 0) {
-			return -1;
-		}
-
-		code = tree[code + (unsigned int) bit];
-	}
-
-	// Mask off leaf bit to get the plain code.
-
-	return (int) (code & ~TREE_NODE_LEAF);
+return (int) (code & ~TREE_NODE_LEAF);
 }
 

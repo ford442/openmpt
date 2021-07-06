@@ -24,7 +24,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
@@ -32,14 +31,11 @@
 #define mbedtls_fprintf    fprintf
 #define mbedtls_printf     printf
 #endif
-
 #include "mbedtls/aes.h"
 #include "mbedtls/md.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #if defined(_WIN32)
 #include <windows.h>
 #if !defined(_WIN32_WCE)
@@ -49,24 +45,20 @@
 #include <sys/types.h>
 #include <unistd.h>
 #endif
-
 #define MODE_ENCRYPT    0
 #define MODE_DECRYPT    1
-
 #define USAGE   \
     "\n  aescrypt2 <mode> <input filename> <output filename> <key>\n" \
     "\n   <mode>: 0 = encrypt, 1 = decrypt\n" \
     "\n  example: aescrypt2 0 file file.aes hex:E76B2413958B00E193\n" \
     "\n"
-
 #if !defined(MBEDTLS_AES_C) || !defined(MBEDTLS_SHA256_C) || \
     !defined(MBEDTLS_FS_IO) || !defined(MBEDTLS_MD_C)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_AES_C and/or MBEDTLS_SHA256_C "
-                    "and/or MBEDTLS_FS_IO and/or MBEDTLS_MD_C "
-                    "not defined.\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_AES_C and/or MBEDTLS_SHA256_C "
+               "and/or MBEDTLS_FS_IO and/or MBEDTLS_MD_C "
+               "not defined.\n");
+return (0);
 }
 #else
 int main( int argc, char *argv[] )

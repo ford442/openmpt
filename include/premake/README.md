@@ -27,10 +27,11 @@
     </a>
 </p>
 
-
 # Welcome to Premake
 
-Premake is a command line utility which reads a scripted definition of a software project, then uses it to perform build configuration tasks or generate project files for toolsets like Visual Studio, Xcode, and GNU Make. Premake's scripts are little [Lua](http://www.lua.org/) programs, so the sky's the limit!
+Premake is a command line utility which reads a scripted definition of a software project, then uses it to perform build
+configuration tasks or generate project files for toolsets like Visual Studio, Xcode, and GNU Make. Premake's scripts
+are little [Lua](http://www.lua.org/) programs, so the sky's the limit!
 
 ```lua
 workspace "MyWorkspace"
@@ -58,9 +59,12 @@ project "MyProject"
 
 ## Sponsors
 
-Premake is a BSD-licensed open source project. Our many thanks to these fine people who help us spend more time adding features and supporting the community. :tada:
+Premake is a BSD-licensed open source project. Our many thanks to these fine people who help us spend more time adding
+features and supporting the community. :tada:
 
-Want to join them? [Learn more here](https://opencollective.com/premake). Use Premake at work? Ask your manager or marketing team about contributing too; your company logo will appear on our [website](https://premake.github.io/) and README, as well as all of our [release pages](https://github.com/premake/premake-core/releases).
+Want to join them? [Learn more here](https://opencollective.com/premake). Use Premake at work? Ask your manager or
+marketing team about contributing too; your company logo will appear on our [website](https://premake.github.io/) and
+README, as well as all of our [release pages](https://github.com/premake/premake-core/releases).
 
 ### Organizations
 
@@ -72,7 +76,9 @@ Want to join them? [Learn more here](https://opencollective.com/premake). Use Pr
 
 ## Contributing
 
-We love getting [pull requests](https://www.quora.com/GitHub-What-is-a-pull-request) and rely heavily on the contributions of our community to keep Premake healthy and growing. If you're new to the project, [our Contributing Guide is here](https://github.com/premake/premake-core/blob/master/CONTRIBUTING.md).
+We love getting [pull requests](https://www.quora.com/GitHub-What-is-a-pull-request) and rely heavily on the
+contributions of our community to keep Premake healthy and growing. If you're new to the
+project, [our Contributing Guide is here](https://github.com/premake/premake-core/blob/master/CONTRIBUTING.md).
 
 A great big thank you to all of you who have already contributed your time and know-how!
 
@@ -87,5 +93,4 @@ A great big thank you to all of you who have already contributed your time and k
 
 [BSD 3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-The Lua language and runtime library is &copy; TeCGraf, PUC-Rio.
-See their website at http://www.lua.org/
+The Lua language and runtime library is &copy; TeCGraf, PUC-Rio. See their website at http://www.lua.org/

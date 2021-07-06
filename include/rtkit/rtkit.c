@@ -30,11 +30,8 @@
 #define _GNU_SOURCE /* OpenMPT */
 #endif /* OpenMPT */
 #endif /* OpenMPT */
-
 #include <errno.h>
-
 #include "rtkit.h"
-
 #ifdef __linux__
 
 #ifndef _GNU_SOURCE
@@ -290,25 +287,19 @@ finish:
 }
 
 #else
-
 int rtkit_make_realtime(DBusConnection *connection, pid_t thread, int priority) {
-        return -ENOTSUP;
+return -ENOTSUP;
 }
-
 int rtkit_make_high_priority(DBusConnection *connection, pid_t thread, int nice_level) {
-        return -ENOTSUP;
+return -ENOTSUP;
 }
-
 int rtkit_get_max_realtime_priority(DBusConnection *connection) {
-        return -ENOTSUP;
+return -ENOTSUP;
 }
-
-int rtkit_get_min_nice_level(DBusConnection *connection, int* min_nice_level) {
-        return -ENOTSUP;
+int rtkit_get_min_nice_level(DBusConnection *connection, int *min_nice_level) {
+return -ENOTSUP;
 }
-
 long long rtkit_get_rttime_usec_max(DBusConnection *connection) {
-        return -ENOTSUP;
+return -ENOTSUP;
 }
-
 #endif

@@ -21,7 +21,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef CURLDEBUG
 
 #include <curl/curl.h>

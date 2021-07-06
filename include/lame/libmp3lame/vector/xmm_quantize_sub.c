@@ -23,15 +23,11 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-
 #include "lame.h"
 #include "machine.h"
 #include "encoder.h"
 #include "util.h"
 #include "lame_intrin.h"
-
-
-
 #ifdef HAVE_XMMINTRIN_H
 
 #include <xmmintrin.h>
@@ -236,5 +232,5 @@ fht_SSE2(FLOAT * fz, int n)
     } while (k4 < n);
 }
 
-#endif	/* HAVE_XMMINTRIN_H */
+#endif    /* HAVE_XMMINTRIN_H */
 

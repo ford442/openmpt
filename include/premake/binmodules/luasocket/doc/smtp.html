@@ -1,52 +1,48 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" 
-    "http://www.w3.org/TR/html4/strict.dtd">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
 <html>
-
 <head>
 <meta name="description" content="LuaSocket: SMTP support">
 <meta name="keywords" content="Lua, LuaSocket, SMTP, E-Mail, MIME, Multipart,
-Library, Support"> 
+Library, Support">
 <title>LuaSocket: SMTP support</title>
 <link rel="stylesheet" href="reference.css" type="text/css">
 </head>
-
 <body>
-
 <!-- header +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
-
 <div class=header>
 <hr>
 <center>
 <table summary="LuaSocket logo">
-<tr><td align=center><a href="http://www.lua.org">
+<tr>
+<td align=center><a href="http://www.lua.org">
 <img width=128 height=128 border=0 alt="LuaSocket" src="luasocket.png">
-</a></td></tr>
-<tr><td align=center valign=top>Network support for the Lua language
-</td></tr>
+</a></td>
+</tr>
+<tr>
+<td align=center valign=top>Network support for the Lua language
+</td>
+</tr>
 </table>
 <p class=bar>
 <a href="index.html">home</a> &middot;
 <a href="index.html#download">download</a> &middot;
 <a href="installation.html">installation</a> &middot;
 <a href="introduction.html">introduction</a> &middot;
-<a href="reference.html">reference</a> 
+<a href="reference.html">reference</a>
 </p>
 </center>
 <hr>
 </div>
-
 <!-- smtp +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
-
-<h2 id=smtp>SMTP</h2> 
-
-<p> The  <tt>smtp</tt> namespace provides functionality to send e-mail
-messages. The high-level API consists of two functions: one to 
+<h2 id=smtp>SMTP</h2>
+<p> The <tt>smtp</tt> namespace provides functionality to send e-mail
+messages. The high-level API consists of two functions: one to
 define an e-mail message, and another to actually send the message.
 Although almost all users will find that these functions provide more than
 enough functionality, the underlying implementation allows for even more
-control (if you bother to read the code).  
+control (if you bother to read the code).
 </p>
-
 <p>The implementation conforms to the Simple Mail Transfer Protocol,
 <a href="http://www.ietf.org/rfc/rfc2821.txt">RFC 2821</a>.
 Another RFC of interest is <a
@@ -55,29 +51,25 @@ which governs the Internet Message Format.
 Multipart messages (those that contain attachments) are part
 of the MIME standard, but described mainly
 in <a href="http://www.ietf.org/rfc/rfc2046.txt">RFC 2046</a>
-
 <p> In the description below, good understanding of <a
 href="http://lua-users.org/wiki/FiltersSourcesAndSinks"> LTN012, Filters
-sources and sinks</a> and the  <a href=mime.html>MIME</a> module is
-assumed.  In fact, the SMTP module was the main reason for their 
+sources and sinks</a> and the <a href=mime.html>MIME</a> module is
+assumed. In fact, the SMTP module was the main reason for their
 creation. </p>
-
-<p> 
+<p>
 To obtain the <tt>smtp</tt> namespace, run:
 </p>
-
 <pre class=example>
 -- loads the SMTP module and everything it requires
 local smtp = require("socket.smtp")
 </pre>
-
 <p>
 MIME headers are represented as a Lua table in the form:
 </p>
-
 <blockquote>
 <table summary="MIME headers in Lua table">
-<tr><td><tt>
+<tr>
+<td><tt>
 headers = {<br>
 &nbsp;&nbsp;field-1-name = <i>field-1-value</i>,<br>
 &nbsp;&nbsp;field-2-name = <i>field-2-value</i>,<br>
@@ -85,57 +77,51 @@ headers = {<br>
 &nbsp;&nbsp;...<br>
 &nbsp;&nbsp;field-n-name = <i>field-n-value</i><br>
 }
-</tt></td></tr>
+</tt></td>
+</tr>
 </table>
 </blockquote>
-
 <p>
 Field names are case insensitive (as specified by the standard) and all
 functions work with lowercase field names (but see
 <a href=socket.html#headers.canonic><tt>socket.headers.canonic</tt></a>).
 Field values are left unmodified.
 </p>
-
 <p class=note>
 Note: MIME headers are independent of order. Therefore, there is no problem
-in representing them in a Lua table. 
+in representing them in a Lua table.
 </p>
-
 <p>
 The following constants can be set to control the default behavior of
-the SMTP module: 
+the SMTP module:
 </p>
-
 <ul>
-<li> <tt>DOMAIN</tt>: domain used to greet the server;
-<li> <tt>PORT</tt>: default port used for the connection;
-<li> <tt>SERVER</tt>: default server used for the connection;
-<li> <tt>TIMEOUT</tt>: default timeout for all I/O operations;
-<li> <tt>ZONE</tt>: default time zone.
+<li><tt>DOMAIN</tt>: domain used to greet the server;
+<li><tt>PORT</tt>: default port used for the connection;
+<li><tt>SERVER</tt>: default server used for the connection;
+<li><tt>TIMEOUT</tt>: default timeout for all I/O operations;
+<li><tt>ZONE</tt>: default time zone.
 </ul>
-
 <!-- message ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
-
-<p class=name id=message> 
+<p class=name id=message>
 smtp.<b>message(</b>mesgt<b>)</b>
 </p>
-
 <p class=description>
 Returns a <em>simple</em>
-<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a> source that sends an SMTP message body, possibly multipart (arbitrarily deep). 
+<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a> source that sends an SMTP message body, possibly
+multipart (arbitrarily deep).
 </p>
-
 <p class=parameters>
 The only parameter of the function is a table describing the message.
 <tt>Mesgt</tt> has the following form (notice the recursive structure):
 </p>
-
 <blockquote>
 <table summary="Mesgt table structure">
-<tr><td><tt>
+<tr>
+<td><tt>
 mesgt = {<br>
 &nbsp;&nbsp;headers = <i>header-table</i>,<br>
-&nbsp;&nbsp;body = <i>LTN12 source</i> or <i>string</i> or 
+&nbsp;&nbsp;body = <i>LTN12 source</i> or <i>string</i> or
 <i>multipart-mesgt</i><br>
 }<br>
 &nbsp;<br>
@@ -147,29 +133,27 @@ multipart-mesgt = {<br>
 &nbsp;&nbsp;[<i>n</i>] = <i>mesgt</i>,<br>
 &nbsp;&nbsp;[epilogue = <i>string</i>,]<br>
 }<br>
-</tt></td></tr>
+</tt></td>
+</tr>
 </table>
 </blockquote>
-
 <p class=parameters>
 For a simple message, all that is needed is a set of <tt>headers</tt>
 and the <tt>body</tt>. The message <tt>body</tt> can be given as a string
-or as a <em>simple</em> 
-<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a> 
+or as a <em>simple</em>
+<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a>
 source. For multipart messages, the body is a table that
 recursively defines each part as an independent message, plus an optional
 <tt>preamble</tt> and <tt>epilogue</tt>.
 </p>
-
-<p class=return> 
-The function returns a <em>simple</em> 
-<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a> 
+<p class=return>
+The function returns a <em>simple</em>
+<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a>
 source that produces the
-message contents as defined by <tt>mesgt</tt>, chunk by chunk. 
+message contents as defined by <tt>mesgt</tt>, chunk by chunk.
 Hopefully, the following
 example will make things clear. When in doubt, refer to the appropriate RFC
-as listed in the introduction.  </p>
-
+as listed in the introduction. </p>
 <pre class=example>
 -- load the smtp support and its friends
 local smtp = require("socket.smtp")
@@ -230,11 +214,8 @@ r, e = smtp.send{
     source = source,
 }
 </pre>
-
-
 <!-- send +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
-
-<p class=name id=send> 
+<p class=name id=send>
 smtp.<b>send{</b><br>
 &nbsp;&nbsp;from = <i>string</i>,<br>
 &nbsp;&nbsp;rcpt = <i>string</i> or <i>string-table</i>,<br>
@@ -248,53 +229,47 @@ smtp.<b>send{</b><br>
 &nbsp;&nbsp;[create = <i>function</i>]<br>
 <b>}</b>
 </p>
-
 <p class=description>
 Sends a message to a recipient list. Since sending messages is not as
-simple as downloading an URL from a FTP or HTTP server, this function 
-doesn't have a simple interface. However, see the 
-<a href=#message><tt>message</tt></a> source factory for 
+simple as downloading an URL from a FTP or HTTP server, this function
+doesn't have a simple interface. However, see the
+<a href=#message><tt>message</tt></a> source factory for
 a very powerful way to define the message contents.
 </p>
-
-
 <p class=parameters>
-The sender is given by the e-mail address in the <tt>from</tt> field. 
+The sender is given by the e-mail address in the <tt>from</tt> field.
 <tt>Rcpt</tt> is a Lua table with one entry for each recipient e-mail
 address, or a string
-in case there is just one recipient. 
-The contents of the message are given by a <em>simple</em> 
-<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a> 
+in case there is just one recipient.
+The contents of the message are given by a <em>simple</em>
+<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a>
 <tt>source</tt>. Several arguments are optional:
 </p>
 <ul>
-<li> <tt>user</tt>, <tt>password</tt>: User and password for
+<li><tt>user</tt>, <tt>password</tt>: User and password for
 authentication. The function will attempt LOGIN and PLAIN authentication
 methods if supported by the server (both are unsafe);
-<li> <tt>server</tt>: Server to connect to. Defaults to "localhost";
-<li> <tt>port</tt>: Port to connect to. Defaults to 25;
-<li> <tt>domain</tt>: Domain name used to greet the server; Defaults to the
-local machine host name; 
-<li> <tt>step</tt>: 
-<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a> 
+<li><tt>server</tt>: Server to connect to. Defaults to "localhost";
+<li><tt>port</tt>: Port to connect to. Defaults to 25;
+<li><tt>domain</tt>: Domain name used to greet the server; Defaults to the
+local machine host name;
+<li><tt>step</tt>:
+<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a>
 pump step function used to pass data from the
 source to the server. Defaults to the LTN12 <tt>pump.step</tt> function;
 <li><tt>create</tt>: An optional function to be used instead of
-<a href=tcp.html#socket.tcp><tt>socket.tcp</tt></a> when the communications socket is created. 
+<a href=tcp.html#socket.tcp><tt>socket.tcp</tt></a> when the communications socket is created.
 </ul>
-
-<p class=return> 
-If  successful, the function returns 1. Otherwise, the function returns
+<p class=return>
+If successful, the function returns 1. Otherwise, the function returns
 <b><tt>nil</tt></b> followed by an error message.
 </p>
-
 <p class=note>
 Note: SMTP servers can be very picky with the format of e-mail
 addresses. To be safe, use only addresses of the form
 "<tt>&lt;fulano@example.com&gt;</tt>" in the <tt>from</tt> and
 <tt>rcpt</tt> arguments to the <tt>send</tt> function. In headers, e-mail
-addresses can take whatever form you like.  </p>
-
+addresses can take whatever form you like. </p>
 <p class=note>
 Big note: There is a good deal of misconception with the use of the
 destination address field headers, i.e., the '<tt>To</tt>', '<tt>Cc</tt>',
@@ -302,63 +277,58 @@ and, more importantly, the '<tt>Bcc</tt>' headers. Do <em>not</em> add a
 '<tt>Bcc</tt>' header to your messages because it will probably do the
 exact opposite of what you expect.
 </p>
-
 <p class=note>
 Only recipients specified in the <tt>rcpt</tt> list will receive a copy of the
-message.  Each recipient of an SMTP mail message receives a copy of the
-message body along with the headers, and nothing more.  The headers
-<em>are</em> part of the message and should be produced by the 
-<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a> 
+message. Each recipient of an SMTP mail message receives a copy of the
+message body along with the headers, and nothing more. The headers
+<em>are</em> part of the message and should be produced by the
+<a href="http://lua-users.org/wiki/FiltersSourcesAndSinks">LTN12</a>
 <tt>source</tt> function. The <tt>rcpt</tt> list is <em>not</em>
 part of the message and will not be sent to anyone.
 </p>
-
 <p class=note>
 <a href="http://www.ietf.org/rfc/rfc2822.txt">RFC 2822</a>
 has two <em>important and short</em> sections, "3.6.3. Destination address
-fields" and "5. Security considerations",  explaining the proper
-use of these headers. Here is a summary of what it says: 
+fields" and "5. Security considerations", explaining the proper
+use of these headers. Here is a summary of what it says:
 </p>
-
 <ul>
-<li> <tt>To</tt>: contains the address(es) of the primary recipient(s)
+<li><tt>To</tt>: contains the address(es) of the primary recipient(s)
 of the message;
-<li> <tt>Cc</tt>: (where the "Cc" means "Carbon Copy" in the sense of
+<li><tt>Cc</tt>: (where the "Cc" means "Carbon Copy" in the sense of
 making a copy on a typewriter using carbon paper) contains the
 addresses of others who are to receive the message, though the
 content of the message may not be directed at them;
-<li> <tt>Bcc</tt>: (where the "Bcc" means "Blind Carbon
-Copy") contains addresses of recipients of the message whose addresses are not to be revealed to other recipients of the message.
-</ul> 
-
+<li><tt>Bcc</tt>: (where the "Bcc" means "Blind Carbon
+Copy") contains addresses of recipients of the message whose addresses are not to be revealed to other recipients of the
+message.
+</ul>
 <p class=note>
-The LuaSocket <tt>send</tt> function does not care or interpret the 
-headers you send, but it gives you full control over what is sent and 
+The LuaSocket <tt>send</tt> function does not care or interpret the
+headers you send, but it gives you full control over what is sent and
 to whom it is sent:
 </p>
 <ul>
 <li> If someone is to receive the message, the e-mail address <em>has</em>
 to be in the recipient list. This is the only parameter that controls who
 gets a copy of the message;
-<li> If there are multiple recipients, none of them will automatically 
+<li> If there are multiple recipients, none of them will automatically
 know that someone else got that message. That is, the default behavior is
-similar to the <tt>Bcc</tt> field of popular e-mail clients; 
+similar to the <tt>Bcc</tt> field of popular e-mail clients;
 <li> It is up to you to add the <tt>To</tt> header with the list of primary
 recipients so that other recipients can see it;
-<li> It is also up to you to add the <tt>Cc</tt> header with the 
+<li> It is also up to you to add the <tt>Cc</tt> header with the
 list of additional recipients so that everyone else sees it;
-<li> Adding a header <tt>Bcc</tt> is nonsense, unless it is 
+<li> Adding a header <tt>Bcc</tt> is nonsense, unless it is
 empty. Otherwise, everyone receiving the message will see it and that is
 exactly what you <em>don't</em> want to happen!
 </ul>
-
 <p class=note>
-I hope this clarifies the issue. Otherwise, please refer to 
+I hope this clarifies the issue. Otherwise, please refer to
 <a href="http://www.ietf.org/rfc/rfc2821.txt">RFC 2821</a>
 and
 <a href="http://www.ietf.org/rfc/rfc2822.txt">RFC 2822</a>.
 </p>
-
 <pre class=example>
 -- load the smtp support
 local smtp = require("socket.smtp")
@@ -392,9 +362,7 @@ r, e = smtp.send{
   source = smtp.message(mesgt)
 }
 </pre>
-
 <!-- footer +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
-
 <div class=footer>
 <hr>
 <center>
@@ -413,6 +381,5 @@ Thu Apr 20 00:25:51 EDT 2006
 </p>
 </center>
 </div>
-
 </body>
 </html>

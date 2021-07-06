@@ -23,7 +23,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef USE_NTLM
 
 /* NTLM buffer fixed size, large enough for long user + host + domain */
@@ -139,5 +138,4 @@
 #endif /* BUILDING_CURL_NTLM_MSGS_C */
 
 #endif /* USE_NTLM */
-
 #endif /* HEADER_CURL_NTLM_H */

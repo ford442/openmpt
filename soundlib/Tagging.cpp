@@ -11,28 +11,17 @@
 #include "stdafx.h"
 #include "Tagging.h"
 #include "../common/version.h"
-
 OPENMPT_NAMESPACE_BEGIN
-
-
-void FileTags::SetEncoder()
-{
-	encoder = Version::Current().GetOpenMPTVersionString();
+void FileTags::SetEncoder() {
+encoder = Version::Current().GetOpenMPTVersionString();
 }
-
-
-mpt::ustring GetSampleNameFromTags(const FileTags &tags)
-{
-	mpt::ustring result;
-	if(tags.artist.empty())
-	{
-		result = tags.title;
-	} else
-	{
-		result = MPT_UFORMAT("{} (by {})")(tags.title, tags.artist);
-	}
-	return result;
+mpt::ustring GetSampleNameFromTags(const FileTags &tags) {
+mpt::ustring result;
+if(tags.artist.empty()) {
+result = tags.title;
+} else {
+result = MPT_UFORMAT("{} (by {})")(tags.title, tags.artist);
 }
-
-
+return result;
+}
 OPENMPT_NAMESPACE_END

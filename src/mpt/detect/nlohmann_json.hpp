@@ -2,7 +2,6 @@
 
 #ifndef MPT_DETECT_NLOHMANN_JSON_HPP
 #define MPT_DETECT_NLOHMANN_JSON_HPP
-
 #if defined(MPT_WITH_NLOHMANN_JSON)
 #if !defined(CPPCHECK)
 #if !__has_include(<nlohmann/json.hpp>)
@@ -21,5 +20,4 @@
 #endif
 #endif
 #endif
-
 #endif // MPT_DETECT_NLOHMANN_JSON_HPP

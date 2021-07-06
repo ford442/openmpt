@@ -41,24 +41,19 @@
 
 #ifndef PA_WIN_COINITIALIZE_H
 #define PA_WIN_COINITIALIZE_H
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
-
-
 /**
  @brief Data type used to hold the result of an attempt to initialize COM
     using PaWinUtil_CoInitialize. Must be retained between a call to
     PaWinUtil_CoInitialize and a matching call to PaWinUtil_CoUninitialize.
 */
-typedef struct PaWinUtilComInitializationResult{
-    int state;
-    DWORD initializingThreadId;
+typedef struct PaWinUtilComInitializationResult {
+int state;
+DWORD initializingThreadId;
 } PaWinUtilComInitializationResult;
-
-
 /**
  @brief Initialize Microsoft COM subsystem on the current thread.
 
@@ -72,9 +67,7 @@ typedef struct PaWinUtilComInitializationResult{
  If PaWinUtil_CoInitialize returns paNoError, the caller must later call
  PaWinUtil_CoUninitialize once.
 */
-PaError PaWinUtil_CoInitialize( PaHostApiTypeId hostApiType, PaWinUtilComInitializationResult *comInitializationResult );
-
-
+PaError PaWinUtil_CoInitialize(PaHostApiTypeId hostApiType, PaWinUtilComInitializationResult *comInitializationResult);
 /**
  @brief Uninitialize the Microsoft COM subsystem on the current thread using
  the result of a previous call to PaWinUtil_CoInitialize. Must be called on the same
@@ -85,9 +78,7 @@ PaError PaWinUtil_CoInitialize( PaHostApiTypeId hostApiType, PaWinUtilComInitial
  @param comInitializationResult An input parameter. A pointer to a value previously
  initialized by a call to PaWinUtil_CoInitialize.
 */
-void PaWinUtil_CoUninitialize( PaHostApiTypeId hostApiType, PaWinUtilComInitializationResult *comInitializationResult );
-
-
+void PaWinUtil_CoUninitialize(PaHostApiTypeId hostApiType, PaWinUtilComInitializationResult *comInitializationResult);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

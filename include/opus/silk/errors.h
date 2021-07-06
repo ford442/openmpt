@@ -27,7 +27,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef SILK_ERRORS_H
 #define SILK_ERRORS_H
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -90,9 +89,7 @@ extern "C"
 
 /* Payload has bit errors */
 #define SILK_DEC_INVALID_FRAME_SIZE                 -203
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif

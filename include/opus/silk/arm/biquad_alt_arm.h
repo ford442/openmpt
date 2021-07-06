@@ -27,9 +27,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef SILK_BIQUAD_ALT_ARM_H
 # define SILK_BIQUAD_ALT_ARM_H
-
 # include "celt/arm/armcpu.h"
-
 # if defined(OPUS_ARM_MAY_HAVE_NEON_INTR)
 void silk_biquad_alt_stride2_neon(
     const opus_int16            *in,                /* I     input signal                                               */
@@ -45,7 +43,6 @@ void silk_biquad_alt_stride2_neon(
 #   define silk_biquad_alt_stride2(in, B_Q28, A_Q28, S, out, len, arch) ((void)(arch), PRESUME_NEON(silk_biquad_alt_stride2)(in, B_Q28, A_Q28, S, out, len))
 #  endif
 # endif
-
 # if !defined(OVERRIDE_silk_biquad_alt_stride2)
 /*Is run-time CPU detection enabled on this platform?*/
 #  if defined(OPUS_HAVE_RTCD) && (defined(OPUS_ARM_MAY_HAVE_NEON_INTR) && !defined(OPUS_ARM_PRESUME_NEON_INTR))
@@ -64,5 +61,4 @@ extern void (*const SILK_BIQUAD_ALT_STRIDE2_IMPL[OPUS_ARCHMASK+1])(
 #   define silk_biquad_alt_stride2(in, B_Q28, A_Q28, S, out, len, arch) ((void)(arch), silk_biquad_alt_stride2_neon(in, B_Q28, A_Q28, S, out, len))
 #  endif
 # endif
-
 #endif /* end SILK_BIQUAD_ALT_ARM_H */

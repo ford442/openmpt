@@ -24,23 +24,19 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_PLATFORM_C)
 #include "mbedtls/platform.h"
 #else
 #include <stdio.h>
 #define mbedtls_printf     printf
 #endif
-
 #if defined(MBEDTLS_MD5_C)
 #include "mbedtls/md5.h"
 #endif
-
 #if !defined(MBEDTLS_MD5_C)
-int main( void )
-{
-    mbedtls_printf("MBEDTLS_MD5_C not defined.\n");
-    return( 0 );
+int main(void) {
+mbedtls_printf("MBEDTLS_MD5_C not defined.\n");
+return (0);
 }
 #else
 int main( void )

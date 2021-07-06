@@ -20,10 +20,8 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifndef LHASA_LHA_INPUT_STREAM_H
 #define LHASA_LHA_INPUT_STREAM_H
-
 #include <inttypes.h>
 #include "public/lha_input_stream.h"
-
 /**
  * Read a block of data from the LHA stream, of the specified number
  * of bytes.
@@ -36,7 +34,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 int lha_input_stream_read(LHAInputStream *stream, void *buf, size_t buf_len);
-
 /**
  * Skip over the specified number of bytes.
  *
@@ -46,6 +43,5 @@ int lha_input_stream_read(LHAInputStream *stream, void *buf, size_t buf_len);
  */
 
 int lha_input_stream_skip(LHAInputStream *stream, size_t bytes);
-
 #endif /* #ifndef LHASA_LHA_INPUT_STREAM_H */
 

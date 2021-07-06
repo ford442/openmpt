@@ -19,47 +19,36 @@
 #include <windows.h>
 #include <winnls.h>
 #endif
-
 #include "debug.h"
-
 /* A safe realloc also for very old systems where realloc(NULL, size) returns NULL. */
-void *safe_realloc(void *ptr, size_t size)
-{
-	if(ptr == NULL) return malloc(size);
-	else return realloc(ptr, size);
+void *safe_realloc(void *ptr, size_t size) {
+if(ptr == NULL) return malloc(size);
+else return realloc(ptr, size);
 }
-
 // A more sensible variant of realloc: It deallocates the original memory if
 // realloc fails or if size zero was requested.
-void *safer_realloc(void *ptr, size_t size)
-{
-	void *nptr = size ? safe_realloc(ptr, size) : NULL;
-	if(!nptr && ptr)
-		free(ptr);
-	return nptr;
+void *safer_realloc(void *ptr, size_t size) {
+void *nptr = size ? safe_realloc(ptr, size) : NULL;
+if(!nptr && ptr)
+free(ptr);
+return nptr;
 }
-
 #ifndef HAVE_STRERROR
-const char *strerror(int errnum)
-{
-	extern int sys_nerr;
-	extern char *sys_errlist[];
-
-	return (errnum < sys_nerr) ?  sys_errlist[errnum]  :  "";
+const char *strerror(int errnum) {
+extern int sys_nerr;
+extern char *sys_errlist[];
+return (errnum < sys_nerr) ? sys_errlist[errnum] : "";
 }
 #endif
-
-char* compat_strdup(const char *src)
-{
-	char *dest = NULL;
-	if(src)
-	{
-		size_t len;
-		len = strlen(src)+1;
-		if((dest = malloc(len)))
-			memcpy(dest, src, len);
-	}
-	return dest;
+char *compat_strdup(const char *src) {
+char *dest = NULL;
+if(src) {
+size_t len;
+len = strlen(src) + 1;
+if((dest = malloc(len)))
+memcpy(dest, src, len);
+}
+return dest;
 }
 
 /* Windows Unicode stuff */

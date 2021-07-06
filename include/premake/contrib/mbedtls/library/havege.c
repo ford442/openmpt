@@ -31,7 +31,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_HAVEGE_C)
 
 #include "mbedtls/havege.h"

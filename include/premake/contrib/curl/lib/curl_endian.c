@@ -21,9 +21,7 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #include "curl_endian.h"
-
 /*
  * Curl_read16_le()
  *
@@ -37,12 +35,10 @@
  *
  * Returns the integer.
  */
-unsigned short Curl_read16_le(const unsigned char *buf)
-{
-  return (unsigned short)(((unsigned short)buf[0]) |
-                          ((unsigned short)buf[1] << 8));
+unsigned short Curl_read16_le(const unsigned char *buf) {
+return (unsigned short) (((unsigned short) buf[0]) |
+                         ((unsigned short) buf[1] << 8));
 }
-
 /*
  * Curl_read32_le()
  *
@@ -56,12 +52,10 @@ unsigned short Curl_read16_le(const unsigned char *buf)
  *
  * Returns the integer.
  */
-unsigned int Curl_read32_le(const unsigned char *buf)
-{
-  return ((unsigned int)buf[0]) | ((unsigned int)buf[1] << 8) |
-         ((unsigned int)buf[2] << 16) | ((unsigned int)buf[3] << 24);
+unsigned int Curl_read32_le(const unsigned char *buf) {
+return ((unsigned int) buf[0]) | ((unsigned int) buf[1] << 8) |
+       ((unsigned int) buf[2] << 16) | ((unsigned int) buf[3] << 24);
 }
-
 #if (CURL_SIZEOF_CURL_OFF_T > 4)
 /*
  * Curl_read64_le()
@@ -99,7 +93,6 @@ unsigned __int64 Curl_read64_le(const unsigned char *buf)
 #endif
 
 #endif /* CURL_SIZEOF_CURL_OFF_T > 4 */
-
 /*
  * Curl_read16_be()
  *
@@ -113,12 +106,10 @@ unsigned __int64 Curl_read64_le(const unsigned char *buf)
  *
  * Returns the integer.
  */
-unsigned short Curl_read16_be(const unsigned char *buf)
-{
-  return (unsigned short)(((unsigned short)buf[0] << 8) |
-                          ((unsigned short)buf[1]));
+unsigned short Curl_read16_be(const unsigned char *buf) {
+return (unsigned short) (((unsigned short) buf[0] << 8) |
+                         ((unsigned short) buf[1]));
 }
-
 /*
  * Curl_read32_be()
  *
@@ -132,12 +123,10 @@ unsigned short Curl_read16_be(const unsigned char *buf)
  *
  * Returns the integer.
  */
-unsigned int Curl_read32_be(const unsigned char *buf)
-{
-  return ((unsigned int)buf[0] << 24) | ((unsigned int)buf[1] << 16) |
-         ((unsigned int)buf[2] << 8) | ((unsigned int)buf[3]);
+unsigned int Curl_read32_be(const unsigned char *buf) {
+return ((unsigned int) buf[0] << 24) | ((unsigned int) buf[1] << 16) |
+       ((unsigned int) buf[2] << 8) | ((unsigned int) buf[3]);
 }
-
 #if (CURL_SIZEOF_CURL_OFF_T > 4)
 /*
  * Curl_read64_be()
@@ -175,7 +164,6 @@ unsigned __int64 Curl_read64_be(const unsigned char *buf)
 #endif
 
 #endif /* CURL_SIZEOF_CURL_OFF_T > 4 */
-
 /*
  * Curl_write16_le()
  *
@@ -187,12 +175,10 @@ unsigned __int64 Curl_read64_be(const unsigned char *buf)
  * value    [in]     - The 16-bit integer value.
  * buffer   [in]     - A pointer to the output buffer.
  */
-void Curl_write16_le(const short value, unsigned char *buffer)
-{
-  buffer[0] = (char)(value & 0x00FF);
-  buffer[1] = (char)((value & 0xFF00) >> 8);
+void Curl_write16_le(const short value, unsigned char *buffer) {
+buffer[0] = (char) (value & 0x00FF);
+buffer[1] = (char) ((value & 0xFF00) >> 8);
 }
-
 /*
  * Curl_write32_le()
  *
@@ -204,14 +190,12 @@ void Curl_write16_le(const short value, unsigned char *buffer)
  * value    [in]     - The 32-bit integer value.
  * buffer   [in]     - A pointer to the output buffer.
  */
-void Curl_write32_le(const int value, unsigned char *buffer)
-{
-  buffer[0] = (char)(value & 0x000000FF);
-  buffer[1] = (char)((value & 0x0000FF00) >> 8);
-  buffer[2] = (char)((value & 0x00FF0000) >> 16);
-  buffer[3] = (char)((value & 0xFF000000) >> 24);
+void Curl_write32_le(const int value, unsigned char *buffer) {
+buffer[0] = (char) (value & 0x000000FF);
+buffer[1] = (char) ((value & 0x0000FF00) >> 8);
+buffer[2] = (char) ((value & 0x00FF0000) >> 16);
+buffer[3] = (char) ((value & 0xFF000000) >> 24);
 }
-
 #if (CURL_SIZEOF_CURL_OFF_T > 4)
 /*
  * Curl_write64_le()

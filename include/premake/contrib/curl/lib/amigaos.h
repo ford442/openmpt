@@ -22,18 +22,14 @@
  *
  ***************************************************************************/
 #include "curl_setup.h"
-
 #if defined(__AMIGA__) && !defined(__ixemul__)
 
 bool Curl_amiga_init();
 void Curl_amiga_cleanup();
 
 #else
-
 #define Curl_amiga_init() 1
 #define Curl_amiga_cleanup() Curl_nop_stmt
-
 #endif
-
 #endif /* HEADER_CURL_AMIGAOS_H */
 

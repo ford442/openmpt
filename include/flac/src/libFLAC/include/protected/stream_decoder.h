@@ -32,34 +32,29 @@
 
 #ifndef FLAC__PROTECTED__STREAM_DECODER_H
 #define FLAC__PROTECTED__STREAM_DECODER_H
-
 #include "FLAC/stream_decoder.h"
 #if FLAC__HAS_OGG
 #include "private/ogg_decoder_aspect.h"
 #endif
-
 typedef struct FLAC__StreamDecoderProtected {
-	FLAC__StreamDecoderState state;
-	FLAC__StreamDecoderInitStatus initstate;
-	uint32_t channels;
-	FLAC__ChannelAssignment channel_assignment;
-	uint32_t bits_per_sample;
-	uint32_t sample_rate; /* in Hz */
-	uint32_t blocksize; /* in samples (per channel) */
-	FLAC__bool md5_checking; /* if true, generate MD5 signature of decoded data and compare against signature in the STREAMINFO metadata block */
+FLAC__StreamDecoderState state;
+FLAC__StreamDecoderInitStatus initstate;
+uint32_t channels;
+FLAC__ChannelAssignment channel_assignment;
+uint32_t bits_per_sample;
+uint32_t sample_rate; /* in Hz */
+uint32_t blocksize; /* in samples (per channel) */
+FLAC__bool md5_checking; /* if true, generate MD5 signature of decoded data and compare against signature in the STREAMINFO metadata block */
 #if FLAC__HAS_OGG
-	FLAC__OggDecoderAspect ogg_decoder_aspect;
+FLAC__OggDecoderAspect ogg_decoder_aspect;
 #endif
 } FLAC__StreamDecoderProtected;
-
 /*
  * return the number of input bytes consumed
  */
 uint32_t FLAC__stream_decoder_get_input_bytes_unconsumed(const FLAC__StreamDecoder *decoder);
-
 /*
  * return client_data from decoder
  */
 FLAC_API void *get_client_data_from_decoder(FLAC__StreamDecoder *decoder);
-
 #endif

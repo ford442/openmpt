@@ -23,7 +23,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #if defined(USE_NTLM)
 
 #if !defined(USE_WINDOWS_SSPI) || defined(USE_WIN32_CRYPTO)
@@ -102,5 +101,4 @@ CURLcode  Curl_ntlm_core_mk_lmv2_resp(unsigned char *ntlmv2hash,
 #endif /* !USE_WINDOWS_SSPI || USE_WIN32_CRYPTO */
 
 #endif /* USE_NTLM */
-
 #endif /* HEADER_CURL_NTLM_CORE_H */

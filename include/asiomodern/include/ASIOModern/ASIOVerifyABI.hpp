@@ -1,15 +1,10 @@
 
 #ifndef ASIO_ASIOVERIFY_ABI_HPP
 #define ASIO_ASIOVERIFY_ABI_HPP
-
-
-
 #include "ASIOVersion.hpp"
 #include "ASIOConfig.hpp"
 #include "ASIOCore.hpp"
-
 #include "ASIOConfig.hpp"
-
 #if __has_include(<iasiodrv.h>)
 #define ASIO_ABI_VERIFIED 1
 #include <iasiodrv.h>
@@ -17,13 +12,7 @@
 #define ASIO_ABI_VERIFIED 0
 ASIO_WARNING("Warning: iasiodrv.h not found. ASIO ABI is not verified.")
 #endif
-
-
-
 namespace ASIO {
-
-
-
 #if ASIO_ABI_VERIFIED
 
 inline namespace VerifyABI {
@@ -119,9 +108,6 @@ static_assert(alignof(ASIO::ISystemDriver) == alignof(::IASIO));
 } // namespace VerifyABI
 
 #endif // ASIO_ABI_VERIFIED
-
-
-
 } // namespace ASIO
 
 

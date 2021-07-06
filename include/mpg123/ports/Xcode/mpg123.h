@@ -7,11 +7,8 @@
 
 #ifndef MPG123_XCODE_H
 #define MPG123_XCODE_H
-
 #include <stdlib.h>
 #include <sys/types.h>
-
 #define MPG123_NO_CONFIGURE
 #include "../../src/libmpg123/mpg123.h.in" /* Yes, .h.in; we include the configure template! */
-
 #endif

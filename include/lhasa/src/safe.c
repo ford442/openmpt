@@ -21,7 +21,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-
 #include "lib/lha_arch.h"
 
 // Routines for safe terminal output.
@@ -42,22 +41,19 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 // TODO: This may not be ideal behavior for handling files with
 // names that contain Unicode characters.
 
-static void safe_output(FILE *stream, unsigned char *str)
-{
-	unsigned char *p;
+static void safe_output(FILE *stream, unsigned char *str) {
+unsigned char *p;
+for(p = str; *p != '\0'; ++p) {
 
-	for (p = str; *p != '\0'; ++p) {
+// Accept only plain ASCII characters.
+// Control characters (0x00-0x1f) are rejected,
+// as is 0x7f and all characters in the upper range.
 
-		// Accept only plain ASCII characters.
-		// Control characters (0x00-0x1f) are rejected,
-		// as is 0x7f and all characters in the upper range.
-
-		if (*p < 0x20 || *p >= 0x7f) {
-			*p = '?';
-		}
-	}
-
-	fprintf(stream, "%s", str);
+if(*p < 0x20 || *p >= 0x7f) {
+*p = '?';
+}
+}
+fprintf(stream, "%s", str);
 }
 
 // Version of printf() that strips out any potentially malicious
@@ -65,43 +61,32 @@ static void safe_output(FILE *stream, unsigned char *str)
 // Note: all escape characters are considered potentially malicious,
 // including newline characters.
 
-int safe_fprintf(FILE *stream, char *format, ...)
-{
-	va_list args;
-	int result;
-	unsigned char *str;
-
-	va_start(args, format);
-
-	result = lha_arch_vasprintf((char **) &str, format, args);
-	if (str == NULL) {
-		exit(-1);
-	}
-	safe_output(stream, str);
-	free(str);
-
-	va_end(args);
-
-	return result;
+int safe_fprintf(FILE *stream, char *format, ...) {
+va_list args;
+int result;
+unsigned char *str;
+va_start(args, format);
+result = lha_arch_vasprintf((char **) &str, format, args);
+if(str == NULL) {
+exit(-1);
 }
-
-int safe_printf(char *format, ...)
-{
-	va_list args;
-	int result;
-	unsigned char *str;
-
-	va_start(args, format);
-
-	result = lha_arch_vasprintf((char **) &str, format, args);
-	if (str == NULL) {
-		exit(-1);
-	}
-	safe_output(stdout, str);
-	free(str);
-
-	va_end(args);
-
-	return result;
+safe_output(stream, str);
+free(str);
+va_end(args);
+return result;
+}
+int safe_printf(char *format, ...) {
+va_list args;
+int result;
+unsigned char *str;
+va_start(args, format);
+result = lha_arch_vasprintf((char **) &str, format, args);
+if(str == NULL) {
+exit(-1);
+}
+safe_output(stdout, str);
+free(str);
+va_end(args);
+return result;
 }
 

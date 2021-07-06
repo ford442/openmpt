@@ -40,7 +40,6 @@
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
-
 #if defined(MBEDTLS_BIGNUM_C)
 
 #include "mbedtls/bignum.h"

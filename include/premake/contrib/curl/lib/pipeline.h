@@ -29,19 +29,14 @@ void Curl_move_handle_from_send_to_recv_pipe(struct Curl_easy *handle,
                                              struct connectdata *conn);
 bool Curl_pipeline_penalized(struct Curl_easy *data,
                              struct connectdata *conn);
-
 bool Curl_pipeline_site_blacklisted(struct Curl_easy *handle,
                                     struct connectdata *conn);
-
 CURLMcode Curl_pipeline_set_site_blacklist(char **sites,
                                            struct curl_llist **list_ptr);
-
 bool Curl_pipeline_server_blacklisted(struct Curl_easy *handle,
                                       char *server_name);
-
 CURLMcode Curl_pipeline_set_server_blacklist(char **servers,
                                              struct curl_llist **list_ptr);
-
 bool Curl_pipeline_checkget_write(struct Curl_easy *data,
                                   struct connectdata *conn);
 bool Curl_pipeline_checkget_read(struct Curl_easy *data,
@@ -52,5 +47,4 @@ bool Curl_recvpipe_head(struct Curl_easy *data,
                         struct connectdata *conn);
 bool Curl_sendpipe_head(struct Curl_easy *data,
                         struct connectdata *conn);
-
 #endif /* HEADER_CURL_PIPELINE_H */

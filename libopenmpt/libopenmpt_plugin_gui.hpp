@@ -9,27 +9,19 @@
 
 #ifndef LIBOPENMPT_PLUGIN_GUI_HPP
 #define LIBOPENMPT_PLUGIN_GUI_HPP
-
 #include "libopenmpt_plugin_settings.hpp"
-
 #include <windows.h>
-
 #include <string>
-
 namespace libopenmpt {
 namespace plugin {
-
 #if defined(MPT_WITH_MFC)
 
 void DllMainAttach();
 void DllMainDetach();
 
 #endif // MPT_WITH_MFC
-
-void gui_edit_settings( libopenmpt_settings * s, HWND parent, std::basic_string<TCHAR> title );
-
-void gui_show_file_info( HWND parent, std::basic_string<TCHAR> title, std::basic_string<TCHAR> info );
-
+void gui_edit_settings(libopenmpt_settings *s, HWND parent, std::basic_string <TCHAR> title);
+void gui_show_file_info(HWND parent, std::basic_string <TCHAR> title, std::basic_string <TCHAR> info);
 } // namespace plugin
 } // namespace libopenmpt
 

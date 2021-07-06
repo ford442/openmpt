@@ -509,5 +509,4 @@
 
 /* Define to the function return type for send. */
 #define SEND_TYPE_RETV ssize_t
-
 #endif /* HEADER_CURL_CONFIG_RISCOS_H */

@@ -10,197 +10,159 @@
 
 #include "stdafx.h"
 #include "ComponentManager.h"
-
 #include "mpt/mutex/mutex.hpp"
-
 #include "Logging.h"
-
 OPENMPT_NAMESPACE_BEGIN
-
-
 ComponentBase::ComponentBase(ComponentType type)
-	: m_Type(type)
-	, m_Initialized(false)
-	, m_Available(false)
-{
-	return;
+        : m_Type(type), m_Initialized(false), m_Available(false) {
+return;
 }
-
-
-ComponentBase::~ComponentBase()
-{
-	return;
+ComponentBase::~ComponentBase() {
+return;
 }
-
-
-void ComponentBase::SetInitialized()
-{
-	m_Initialized = true;
+void ComponentBase::SetInitialized() {
+m_Initialized = true;
 }
-
-
-void ComponentBase::SetAvailable()
-{
-	m_Available = true;
+void ComponentBase::SetAvailable() {
+m_Available = true;
 }
-
-
-ComponentType ComponentBase::GetType() const
-{
-	return m_Type;
+ComponentType ComponentBase::GetType() const {
+return m_Type;
 }
-
-
-bool ComponentBase::IsInitialized() const
-{
-	return m_Initialized;
+bool ComponentBase::IsInitialized() const {
+return m_Initialized;
 }
-
-
-bool ComponentBase::IsAvailable() const
-{
-	return m_Initialized && m_Available;
+bool ComponentBase::IsAvailable() const {
+return m_Initialized && m_Available;
 }
-
-
-mpt::ustring ComponentBase::GetVersion() const
-{
-	return mpt::ustring();
+mpt::ustring ComponentBase::GetVersion() const {
+return mpt::ustring();
 }
-
-
-void ComponentBase::Initialize()
-{
-	if(IsInitialized())
-	{
-		return;
-	}
-	if(DoInitialize())
-	{
-		SetAvailable();
-	}
-	SetInitialized();
+void ComponentBase::Initialize() {
+if(IsInitialized()) {
+return;
 }
-
-
+if(DoInitialize()) {
+SetAvailable();
+}
+SetInitialized();
+}
 #if defined(MODPLUG_TRACKER)
 
 
 ComponentLibrary::ComponentLibrary(ComponentType type)
-	: ComponentBase(type)
-	, m_BindFailed(false)
+    : ComponentBase(type)
+    , m_BindFailed(false)
 {
-	return;
+    return;
 }
 
 
 ComponentLibrary::~ComponentLibrary()
 {
-	return;
+    return;
 }
 
 
 bool ComponentLibrary::AddLibrary(const std::string &libName, const mpt::LibraryPath &libPath)
 {
-	if(m_Libraries[libName].IsValid())
-	{
-		// prefer previous
-		return true;
-	}
-	mpt::Library lib(libPath);
-	if(!lib.IsValid())
-	{
-		return false;
-	}
-	m_Libraries[libName] = lib;
-	return true;
+    if(m_Libraries[libName].IsValid())
+    {
+        // prefer previous
+        return true;
+    }
+    mpt::Library lib(libPath);
+    if(!lib.IsValid())
+    {
+        return false;
+    }
+    m_Libraries[libName] = lib;
+    return true;
 }
 
 
 void ComponentLibrary::ClearLibraries()
 {
-	m_Libraries.clear();
+    m_Libraries.clear();
 }
 
 
 void ComponentLibrary::SetBindFailed()
 {
-	m_BindFailed = true;
+    m_BindFailed = true;
 }
 
 
 void ComponentLibrary::ClearBindFailed()
 {
-	m_BindFailed = false;
+    m_BindFailed = false;
 }
 
 
 bool ComponentLibrary::HasBindFailed() const
 {
-	return m_BindFailed;
+    return m_BindFailed;
 }
 
 
 mpt::Library ComponentLibrary::GetLibrary(const std::string &libName) const
 {
-	const auto it = m_Libraries.find(libName);
-	if(it == m_Libraries.end())
-	{
-		return mpt::Library();
-	}
-	return it->second;
+    const auto it = m_Libraries.find(libName);
+    if(it == m_Libraries.end())
+    {
+        return mpt::Library();
+    }
+    return it->second;
 }
 
 
 #endif // MODPLUG_TRACKER
-
-
 #if MPT_COMPONENT_MANAGER
 
 
 ComponentFactoryBase::ComponentFactoryBase(const std::string &id, const std::string &settingsKey)
-	: m_ID(id)
-	, m_SettingsKey(settingsKey)
+    : m_ID(id)
+    , m_SettingsKey(settingsKey)
 {
-	return;
+    return;
 }
 
 
 ComponentFactoryBase::~ComponentFactoryBase()
 {
-	return;
+    return;
 }
 
 
 std::string ComponentFactoryBase::GetID() const
 {
-	return m_ID;
+    return m_ID;
 }
 
 
 std::string ComponentFactoryBase::GetSettingsKey() const
 {
-	return m_SettingsKey;
+    return m_SettingsKey;
 }
 
 
 void ComponentFactoryBase::PreConstruct() const
 {
-	MPT_LOG_GLOBAL(LogInformation, "Components", 
-		MPT_UFORMAT("Constructing Component {}")
-			( mpt::ToUnicode(mpt::Charset::ASCII, m_ID)
-			)
-		);
+    MPT_LOG_GLOBAL(LogInformation, "Components",
+        MPT_UFORMAT("Constructing Component {}")
+            ( mpt::ToUnicode(mpt::Charset::ASCII, m_ID)
+            )
+        );
 }
 
 
 void ComponentFactoryBase::Initialize(ComponentManager &componentManager, std::shared_ptr<IComponent> component) const
 {
-	if(componentManager.IsComponentBlocked(GetSettingsKey()))
-	{
-		return;
-	}
-	componentManager.InitializeComponent(component);
+    if(componentManager.IsComponentBlocked(GetSettingsKey()))
+    {
+        return;
+    }
+    componentManager.InitializeComponent(component);
 }
 
 
@@ -218,31 +180,31 @@ void ComponentFactoryBase::Initialize(ComponentManager &componentManager, std::s
 
 static mpt::mutex & ComponentListMutex()
 {
-	static mpt::mutex g_ComponentListMutex;
-	return g_ComponentListMutex;
+    static mpt::mutex g_ComponentListMutex;
+    return g_ComponentListMutex;
 }
 
 static ComponentListEntry * & ComponentListHead()
 {
-	static ComponentListEntry g_ComponentListHeadEmpty = {nullptr, nullptr};
-	static ComponentListEntry *g_ComponentListHead = &g_ComponentListHeadEmpty;
-	return g_ComponentListHead;
+    static ComponentListEntry g_ComponentListHeadEmpty = {nullptr, nullptr};
+    static ComponentListEntry *g_ComponentListHead = &g_ComponentListHeadEmpty;
+    return g_ComponentListHead;
 }
 
 bool ComponentListPush(ComponentListEntry *entry)
 {
-	mpt::lock_guard<mpt::mutex> guard(ComponentListMutex());
+    mpt::lock_guard<mpt::mutex> guard(ComponentListMutex());
 #if MPT_MSVC_BEFORE(2019,0)
-	// Guard against VS2017 compiler bug causing repeated initialization of inline variables.
-	// See <https://developercommunity.visualstudio.com/t/static-inline-variable-gets-destroyed-multiple-tim/297876>.
-	if(entry->next)
-	{
-		return false;
-	}
+    // Guard against VS2017 compiler bug causing repeated initialization of inline variables.
+    // See <https://developercommunity.visualstudio.com/t/static-inline-variable-gets-destroyed-multiple-tim/297876>.
+    if(entry->next)
+    {
+        return false;
+    }
 #endif
-	entry->next = ComponentListHead();
-	ComponentListHead() = entry;
-	return true;
+    entry->next = ComponentListHead();
+    ComponentListHead() = entry;
+    return true;
 }
 
 
@@ -251,225 +213,223 @@ static std::shared_ptr<ComponentManager> g_ComponentManager;
 
 void ComponentManager::Init(const IComponentManagerSettings &settings)
 {
-	MPT_LOG_GLOBAL(LogInformation, "Components", U_("Init"));
-	// cannot use make_shared because the constructor is private
-	g_ComponentManager = std::shared_ptr<ComponentManager>(new ComponentManager(settings));
+    MPT_LOG_GLOBAL(LogInformation, "Components", U_("Init"));
+    // cannot use make_shared because the constructor is private
+    g_ComponentManager = std::shared_ptr<ComponentManager>(new ComponentManager(settings));
 }
 
 
 void ComponentManager::Release()
 {
-	MPT_LOG_GLOBAL(LogInformation, "Components", U_("Release"));
-	g_ComponentManager = nullptr;
+    MPT_LOG_GLOBAL(LogInformation, "Components", U_("Release"));
+    g_ComponentManager = nullptr;
 }
 
 
 std::shared_ptr<ComponentManager> ComponentManager::Instance()
 {
-	return g_ComponentManager;
+    return g_ComponentManager;
 }
 
 
 ComponentManager::ComponentManager(const IComponentManagerSettings &settings)
-	: m_Settings(settings)
+    : m_Settings(settings)
 {
-	mpt::lock_guard<mpt::mutex> guard(ComponentListMutex());
-	for(ComponentListEntry *entry = ComponentListHead(); entry; entry = entry->next)
-	{
-		if(entry->reg)
-		{
-			entry->reg(*this);
-		}
-	}
+    mpt::lock_guard<mpt::mutex> guard(ComponentListMutex());
+    for(ComponentListEntry *entry = ComponentListHead(); entry; entry = entry->next)
+    {
+        if(entry->reg)
+        {
+            entry->reg(*this);
+        }
+    }
 }
 
 
 void ComponentManager::Register(const IComponentFactory &componentFactory)
 {
-	if(m_Components.find(componentFactory.GetID()) != m_Components.end())
-	{
-		return;
-	}
-	RegisteredComponent registeredComponent;
-	registeredComponent.settingsKey = componentFactory.GetSettingsKey();
-	registeredComponent.factoryMethod = componentFactory.GetStaticConstructor();
-	registeredComponent.instance = nullptr;
-	registeredComponent.weakInstance = std::weak_ptr<IComponent>();
-	m_Components.insert(std::make_pair(componentFactory.GetID(), registeredComponent));
+    if(m_Components.find(componentFactory.GetID()) != m_Components.end())
+    {
+        return;
+    }
+    RegisteredComponent registeredComponent;
+    registeredComponent.settingsKey = componentFactory.GetSettingsKey();
+    registeredComponent.factoryMethod = componentFactory.GetStaticConstructor();
+    registeredComponent.instance = nullptr;
+    registeredComponent.weakInstance = std::weak_ptr<IComponent>();
+    m_Components.insert(std::make_pair(componentFactory.GetID(), registeredComponent));
 }
 
 
 void ComponentManager::Startup()
 {
-	MPT_LOG_GLOBAL(LogDebug, "Components", U_("Startup"));
-	if(m_Settings.LoadOnStartup())
-	{
-		for(auto &it : m_Components)
-		{
-			it.second.instance = it.second.factoryMethod(*this);
-			it.second.weakInstance = it.second.instance;
-		}
-	}
-	if(!m_Settings.KeepLoaded())
-	{
-		for(auto &it : m_Components)
-		{
-			it.second.instance = nullptr;
-		}
-	}
+    MPT_LOG_GLOBAL(LogDebug, "Components", U_("Startup"));
+    if(m_Settings.LoadOnStartup())
+    {
+        for(auto &it : m_Components)
+        {
+            it.second.instance = it.second.factoryMethod(*this);
+            it.second.weakInstance = it.second.instance;
+        }
+    }
+    if(!m_Settings.KeepLoaded())
+    {
+        for(auto &it : m_Components)
+        {
+            it.second.instance = nullptr;
+        }
+    }
 }
 
 
 bool ComponentManager::IsComponentBlocked(const std::string &settingsKey) const
 {
-	if(settingsKey.empty())
-	{
-		return false;
-	}
-	return m_Settings.IsBlocked(settingsKey);
+    if(settingsKey.empty())
+    {
+        return false;
+    }
+    return m_Settings.IsBlocked(settingsKey);
 }
 
 
 void ComponentManager::InitializeComponent(std::shared_ptr<IComponent> component) const
 {
-	if(!component)
-	{
-		return;
-	}
-	if(component->IsInitialized())
-	{
-		return;
-	}
-	component->Initialize();
+    if(!component)
+    {
+        return;
+    }
+    if(component->IsInitialized())
+    {
+        return;
+    }
+    component->Initialize();
 }
 
 
 std::shared_ptr<const IComponent> ComponentManager::GetComponent(const IComponentFactory &componentFactory)
 {
-	std::shared_ptr<IComponent> component = nullptr;
-	auto it = m_Components.find(componentFactory.GetID());
-	if(it != m_Components.end())
-	{ // registered component
-		if((*it).second.instance)
-		{ // loaded
-			component = (*it).second.instance;
-		} else
-		{ // not loaded
-			component = (*it).second.weakInstance.lock();
-			if(!component)
-			{
-				component = (*it).second.factoryMethod(*this);
-			}
-			if(m_Settings.KeepLoaded())
-			{ // keep the component loaded
-				(*it).second.instance = component;
-			}
-			(*it).second.weakInstance = component;
-		}
-	} else
-	{ // unregistered component
-		component = componentFactory.Construct(*this);
-	}
-	MPT_ASSERT(component);
-	return component;
+    std::shared_ptr<IComponent> component = nullptr;
+    auto it = m_Components.find(componentFactory.GetID());
+    if(it != m_Components.end())
+    { // registered component
+        if((*it).second.instance)
+        { // loaded
+            component = (*it).second.instance;
+        } else
+        { // not loaded
+            component = (*it).second.weakInstance.lock();
+            if(!component)
+            {
+                component = (*it).second.factoryMethod(*this);
+            }
+            if(m_Settings.KeepLoaded())
+            { // keep the component loaded
+                (*it).second.instance = component;
+            }
+            (*it).second.weakInstance = component;
+        }
+    } else
+    { // unregistered component
+        component = componentFactory.Construct(*this);
+    }
+    MPT_ASSERT(component);
+    return component;
 }
 
 
 std::shared_ptr<const IComponent> ComponentManager::ReloadComponent(const IComponentFactory &componentFactory)
 {
-	std::shared_ptr<IComponent> component = nullptr;
-	auto it = m_Components.find(componentFactory.GetID());
-	if(it != m_Components.end())
-	{ // registered component
-		if((*it).second.instance)
-		{ // loaded
-			(*it).second.instance = nullptr;
-			if(!(*it).second.weakInstance.expired())
-			{
-				throw std::runtime_error("Component not completely unloaded. Cannot reload.");
-			}
-			(*it).second.weakInstance = std::weak_ptr<IComponent>();
-		}
-		// not loaded
-		component = (*it).second.factoryMethod(*this);
-		if(m_Settings.KeepLoaded())
-		{ // keep the component loaded
-			(*it).second.instance = component;
-		}
-		(*it).second.weakInstance = component;
-	} else
-	{ // unregistered component
-		component = componentFactory.Construct(*this);
-	}
-	MPT_ASSERT(component);
-	return component;
+    std::shared_ptr<IComponent> component = nullptr;
+    auto it = m_Components.find(componentFactory.GetID());
+    if(it != m_Components.end())
+    { // registered component
+        if((*it).second.instance)
+        { // loaded
+            (*it).second.instance = nullptr;
+            if(!(*it).second.weakInstance.expired())
+            {
+                throw std::runtime_error("Component not completely unloaded. Cannot reload.");
+            }
+            (*it).second.weakInstance = std::weak_ptr<IComponent>();
+        }
+        // not loaded
+        component = (*it).second.factoryMethod(*this);
+        if(m_Settings.KeepLoaded())
+        { // keep the component loaded
+            (*it).second.instance = component;
+        }
+        (*it).second.weakInstance = component;
+    } else
+    { // unregistered component
+        component = componentFactory.Construct(*this);
+    }
+    MPT_ASSERT(component);
+    return component;
 }
 
 
 std::vector<std::string> ComponentManager::GetRegisteredComponents() const
 {
-	std::vector<std::string> result;
-	result.reserve(m_Components.size());
-	for(const auto &it : m_Components)
-	{
-		result.push_back(it.first);
-	}
-	return result;
+    std::vector<std::string> result;
+    result.reserve(m_Components.size());
+    for(const auto &it : m_Components)
+    {
+        result.push_back(it.first);
+    }
+    return result;
 }
 
 
 ComponentInfo ComponentManager::GetComponentInfo(std::string name) const
 {
-	ComponentInfo result;
-	result.name = name;
-	result.state = ComponentStateUnregistered;
-	result.settingsKey = "";
-	result.type = ComponentTypeUnknown;
-	const auto it = m_Components.find(name);
-	if(it == m_Components.end())
-	{
-		result.state = ComponentStateUnregistered;
-		return result;
-	}
-	result.settingsKey = it->second.settingsKey;
-	if(IsComponentBlocked(it->second.settingsKey))
-	{
-		result.state = ComponentStateBlocked;
-		return result;
-	}
-	std::shared_ptr<IComponent> component = it->second.instance;
-	if(!component)
-	{
-		component = it->second.weakInstance.lock();
-	}
-	if(!component)
-	{
-		result.state = ComponentStateUnintialized;
-		return result;
-	}
-	result.type = component->GetType();
-	if(!component->IsInitialized())
-	{
-		result.state = ComponentStateUnintialized;
-		return result;
-	}
-	if(!component->IsAvailable())
-	{
-		result.state = ComponentStateUnavailable;
-		return result;
-	}
-	result.state = ComponentStateAvailable;
-	return result;
+    ComponentInfo result;
+    result.name = name;
+    result.state = ComponentStateUnregistered;
+    result.settingsKey = "";
+    result.type = ComponentTypeUnknown;
+    const auto it = m_Components.find(name);
+    if(it == m_Components.end())
+    {
+        result.state = ComponentStateUnregistered;
+        return result;
+    }
+    result.settingsKey = it->second.settingsKey;
+    if(IsComponentBlocked(it->second.settingsKey))
+    {
+        result.state = ComponentStateBlocked;
+        return result;
+    }
+    std::shared_ptr<IComponent> component = it->second.instance;
+    if(!component)
+    {
+        component = it->second.weakInstance.lock();
+    }
+    if(!component)
+    {
+        result.state = ComponentStateUnintialized;
+        return result;
+    }
+    result.type = component->GetType();
+    if(!component->IsInitialized())
+    {
+        result.state = ComponentStateUnintialized;
+        return result;
+    }
+    if(!component->IsAvailable())
+    {
+        result.state = ComponentStateUnavailable;
+        return result;
+    }
+    result.state = ComponentStateAvailable;
+    return result;
 }
 
 
 mpt::PathString ComponentManager::GetComponentPath() const
 {
-	return m_Settings.Path();
+    return m_Settings.Path();
 }
 
 
 #endif // MPT_COMPONENT_MANAGER
-
-
 OPENMPT_NAMESPACE_END

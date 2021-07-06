@@ -21,7 +21,6 @@
  ***************************************************************************/
 
 #include "curl_setup.h"
-
 #ifdef NETWARE /* Novell NetWare */
 
 #ifdef __NOVELL_LIBC__
