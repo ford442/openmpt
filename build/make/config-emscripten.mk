@@ -32,9 +32,9 @@ CFLAGS   += -pthread
 LDFLAGS  += -pthread
 endif
 
-CXXFLAGS += -Os
-CFLAGS   += -Os
-LDFLAGS  += -Os
+CXXFLAGS += -O3
+CFLAGS   += -O3
+LDFLAGS  += -O3
 
 # Enable LTO as recommended by Emscripten
 CXXFLAGS += -flto=thin
@@ -46,7 +46,7 @@ ifeq ($(EMSCRIPTEN_TARGET),default)
 CPPFLAGS += -DMPT_BUILD_WASM
 CXXFLAGS += 
 CFLAGS   += 
-LDFLAGS  += 
+LDFLAGS  += -s WASM=1 -sSUPPORT_BIG_ENDIAN=1 -sASSERTIONS=0  -s ENVIRONMENT=web -s INITIAL_MEMORY=1400mb -s MALLOC="emmalloc" -sSUPPORT_LONGJMP=0 -DNDEBUG -sPRINTF_LONG_DOUBLE=1 
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
