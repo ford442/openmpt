@@ -35,22 +35,31 @@ How to compile
 
  -  Supported Visual Studio versions:
 
-     -  Visual Studio 2017 and 2019 Community/Professional/Enterprise
+     -  Visual Studio 2017, 2019, and 2022 Community/Professional/Enterprise
 
         To compile the project, open `build/vsVERSIONwin7/OpenMPT.sln` (VERSION
-        being 2017 or 2019) and hit the compile button. Other target systems can
-        be found in the `vs2017*` and `vs2019*` sibling folders.
+        being 2017, 2019, or 2022) and hit the compile button. Other target
+        systems can be found in the `vs2017*`, `vs2019*`, and `vs2022` sibling
+        folders.
 
         Note that you have to build the `PluginBridge` and `PluginBridgeLegacy`
         projects manually for architectures other than the one you are building
         OpenMPT for, as Visual Studio only builds one architecture configuration
         at a time.
 
- -  OpenMPT requires the compile host system to be 64bit x86-64.
+ -  OpenMPT requires the compile host system to be Windows 8.1 (or later) amd64,
+    or Windows 11 (or later) ARM64.
 
- -  The Windows 8.1 SDK is required to build OpenMPT with Visual Studio 2017
-    (this is included with Visual Studio, however may need to be selected
-    explicitly during setup).
+ -  In order to build OpenMPT for Windows XP, the Visual Studio 2017 XP 
+    targetting toolset as well as the Windows 8.1 SDK need to be installed. The
+    SDK is optionally included with Visual Studio 2017, but must be separately
+    installed with later Visual Studio versions.
+
+    The Windows 8.1 SDK is available from
+    <https://developer.microsoft.com/en-us/windows/downloads/sdk-archive/> or
+    directly from
+    <https://download.microsoft.com/download/B/0/C/B0C80BA3-8AD6-4958-810B-6882485230B5/standalonesdk/sdksetup.exe>
+    .
 
  -  Microsoft Foundation Classes (MFC) are required to build OpenMPT.
 

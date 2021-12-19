@@ -86,6 +86,7 @@
 			SSE3 = "-msse3",
 			SSSE3 = "-mssse3",
 			["SSE4.1"] = "-msse4.1",
+			["SSE4.2"] = "-msse4.2",
 		},
 		isaextensions = {
 			MOVBE = "-mmovbe",
@@ -101,9 +102,10 @@
 			RDRND = "-mrdrnd",
 		},
 		warnings = {
-			Extra = {"-Wall", "-Wextra"},
-			High = "-Wall",
 			Off = "-w",
+			High = "-Wall",
+			Extra = {"-Wall", "-Wextra"},
+			Everything = "-Weverything",
 		},
 		symbols = function(cfg, mappings)
 			local values = gcc.getdebugformat(cfg)
@@ -144,7 +146,7 @@
 	function gcc.getcflags(cfg)
 		local shared_flags = config.mapFlags(cfg, gcc.shared)
 		local cflags = config.mapFlags(cfg, gcc.cflags)
-		local flags = table.join(shared_flags, cflags)
+		local flags = table.join(shared_flags, cflags, gcc.getsystemversionflags(cfg))
 		flags = table.join(flags, gcc.getwarnings(cfg))
 		return flags
 	end
@@ -161,6 +163,23 @@
 			table.insert(result, '-Werror=' .. fatal)
 		end
 		return result
+	end
+
+--
+-- Returns C/C++ system version build flags
+--
+
+	function gcc.getsystemversionflags(cfg)
+		local flags = {}
+
+		if cfg.system == p.MACOSX then
+			local minVersion = p.project.systemversion(cfg)
+			if minVersion ~= nil then
+				table.insert (flags, "-mmacosx-version-min=" .. minVersion)
+			end
+		end
+
+		return flags
 	end
 
 
@@ -183,6 +202,8 @@
 			["C++14"] = "-std=c++14",
 			["C++1z"] = "-std=c++1z",
 			["C++17"] = "-std=c++17",
+			["C++2a"] = "-std=c++2a",
+			["C++20"] = "-std=c++20",
 			["gnu++98"] = "-std=gnu++98",
 			["gnu++0x"] = "-std=gnu++0x",
 			["gnu++11"] = "-std=gnu++11",
@@ -190,6 +211,9 @@
 			["gnu++14"] = "-std=gnu++14",
 			["gnu++1z"] = "-std=gnu++1z",
 			["gnu++17"] = "-std=gnu++17",
+			["gnu++2a"] = "-std=gnu++2a",
+			["gnu++20"] = "-std=gnu++20",
+			["C++latest"] = "-std=c++20",
 		},
 		rtti = {
 			Off = "-fno-rtti"
@@ -209,7 +233,7 @@
 		local shared_flags = config.mapFlags(cfg, gcc.shared)
 		local cxxflags = config.mapFlags(cfg, gcc.cxxflags)
 		local flags = table.join(shared_flags, cxxflags)
-		flags = table.join(flags, gcc.getwarnings(cfg))
+		flags = table.join(flags, gcc.getwarnings(cfg), gcc.getsystemversionflags(cfg))
 		return flags
 	end
 
@@ -261,12 +285,20 @@
 -- Decorate include file search paths for the GCC command line.
 --
 
-	function gcc.getincludedirs(cfg, dirs, sysdirs)
+	function gcc.getincludedirs(cfg, dirs, sysdirs, frameworkdirs)
 		local result = {}
 		for _, dir in ipairs(dirs) do
 			dir = project.getrelative(cfg.project, dir)
 			table.insert(result, '-I' .. p.quoted(dir))
 		end
+
+		if table.contains(os.getSystemTags(cfg.system), "darwin") then
+			for _, dir in ipairs(frameworkdirs or {}) do
+				dir = project.getrelative(cfg.project, dir)
+				table.insert(result, '-F' .. p.quoted(dir))
+			end
+		end
+
 		for _, dir in ipairs(sysdirs or {}) do
 			dir = project.getrelative(cfg.project, dir)
 			table.insert(result, '-isystem ' .. p.quoted(dir))
@@ -274,40 +306,68 @@
 		return result
 	end
 
+	-- relative pch file path if any
+	function gcc.getpch(cfg)
+		-- If there is no header, or if PCH has been disabled, I can early out
+		if not cfg.pchheader or cfg.flags.NoPCH then
+			return nil
+		end
+
+		-- Visual Studio requires the PCH header to be specified in the same way
+		-- it appears in the #include statements used in the source code; the PCH
+		-- source actual handles the compilation of the header. GCC compiles the
+		-- header file directly, and needs the file's actual file system path in
+		-- order to locate it.
+
+		-- To maximize the compatibility between the two approaches, see if I can
+		-- locate the specified PCH header on one of the include file search paths
+		-- and, if so, adjust the path automatically so the user doesn't have
+		-- add a conditional configuration to the project script.
+
+		local pch = cfg.pchheader
+		local found = false
+
+		-- test locally in the project folder first (this is the most likely location)
+		local testname = path.join(cfg.project.basedir, pch)
+		if os.isfile(testname) then
+			return project.getrelative(cfg.project, testname)
+		else
+			-- else scan in all include dirs.
+			for _, incdir in ipairs(cfg.includedirs) do
+				testname = path.join(incdir, pch)
+				if os.isfile(testname) then
+					return project.getrelative(cfg.project, testname)
+				end
+			end
+		end
+
+		return project.getrelative(cfg.project, path.getabsolute(pch))
+	end
+
 --
 -- Return a list of decorated rpaths
 --
+-- @param cfg
+--    The configuration to query.
+-- @param dirs
+--    List of absolute paths
+-- @param mode
+--    Output mode
+--    - "linker" (default) Linker rpath instructions
+--    - "path" List of path relative to configuration target directory
+--
 
-	function gcc.getrunpathdirs(cfg, dirs)
+	function gcc.getrunpathdirs(cfg, dirs, mode)
 		local result = {}
+		mode = iif (mode == nil, "linker", mode)
 
 		if not (table.contains(os.getSystemTags(cfg.system), "darwin")
 				or (cfg.system == p.LINUX)) then
 			return result
 		end
 
-		local rpaths = {}
-
-		-- User defined runpath search paths
-		for _, fullpath in ipairs(cfg.runpathdirs) do
+		for _, fullpath in ipairs(dirs) do
 			local rpath = path.getrelative(cfg.buildtarget.directory, fullpath)
-			if not (table.contains(rpaths, rpath)) then
-				table.insert(rpaths, rpath)
-			end
-		end
-
-		-- Automatically add linked shared libraries path relative to target directory
-		for _, sibling in ipairs(config.getlinks(cfg, "siblings", "object")) do
-			if (sibling.kind == p.SHAREDLIB) then
-				local fullpath = sibling.linktarget.directory
-				local rpath = path.getrelative(cfg.buildtarget.directory, fullpath)
-				if not (table.contains(rpaths, rpath)) then
-					table.insert(rpaths, rpath)
-				end
-			end
-		end
-
-		for _, rpath in ipairs(rpaths) do
 			if table.contains(os.getSystemTags(cfg.system), "darwin") then
 				rpath = "@loader_path/" .. rpath
 			elseif (cfg.system == p.LINUX) then
@@ -315,7 +375,11 @@
 				rpath = "$$ORIGIN" .. rpath
 			end
 
-			table.insert(result, "-Wl,-rpath,'" .. rpath .. "'")
+			if mode == "linker" then
+				rpath = "-Wl,-rpath,'" .. rpath .. "'"
+			end
+
+			table.insert(result, rpath)
 		end
 
 		return result
@@ -424,6 +488,13 @@
 		-- config.getlinks() all includes cfg.libdirs.
 		for _, dir in ipairs(config.getlinks(cfg, "system", "directory")) do
 			table.insert(flags, '-L' .. p.quoted(dir))
+		end
+
+		if table.contains(os.getSystemTags(cfg.system), "darwin") then
+			for _, dir in ipairs(cfg.frameworkdirs) do
+				dir = project.getrelative(cfg.project, dir)
+				table.insert(flags, '-F' .. p.quoted(dir))
+			end
 		end
 
 		if cfg.flags.RelativeLinks then

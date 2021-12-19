@@ -156,6 +156,21 @@ void CViewComments::OnDestroy()
 }
 
 
+LRESULT CViewComments::OnModViewMsg(WPARAM wParam, LPARAM lParam)
+{
+	switch(wParam)
+	{
+		case VIEWMSG_SETFOCUS:
+		case VIEWMSG_SETACTIVE:
+			GetParentFrame()->SetActiveView(this);
+			m_ItemList.SetFocus();
+			return 0;
+		default:
+			return CModScrollView::OnModViewMsg(wParam, lParam);
+	}
+}
+
+
 LRESULT CViewComments::OnMidiMsg(WPARAM midiData_, LPARAM)
 {
 	uint32 midiData = static_cast<uint32>(midiData_);
@@ -227,6 +242,10 @@ LRESULT CViewComments::OnCustomKeyMsg(WPARAM wParam, LPARAM)
 	{
 		OnDblClickListItem(nullptr, nullptr);
 		return wParam;
+	} else if(wParam == kcRenameSmpInsListItem)
+	{
+		m_ItemList.EditLabel(item - 1);
+		return wParam;
 	}
 	return kcNull;
 }
@@ -246,7 +265,7 @@ BOOL CViewComments::PreTranslateMessage(MSG *pMsg)
 			UINT nRepCnt = LOWORD(pMsg->lParam);
 			UINT nFlags = HIWORD(pMsg->lParam);
 			KeyEventType kT = ih->GetKeyEventType(nFlags);
-			if(ih->KeyEvent(kCtxViewComments, nChar, nRepCnt, nFlags, kT) != kcNull)
+			if(!ih->IsBypassed() && ih->KeyEvent(kCtxViewComments, nChar, nRepCnt, nFlags, kT) != kcNull)
 			{
 				return TRUE;  // Mapped to a command, no need to pass message on.
 			}
@@ -529,12 +548,14 @@ void CViewComments::OnBeginLabelEdit(LPNMHDR, LRESULT *)
 		const CModSpecifications &specs = GetDocument()->GetSoundFile().GetModSpecifications();
 		const auto maxStrLen = (m_nListId == IDC_LIST_SAMPLES) ? specs.sampleNameLengthMax : specs.instrNameLengthMax;
 		editCtrl->LimitText(maxStrLen);
+		CMainFrame::GetInputHandler()->Bypass(true);
 	}
 }
 
 
 void CViewComments::OnEndLabelEdit(LPNMHDR pnmhdr, LRESULT *)
 {
+	CMainFrame::GetInputHandler()->Bypass(false);
 	LV_DISPINFO *plvDispInfo = (LV_DISPINFO *)pnmhdr;
 	LV_ITEM &lvItem = plvDispInfo->item;
 	CModDoc *pModDoc = GetDocument();

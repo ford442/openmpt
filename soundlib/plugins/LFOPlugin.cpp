@@ -139,7 +139,7 @@ PlugParamValue LFOPlugin::GetParameter(PlugParamIndex index)
 void LFOPlugin::SetParameter(PlugParamIndex index, PlugParamValue value)
 {
 	ResetSilence();
-	Limit(value, 0.0f, 1.0f);
+	value = mpt::safe_clamp(value, 0.0f, 1.0f);
 	switch(index)
 	{
 	case kAmplitude: m_amplitude = value; break;
@@ -154,8 +154,6 @@ void LFOPlugin::SetParameter(PlugParamIndex index, PlugParamValue value)
 		break;
 	case kWaveform:
 		m_waveForm = ParamToWaveform(value);
-		if(m_waveForm >= kNumWaveforms)
-			m_waveForm = static_cast<LFOWaveform>(kNumWaveforms - 1);
 		break;
 	case kPolarity: m_polarity = (value >= 0.5f); break;
 	case kBypassed: m_bypassed = (value >= 0.5f); break;
@@ -340,9 +338,12 @@ void LFOPlugin::SetChunk(const ChunkData &chunk, bool)
 		&& !memcmp(data.magic, "LFO ", 4)
 		&& data.version == 0)
 	{
-		m_amplitude = Clamp<float>(IEEE754binary32LE().SetInt32(data.amplitude), 0.0f, 1.0f);
-		m_offset = Clamp<float>(IEEE754binary32LE().SetInt32(data.offset), 0.0f, 1.0f);
-		m_frequency = Clamp<float>(IEEE754binary32LE().SetInt32(data.frequency), 0.0f, 1.0f);
+		const float amplitude = IEEE754binary32LE().SetInt32(data.amplitude);
+		m_amplitude = mpt::safe_clamp(amplitude, 0.0f, 1.0f);
+		const float offset = IEEE754binary32LE().SetInt32(data.offset);
+		m_offset = mpt::safe_clamp(offset, 0.0f, 1.0f);
+		const float frequency = IEEE754binary32LE().SetInt32(data.frequency);
+		m_frequency = mpt::safe_clamp(frequency, 0.0f, 1.0f);
 		if(data.waveForm < kNumWaveforms)
 			m_waveForm = static_cast<LFOWaveform>(data.waveForm.get());
 		m_outputParam = data.outputParam;

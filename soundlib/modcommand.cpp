@@ -870,6 +870,95 @@ void ModCommand::Convert(MODTYPE fromType, MODTYPE toType, const CSoundFile &snd
 }
 
 
+bool ModCommand::IsContinousCommand(const CSoundFile& sndFile) const
+{
+	switch(command)
+	{
+	case CMD_ARPEGGIO:
+	case CMD_TONEPORTAMENTO:
+	case CMD_VIBRATO:
+	case CMD_TREMOLO:
+	case CMD_RETRIG:
+	case CMD_TREMOR:
+	case CMD_FINEVIBRATO:
+	case CMD_PANBRELLO:
+	case CMD_SMOOTHMIDI:
+	case CMD_NOTESLIDEUP:
+	case CMD_NOTESLIDEDOWN:
+	case CMD_NOTESLIDEUPRETRIG:
+	case CMD_NOTESLIDEDOWNRETRIG:
+		return true;
+	case CMD_PORTAMENTOUP:
+	case CMD_PORTAMENTODOWN:
+		if(!param && sndFile.GetType() == MOD_TYPE_MOD)
+			return false;
+		if(sndFile.GetType() & (MOD_TYPE_MOD | MOD_TYPE_XM | MOD_TYPE_MT2 | MOD_TYPE_MED | MOD_TYPE_AMF0 | MOD_TYPE_DIGI | MOD_TYPE_STP | MOD_TYPE_DTM))
+			return true;
+		if(param >= 0xF0)
+			return false;
+		if(param >= 0xE0 && sndFile.GetType() != MOD_TYPE_DBM)
+			return false;
+		return true;
+	case CMD_VOLUMESLIDE:
+	case CMD_TONEPORTAVOL:
+	case CMD_VIBRATOVOL:
+	case CMD_GLOBALVOLSLIDE:
+	case CMD_CHANNELVOLSLIDE:
+	case CMD_PANNINGSLIDE:
+		if(!param && sndFile.GetType() == MOD_TYPE_MOD)
+			return false;
+		if(sndFile.GetType() & (MOD_TYPE_MOD | MOD_TYPE_XM | MOD_TYPE_AMF0 | MOD_TYPE_MED | MOD_TYPE_DIGI))
+			return true;
+		if((param & 0xF0) == 0xF0 && (param & 0x0F))
+			return false;
+		if((param & 0x0F) == 0x0F && (param & 0xF0))
+			return false;
+		return true;
+	case CMD_TEMPO:
+		return (param < 0x20);
+	default:
+		return false;
+	}
+}
+
+
+bool ModCommand::IsContinousVolColCommand() const
+{
+	switch(volcmd)
+	{
+	case VOLCMD_VOLSLIDEUP:
+	case VOLCMD_VOLSLIDEDOWN:
+	case VOLCMD_VIBRATOSPEED:
+	case VOLCMD_VIBRATODEPTH:
+	case VOLCMD_PANSLIDELEFT:
+	case VOLCMD_PANSLIDERIGHT:
+	case VOLCMD_TONEPORTAMENTO:
+	case VOLCMD_PORTAUP:
+	case VOLCMD_PORTADOWN:
+		return true;
+	default:
+		return false;
+	}
+}
+
+
+bool ModCommand::IsSlideUpDownCommand() const
+{
+	switch(command)
+	{
+		case CMD_VOLUMESLIDE:
+		case CMD_TONEPORTAVOL:
+		case CMD_VIBRATOVOL:
+		case CMD_GLOBALVOLSLIDE:
+		case CMD_CHANNELVOLSLIDE:
+		case CMD_PANNINGSLIDE:
+			return true;
+		default:
+			return false;
+	}
+}
+
+
 bool ModCommand::IsGlobalCommand(COMMAND command, PARAM param)
 {
 	switch(command)
@@ -989,6 +1078,7 @@ bool ModCommand::ConvertVolEffect(uint8 &effect, uint8 &param, bool force)
 	switch(effect)
 	{
 	case CMD_NONE:
+		effect = VOLCMD_NONE;
 		return true;
 	case CMD_VOLUME:
 		effect = VOLCMD_VOLUME;

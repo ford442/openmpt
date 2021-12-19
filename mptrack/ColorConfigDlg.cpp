@@ -72,6 +72,7 @@ BEGIN_MESSAGE_MAP(COptionsColors, CPropertyPage)
 	ON_COMMAND(IDC_RADIO2,				&COptionsColors::OnSettingsChanged)
 	ON_COMMAND(IDC_RADIO3,				&COptionsColors::OnSettingsChanged)
 	ON_COMMAND(IDC_RADIO4,				&COptionsColors::OnSettingsChanged)
+	ON_COMMAND(IDC_RADIO5,				&COptionsColors::OnSettingsChanged)
 END_MESSAGE_MAP()
 
 
@@ -197,11 +198,12 @@ void COptionsColors::OnOK()
 	TrackerSettings::Instance().rememberSongWindows = IsDlgButtonChecked(IDC_CHECK5) != BST_UNCHECKED;
 	TrackerSettings::Instance().accidentalFlats = IsDlgButtonChecked(IDC_RADIO2) != BST_UNCHECKED;
 
-	if(IsDlgButtonChecked(IDC_RADIO3))
+	int channelColors = GetCheckedRadioButton(IDC_RADIO3, IDC_RADIO5);
+	if(channelColors == IDC_RADIO3)
 		TrackerSettings::Instance().defaultRainbowChannelColors = DefaultChannelColors::NoColors;
-	else if(IsDlgButtonChecked(IDC_RADIO4))
+	else if(channelColors == IDC_RADIO4)
 		TrackerSettings::Instance().defaultRainbowChannelColors = DefaultChannelColors::Rainbow;
-	else if(IsDlgButtonChecked(IDC_RADIO5))
+	else
 		TrackerSettings::Instance().defaultRainbowChannelColors = DefaultChannelColors::Random;
 
 	FontSetting newPatternFont = patternFont;

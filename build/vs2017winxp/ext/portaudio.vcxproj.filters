@@ -25,6 +25,9 @@
     <Filter Include="include\portaudio\src\hostapi\skeleton">
       <UniqueIdentifier>{C10780C5-AD59-57B5-9678-94C58269709E}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\portaudio\src\hostapi\wasapi">
+      <UniqueIdentifier>{61150D1D-4DFC-CE14-F64C-3532E212487B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="include\portaudio\src\hostapi\wmme">
       <UniqueIdentifier>{D2F68913-BE32-8D7D-2745-A57413A03598}</UniqueIdentifier>
     </Filter>
@@ -126,9 +129,6 @@
     <ClInclude Include="..\..\..\include\portaudio\src\os\win\pa_win_coinitialize.h">
       <Filter>include\portaudio\src\os\win</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\include\portaudio\src\os\win\pa_win_wdmks_utils.h">
-      <Filter>include\portaudio\src\os\win</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\include\portaudio\src\os\win\pa_x86_plain_converters.h">
       <Filter>include\portaudio\src\os\win</Filter>
     </ClInclude>
@@ -173,6 +173,9 @@
     <ClCompile Include="..\..\..\include\portaudio\src\hostapi\skeleton\pa_hostapi_skeleton.c">
       <Filter>include\portaudio\src\hostapi\skeleton</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\include\portaudio\src\hostapi\wasapi\pa_win_wasapi.c">
+      <Filter>include\portaudio\src\hostapi\wasapi</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\include\portaudio\src\hostapi\wmme\pa_win_wmme.c">
       <Filter>include\portaudio\src\hostapi\wmme</Filter>
     </ClCompile>
@@ -186,9 +189,6 @@
       <Filter>include\portaudio\src\os\win</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\include\portaudio\src\os\win\pa_win_waveformat.c">
-      <Filter>include\portaudio\src\os\win</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\include\portaudio\src\os\win\pa_win_wdmks_utils.c">
       <Filter>include\portaudio\src\os\win</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\include\portaudio\src\os\win\pa_x86_plain_converters.c">

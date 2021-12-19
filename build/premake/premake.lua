@@ -44,6 +44,11 @@ newoption {
 }
 
 newoption {
+	trigger = "uwp",
+	description = "Generate Windows UWP targetting projects",
+}
+
+newoption {
 	trigger = "clang",
 	description = "ClangCL projects",
 }
@@ -53,7 +58,14 @@ mpt_bindirsuffix = ""
 mpt_bindirsuffix32 = ""
 mpt_bindirsuffix64 = ""
 
-if _OPTIONS["win10"] then
+if _OPTIONS["uwp"] then
+	allplatforms = { "x86", "x86_64", "arm", "arm64" }
+	trkplatforms = { "x86", "x86_64", "arm", "arm64" }
+	mpt_projectpathname = mpt_projectpathname .. "uwp"
+	mpt_bindirsuffix = mpt_bindirsuffix .. "uwp"
+	mpt_bindirsuffix32 = mpt_bindirsuffix32 .. "uwp"
+	mpt_bindirsuffix64 = mpt_bindirsuffix64 .. "uwp"
+elseif _OPTIONS["win10"] then
 	allplatforms = { "x86", "x86_64", "arm", "arm64" }
 	trkplatforms = { "x86", "x86_64", "arm", "arm64" }
 	mpt_projectpathname = mpt_projectpathname .. "win10"
@@ -84,39 +96,10 @@ elseif _OPTIONS["winxp"] then
 end
 
 if _OPTIONS["clang"] then
-	mpt_projectpathname = mpt_projectpathname .. "clangcl"
-	mpt_bindirsuffix = mpt_bindirsuffix .. "clangcl"
-	mpt_bindirsuffix32 = mpt_bindirsuffix32 .. "clangcl"
-	mpt_bindirsuffix64 = mpt_bindirsuffix64 .. "clangcl"
-end
-
-if _OPTIONS["group"] == "libopenmpt-all" then
-
-solution "libopenmpt-all"
-	startproject "libopenmpt"
- location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked" }
- platforms ( allplatforms )
-	dofile "../../build/premake/premake-defaults-solution.lua"
-
- dofile "../../build/premake/mpt-libopenmpt_test.lua"
- dofile "../../build/premake/mpt-libopenmpt.lua"
- dofile "../../build/premake/mpt-libopenmpt_examples.lua"
- dofile "../../build/premake/mpt-libopenmpt-small.lua"
- dofile "../../build/premake/mpt-in_openmpt.lua"
- dofile "../../build/premake/mpt-xmp-openmpt.lua"
- dofile "../../build/premake/mpt-openmpt123.lua"
- dofile "../../build/premake/ext-flac.lua"
- dofile "../../build/premake/ext-minimp3.lua"
- dofile "../../build/premake/ext-miniz.lua"
- dofile "../../build/premake/ext-mpg123.lua"
- dofile "../../build/premake/ext-ogg.lua"
- dofile "../../build/premake/ext-portaudio.lua"
- dofile "../../build/premake/ext-portaudiocpp.lua"
- dofile "../../build/premake/ext-stb_vorbis.lua"
- dofile "../../build/premake/ext-vorbis.lua"
- dofile "../../build/premake/ext-zlib.lua"
-
+	mpt_projectpathname = mpt_projectpathname .. "clang"
+	mpt_bindirsuffix = mpt_bindirsuffix .. "clang"
+	mpt_bindirsuffix32 = mpt_bindirsuffix32 .. "clang"
+	mpt_bindirsuffix64 = mpt_bindirsuffix64 .. "clang"
 end
 
 if _OPTIONS["group"] == "libopenmpt_test" then
@@ -124,7 +107,7 @@ if _OPTIONS["group"] == "libopenmpt_test" then
 solution "libopenmpt_test"
 	startproject "libopenmpt_test"
  location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked" }
+ configurations { "Debug", "Release", "Checked", "DebugShared", "ReleaseShared", "CheckedShared" }
  platforms ( allplatforms )
 	dofile "../../build/premake/premake-defaults-solution.lua"
 
@@ -200,11 +183,15 @@ solution "libopenmpt"
 	dofile "../../build/premake/premake-defaults-solution.lua"
 
  dofile "../../build/premake/mpt-libopenmpt.lua"
- dofile "../../build/premake/mpt-libopenmpt_examples.lua"
+ if not _OPTIONS["uwp"] then
+  dofile "../../build/premake/mpt-libopenmpt_examples.lua"
+ end
  dofile "../../build/premake/ext-mpg123.lua"
  dofile "../../build/premake/ext-ogg.lua"
- dofile "../../build/premake/ext-portaudio.lua"
- dofile "../../build/premake/ext-portaudiocpp.lua"
+ if not _OPTIONS["uwp"] then
+  dofile "../../build/premake/ext-portaudio.lua"
+  dofile "../../build/premake/ext-portaudiocpp.lua"
+ end
  dofile "../../build/premake/ext-vorbis.lua"
  dofile "../../build/premake/ext-zlib.lua"
 
@@ -256,7 +243,7 @@ solution "OpenMPT-UTF8"
 
  dofile "../../build/premake/mpt-OpenMPT.lua"
  dofile "../../build/premake/mpt-PluginBridge.lua"
- dofile "../../build/premake/mpt-signtool.lua"
+ dofile "../../build/premake/mpt-updatesigntool.lua"
  dofile "../../build/premake/ext-ancient.lua"
  dofile "../../build/premake/ext-flac.lua"
  dofile "../../build/premake/ext-lame.lua"
@@ -288,7 +275,7 @@ solution "OpenMPT-ANSI"
 
  dofile "../../build/premake/mpt-OpenMPT.lua"
  dofile "../../build/premake/mpt-PluginBridge.lua"
- dofile "../../build/premake/mpt-signtool.lua"
+ dofile "../../build/premake/mpt-updatesigntool.lua"
  dofile "../../build/premake/ext-ancient.lua"
  dofile "../../build/premake/ext-flac.lua"
  dofile "../../build/premake/ext-lame.lua"
@@ -320,7 +307,7 @@ solution "OpenMPT"
 
  dofile "../../build/premake/mpt-OpenMPT.lua"
  dofile "../../build/premake/mpt-PluginBridge.lua"
- dofile "../../build/premake/mpt-signtool.lua"
+ dofile "../../build/premake/mpt-updatesigntool.lua"
  dofile "../../build/premake/ext-ancient.lua"
  dofile "../../build/premake/ext-flac.lua"
  dofile "../../build/premake/ext-lame.lua"
@@ -365,6 +352,7 @@ solution "all-externals"
  dofile "../../build/premake/ext-opusenc.lua"
  dofile "../../build/premake/ext-opusfile.lua"
  dofile "../../build/premake/ext-portaudio.lua"
+ dofile "../../build/premake/ext-portaudiocpp.lua"
  dofile "../../build/premake/ext-pugixml.lua"
  dofile "../../build/premake/ext-r8brain.lua"
  dofile "../../build/premake/ext-rtaudio.lua"
@@ -375,5 +363,69 @@ solution "all-externals"
  dofile "../../build/premake/ext-UnRAR.lua"
  dofile "../../build/premake/ext-vorbis.lua"
  dofile "../../build/premake/ext-zlib.lua"
+
+end
+
+
+
+if _OPTIONS["uwp"] then
+
+	require('vstudio')
+
+	local function mptGlobalsUWP(prj)
+		if _ACTION == 'vs2022' then
+			premake.w('<DefaultLanguage>en-US</DefaultLanguage>')
+			premake.w('<MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>')
+			premake.w('<AppContainerApplication>true</AppContainerApplication>')
+			premake.w('<ApplicationType>Windows Store</ApplicationType>')
+			premake.w('<ApplicationTypeRevision>10.0</ApplicationTypeRevision>')
+			premake.w('<WindowsTargetPlatformVersion Condition=" \'$(WindowsTargetPlatformVersion)\' == \'\' ">10.0.22000.0</WindowsTargetPlatformVersion>')
+			premake.w('<WindowsTargetPlatformMinVersion>10.0.17134.0</WindowsTargetPlatformMinVersion>')
+		elseif _ACTION == 'vs2019' then
+			premake.w('<DefaultLanguage>en-US</DefaultLanguage>')
+			premake.w('<MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>')
+			premake.w('<AppContainerApplication>true</AppContainerApplication>')
+			premake.w('<ApplicationType>Windows Store</ApplicationType>')
+			premake.w('<ApplicationTypeRevision>10.0</ApplicationTypeRevision>')
+			premake.w('<WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>')
+			premake.w('<WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>')
+		end
+	end
+
+	local function mptClCompileUWP(prj)
+		premake.w('<CompileAsWinRT>false</CompileAsWinRT>')
+	end
+	
+	local function mptOutputPropertiesUWP(prj)
+		premake.w('<IgnoreImportLibrary>false</IgnoreImportLibrary>')
+	end
+		
+	local function mptProjectReferencesUWP(prj)
+		premake.w('<ReferenceOutputAssembly>false</ReferenceOutputAssembly>')
+	end
+
+	premake.override(premake.vstudio.vc2010.elements, "globals", function(base, prj)
+		local calls = base(prj)
+		table.insert(calls, mptGlobalsUWP)
+		return calls
+	end)
+
+	premake.override(premake.vstudio.vc2010.elements, "clCompile", function(base, prj)
+		local calls = base(prj)
+		table.insert(calls, mptClCompileUWP)
+		return calls
+	end)
+
+	premake.override(premake.vstudio.vc2010.elements, "outputProperties", function(base, prj)
+		local calls = base(prj)
+		table.insert(calls, mptOutputPropertiesUWP)
+		return calls
+	end)
+
+	premake.override(premake.vstudio.vc2010.elements, "projectReferences", function(base, prj)
+		local calls = base(prj)
+		table.insert(calls, mptProjectReferencesUWP)
+		return calls
+	end)
 
 end

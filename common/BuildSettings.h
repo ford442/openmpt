@@ -78,9 +78,9 @@
 #if defined(MODPLUG_TRACKER)
 
 #if MPT_OS_WINDOWS
-#if !defined(MPT_BUILD_WINESUPPORT) && !defined(MPT_BUILD_SIGNTOOL)
+#if !defined(MPT_BUILD_WINESUPPORT) && !defined(MPT_BUILD_UPDATESIGNTOOL)
 #define MPT_WITH_MFC
-#endif // !MPT_BUILD_WINESUPPORT && !MPT_BUILD_SIGNTOOL
+#endif // !MPT_BUILD_WINESUPPORT && !MPT_BUILD_UPDATESIGNTOOL
 #endif // MPT_OS_WINDOWS
 
 // OpenMPT-only dependencies
@@ -108,6 +108,7 @@
 #define MPT_WITH_SMBPITCHSHIFT
 #define MPT_WITH_UNRAR
 #define MPT_WITH_VORBISENC
+#define MPT_WITH_VST
 
 // OpenMPT and libopenmpt dependencies (not for openmp123, player plugins or examples)
 //#define MPT_WITH_DL
@@ -242,8 +243,8 @@
 // Support mpt::ChartsetLocale
 #define MPT_ENABLE_CHARSET_LOCALE
 
-// Use inline assembly
-#define ENABLE_ASM
+// Use architecture-specific intrinsics
+#define MPT_ENABLE_ARCH_INTRINSICS
 
 #if !defined(MPT_BUILD_RETRO)
 #define MPT_ENABLE_UPDATE
@@ -263,9 +264,6 @@
 
 // Disable the built-in automatic gain control
 //#define NO_AGC
-
-// Define to build without VST plugin support; makes build possible without VST SDK.
-//#define NO_VST
 
 // (HACK) Define to build without any plugin support
 //#define NO_PLUGINS
@@ -298,8 +296,8 @@
 #else
 //#define MPT_ENABLE_CHARSET_LOCALE
 #endif
-// Do not use inline asm in library builds. There is just about no codepath which would use it anyway.
-//#define ENABLE_ASM
+// Do not use architecture-specifid intrinsics in library builds. There is just about no codepath which would use it anyway.
+//#define MPT_ENABLE_ARCH_INTRINSICS
 #if defined(MPT_BUILD_HACK_ARCHIVE_SUPPORT)
 //#define NO_ARCHIVE_SUPPORT
 #else
@@ -309,7 +307,6 @@
 #define NO_DSP
 #define NO_EQ
 #define NO_AGC
-#define NO_VST
 //#define NO_PLUGINS
 
 #endif // LIBOPENMPT_BUILD
@@ -382,55 +379,23 @@
 #endif
 #endif
 
-#if !MPT_COMPILER_MSVC && defined(ENABLE_ASM)
-#undef ENABLE_ASM // inline assembly requires MSVC compiler
-#endif
-
-#if defined(ENABLE_ASM)
+#if defined(MPT_ENABLE_ARCH_INTRINSICS)
 #if MPT_COMPILER_MSVC && defined(_M_IX86)
 
-#define ENABLE_CPUID
+#define MPT_ENABLE_ARCH_X86
 
-// Generate general x86 inline assembly and intrinsics.
-#define ENABLE_X86
-
-// Generate MMX instructions (only used when the CPU supports it).
-#define ENABLE_MMX
-// Generate SSE instructions (only used when the CPU supports it).
-#define ENABLE_SSE
-// Generate SSE2 instructions (only used when the CPU supports it).
-#define ENABLE_SSE2
-// Generate SSE3 instructions (only used when the CPU supports it).
-#define ENABLE_SSE3
-// Generate SSE4 instructions (only used when the CPU supports it).
-#define ENABLE_SSE4
-// Generate AVX instructions (only used when the CPU supports it).
-#define ENABLE_AVX
-// Generate AVX2 instructions (only used when the CPU supports it).
-#define ENABLE_AVX2
+#define MPT_ENABLE_ARCH_INTRINSICS_SSE
+#define MPT_ENABLE_ARCH_INTRINSICS_SSE2
 
 #elif MPT_COMPILER_MSVC && defined(_M_X64)
 
-#define ENABLE_CPUID
+#define MPT_ENABLE_ARCH_AMD64
 
-// Generate general amd64 intrinsics.
-#define ENABLE_AMD64
-
-// Generate SSE instructions (only used when the CPU supports it).
-#define ENABLE_SSE
-// Generate SSE2 instructions (only used when the CPU supports it).
-#define ENABLE_SSE2
-// Generate SSE3 instructions (only used when the CPU supports it).
-#define ENABLE_SSE3
-// Generate SSE4 instructions (only used when the CPU supports it).
-#define ENABLE_SSE4
-// Generate AVX instructions (only used when the CPU supports it).
-#define ENABLE_AVX
-// Generate AVX2 instructions (only used when the CPU supports it).
-#define ENABLE_AVX2
+#define MPT_ENABLE_ARCH_INTRINSICS_SSE
+#define MPT_ENABLE_ARCH_INTRINSICS_SSE2
 
 #endif // arch
-#endif // ENABLE_ASM
+#endif // MPT_ENABLE_ARCH_INTRINSICS
 
 #if defined(ENABLE_TESTS) && defined(MODPLUG_NO_FILESAVE)
 #undef MODPLUG_NO_FILESAVE // tests recommend file saving
@@ -467,7 +432,9 @@
 
 #if defined(NO_PLUGINS)
 // Any plugin type requires NO_PLUGINS to not be defined.
-#define NO_VST
+#if defined(MPT_WITH_VST)
+#undef MPT_WITH_VST
+#endif
 #endif
 
 

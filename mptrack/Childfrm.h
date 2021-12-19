@@ -53,6 +53,7 @@ struct SAMPLEVIEWSTATE
 
 struct INSTRUMENTVIEWSTATE
 {
+	float zoom = 4;
 	EnvelopeType nEnv = ENV_VOLUME;
 	INSTRUMENTINDEX initialInstrument = 0;
 	bool bGrid = false;
@@ -98,7 +99,8 @@ public:
 	void ForceRefresh();
 	void SavePosition(BOOL bExit=FALSE);
 	const char *GetCurrentViewClassName() const;
-	LRESULT SendViewMessage(UINT uMsg, LPARAM lParam=0) const;
+	LRESULT SendCtrlMessage(UINT uMsg, LPARAM lParam = 0) const;
+	LRESULT SendViewMessage(UINT uMsg, LPARAM lParam = 0) const;
 	LRESULT ActivateView(UINT nId, LPARAM lParam) { return ::SendMessage(m_hWndCtrl, WM_MOD_ACTIVATEVIEW, nId, lParam); }
 	HWND GetHwndCtrl() const { return m_hWndCtrl; }
 	HWND GetHwndView() const { return m_hWndView; }
@@ -113,6 +115,8 @@ public:
 
 	std::string SerializeView() const;
 	void DeserializeView(FileReader &file);
+
+	void ToggleViews();
 
 	static CChildFrame *LastActiveFrame() { return m_lastActiveFrame; }
 

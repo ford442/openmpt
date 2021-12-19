@@ -30,6 +30,7 @@ class CDLSBank;
 class CInputHandler;
 class CModDoc;
 class CAutoSaver;
+struct UpdateCheckResult;
 namespace SoundDevice {
 class Base;
 class ICallback;
@@ -61,6 +62,7 @@ enum
 	WM_MOD_SETMODIFIED,
 	WM_MOD_MDIACTIVATE,
 	WM_MOD_MDIDEACTIVATE,
+	WM_MOD_UPDATENOTIFY,
 };
 
 enum
@@ -104,20 +106,17 @@ enum
 	CTRLMSG_SMP_PREVINSTRUMENT,
 	CTRLMSG_SMP_NEXTINSTRUMENT,
 	CTRLMSG_SMP_OPENFILE,
-	CTRLMSG_SMP_OPENFILE_NEW,
 	CTRLMSG_SMP_SETZOOM,
 	CTRLMSG_SMP_GETZOOM,
 	CTRLMSG_SMP_SONGDROP,
-	CTRLMSG_SMP_SONGDROP_NEW,
 	CTRLMSG_SMP_INITOPL,
+	CTRLMSG_SMP_NEWSAMPLE,
 	// Instrument-Specific
 	CTRLMSG_INS_PREVINSTRUMENT,
 	CTRLMSG_INS_NEXTINSTRUMENT,
 	CTRLMSG_INS_OPENFILE,
-	CTRLMSG_INS_OPENFILE_NEW,
 	CTRLMSG_INS_NEWINSTRUMENT,
 	CTRLMSG_INS_SONGDROP,
-	CTRLMSG_INS_SONGDROP_NEW,
 	CTRLMSG_INS_SAMPLEMAP,
 };
 
@@ -313,6 +312,7 @@ protected:
 	class COptionsSoundcard *m_SoundCardOptionsDialog = nullptr;
 #if defined(MPT_ENABLE_UPDATE)
 	class CUpdateSetupDlg *m_UpdateOptionsDialog = nullptr;
+	std::unique_ptr<UpdateCheckResult> m_updateCheckResult;
 #endif // MPT_ENABLE_UPDATE
 	DWORD helpCookie = 0;
 	bool m_bOptionsLocked = false;
@@ -401,6 +401,10 @@ public:
 	void UpdateTree(CModDoc *pModDoc, UpdateHint hint, CObject *pHint = nullptr);
 	static CInputHandler* GetInputHandler() { return m_InputHandler; }
 	void SetElapsedTime(double t) { m_dwTimeSec = static_cast<CSoundFile::samplecount_t>(t); }
+
+#if defined(MPT_ENABLE_UPDATE)
+	bool ShowUpdateIndicator(const UpdateCheckResult &result, const CString &releaseVersion, const CString &infoURL, bool showHighlight);
+#endif // MPT_ENABLE_UPDATE
 
 	CModTree *GetUpperTreeview() { return m_wndTree.m_pModTree; }
 	CModTree *GetLowerTreeview() { return m_wndTree.m_pModTreeData; }
@@ -539,6 +543,7 @@ protected:
 	afx_msg LRESULT OnInvalidatePatterns(WPARAM, LPARAM);
 	afx_msg LRESULT OnCustomKeyMsg(WPARAM, LPARAM);
 	afx_msg void OnInternetUpdate();
+	afx_msg void OnUpdateAvailable();
 	afx_msg void OnShowSettingsFolder();
 #if defined(MPT_ENABLE_UPDATE)
 	afx_msg LRESULT OnUpdateCheckStart(WPARAM wparam, LPARAM lparam);
@@ -546,7 +551,7 @@ protected:
 	afx_msg LRESULT OnUpdateCheckCanceled(WPARAM wparam, LPARAM lparam);
 	afx_msg LRESULT OnUpdateCheckFailure(WPARAM wparam, LPARAM lparam);
 	afx_msg LRESULT OnUpdateCheckSuccess(WPARAM wparam, LPARAM lparam);
-	afx_msg void OnToolbarUpdateIndicatorClick();
+	afx_msg LRESULT OnToolbarUpdateIndicatorClick(WPARAM wparam, LPARAM lparam);
 #endif // MPT_ENABLE_UPDATE
 	afx_msg void OnHelp();
 	afx_msg BOOL OnDeviceChange(UINT nEventType, DWORD_PTR dwData);

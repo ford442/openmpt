@@ -64,6 +64,9 @@ void CSoundFile::S3MConvert(ModCommand &m, bool fromIT)
 	case '[': m.command = fromIT ? CMD_XPARAM : CMD_NONE; break;
 	case '^': m.command = fromIT ? CMD_FINETUNE : CMD_NONE; break;
 	case '_': m.command = fromIT ? CMD_FINETUNE_SMOOTH : CMD_NONE; break;
+	// BeRoTracker extensions
+	case '1' + 0x41: m.command = fromIT ? CMD_KEYOFF : CMD_NONE; break;
+	case '2' + 0x41: m.command = fromIT ? CMD_SETENVPOSITION : CMD_NONE; break;
 	default: m.command = CMD_NONE;
 	}
 }
@@ -167,21 +170,6 @@ void CSoundFile::S3MSaveConvert(uint8 &command, uint8 &param, bool toIT, bool co
 
 #endif // MODPLUG_NO_FILESAVE
 
-// Pattern decoding flags
-enum S3MPattern
-{
-	s3mEndOfRow			= 0x00,
-	s3mChannelMask		= 0x1F,
-	s3mNotePresent		= 0x20,
-	s3mVolumePresent	= 0x40,
-	s3mEffectPresent	= 0x80,
-	s3mAnyPresent		= 0xE0,
-
-	s3mNoteOff			= 0xFE,
-	s3mNoteNone			= 0xFF,
-};
-
-
 static bool ValidateHeader(const S3MFileHeader &fileHeader)
 {
 	if(std::memcmp(fileHeader.magic, "SCRM", 4)
@@ -254,6 +242,10 @@ bool CSoundFile::ReadS3M(FileReader &file, ModLoadingFlags loadFlags)
 	const int32 schismDateVersion = SchismTrackerEpoch + ((fileHeader.cwtv == 0x4FFF) ? fileHeader.reserved2 : (fileHeader.cwtv - 0x4050));
 	switch(fileHeader.cwtv & S3MFileHeader::trackerMask)
 	{
+	case S3MFileHeader::trkAkord & S3MFileHeader::trackerMask:
+		if(fileHeader.cwtv == S3MFileHeader::trkAkord)
+			madeWithTracker = U_("Akord");
+		break;
 	case S3MFileHeader::trkScreamTracker:
 		if(fileHeader.cwtv == S3MFileHeader::trkST3_20 && fileHeader.special == 0 && (fileHeader.ordNum & 0x0F) == 0 && fileHeader.ultraClicks == 0 && (fileHeader.flags & ~0x50) == 0)
 		{
@@ -276,7 +268,8 @@ bool CSoundFile::ReadS3M(FileReader &file, ModLoadingFlags loadFlags)
 			madeWithTracker = U_("Velvet Studio");
 		} else
 		{
-			// ST3.20 should only ever write ultra-click values 16, 24 and 32 (corresponding to 8, 12 and 16 in the GUI), ST3.01/3.03 should only write 0.
+			// ST3.20 should only ever write ultra-click values 16, 24 and 32 (corresponding to 8, 12 and 16 in the GUI), ST3.01/3.03 should only write 0,
+			// though several ST3.01/3.03 files with ultra-click values of 16 have been found as well.
 			// However, we won't fingerprint these values here as it's unlikely that there is any other tracker out there disguising as ST3 and using a strange ultra-click value.
 			// Also, re-saving a file with a strange ultra-click value in ST3 doesn't fix this value unless the user manually changes it, or if it's below 16.
 			madeWithTracker = U_("Scream Tracker");
@@ -357,7 +350,7 @@ bool CSoundFile::ReadS3M(FileReader &file, ModLoadingFlags loadFlags)
 		madeWithTracker = MPT_UFORMAT("{} {}.{}")(madeWithTracker, (fileHeader.cwtv & 0xF00) >> 8, mpt::ufmt::hex0<2>(fileHeader.cwtv & 0xFF));
 	}
 
-	m_modFormat.formatName = U_("ScreamTracker 3");
+	m_modFormat.formatName = U_("Scream Tracker 3");
 	m_modFormat.type = U_("s3m");
 	m_modFormat.madeWithTracker = std::move(madeWithTracker);
 	m_modFormat.charset = m_dwLastSavedWithVersion ? mpt::Charset::Windows1252 : mpt::Charset::CP437;
@@ -516,7 +509,7 @@ bool CSoundFile::ReadS3M(FileReader &file, ModLoadingFlags loadFlags)
 
 		if(sampleHeader.sampleType < S3MSampleHeader::typeAdMel)
 		{
-			const uint32 sampleOffset = (sampleHeader.dataPointer[1] << 4) | (sampleHeader.dataPointer[2] << 12) | (sampleHeader.dataPointer[0] << 20);
+			const uint32 sampleOffset = sampleHeader.GetSampleOffset();
 			if((loadFlags & loadSampleData) && sampleHeader.length != 0 && file.Seek(sampleOffset))
 			{
 				sampleHeader.GetSampleFormat((fileHeader.formatVersion == S3MFileHeader::oldVersion)).ReadSample(Samples[smp + 1], file);
@@ -574,7 +567,9 @@ bool CSoundFile::ReadS3M(FileReader &file, ModLoadingFlags loadFlags)
 
 		// Skip pattern length indication.
 		// Some modules, for example http://aminet.net/mods/8voic/s3m_hunt.lha seem to have a wrong pattern length -
-		// If you strictly adhere the pattern length, you won't read the patterns correctly in that module.
+		// If you strictly adhere the pattern length, you won't read some patterns (e.g. 17) correctly in that module.
+		// It's most likely a broken copy because there are other versions of the track which don't have this issue.
+		// Still, we don't really need this information, so we just ignore it.
 		file.Skip(2);
 
 		// Read pattern data
@@ -603,7 +598,7 @@ bool CSoundFile::ReadS3M(FileReader &file, ModLoadingFlags loadFlags)
 			{
 				const auto [note, instr] = file.ReadArray<uint8, 2>();
 				if(note < 0xF0)
-					m.note = (note & 0x0F) + 12 * (note >> 4) + 12 + NOTE_MIN;
+					m.note = static_cast<ModCommand::NOTE>(Clamp((note & 0x0F) + 12 * (note >> 4) + 12 + NOTE_MIN, NOTE_MIN, NOTE_MAX));
 				else if(note == s3mNoteOff)
 					m.note = NOTE_NOTECUT;
 				else if(note == s3mNoteNone)
@@ -650,6 +645,10 @@ bool CSoundFile::ReadS3M(FileReader &file, ModLoadingFlags loadFlags)
 						else if(m.param > 0x08)
 							zxxCountRight++;
 					}
+				} else if(m.command == CMD_OFFSET && m.param == 0 && fileHeader.cwtv <= S3MFileHeader::trkST3_01)
+				{
+					// Offset command didn't have effect memory in ST3.01; fixed in ST3.03
+					m.command = CMD_DUMMY;
 				}
 			}
 		}
@@ -868,7 +867,6 @@ bool CSoundFile::SaveS3M(std::ostream &f) const
 
 						if(note == NOTE_NONE)
 						{
-							// No Note, or note is too low
 							note = s3mNoteNone;
 						} else if(ModCommand::IsSpecialNote(note))
 						{

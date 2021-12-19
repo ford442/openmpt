@@ -15,9 +15,9 @@
 // For loading external samples
 #include "../common/mptPathString.h"
 #endif // MPT_EXTERNAL_SAMPLES
-#ifndef NO_VST
+#ifdef MPT_WITH_VST
 #include "../mptrack/Vstplug.h"
-#endif // NO_VST
+#endif // MPT_WITH_VST
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -477,11 +477,13 @@ bool CSoundFile::ReadMT2(FileReader &file, ModLoadingFlags loadFlags)
 	ReadOrderFromArray(Order(), orders, fileHeader.numOrders);
 	Order().SetRestartPos(fileHeader.restartPos);
 
-	FileReader drumData = file.ReadChunk(file.ReadUint16LE());
+	// This value is supposed to be the size of the drums data, but in old MT2.0 files it's 8 bytes too small.
+	// MadTracker itself unconditionally reads 274 bytes here if the value is != 0, so we do the same.
+	const bool hasDrumChannels = file.ReadUint16LE() != 0;
+	FileReader drumData = file.ReadChunk(hasDrumChannels ? sizeof(MT2DrumsData) : 0);
 	FileReader extraData = file.ReadChunk(file.ReadUint32LE());
 
 	const CHANNELINDEX channelsWithoutDrums = m_nChannels;
-	const bool hasDrumChannels = drumData.CanRead(sizeof(MT2DrumsData));
 	static_assert(MAX_BASECHANNELS >= 64 + 8);
 	if(hasDrumChannels)
 	{
@@ -590,7 +592,7 @@ bool CSoundFile::ReadMT2(FileReader &file, ModLoadingFlags loadFlags)
 			{
 				m_nTempoMode = TempoMode::Modern;
 				double d = chunk.ReadDoubleLE();
-				if(d != 0.0)
+				if(d > 0.00000001)
 				{
 					m_nDefaultTempo = TEMPO(44100.0 * 60.0 / (m_nDefaultSpeed * m_nDefaultRowsPerBeat * d));
 				}
@@ -604,7 +606,10 @@ bool CSoundFile::ReadMT2(FileReader &file, ModLoadingFlags loadFlags)
 			break;
 
 		case MagicLE("TRKS"):
-			m_nSamplePreAmp = chunk.ReadUint16LE() / 256u;	// 131072 is 0dB... I think (that's how MTIOModule_MT2.cpp reads)
+			m_nSamplePreAmp = chunk.ReadUint16LE() / 256u;  // 131072 is 0dB... I think (that's how MTIOModule_MT2.cpp reads)
+			// Dirty workaround for modules that use track automation for a fade-in at the song start (e.g. Rock.mt2)
+			if(!m_nSamplePreAmp)
+				m_nSamplePreAmp = 48;
 			m_nVSTiVolume = m_nSamplePreAmp / 2u;
 			for(CHANNELINDEX c = 0; c < GetNumChannels(); c++)
 			{
@@ -665,7 +670,7 @@ bool CSoundFile::ReadMT2(FileReader &file, ModLoadingFlags loadFlags)
 
 		case MagicLE("VST2"):
 			numVST = chunk.ReadUint32LE();
-#ifndef NO_VST
+#ifdef MPT_WITH_VST
 			if(!(loadFlags & loadPluginData))
 			{
 				break;
@@ -736,11 +741,11 @@ bool CSoundFile::ReadMT2(FileReader &file, ModLoadingFlags loadFlags)
 						chunk.ReadRaw(mpt::span(mixPlug.pluginData.data() + 4, vstHeader.n));
 					} else
 					{
-						float32 *f = reinterpret_cast<float32 *>(mixPlug.pluginData.data());
-						*(f++) = 0;	// Plugin data type
-						for(uint32 param = 0; param < vstHeader.n; param++, f++)
+						auto memFile = std::make_pair(mpt::as_span(mixPlug.pluginData), mpt::IO::Offset(0));
+						mpt::IO::WriteIntLE<uint32>(memFile, 0);  // Plugin data type
+						for(uint32 param = 0; param < vstHeader.n; param++)
 						{
-							*f = chunk.ReadFloatLE();
+							mpt::IO::Write(memFile, IEEE754binary32LE{chunk.ReadFloatLE()});
 						}
 					}
 				} else
@@ -748,7 +753,7 @@ bool CSoundFile::ReadMT2(FileReader &file, ModLoadingFlags loadFlags)
 					break;
 				}
 			}
-#endif // NO_VST
+#endif // MPT_WITH_VST
 			break;
 		}
 	}

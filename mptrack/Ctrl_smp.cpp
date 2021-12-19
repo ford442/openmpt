@@ -348,6 +348,7 @@ bool CCtrlSamples::SetCurrentSample(SAMPLEINDEX nSmp, LONG lZoom, bool bUpdNum)
 	{
 		m_nSample = nSmp;
 		UpdateView(SampleHint(m_nSample).Info());
+		m_parent.SampleChanged(m_nSample);
 	}
 	if(bUpdNum)
 	{
@@ -368,7 +369,8 @@ bool CCtrlSamples::SetCurrentSample(SAMPLEINDEX nSmp, LONG lZoom, bool bUpdNum)
 			}
 		}
 	}
-	PostViewMessage(VIEWMSG_SETCURRENTSAMPLE, (lZoom << 16) | m_nSample);
+	static_assert(MAX_SAMPLES < uint16_max);
+	SendViewMessage(VIEWMSG_SETCURRENTSAMPLE, (lZoom << 16) | m_nSample);
 	UnlockControls();
 	return true;
 }
@@ -454,19 +456,11 @@ LRESULT CCtrlSamples::OnModCtrlMsg(WPARAM wParam, LPARAM lParam)
 		OnNextInstrument();
 		break;
 
-	case CTRLMSG_SMP_OPENFILE_NEW:
-		if(!InsertSample(false))
-			break;
-		[[fallthrough]];
 	case CTRLMSG_SMP_OPENFILE:
 		if(lParam)
 			return OpenSample(*reinterpret_cast<const mpt::PathString *>(lParam));
 		break;
 
-	case CTRLMSG_SMP_SONGDROP_NEW:
-		if(!InsertSample(false))
-			break;
-		[[fallthrough]];
 	case CTRLMSG_SMP_SONGDROP:
 		if(lParam)
 		{
@@ -487,6 +481,9 @@ LRESULT CCtrlSamples::OnModCtrlMsg(WPARAM wParam, LPARAM lParam)
 	case CTRLMSG_SMP_INITOPL:
 		OnInitOPLInstrument();
 		break;
+
+	case CTRLMSG_SMP_NEWSAMPLE:
+		return InsertSample(false) ? 1 : 0;
 
 	case IDC_SAMPLE_REVERSE:
 		OnReverse();
@@ -579,7 +576,10 @@ BOOL CCtrlSamples::GetToolTipText(UINT uId, LPTSTR pszText)
 		case IDC_EDIT7:
 		case IDC_EDIT8:
 			// Volume to dB
-			_tcscpy(pszText, CModDoc::LinearToDecibels(val, 64.0));
+			if(IsOPLInstrument())
+				_tcscpy(pszText, (mpt::tfmt::fix((static_cast<int32>(val) - 64) * 0.75, 2) + _T(" dB")).c_str());
+			else
+				_tcscpy(pszText, CModDoc::LinearToDecibels(val, 64.0));
 			return TRUE;
 
 		case IDC_EDIT9:
@@ -1152,21 +1152,7 @@ void CCtrlSamples::OnSampleChanged()
 		if ((n > 0) && (n <= m_sndFile.GetNumSamples()) && (n != m_nSample))
 		{
 			SetCurrentSample(n, -1, FALSE);
-			if (m_sndFile.GetNumInstruments())
-			{
-				INSTRUMENTINDEX k = static_cast<INSTRUMENTINDEX>(m_parent.GetInstrumentChange());
-				if(!m_modDoc.IsChildSample(k, m_nSample))
-				{
-					INSTRUMENTINDEX nins = m_modDoc.FindSampleParent(m_nSample);
-					if(nins != INSTRUMENTINDEX_INVALID)
-					{
-						m_parent.InstrumentChanged(nins);
-					}
-				}
-			} else
-			{
-				m_parent.InstrumentChanged(m_nSample);
-			}
+			m_parent.SampleChanged(m_nSample);
 		}
 	}
 }
@@ -1201,8 +1187,8 @@ void CCtrlSamples::OnTbnDropDownToolBar(NMHDR *pNMHDR, LRESULT *pResult)
 	case IDC_SAMPLE_OPEN:
 		{
 			menu.CreatePopupMenu();
-			menu.AppendMenu(MF_STRING, IDC_SAMPLE_OPENKNOWN, _T("Import &Sample..."));
-			menu.AppendMenu(MF_STRING, IDC_SAMPLE_OPENRAW, _T("Import &RAW Sample..."));
+			menu.AppendMenu(MF_STRING, IDC_SAMPLE_OPENKNOWN, ih->GetKeyTextFromCommand(kcSampleLoad, _T("Import &Sample...")));
+			menu.AppendMenu(MF_STRING, IDC_SAMPLE_OPENRAW, ih->GetKeyTextFromCommand(kcSampleLoadRaw, _T("Import &Raw Sample...")));
 			menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
 			menu.DestroyMenu();
 		}
@@ -1283,7 +1269,7 @@ static constexpr std::pair<const mpt::uchar *, const mpt::uchar *> SampleFormats
 #endif // MPT_ENABLE_MP3_SAMPLES
 	{ UL_("XI Samples (*.xi)"), UL_("*.xi") },
 	{ UL_("Impulse Tracker Samples (*.its)"), UL_("*.its") },
-	{ UL_("ScreamTracker Samples (*.s3i,*.smp)"), UL_("*.s3i;*.smp") },
+	{ UL_("Scream Tracker Samples (*.s3i,*.smp)"), UL_("*.s3i;*.smp") },
 	{ UL_("OPL Instruments (*.sb0,*.sb2,*.sbi)"), UL_("*.sb0;*.sb2;*.sbi") },
 	{ UL_("GF1 Patches (*.pat)"), UL_("*.pat") },
 	{ UL_("Wave64 Files (*.w64)"), UL_("*.w64") },
@@ -1296,7 +1282,7 @@ static constexpr std::pair<const mpt::uchar *, const mpt::uchar *> SampleFormats
 
 static mpt::ustring ConstructFileFilter(bool includeRaw)
 {
-	mpt::ustring s = U_("All Samples|");
+	mpt::ustring s = U_("All Samples (*.wav,*.flac,*.xi,*.its,*.s3i,*.sbi,...)|");
 	bool first = true;
 	for(const auto &[name, exts] : SampleFormats)
 	{
@@ -1482,7 +1468,7 @@ void CCtrlSamples::SaveSample(bool doBatchSave)
 		.DefaultFilename(fileName)
 		.ExtensionFilter("Wave File (*.wav)|*.wav|"
 			"FLAC File (*.flac)|*.flac|"
-			"S3I ScreamTracker 3 Instrument (*.s3i)|*.s3i|"
+			"S3I Scream Tracker 3 Instrument (*.s3i)|*.s3i|"
 			"RAW Audio (*.raw)|*.raw||")
 			.WorkingDirectory(defaultPath)
 			.FilterIndex(&filter);
@@ -1879,12 +1865,12 @@ void CCtrlSamples::OnResample()
 			newFreq = sampleFreq / 2;
 		else if(newFreq == sampleFreq)
 			continue;
-		ApplyResample(smp, newFreq, dlg.GetFilter(), first != last);
+		ApplyResample(smp, newFreq, dlg.GetFilter(), first != last, dlg.UpdatePatternCommands());
 	}
 }
 
 
-void CCtrlSamples::ApplyResample(SAMPLEINDEX smp, uint32 newRate, ResamplingMode mode, bool ignoreSelection)
+void CCtrlSamples::ApplyResample(SAMPLEINDEX smp, uint32 newRate, ResamplingMode mode, bool ignoreSelection, bool updatePatternCommands)
 {
 	BeginWaitCursor();
 
@@ -2070,6 +2056,7 @@ void CCtrlSamples::ApplyResample(SAMPLEINDEX smp, uint32 newRate, ResamplingMode
 		m_modDoc.GetSampleUndo().PrepareUndo(smp, sundo_replace, (newRate > oldRate) ? "Upsample" : "Downsample");
 
 		// Adjust loops and cues
+		const auto oldCues = sample.cues;
 		for(SmpLength &point : SampleEdit::GetCuesAndLoops(sample))
 		{
 			if(point >= oldLength)
@@ -2079,6 +2066,43 @@ void CCtrlSamples::ApplyResample(SAMPLEINDEX smp, uint32 newRate, ResamplingMode
 			else if(point > selection.nStart)
 				point = selection.nStart + Util::muldivr_unsigned(point - selection.nStart, newRate, oldRate);
 			LimitMax(point, newTotalLength);
+		}
+
+		if(updatePatternCommands)
+		{
+			bool patternUndoCreated = false;
+			m_sndFile.Patterns.ForEachModCommand([&](ModCommand &m)
+			{
+				if(m.command != CMD_OFFSET && m.command != CMD_REVERSEOFFSET && m.command != CMD_OFFSETPERCENTAGE)
+					return;
+				if(m_sndFile.GetSampleIndex(m.note, m.instr) != smp)
+					return;
+				SmpLength point = m.param * 256u;
+			
+				if(m.command == CMD_OFFSETPERCENTAGE || (m.volcmd == VOLCMD_OFFSET && m.vol == 0))
+					point = Util::muldivr_unsigned(point, oldLength, 65536);
+				else if(m.volcmd == VOLCMD_OFFSET && m.vol <= std::size(oldCues))
+					point += oldCues[m.vol - 1];
+
+				if(point >= oldLength)
+					point = newTotalLength;
+				else if (point >= selection.nEnd)
+					point += newSelLength - selLength;
+				else if (point > selection.nStart)
+					point = selection.nStart + Util::muldivr_unsigned(point - selection.nStart, newRate, oldRate);
+				LimitMax(point, newTotalLength);
+
+				if(m.command == CMD_OFFSETPERCENTAGE || (m.volcmd == VOLCMD_OFFSET && m.vol == 0))
+					point = Util::muldivr_unsigned(point, 65536, newTotalLength);
+				else if(m.volcmd == VOLCMD_OFFSET && m.vol <= std::size(sample.cues))
+					point -= sample.cues[m.vol - 1];
+				if(!patternUndoCreated)
+				{
+					patternUndoCreated = true;
+					m_modDoc.PrepareUndoForAllPatterns(false, "Resample (Adjust Offsets)");
+				}
+				m.param = mpt::saturate_cast<ModCommand::PARAM>(point / 256u);
+			});
 		}
 
 		if(!selection.selectionActive)
@@ -2134,7 +2158,7 @@ void CCtrlSamples::OnEnableStretchToSize()
 	if(!timeStretch) ReadTimeStretchParameters();
 	((CComboBox *)GetDlgItem(IDC_COMBO4))->EnableWindow(timeStretch ? FALSE : TRUE);
 	((CEdit *)GetDlgItem(IDC_EDIT6))->EnableWindow(timeStretch ? TRUE : FALSE);
-	((CButton *)GetDlgItem(IDC_BUTTON2))->EnableWindow(timeStretch ? TRUE : FALSE); //rewbs.timeStretchMods
+	((CButton *)GetDlgItem(IDC_BUTTON2))->EnableWindow(timeStretch ? TRUE : FALSE);
 
 	GetDlgItem(IDC_TEXT_PITCH)->SetWindowText(timeStretch ? _T("Sequence") : _T("Pitch"));
 	GetDlgItem(IDC_TEXT_QUALITY)->SetWindowText(timeStretch ? _T("Seek Window") : _T("Quality"));
@@ -2764,7 +2788,6 @@ void CCtrlSamples::OnNameChanged()
 	const std::string s = mpt::ToCharset(m_sndFile.GetCharsetInternal(), tmp);
 	if(s != m_sndFile.m_szNames[m_nSample])
 	{
-		const bool startedEdit = m_startedEdit;
 		if(!m_startedEdit)
 		{
 			PrepareUndo("Set Name");
@@ -3443,6 +3466,7 @@ LRESULT CCtrlSamples::OnCustomKeyMsg(WPARAM wParam, LPARAM /*lParam*/)
 	switch(wParam)
 	{
 	case kcSampleLoad:		OnSampleOpen(); return wParam;
+	case kcSampleLoadRaw:	OnSampleOpenRaw(); return wParam;
 	case kcSampleSave:		OnSampleSaveOne(); return wParam;
 	case kcSampleNew:		InsertSample(false); return wParam;
 	case kcSampleDuplicate:	InsertSample(true); return wParam;
@@ -3543,6 +3567,7 @@ void CCtrlSamples::OnXFade()
 		SwitchToView();
 		return;
 	}
+	bool resetLoopOnCancel = false;
 	if((sample.nLoopEnd <= sample.nLoopStart || sample.nLoopEnd > sample.nLength)
 		&& (sample.nSustainEnd <= sample.nSustainStart || sample.nSustainEnd > sample.nLength))
 	{
@@ -3550,6 +3575,7 @@ void CCtrlSamples::OnXFade()
 		if(selection.nStart > 0 && selection.nEnd > selection.nStart)
 		{
 			sample.SetLoop(selection.nStart, selection.nEnd, true, false, m_sndFile);
+			resetLoopOnCancel = true;
 		} else
 		{
 			Reporting::Error("Crossfade requires a sample loop to work.", this);
@@ -3585,6 +3611,9 @@ void CCtrlSamples::OnXFade()
 		{
 			m_modDoc.GetSampleUndo().RemoveLastUndoStep(m_nSample);
 		}
+	} else if(resetLoopOnCancel)
+	{
+		sample.SetLoop(0, 0, false, false, m_sndFile);
 	}
 	SwitchToView();
 }

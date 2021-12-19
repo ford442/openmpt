@@ -281,7 +281,7 @@ struct MO3Sample
 		smpCompressionMask  = 0x1000 | 0x2000 | 0x4000 | 0x8000
 	};
 
-	int32le  freqFinetune;	// Frequency in S3M and IT, finetune (0...255) in MOD, MTM, XM
+	uint32le freqFinetune;	// Frequency in S3M and IT, finetune (0...255) in MOD, MTM, XM
 	int8le   transpose;
 	uint8le  defaultVolume;	// 0...64
 	uint16le panning;		// 0...256 if enabled, 0xFFFF otherwise
@@ -306,9 +306,9 @@ struct MO3Sample
 		if(type & (MOD_TYPE_IT | MOD_TYPE_S3M))
 		{
 			if(frequencyIsHertz)
-				mptSmp.nC5Speed = static_cast<uint32>(freqFinetune);
+				mptSmp.nC5Speed = freqFinetune;
 			else
-				mptSmp.nC5Speed = mpt::saturate_round<uint32>(8363.0 * std::pow(2.0, (freqFinetune + 1408) / 1536.0));
+				mptSmp.nC5Speed = mpt::saturate_round<uint32>(8363.0 * std::pow(2.0, static_cast<int32>(freqFinetune + 1408) / 1536.0));
 		} else
 		{
 			mptSmp.nFineTune = static_cast<int8>(freqFinetune);
@@ -396,7 +396,7 @@ struct MO3SampleChunk
 		do \
 		{ \
 			READ_CTRL_BIT; \
-			strLen = (strLen << 1) + carry; \
+			strLen = mpt::lshift_signed(strLen, 1) + carry; \
 			READ_CTRL_BIT; \
 		} while(carry); \
 	}
@@ -443,7 +443,7 @@ static bool UnpackMO3Data(FileReader &file, std::vector<uint8> &uncompressed, co
 			{
 				// LZ ptr in ctrl stream
 				if(uint8 b; file.Read(b))
-					strOffset = (strLen << 8) | b;  // read less significant offset byte from stream
+					strOffset = mpt::lshift_signed(strLen, 8) | b;  // read less significant offset byte from stream
 				else
 					break;
 				strLen = 0;
@@ -458,9 +458,9 @@ static bool UnpackMO3Data(FileReader &file, std::vector<uint8> &uncompressed, co
 
 			// read the next 2 bits as part of strLen
 			READ_CTRL_BIT;
-			strLen = (strLen << 1) + carry;
+			strLen = mpt::lshift_signed(strLen, 1) + carry;
 			READ_CTRL_BIT;
-			strLen = (strLen << 1) + carry;
+			strLen = mpt::lshift_signed(strLen, 1) + carry;
 			if(strLen == 0)
 			{
 				// length does not fit in 2 bits
@@ -990,6 +990,8 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 	35 = CMD_XPARAM (IT)
 	36 = CMD_SMOOTHMIDI (IT)
 	37 = CMD_DELAYCUT (IT)
+	38 = CMD_FINETUNE (MPTM)
+	39 = CMD_FINETUNE_SMOOTH (MPTM)
 
 	Note: S3M/IT CMD_TONEPORTAVOL / CMD_VIBRATOVOL are encoded as two commands:
 	K= 07 00 22 x
@@ -998,20 +1000,21 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 
 	static constexpr ModCommand::COMMAND effTrans[] =
 	{
-		CMD_NONE,				CMD_NONE,				CMD_NONE,				CMD_ARPEGGIO,
-		CMD_PORTAMENTOUP,		CMD_PORTAMENTODOWN,		CMD_TONEPORTAMENTO,		CMD_VIBRATO,
-		CMD_TONEPORTAVOL,		CMD_VIBRATOVOL,			CMD_TREMOLO,			CMD_PANNING8,
-		CMD_OFFSET,				CMD_VOLUMESLIDE,		CMD_POSITIONJUMP,		CMD_VOLUME,
-		CMD_PATTERNBREAK,		CMD_MODCMDEX,			CMD_TEMPO,				CMD_TREMOR,
-		VOLCMD_VOLSLIDEUP,		VOLCMD_FINEVOLUP,		CMD_GLOBALVOLUME,		CMD_GLOBALVOLSLIDE,
-		CMD_KEYOFF,				CMD_SETENVPOSITION,		CMD_PANNINGSLIDE,		VOLCMD_PANSLIDELEFT,
-		CMD_RETRIG,				CMD_XFINEPORTAUPDOWN,	CMD_XFINEPORTAUPDOWN,	VOLCMD_VIBRATOSPEED,
-		VOLCMD_VIBRATODEPTH,	CMD_SPEED,				CMD_VOLUMESLIDE,		CMD_PORTAMENTODOWN,
-		CMD_PORTAMENTOUP,		CMD_TREMOR,				CMD_RETRIG,				CMD_FINEVIBRATO,
-		CMD_CHANNELVOLUME,		CMD_CHANNELVOLSLIDE,	CMD_PANNINGSLIDE,		CMD_S3MCMDEX,
-		CMD_TEMPO,				CMD_GLOBALVOLSLIDE,		CMD_PANBRELLO,			CMD_MIDI,
-		VOLCMD_FINEVOLUP,		VOLCMD_PORTADOWN,		VOLCMD_PORTAUP,			CMD_NONE,
-		VOLCMD_OFFSET,			CMD_XPARAM,				CMD_SMOOTHMIDI,			CMD_DELAYCUT
+		CMD_NONE,               CMD_NONE,               CMD_NONE,               CMD_ARPEGGIO,
+		CMD_PORTAMENTOUP,       CMD_PORTAMENTODOWN,     CMD_TONEPORTAMENTO,     CMD_VIBRATO,
+		CMD_TONEPORTAVOL,       CMD_VIBRATOVOL,         CMD_TREMOLO,            CMD_PANNING8,
+		CMD_OFFSET,             CMD_VOLUMESLIDE,        CMD_POSITIONJUMP,       CMD_VOLUME,
+		CMD_PATTERNBREAK,       CMD_MODCMDEX,           CMD_TEMPO,              CMD_TREMOR,
+		VOLCMD_VOLSLIDEUP,      VOLCMD_FINEVOLUP,       CMD_GLOBALVOLUME,       CMD_GLOBALVOLSLIDE,
+		CMD_KEYOFF,             CMD_SETENVPOSITION,     CMD_PANNINGSLIDE,       VOLCMD_PANSLIDELEFT,
+		CMD_RETRIG,             CMD_XFINEPORTAUPDOWN,   CMD_XFINEPORTAUPDOWN,   VOLCMD_VIBRATOSPEED,
+		VOLCMD_VIBRATODEPTH,    CMD_SPEED,              CMD_VOLUMESLIDE,        CMD_PORTAMENTODOWN,
+		CMD_PORTAMENTOUP,       CMD_TREMOR,             CMD_RETRIG,             CMD_FINEVIBRATO,
+		CMD_CHANNELVOLUME,      CMD_CHANNELVOLSLIDE,    CMD_PANNINGSLIDE,       CMD_S3MCMDEX,
+		CMD_TEMPO,              CMD_GLOBALVOLSLIDE,     CMD_PANBRELLO,          CMD_MIDI,
+		VOLCMD_FINEVOLUP,       VOLCMD_PORTADOWN,       VOLCMD_PORTAUP,         CMD_NONE,
+		VOLCMD_OFFSET,          CMD_XPARAM,             CMD_SMOOTHMIDI,         CMD_DELAYCUT,
+		CMD_FINETUNE,           CMD_FINETUNE_SMOOTH,
 	};
 
 	uint8 noteOffset = NOTE_MIN;
@@ -1451,7 +1454,7 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 			// Note: Every Ogg stream has a unique serial number.
 			// stb_vorbis (currently) ignores this serial number so we can just stitch
 			// together our sample without adjusting the shared header's serial number.
-			const bool sharedHeader = sharedOggHeader != smp && sharedOggHeader > 0 && sharedOggHeader <= m_nSamples;
+			const bool sharedHeader = sharedOggHeader != smp && sharedOggHeader > 0 && sharedOggHeader <= m_nSamples && sampleChunk.headerSize > 0;
 
 #if defined(MPT_WITH_VORBIS) && defined(MPT_WITH_VORBISFILE)
 
@@ -1943,7 +1946,7 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 		break;
 	case MOD_TYPE_S3M:
 		m_modFormat.originalType = U_("s3m");
-		m_modFormat.originalFormatName = U_("ScreamTracker 3");
+		m_modFormat.originalFormatName = U_("Scream Tracker 3");
 		break;
 	case MOD_TYPE_IT:
 		m_modFormat.originalType = U_("it");

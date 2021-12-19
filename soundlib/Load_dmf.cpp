@@ -15,7 +15,6 @@
 
 #include "stdafx.h"
 #include "Loaders.h"
-#include "ChunkReader.h"
 #include "BitReader.h"
 
 OPENMPT_NAMESPACE_BEGIN
@@ -939,7 +938,7 @@ bool CSoundFile::ReadDMF(FileReader &file, ModLoadingFlags loadFlags)
 		// Since this is practically always the last chunk in the file, the following code is safe for those versions, though.
 		else if(fileHeader.version < 8 && chunkHeader.GetID() == DMFChunk::idSMPD)
 			chunkLength = uint32_max;
-		chunks.emplace_back(chunkHeader, file.ReadChunk(chunkLength));
+		chunks.chunks.push_back(ChunkReader::Item<DMFChunk>{chunkHeader, file.ReadChunk(chunkLength)});
 		file.Skip(chunkSkip);
 	}
 	FileReader chunk;
@@ -1049,6 +1048,7 @@ bool CSoundFile::ReadDMF(FileReader &file, ModLoadingFlags loadFlags)
 	m_nDefaultTempo.Set(120);
 	m_nDefaultGlobalVolume = 256;
 	m_nSamplePreAmp = m_nVSTiVolume = 48;
+	m_playBehaviour.set(kApplyOffsetWithoutNote);
 
 	return true;
 }
@@ -1118,6 +1118,8 @@ uintptr_t DMFUnpack(FileReader &file, uint8 *psample, uint32 maxlen)
 	try
 	{
 		tree.DMFNewNode();
+		if(tree.nodes[0].left < 0 || tree.nodes[0].right < 0)
+			return tree.file.GetPosition();
 		for(uint32 i = 0; i < maxlen; i++)
 		{
 			int actnode = 0;

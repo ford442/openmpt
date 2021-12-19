@@ -8,6 +8,9 @@
 #include "mpt/base/detect.hpp"
 #include "mpt/base/namespace.hpp"
 
+#include <algorithm>
+#include <type_traits>
+
 #include <cmath>
 
 
@@ -58,6 +61,23 @@ inline float round(const float val) {
 using std::round;
 
 #endif // MPT_OS_DJGPP
+
+
+template <typename T>
+inline T sanitize_nan(T val) {
+	static_assert(std::is_floating_point<T>::value);
+	if (std::isnan(val)) {
+		return T(0.0);
+	}
+	return val;
+}
+
+
+template <typename T>
+inline T safe_clamp(T v, T lo, T hi) {
+	static_assert(std::is_floating_point<T>::value);
+	return std::clamp(mpt::sanitize_nan(v), lo, hi);
+}
 
 
 } // namespace MPT_INLINE_NS

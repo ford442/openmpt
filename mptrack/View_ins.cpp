@@ -256,6 +256,7 @@ LRESULT CViewInstrument::OnModViewMsg(WPARAM wParam, LPARAM lParam)
 			INSTRUMENTVIEWSTATE *pState = (INSTRUMENTVIEWSTATE *)lParam;
 			if(pState->initialized)
 			{
+				m_zoom = pState->zoom;
 				SetCurrentInstrument(m_nInstrument, pState->nEnv);
 				m_bGrid = pState->bGrid;
 			}
@@ -267,6 +268,7 @@ LRESULT CViewInstrument::OnModViewMsg(WPARAM wParam, LPARAM lParam)
 		{
 			INSTRUMENTVIEWSTATE *pState = (INSTRUMENTVIEWSTATE *)lParam;
 			pState->initialized = true;
+			pState->zoom = m_zoom;
 			pState->nEnv = m_nEnv;
 			pState->bGrid = m_bGrid;
 		}
@@ -326,7 +328,7 @@ bool CViewInstrument::EnvSetValue(int nPoint, int32 nTick, int32 nValue, bool mo
 			int mintick = (nPoint > 0) ? envelope->at(nPoint - 1).tick : 0;
 			int maxtick;
 			if(nPoint + 1 >= (int)envelope->size() || moveTail)
-				maxtick = Util::MaxValueOfType(maxtick);
+				maxtick = std::numeric_limits<decltype(maxtick)>::max();
 			else
 				maxtick = envelope->at(nPoint + 1).tick;
 
@@ -2001,9 +2003,6 @@ void CViewInstrument::OnEditPaste()
 	}
 }
 
-static DWORD nLastNotePlayed = 0;
-static DWORD nLastScanCode = 0;
-
 
 void CViewInstrument::PlayNote(ModCommand::NOTE note)
 {
@@ -2029,9 +2028,7 @@ void CViewInstrument::PlayNote(ModCommand::NOTE note)
 					if(!pMainFrm->PlayMod(pModDoc))
 						return;
 				}
-				CriticalSection cs;
-				pModDoc->CheckNNA(note, m_nInstrument, m_baPlayingNote);
-				pModDoc->PlayNote(PlayNoteParam(note).Instrument(m_nInstrument), &m_noteChannel);
+				pModDoc->PlayNote(PlayNoteParam(note).Instrument(m_nInstrument).CheckNNA(m_baPlayingNote), &m_noteChannel);
 			}
 			CString noteName;
 			if(ModCommand::IsNote(note))
@@ -2069,7 +2066,8 @@ void CViewInstrument::OnDropFiles(HDROP hDropInfo)
 				if(SendCtrlMessage(CTRLMSG_INS_OPENFILE, (LPARAM)&file) && f < nFiles - 1)
 				{
 					// Insert more instrument slots
-					SendCtrlMessage(IDC_INSTRUMENT_NEW);
+					if(!SendCtrlMessage(CTRLMSG_INS_NEWINSTRUMENT))
+						break;
 				}
 			}
 		}
@@ -2111,24 +2109,35 @@ BOOL CViewInstrument::OnDragonDrop(BOOL doDrop, const DRAGONDROP *dropInfo)
 		canDrop = !dropInfo->GetPath().empty();
 		break;
 	}
-	if((!canDrop) || (!doDrop))
+	
+	const bool insertNew = CMainFrame::GetInputHandler()->ShiftPressed() && sndFile.GetNumInstruments() > 0;
+	if(insertNew && !sndFile.CanAddMoreInstruments())
+		canDrop = false;
+
+	if(!canDrop || !doDrop)
 		return canDrop;
-	if((!sndFile.GetNumInstruments()) && sndFile.GetModSpecifications().instrumentsMax > 0)
-	{
+
+	if(!sndFile.GetNumInstruments() && sndFile.GetModSpecifications().instrumentsMax > 0)
 		SendCtrlMessage(CTRLMSG_INS_NEWINSTRUMENT);
-	}
-	if((!m_nInstrument) || (m_nInstrument > sndFile.GetNumInstruments()))
+	if(!m_nInstrument || m_nInstrument > sndFile.GetNumInstruments())
 		return FALSE;
+
 	// Do the drop
-	bool update = false;
+	bool modified = false;
 	BeginWaitCursor();
 	switch(dropInfo->dropType)
 	{
 	case DRAGONDROP_INSTRUMENT:
 		if(dropInfo->sndFile == &sndFile)
+		{
 			SendCtrlMessage(CTRLMSG_SETCURRENTINSTRUMENT, dropInfo->dropItem);
-		else
-			SendCtrlMessage(CTRLMSG_INS_SONGDROP, (LPARAM)dropInfo);
+		} else
+		{
+			if(insertNew && !SendCtrlMessage(CTRLMSG_INS_NEWINSTRUMENT))
+				canDrop = false;
+			else
+				SendCtrlMessage(CTRLMSG_INS_SONGDROP, reinterpret_cast<LPARAM>(dropInfo));
+		}
 		break;
 
 	case DRAGONDROP_MIDIINSTR:
@@ -2143,57 +2152,55 @@ BOOL CViewInstrument::OnDragonDrop(BOOL doDrop, const DRAGONDROP *dropInfo)
 				if(dropInfo->dropItem & 0x80)
 				{
 					UINT key = dropInfo->dropItem & 0x7F;
-					pDlsIns = dlsbank.FindInstrument(TRUE, 0xFFFF, 0xFF, key, &nIns);
+					pDlsIns = dlsbank.FindInstrument(true, 0xFFFF, 0xFF, key, &nIns);
 					if(pDlsIns)
 						nRgn = dlsbank.GetRegionFromKey(nIns, key);
 				} else
 				// Melodic
 				{
-					pDlsIns = dlsbank.FindInstrument(FALSE, 0xFFFF, dropInfo->dropItem, 60, &nIns);
+					pDlsIns = dlsbank.FindInstrument(false, 0xFFFF, dropInfo->dropItem, 60, &nIns);
 					if(pDlsIns)
 						nRgn = dlsbank.GetRegionFromKey(nIns, 60);
 				}
 				canDrop = false;
 				if(pDlsIns)
 				{
-					CriticalSection cs;
-					modDoc->GetInstrumentUndo().PrepareUndo(m_nInstrument, "Replace Instrument");
-					canDrop = dlsbank.ExtractInstrument(sndFile, m_nInstrument, nIns, nRgn);
+					if(!insertNew || SendCtrlMessage(CTRLMSG_INS_NEWINSTRUMENT))
+					{
+						CriticalSection cs;
+						modDoc->GetInstrumentUndo().PrepareUndo(m_nInstrument, "Replace Instrument");
+						canDrop = modified = dlsbank.ExtractInstrument(sndFile, m_nInstrument, nIns, nRgn);
+					}
 				}
-				update = true;
 				break;
 			}
 		}
 		// Instrument file -> fall through
 		[[fallthrough]];
 	case DRAGONDROP_SOUNDFILE:
-		SendCtrlMessage(CTRLMSG_INS_OPENFILE, dropInfo->dropParam);
+		if(!insertNew || SendCtrlMessage(CTRLMSG_INS_NEWINSTRUMENT))
+			SendCtrlMessage(CTRLMSG_INS_OPENFILE, dropInfo->dropParam);
 		break;
 
 	case DRAGONDROP_DLS:
 		{
 			const CDLSBank *pDLSBank = CTrackApp::gpDLSBanks[dropInfo->dropItem];
-			UINT nIns = dropInfo->dropParam & 0x7FFF;
-			UINT nRgn;
+			UINT nIns = dropInfo->dropParam & 0xFFFF;
+			uint32 drumRgn = uint32_max;
 			// Drums: (0x80000000) | (Region << 16) | (Instrument)
-			if (dropInfo->dropParam & 0x80000000)
+			if(dropInfo->dropParam & 0x80000000)
+				drumRgn = (dropInfo->dropParam & 0x7FFF0000) >> 16;
+
+			if(!insertNew || SendCtrlMessage(CTRLMSG_INS_NEWINSTRUMENT))
 			{
-				nRgn = (dropInfo->dropParam & 0xFF0000) >> 16;
-			} else
-			// Melodic: (Instrument)
-			{
-				nRgn = pDLSBank->GetRegionFromKey(nIns, 60);
+				CriticalSection cs;
+				modDoc->GetInstrumentUndo().PrepareUndo(m_nInstrument, "Replace Instrument");
+				canDrop = modified = pDLSBank->ExtractInstrument(sndFile, m_nInstrument, nIns, drumRgn);
 			}
-
-			CriticalSection cs;
-
-			modDoc->GetInstrumentUndo().PrepareUndo(m_nInstrument, "Replace Instrument");
-			canDrop = pDLSBank->ExtractInstrument(sndFile, m_nInstrument, nIns, nRgn);
-			update = true;
 		}
 		break;
 	}
-	if(update)
+	if(modified)
 	{
 		SetModified(InstrumentHint().Info().Envelope().Names(), true);
 		GetDocument()->UpdateAllViews(nullptr, SampleHint().Info().Names().Data(), this);
@@ -2339,8 +2346,10 @@ LRESULT CViewInstrument::OnCustomKeyMsg(WPARAM wParam, LPARAM)
 	{
 		ModCommand::NOTE note = static_cast<ModCommand::NOTE>(wParam - kcInstrumentStartNoteStops + 1 + pMainFrm->GetBaseOctave() * 12);
 		if(ModCommand::IsNote(note))
+		{
 			m_baPlayingNote[note] = false;
-		pModDoc->NoteOff(note, false, m_nInstrument, m_noteChannel[note - NOTE_MIN]);
+			pModDoc->NoteOff(note, false, m_nInstrument, m_noteChannel[note - NOTE_MIN]);
+		}
 		return wParam;
 	}
 

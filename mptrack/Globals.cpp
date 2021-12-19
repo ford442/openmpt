@@ -99,6 +99,11 @@ LRESULT CModControlDlg::OnModCtrlMsg(WPARAM wParam, LPARAM lParam)
 	case CTRLMSG_DEACTIVATEPAGE:
 		OnDeactivatePage();
 		break;
+
+	case CTRLMSG_SETFOCUS:
+		GetParentFrame()->SetActiveView(&m_parent);
+		SetFocus();
+		break;
 	}
 	return 0;
 }
@@ -522,6 +527,27 @@ LRESULT CModControlView::OnGetToolTipText(WPARAM uId, LPARAM pszText)
 		if (pActiveDlg) return (LRESULT)pActiveDlg->GetToolTipText(static_cast<UINT>(uId), (LPTSTR)pszText);
 	}
 	return 0;
+}
+
+
+void CModControlView::SampleChanged(SAMPLEINDEX smp)
+{
+	const CModDoc *modDoc = GetDocument();
+	if(modDoc && modDoc->GetNumInstruments())
+	{
+		INSTRUMENTINDEX k = static_cast<INSTRUMENTINDEX>(GetInstrumentChange());
+		if(!modDoc->IsChildSample(k, smp))
+		{
+			INSTRUMENTINDEX nins = modDoc->FindSampleParent(smp);
+			if(nins != INSTRUMENTINDEX_INVALID)
+			{
+				InstrumentChanged(nins);
+			}
+		}
+	} else
+	{
+		InstrumentChanged(smp);
+	}
 }
 
 

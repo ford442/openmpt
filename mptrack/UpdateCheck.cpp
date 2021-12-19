@@ -167,7 +167,7 @@ static bool IsArchitectureSupported(const mpt::ustring &architecture)
 static bool IsArchitectureFeatureSupported(const mpt::ustring &architecture, const mpt::ustring &feature)
 {
 	MPT_UNUSED_VARIABLE(architecture);
-	#ifdef ENABLE_ASM
+	#ifdef MPT_ENABLE_ARCH_INTRINSICS
 		const CPU::Info CPUInfo = CPU::Info::Get();
 		if(feature == U_("")) return true;
 		else if(feature == U_("lm")) return (CPUInfo.AvailableFeatures & CPU::feature::lm) != 0;
@@ -181,9 +181,9 @@ static bool IsArchitectureFeatureSupported(const mpt::ustring &architecture, con
 		else if(feature == U_("avx")) return (CPUInfo.AvailableFeatures & CPU::feature::avx) != 0;
 		else if(feature == U_("avx2")) return (CPUInfo.AvailableFeatures & CPU::feature::avx2) != 0;
 		else return false;
-	#else
+	#else // !MPT_ENABLE_ARCH_INTRINSICS
 		return true;
-	#endif
+	#endif // MPT_ENABLE_ARCH_INTRINSICS
 }
 
 
@@ -426,7 +426,7 @@ std::vector<mpt::ustring> CUpdateCheck::GetDefaultUpdateSigningKeysRootAnchors()
 	// because otherwise, a single compromised server could allow for rogue updates.
 	return {
 		U_("https://update.openmpt.de/update/"),
-		U_("https://manx.datengang.de/openmpt/update/")
+		U_("https://demo-scene.de/openmpt/update/")
 	};
 }
 
@@ -638,7 +638,7 @@ std::string CUpdateCheck::GetStatisticsDataV3(const Settings &settings)
 	j["OpenMPT"]["SoundDevice"]["Settings"]["ExclusiveMode"] = deviceSettings.ExclusiveMode;
 	j["OpenMPT"]["SoundDevice"]["Settings"]["UseHardwareTiming"] = deviceSettings.UseHardwareTiming;
 	j["OpenMPT"]["SoundDevice"]["Settings"]["KeepDeviceRunning"] = deviceSettings.KeepDeviceRunning;
-	#ifdef ENABLE_ASM
+	#ifdef MPT_ENABLE_ARCH_INTRINSICS
 		const CPU::Info CPUInfo = CPU::Info::Get();
 		j["System"]["Processor"]["Vendor"] = std::string(mpt::String::ReadAutoBuf(CPUInfo.VendorID));
 		j["System"]["Processor"]["Brand"] = std::string(mpt::String::ReadAutoBuf(CPUInfo.BrandID));
@@ -656,7 +656,7 @@ std::string CUpdateCheck::GetStatisticsDataV3(const Settings &settings)
 		j["System"]["Processor"]["Features"]["sse4.2"] = ((CPUInfo.AvailableFeatures & CPU::feature::sse4_2) != 0);
 		j["System"]["Processor"]["Features"]["avx"] = ((CPUInfo.AvailableFeatures & CPU::feature::avx) != 0);
 		j["System"]["Processor"]["Features"]["avx2"] = ((CPUInfo.AvailableFeatures & CPU::feature::avx2) != 0);
-	#endif
+	#endif // MPT_ENABLE_ARCH_INTRINSICS
 	return j.dump(1, '\t');
 }
 
@@ -711,30 +711,60 @@ mpt::ustring CUpdateCheck::GetUpdateURLV2(const CUpdateCheck::Settings &settings
 
 
 // Run update check (independent thread)
-CUpdateCheck::Result CUpdateCheck::SearchUpdate(const CUpdateCheck::Context &context, const CUpdateCheck::Settings &settings, const std::string &statistics)
+UpdateCheckResult CUpdateCheck::SearchUpdate(const CUpdateCheck::Context &context, const CUpdateCheck::Settings &settings, const std::string &statistics)
 {
-	CUpdateCheck::Result result;
-	if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 0))
-	{
-		throw CUpdateCheck::Cancel();
-	}
-	if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 20))
-	{
-		throw CUpdateCheck::Cancel();
-	}
-	HTTP::InternetSession internet(Version::Current().GetOpenMPTVersionString());
-	if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 40))
-	{
-		throw CUpdateCheck::Cancel();
-	}
+	UpdateCheckResult result;
+
 #if MPT_UPDATE_LEGACY
 	if(settings.modeLegacy)
 	{
-		result = SearchUpdateLegacy(internet, settings);
+		if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 0))
+		{
+			throw CUpdateCheck::Cancel();
+		}
+		if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 10))
+		{
+			throw CUpdateCheck::Cancel();
+		}
+		{
+			HTTP::InternetSession internet(Version::Current().GetOpenMPTVersionString());
+			if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 30))
+			{
+				throw CUpdateCheck::Cancel();
+			}
+			result = SearchUpdateLegacy(internet, settings);
+			if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 50))
+			{
+				throw CUpdateCheck::Cancel();
+			}
+			SendStatistics(internet, settings, statistics);
+			if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 70))
+			{
+				throw CUpdateCheck::Cancel();
+			}
+		}
+		if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 90))
+		{
+			throw CUpdateCheck::Cancel();
+		}
+		CleanOldUpdates(settings, context);
+		if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 100))
+		{
+			throw CUpdateCheck::Cancel();
+		}
 	} else
 #endif // MPT_UPDATE_LEGACY
 	{
+		if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 0))
+		{
+			throw CUpdateCheck::Cancel();
+		}
+		if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 10))
+		{
+			throw CUpdateCheck::Cancel();
+		}
 		bool loaded = false;
+		// try to load cached results before establishing any connection
 		if(context.loadPersisted)
 		{
 			try
@@ -751,44 +781,55 @@ CUpdateCheck::Result CUpdateCheck::SearchUpdate(const CUpdateCheck::Context &con
 			} catch(mpt::out_of_memory e)
 			{
 				mpt::delete_out_of_memory(e);
-			}	catch(const std::exception &)
+			} catch(const std::exception &)
 			{
 				// ignore
 			}
 		}
+		if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 20))
+		{
+			throw CUpdateCheck::Cancel();
+		}
 		if(!loaded)
 		{
+			HTTP::InternetSession internet(Version::Current().GetOpenMPTVersionString());
+			if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 30))
+			{
+				throw CUpdateCheck::Cancel();
+			}
 			result = SearchUpdateModern(internet, settings);
-		}
-		try
-		{
+			try
 			{
 				mpt::SafeOutputFile f(settings.persistencePath + P_("update-") + mpt::PathString::FromUnicode(GetChannelName(settings.channel)) + P_(".json"), std::ios::binary);
 				f.stream().imbue(std::locale::classic());
 				mpt::IO::WriteRaw(f.stream(), mpt::as_span(result.json));
 				f.stream().flush();
+			} catch(mpt::out_of_memory e)
+			{
+				mpt::delete_out_of_memory(e);
+			} catch(const std::exception &)
+			{
+				// ignore
 			}
-		} catch(mpt::out_of_memory e)
-		{
-			mpt::delete_out_of_memory(e);
-		} catch(const std::exception &)
-		{
-			// ignore
+			if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 50))
+			{
+				throw CUpdateCheck::Cancel();
+			}
+			SendStatistics(internet, settings, statistics);
+			if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 70))
+			{
+				throw CUpdateCheck::Cancel();
+			}
 		}
-	}
-	if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 60))
-	{
-		throw CUpdateCheck::Cancel();
-	}
-	SendStatistics(internet, settings, statistics);
-	if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 80))
-	{
-		throw CUpdateCheck::Cancel();
-	}
-	CleanOldUpdates(settings, context);
-	if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 100))
-	{
-		throw CUpdateCheck::Cancel();
+		if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 90))
+		{
+			throw CUpdateCheck::Cancel();
+		}
+		CleanOldUpdates(settings, context);
+		if(!context.window->SendMessage(context.msgProgress, context.autoUpdate ? 1 : 0, 100))
+		{
+			throw CUpdateCheck::Cancel();
+		}
 	}
 	return result;
 }
@@ -854,7 +895,7 @@ void CUpdateCheck::SendStatistics(HTTP::InternetSession &internet, const CUpdate
 
 
 #if MPT_UPDATE_LEGACY
-CUpdateCheck::Result CUpdateCheck::SearchUpdateLegacy(HTTP::InternetSession &internet, const CUpdateCheck::Settings &settings)
+UpdateCheckResult CUpdateCheck::SearchUpdateLegacy(HTTP::InternetSession &internet, const CUpdateCheck::Settings &settings)
 {
 
 	HTTP::Request request;
@@ -874,7 +915,7 @@ CUpdateCheck::Result CUpdateCheck::SearchUpdateLegacy(HTTP::InternetSession &int
 	}
 
 	// Now, evaluate the downloaded data.
-	CUpdateCheck::Result result;
+	UpdateCheckResult result;
 	result.UpdateAvailable = false;
 	result.CheckTime = time(nullptr);
 	CString resultData = mpt::ToCString(mpt::Charset::UTF8, mpt::buffer_cast<std::string>(resultHTTP.Data));
@@ -917,7 +958,7 @@ CUpdateCheck::Result CUpdateCheck::SearchUpdateLegacy(HTTP::InternetSession &int
 #endif // MPT_UPDATE_LEGACY
 
 
-CUpdateCheck::Result CUpdateCheck::SearchUpdateModern(HTTP::InternetSession &internet, const CUpdateCheck::Settings &settings)
+UpdateCheckResult CUpdateCheck::SearchUpdateModern(HTTP::InternetSession &internet, const CUpdateCheck::Settings &settings)
 {
 
 	HTTP::Request request;
@@ -938,7 +979,7 @@ CUpdateCheck::Result CUpdateCheck::SearchUpdateModern(HTTP::InternetSession &int
 	}
 
 	// Now, evaluate the downloaded data.
-	CUpdateCheck::Result result;
+	UpdateCheckResult result;
 	result.CheckTime = time(nullptr);
 	try
 	{
@@ -961,7 +1002,7 @@ void CUpdateCheck::CheckForUpdate(const CUpdateCheck::Settings &settings, const 
 {
 	// incremented before starting the thread
 	MPT_ASSERT(s_InstanceCount.load() >= 1);
-	CUpdateCheck::Result result;
+	UpdateCheckResult result;
 	try
 	{
 		context.window->SendMessage(context.msgStart, context.autoUpdate ? 1 : 0, 0);
@@ -1000,17 +1041,15 @@ bool CUpdateCheck::IsAutoUpdateFromMessage(WPARAM wparam, LPARAM /* lparam */ )
 }
 
 
-CUpdateCheck::Result CUpdateCheck::ResultFromMessage(WPARAM /*wparam*/ , LPARAM lparam)
+const UpdateCheckResult &CUpdateCheck::MessageAsResult(WPARAM /* wparam */ , LPARAM lparam)
 {
-	const CUpdateCheck::Result &result = *reinterpret_cast<CUpdateCheck::Result*>(lparam);
-	return result;
+	return *reinterpret_cast<UpdateCheckResult *>(lparam);
 }
 
 
-CUpdateCheck::Error CUpdateCheck::ErrorFromMessage(WPARAM /*wparam*/ , LPARAM lparam)
+const CUpdateCheck::Error &CUpdateCheck::MessageAsError(WPARAM /* wparam */ , LPARAM lparam)
 {
-	const CUpdateCheck::Error &error = *reinterpret_cast<CUpdateCheck::Error*>(lparam);
-	return error;
+	return *reinterpret_cast<CUpdateCheck::Error*>(lparam);
 }
 
 
@@ -1471,38 +1510,49 @@ public:
 };
 
 
-void CUpdateCheck::AcknowledgeSuccess(WPARAM wparam, LPARAM lparam)
+void CUpdateCheck::AcknowledgeSuccess(const UpdateCheckResult &result)
 {
-	MPT_UNREFERENCED_PARAMETER(wparam);
-	const CUpdateCheck::Result& result = *reinterpret_cast<CUpdateCheck::Result*>(lparam);
-	if(result.CheckTime != time_t{})
+	if(!result.IsFromCache())
 	{
 		TrackerSettings::Instance().UpdateLastUpdateCheck = mpt::Date::Unix(result.CheckTime);
 	}
 }
 
 
-void CUpdateCheck::ShowSuccessGUI(WPARAM wparam, LPARAM lparam)
+void CUpdateCheck::ShowSuccessGUI(const bool autoUpdate, const UpdateCheckResult &result)
 {
-
-	const CUpdateCheck::Result &result = *reinterpret_cast<CUpdateCheck::Result*>(lparam);
-	bool autoUpdate = wparam != 0;
+	bool modal = !autoUpdate;
 
 #if MPT_UPDATE_LEGACY
 
 	if(TrackerSettings::Instance().UpdateLegacyMethod)
 	{
-		if(result.UpdateAvailable && (!autoUpdate || result.Version != TrackerSettings::Instance().UpdateIgnoreVersion))
+		if(!result.UpdateAvailable)
 		{
-			UpdateDialog dlg(result.Version, result.Date, result.URL);
-			if(dlg.DoModal() == IDOK)
+			if(modal)
 			{
-				CTrackApp::OpenURL(result.URL);
+				Reporting::Information(U_("You already have the latest version of OpenMPT installed."), U_("OpenMPT Update"));
 			}
-		} else if(!result.UpdateAvailable && !autoUpdate)
-		{
-			Reporting::Information(U_("You already have the latest version of OpenMPT installed."), U_("OpenMPT Internet Update"));
+			return;
 		}
+
+		// always show indicator, do not highlight it with a tooltip if we show a modal window later
+		if(!CMainFrame::GetMainFrame()->ShowUpdateIndicator(result, result.Version, result.URL, !modal))
+		{
+			// on failure to show indicator, continue and show modal dialog
+			modal = true;
+		}
+
+		if(!modal)
+		{
+			return;
+		}
+		UpdateDialog dlg(result.Version, result.Date, result.URL);
+		if(dlg.DoModal() != IDOK)
+		{
+			return;
+		}
+		CTrackApp::OpenURL(result.URL);
 		return;
 	}
 
@@ -1513,14 +1563,14 @@ void CUpdateCheck::ShowSuccessGUI(WPARAM wparam, LPARAM lparam)
 
 	if(!updateInfo.IsAvailable())
 	{
-		if(!autoUpdate)
+		if(modal)
 		{
 			Reporting::Information(U_("You already have the latest version of OpenMPT installed."), U_("OpenMPT Update"));
 		}
 		return;
 	}
 
-	auto & versionInfo = updateData[updateInfo.version];
+	auto &versionInfo = updateData[updateInfo.version];
 	if(autoUpdate && (mpt::ToCString(versionInfo.version) == TrackerSettings::Instance().UpdateIgnoreVersion))
 	{
 		return;
@@ -1528,17 +1578,15 @@ void CUpdateCheck::ShowSuccessGUI(WPARAM wparam, LPARAM lparam)
 
 	if(autoUpdate && TrackerSettings::Instance().UpdateInstallAutomatically && !updateInfo.download.empty() && versionInfo.downloads[updateInfo.download].can_autoupdate && (Version::Current() >= Version::Parse(versionInfo.downloads[updateInfo.download].autoupdate_minversion)))
 	{
-
 		CDoUpdate updateDlg(versionInfo.downloads[updateInfo.download], theApp.GetMainWnd());
 		if(updateDlg.DoModal() != IDOK)
 		{
 			return;
 		}
-
 	} else
 	{
 		const TCHAR *action = _T("&View Announcement");
-		const bool canInstall = !updateInfo.download.empty() && versionInfo.downloads[updateInfo.download].can_autoupdate && (Version::Current() >= Version::Parse(versionInfo.downloads[updateInfo.download].autoupdate_minversion));
+		const bool canInstall = mpt::OS::Windows::IsOriginal() && !updateInfo.download.empty() && versionInfo.downloads[updateInfo.download].can_autoupdate && (Version::Current() >= Version::Parse(versionInfo.downloads[updateInfo.download].autoupdate_minversion));
 		const bool canDownload = !canInstall && !updateInfo.download.empty() && !versionInfo.downloads[updateInfo.download].download_url.empty();
 		if(canInstall)
 		{
@@ -1546,6 +1594,18 @@ void CUpdateCheck::ShowSuccessGUI(WPARAM wparam, LPARAM lparam)
 		} else if(canDownload)
 		{
 			action = _T("&Download Now");
+		}
+
+		// always show indicator, do not highlight it with a tooltip if we show a modal window later or when it is a cached result
+		if(!CMainFrame::GetMainFrame()->ShowUpdateIndicator(result, mpt::ToCString(versionInfo.version), mpt::ToCString(versionInfo.changelog_url), !modal && !result.IsFromCache()))
+		{
+			// on failure to show indicator, continue and show modal dialog
+			modal = true;
+		}
+
+		if(!modal)
+		{
+			return;
 		}
 
 		UpdateDialog dlg(
@@ -1576,37 +1636,34 @@ void CUpdateCheck::ShowSuccessGUI(WPARAM wparam, LPARAM lparam)
 }
 
 
-mpt::ustring CUpdateCheck::GetFailureMessage(WPARAM wparam, LPARAM lparam)
+void CUpdateCheck::ShowFailureGUI(const bool autoUpdate, const CUpdateCheck::Error &error)
 {
-	MPT_UNREFERENCED_PARAMETER(wparam);
-	const CUpdateCheck::Error &error = *reinterpret_cast<CUpdateCheck::Error*>(lparam);
-	return mpt::get_exception_text<mpt::ustring>(error);
-}
-
-
-
-void CUpdateCheck::ShowFailureGUI(WPARAM wparam, LPARAM lparam)
-{
-	const CUpdateCheck::Error &error = *reinterpret_cast<CUpdateCheck::Error*>(lparam);
-	bool autoUpdate = wparam != 0;
 	if(!autoUpdate)
 	{
-		Reporting::Error(mpt::get_exception_text<mpt::ustring>(error), U_("OpenMPT Update Error"));
+		Reporting::Error(error.GetMessage(), _T("OpenMPT Update Error"));
 	}
 }
 
 
 CUpdateCheck::Error::Error(CString errorMessage)
-	: std::runtime_error(mpt::ToCharset(mpt::Charset::UTF8, errorMessage))
+	: std::runtime_error(mpt::ToCharset(mpt::CharsetException, errorMessage))
+	, m_Message(errorMessage)
 {
 	return;
 }
 
 
 CUpdateCheck::Error::Error(CString errorMessage, DWORD errorCode)
-	: std::runtime_error(mpt::ToCharset(mpt::Charset::UTF8, FormatErrorCode(errorMessage, errorCode)))
+	: std::runtime_error(mpt::ToCharset(mpt::CharsetException, FormatErrorCode(errorMessage, errorCode)))
+	, m_Message(errorMessage)
 {
 	return;
+}
+
+
+CString CUpdateCheck::Error::GetMessage() const
+{
+	return m_Message;
 }
 
 
@@ -1736,9 +1793,10 @@ void CUpdateSetupDlg::OnShowStatisticsData(NMHDR * /*pNMHDR*/, LRESULT * /*pResu
 	CUpdateCheck::Settings settings;
 
 	uint32 updateChannel = TrackerSettings::Instance().UpdateChannel;
-	if(IsDlgButtonChecked(IDC_RADIO1)) updateChannel = UpdateChannelRelease;
-	if(IsDlgButtonChecked(IDC_RADIO2)) updateChannel = UpdateChannelNext;
-	if(IsDlgButtonChecked(IDC_RADIO3)) updateChannel = UpdateChannelDevelopment;
+	const int channelRadio = GetCheckedRadioButton(IDC_RADIO1, IDC_RADIO3);
+	if(channelRadio == IDC_RADIO1) updateChannel = UpdateChannelRelease;
+	if(channelRadio == IDC_RADIO2) updateChannel = UpdateChannelNext;
+	if(channelRadio == IDC_RADIO3) updateChannel = UpdateChannelDevelopment;
 
 	int updateCheckPeriod = (m_CbnUpdateFrequency.GetItemData(m_CbnUpdateFrequency.GetCurSel()) == ~(DWORD_PTR)0) ? -1 : static_cast<int>(m_CbnUpdateFrequency.GetItemData(m_CbnUpdateFrequency.GetCurSel()));
 
@@ -1851,9 +1909,10 @@ void CUpdateSetupDlg::OnSettingsChanged()
 void CUpdateSetupDlg::OnOK()
 {
 	uint32 updateChannel = TrackerSettings::Instance().UpdateChannel;
-	if(IsDlgButtonChecked(IDC_RADIO1)) updateChannel = UpdateChannelRelease;
-	if(IsDlgButtonChecked(IDC_RADIO2)) updateChannel = UpdateChannelNext;
-	if(IsDlgButtonChecked(IDC_RADIO3)) updateChannel = UpdateChannelDevelopment;
+	const int channelRadio = GetCheckedRadioButton(IDC_RADIO1, IDC_RADIO3);
+	if(channelRadio == IDC_RADIO1) updateChannel = UpdateChannelRelease;
+	if(channelRadio == IDC_RADIO2) updateChannel = UpdateChannelNext;
+	if(channelRadio == IDC_RADIO3) updateChannel = UpdateChannelDevelopment;
 
 	int updateCheckPeriod = (m_CbnUpdateFrequency.GetItemData(m_CbnUpdateFrequency.GetCurSel()) == ~(DWORD_PTR)0) ? -1 : static_cast<int>(m_CbnUpdateFrequency.GetItemData(m_CbnUpdateFrequency.GetCurSel()));
 	

@@ -76,6 +76,8 @@
 			["C++14"] = "-extern-std=c++14",
 			["C++1z"] = "-extern-std=c++17",
 			["C++17"] = "-extern-std=c++17",
+			["C++2a"] = "-extern-std=c++20",
+			["C++20"] = "-extern-std=c++20",
 			["gnu++98"] = "-extern-std=c++98",
 			["gnu++0x"] = "-extern-std=c++11",
 			["gnu++11"] = "-extern-std=c++11",
@@ -83,6 +85,8 @@
 			["gnu++14"] = "-extern-std=c++14",
 			["gnu++1z"] = "-extern-std=c++17",
 			["gnu++17"] = "-extern-std=c++17",
+			["gnu++2a"] = "-extern-std=c++20",
+			["gnu++20"] = "-extern-std=c++20",
 		},
 		deprecatedfeatures = {
 			Allow = "-d",
@@ -112,11 +116,13 @@
 			SSE3 = "-mattr=+sse3",
 			SSSE3 = "-mattr=+ssse3",
 			["SSE4.1"] = "-mattr=+sse4.1",
+			["SSE4.2"] = "-mattr=+sse4.2",
 		},
 		warnings = {
 			Default = "-wi",
 			High = "-wi",
 			Extra = "-wi",	-- TODO: is there a way to get extra warnings?
+			Everything = "-wi",
 		},
 		symbols = {
 			On = "-g",

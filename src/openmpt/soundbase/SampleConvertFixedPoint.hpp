@@ -8,6 +8,7 @@
 
 #include "mpt/base/arithmetic_shift.hpp"
 #include "mpt/base/macros.hpp"
+#include "mpt/base/math.hpp"
 #include "mpt/base/saturate_cast.hpp"
 #include "openmpt/base/Int24.hpp"
 #include "openmpt/base/Types.hpp"
@@ -15,6 +16,7 @@
 
 #include <algorithm>
 #include <limits>
+
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -30,8 +32,8 @@ struct ConvertFixedPoint;
 template <int fractionalBits>
 struct ConvertFixedPoint<uint8, int32, fractionalBits>
 {
-	typedef int32 input_t;
-	typedef uint8 output_t;
+	using input_t = int32;
+	using output_t = uint8;
 	static constexpr int shiftBits = fractionalBits + 1 - sizeof(output_t) * 8;
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
@@ -47,8 +49,8 @@ struct ConvertFixedPoint<uint8, int32, fractionalBits>
 template <int fractionalBits>
 struct ConvertFixedPoint<int8, int32, fractionalBits>
 {
-	typedef int32 input_t;
-	typedef int8 output_t;
+	using input_t = int32;
+	using output_t = int8;
 	static constexpr int shiftBits = fractionalBits + 1 - sizeof(output_t) * 8;
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
@@ -64,8 +66,8 @@ struct ConvertFixedPoint<int8, int32, fractionalBits>
 template <int fractionalBits>
 struct ConvertFixedPoint<int16, int32, fractionalBits>
 {
-	typedef int32 input_t;
-	typedef int16 output_t;
+	using input_t = int32;
+	using output_t = int16;
 	static constexpr int shiftBits = fractionalBits + 1 - sizeof(output_t) * 8;
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
@@ -81,8 +83,8 @@ struct ConvertFixedPoint<int16, int32, fractionalBits>
 template <int fractionalBits>
 struct ConvertFixedPoint<int24, int32, fractionalBits>
 {
-	typedef int32 input_t;
-	typedef int24 output_t;
+	using input_t = int32;
+	using output_t = int24;
 	static constexpr int shiftBits = fractionalBits + 1 - sizeof(output_t) * 8;
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
@@ -98,8 +100,8 @@ struct ConvertFixedPoint<int24, int32, fractionalBits>
 template <int fractionalBits>
 struct ConvertFixedPoint<int32, int32, fractionalBits>
 {
-	typedef int32 input_t;
-	typedef int32 output_t;
+	using input_t = int32;
+	using output_t = int32;
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
 		static_assert(fractionalBits >= 0 && fractionalBits <= sizeof(input_t) * 8 - 1);
@@ -110,8 +112,8 @@ struct ConvertFixedPoint<int32, int32, fractionalBits>
 template <int fractionalBits>
 struct ConvertFixedPoint<float32, int32, fractionalBits>
 {
-	typedef int32 input_t;
-	typedef float32 output_t;
+	using input_t = int32;
+	using output_t = float32;
 	const float factor;
 	MPT_FORCEINLINE ConvertFixedPoint()
 		: factor(1.0f / static_cast<float>(1 << fractionalBits))
@@ -128,8 +130,8 @@ struct ConvertFixedPoint<float32, int32, fractionalBits>
 template <int fractionalBits>
 struct ConvertFixedPoint<float64, int32, fractionalBits>
 {
-	typedef int32 input_t;
-	typedef float64 output_t;
+	using input_t = int32;
+	using output_t = float64;
 	const double factor;
 	MPT_FORCEINLINE ConvertFixedPoint()
 		: factor(1.0 / static_cast<double>(1 << fractionalBits))
@@ -150,8 +152,8 @@ struct ConvertToFixedPoint;
 template <int fractionalBits>
 struct ConvertToFixedPoint<int32, uint8, fractionalBits>
 {
-	typedef uint8 input_t;
-	typedef int32 output_t;
+	using input_t = uint8;
+	using output_t = int32;
 	static constexpr int shiftBits = fractionalBits + 1 - sizeof(input_t) * 8;
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
@@ -164,8 +166,8 @@ struct ConvertToFixedPoint<int32, uint8, fractionalBits>
 template <int fractionalBits>
 struct ConvertToFixedPoint<int32, int8, fractionalBits>
 {
-	typedef int8 input_t;
-	typedef int32 output_t;
+	using input_t = int8;
+	using output_t = int32;
 	static constexpr int shiftBits = fractionalBits + 1 - sizeof(input_t) * 8;
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
@@ -178,8 +180,8 @@ struct ConvertToFixedPoint<int32, int8, fractionalBits>
 template <int fractionalBits>
 struct ConvertToFixedPoint<int32, int16, fractionalBits>
 {
-	typedef int16 input_t;
-	typedef int32 output_t;
+	using input_t = int16;
+	using output_t = int32;
 	static constexpr int shiftBits = fractionalBits + 1 - sizeof(input_t) * 8;
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
@@ -192,8 +194,8 @@ struct ConvertToFixedPoint<int32, int16, fractionalBits>
 template <int fractionalBits>
 struct ConvertToFixedPoint<int32, int24, fractionalBits>
 {
-	typedef int24 input_t;
-	typedef int32 output_t;
+	using input_t = int24;
+	using output_t = int32;
 	static constexpr int shiftBits = fractionalBits + 1 - sizeof(input_t) * 8;
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
@@ -206,8 +208,8 @@ struct ConvertToFixedPoint<int32, int24, fractionalBits>
 template <int fractionalBits>
 struct ConvertToFixedPoint<int32, int32, fractionalBits>
 {
-	typedef int32 input_t;
-	typedef int32 output_t;
+	using input_t = int32;
+	using output_t = int32;
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
 		static_assert(fractionalBits >= 0 && fractionalBits <= sizeof(output_t) * 8 - 1);
@@ -218,8 +220,8 @@ struct ConvertToFixedPoint<int32, int32, fractionalBits>
 template <int fractionalBits>
 struct ConvertToFixedPoint<int32, float32, fractionalBits>
 {
-	typedef float32 input_t;
-	typedef int32 output_t;
+	using input_t = float32;
+	using output_t = int32;
 	const float factor;
 	MPT_FORCEINLINE ConvertToFixedPoint()
 		: factor(static_cast<float>(1 << fractionalBits))
@@ -229,6 +231,7 @@ struct ConvertToFixedPoint<int32, float32, fractionalBits>
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
 		static_assert(fractionalBits >= 0 && fractionalBits <= sizeof(input_t) * 8 - 1);
+		val = mpt::sanitize_nan(val);
 		return mpt::saturate_cast<output_t>(SC::fastround(val * factor));
 	}
 };
@@ -236,8 +239,8 @@ struct ConvertToFixedPoint<int32, float32, fractionalBits>
 template <int fractionalBits>
 struct ConvertToFixedPoint<int32, float64, fractionalBits>
 {
-	typedef float64 input_t;
-	typedef int32 output_t;
+	using input_t = float64;
+	using output_t = int32;
 	const double factor;
 	MPT_FORCEINLINE ConvertToFixedPoint()
 		: factor(static_cast<double>(1 << fractionalBits))
@@ -247,6 +250,7 @@ struct ConvertToFixedPoint<int32, float64, fractionalBits>
 	MPT_FORCEINLINE output_t operator()(input_t val)
 	{
 		static_assert(fractionalBits >= 0 && fractionalBits <= sizeof(input_t) * 8 - 1);
+		val = mpt::sanitize_nan(val);
 		return mpt::saturate_cast<output_t>(SC::fastround(val * factor));
 	}
 };

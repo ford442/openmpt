@@ -2895,10 +2895,15 @@ bool CViewPattern::DataEntry(bool up, bool coarse)
 			} else
 			{
 				int param = m.param + offset * (coarse ? 16 : 1);
-				ModCommand::PARAM minValue = 0, maxValue = 0xFF;
-				effectInfo.GetEffectInfo(effectInfo.GetIndexFromEffect(m.command, m.param), nullptr, false, &minValue, &maxValue);
-				Limit(param, (int)minValue, (int)maxValue);
-				m.param = (ModCommand::PARAM)param;
+				ModCommand::PARAM minValue = 0x00, maxValue = 0xFF;
+				if(!m.IsSlideUpDownCommand())
+				{
+					const auto effectIndex = effectInfo.GetIndexFromEffect(m.command, m.param);
+					effectInfo.GetEffectInfo(effectIndex, nullptr, false, &minValue, &maxValue);
+					minValue = static_cast<ModCommand::PARAM>(effectInfo.MapPosToValue(effectIndex, minValue));
+					maxValue = static_cast<ModCommand::PARAM>(effectInfo.MapPosToValue(effectIndex, maxValue));
+				}
+				m.param = static_cast<ModCommand::PARAM>(Clamp(param, minValue, maxValue));
 			}
 		}
 	});
@@ -2922,9 +2927,9 @@ int CViewPattern::GetDefaultVolume(const ModCommand &m, ModCommand::INSTR lastIn
 	const CSoundFile &sndFile = *GetSoundFile();
 	SAMPLEINDEX sample = GetDocument()->GetSampleIndex(m, lastInstr);
 	if(sample)
-		return sndFile.GetSample(sample).nVolume / 4;
+		return std::min(sndFile.GetSample(sample).nVolume, uint16(256)) / 4u;
 	else if(m.instr > 0 && m.instr <= sndFile.GetNumInstruments() && sndFile.Instruments[m.instr] != nullptr && sndFile.Instruments[m.instr]->HasValidMIDIChannel())
-		return sndFile.Instruments[m.instr]->nGlobalVol;  // For instrument plugins
+		return std::min(sndFile.Instruments[m.instr]->nGlobalVol, uint32(64));  // For instrument plugins
 	else
 		return 64;
 }
@@ -3703,13 +3708,11 @@ LRESULT CViewPattern::OnMidiMsg(WPARAM dwMidiDataParam, LPARAM)
 	if((event == MIDIEvents::evNoteOn) && !vol)
 		event = MIDIEvents::evNoteOff;  //Convert event to note-off if req'd
 
-
 	// Handle MIDI mapping.
 	PLUGINDEX mappedIndex = uint8_max;
 	PlugParamIndex paramIndex = 0;
 	uint16 paramValue = uint16_max;
 	bool captured = sndFile.GetMIDIMapper().OnMIDImsg(midiData, mappedIndex, paramIndex, paramValue);
-
 
 	// Handle MIDI messages assigned to shortcuts
 	CInputHandler *ih = CMainFrame::GetInputHandler();
@@ -4334,11 +4337,30 @@ LRESULT CViewPattern::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		case kcShowNoteProperties: ShowEditWindow(); return wParam;
 		case kcShowPatternProperties: OnPatternProperties(); return wParam;
 		case kcShowSplitKeyboardSettings:	SetSplitKeyboardSettings(); return wParam;
-		case kcShowEditMenu:	{
-									CPoint pt = GetPointFromPosition(m_Cursor);
-									OnRButtonDown(0, pt);
-								}
-								return wParam;
+		case kcShowEditMenu:
+			{
+				CPoint pt = GetPointFromPosition(m_Cursor);
+				pt.x += GetChannelWidth() / 2;
+				pt.y += GetRowHeight() / 2;
+				OnRButtonDown(0, pt);
+			}
+			return wParam;
+		case kcShowChannelCtxMenu:
+			{
+				CPoint pt = GetPointFromPosition(m_Cursor);
+				pt.x += GetChannelWidth() / 2;
+				pt.y = (m_szHeader.cy - m_szPluginHeader.cy) / 2;
+				OnRButtonDown(0, pt);
+			}
+			return wParam;
+		case kcShowChannelPluginCtxMenu:
+			{
+				CPoint pt = GetPointFromPosition(m_Cursor);
+				pt.x += GetChannelWidth() / 2;
+				pt.y = m_szHeader.cy - m_szPluginHeader.cy / 2;
+				OnRButtonDown(0, pt);
+			}
+			return wParam;
 		case kcPatternGoto:		OnEditGoto(); return wParam;
 
 		case kcNoteCut:			TempEnterNote(NOTE_NOTECUT); return wParam;
@@ -4856,7 +4878,6 @@ void CViewPattern::TempStopNote(ModCommand::NOTE note, const bool fromMidi, bool
 		if(!ins)
 			ins = m_fallbackInstrument;
 
-		const bool playWholeRow = ((TrackerSettings::Instance().m_dwPatternSetup & PATTERN_PLAYEDITROW) && !liveRecord);
 		if(chordMode)
 		{
 			m_Status.reset(psChordPlaying);
@@ -4928,9 +4949,7 @@ void CViewPattern::TempStopNote(ModCommand::NOTE note, const bool fromMidi, bool
 		}
 	}
 
-	// Create undo-point.
-	pModDoc->GetPatternUndo().PrepareUndo(editPos.pattern, nChn, editPos.row, noteChannels[numNotes - 1] - nChn + 1, 1, "Note Stop Entry");
-
+	bool modified = false;
 	for(int i = 0; i < numNotes; i++)
 	{
 		if(m_previousNote[noteChannels[i]] != notes[i])
@@ -4938,6 +4957,13 @@ void CViewPattern::TempStopNote(ModCommand::NOTE note, const bool fromMidi, bool
 			// This might be a note-off from a past note, but since we already hit a new note on this channel, we ignore it.
 			continue;
 		}
+
+		if(!modified)
+		{
+			pModDoc->GetPatternUndo().PrepareUndo(editPos.pattern, nChn, editPos.row, noteChannels[numNotes - 1] - nChn + 1, 1, "Note Stop Entry");
+			modified = true;
+		}
+
 		pTarget = sndFile.Patterns[editPos.pattern].GetpModCommand(editPos.row, noteChannels[i]);
 
 		// -- write sdx if playing live
@@ -4979,6 +5005,8 @@ void CViewPattern::TempStopNote(ModCommand::NOTE note, const bool fromMidi, bool
 		pTarget->volcmd = VOLCMD_NONE;
 		pTarget->vol = 0;
 	}
+	if(!modified)
+		return;
 
 	SetModified(false);
 
@@ -5403,8 +5431,7 @@ void CViewPattern::TempEnterNote(ModCommand::NOTE note, int vol, bool fromMidi)
 void CViewPattern::PlayNote(ModCommand::NOTE note, ModCommand::INSTR instr, int volume, CHANNELINDEX channel)
 {
 	CModDoc *modDoc = GetDocument();
-	modDoc->CheckNNA(note, instr, m_baPlayingNote);
-	modDoc->PlayNote(PlayNoteParam(note).Instrument(instr).Volume(volume).Channel(channel), &m_noteChannel);
+	modDoc->PlayNote(PlayNoteParam(note).Instrument(instr).Volume(volume).Channel(channel).CheckNNA(m_baPlayingNote), &m_noteChannel);
 }
 
 
@@ -5637,8 +5664,7 @@ void CViewPattern::TempEnterChord(ModCommand::NOTE note)
 			}
 			for(int i = 0; i < numNotes; i++)
 			{
-				pModDoc->CheckNNA(chordNotes[i], playIns, m_baPlayingNote);
-				pModDoc->PlayNote(PlayNoteParam(chordNotes[i]).Instrument(playIns).Channel(chn), &m_noteChannel);
+				pModDoc->PlayNote(PlayNoteParam(chordNotes[i]).Instrument(playIns).Channel(chn).CheckNNA(m_baPlayingNote), &m_noteChannel);
 			}
 		}
 	}  // end play note

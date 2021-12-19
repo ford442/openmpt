@@ -5,7 +5,7 @@
 
 	filter {}
 		if _OPTIONS["clang"] then
-			toolset "msc-ClangCL"
+			toolset "clang"
 		end
 	filter {}
 
@@ -24,14 +24,22 @@
 	filter {}
 
 	filter {}
-	filter { "action:vs*", "language:C++" }
+	filter { "action:vs*", "language:C++", "action:vs2017" }
 		cppdialect "C++17"
+	filter { "action:vs*", "language:C++", "action:vs2019" }
+		cppdialect "C++17"
+	filter { "action:vs*", "language:C++", "not action:vs2017", "not action:vs2019" }
+		if _OPTIONS["clang"] then
+			cppdialect "C++17"
+		else
+			cppdialect "C++20"
+		end
 	filter { "action:vs*", "action:vs2017" }
 		if _OPTIONS["win10"] then
-			standardconformance "On"
+			conformancemode "On"
 		end
 	filter { "action:vs*", "not action:vs2017" }
-		standardconformance "On"
+		conformancemode "On"
 	filter { "not action:vs*", "language:C++" }
 		buildoptions { "-std=c++17" }
 	filter { "not action:vs*", "language:C" }
@@ -40,7 +48,7 @@
 
 	filter {}
 	filter { "action:vs*" }
-		if not _OPTIONS["clang"] and not _OPTIONS["winxp"] then
+		if not _OPTIONS["clang"] and not _OPTIONS["winxp"] and not _OPTIONS["uwp"] then
 			spectremitigations "On"
 		end
 	filter {}
@@ -166,7 +174,9 @@
 	filter { "configurations:Debug", "architecture:not ARM", "architecture:not ARM64" }
 		symbols "FastLink"
 	filter { "configurations:Debug" }
-   staticruntime "On"
+		if not _OPTIONS["uwp"] then
+			staticruntime "On"
+		end
 	 runtime "Debug"
    optimize "Debug"
 
@@ -184,11 +194,12 @@
    defines { "MPT_BUILD_MSVC_STATIC" }
    defines { "MPT_BUILD_CHECKED" }
    symbols "On"
-   staticruntime "On"
+		if not _OPTIONS["uwp"] then
+			staticruntime "On"
+		end
 	 runtime "Release"
    optimize "On"
 	 omitframepointer "Off"
-   floatingpoint "Default"
 
   filter { "configurations:CheckedShared" }
    defines { "DEBUG" }
@@ -198,7 +209,6 @@
 	 runtime "Release"
    optimize "On"
 	 omitframepointer "Off"
-   floatingpoint "Default"
 
 	 
   filter { "configurations:Release" }
@@ -208,14 +218,11 @@
 		if not _OPTIONS["clang"] then
 			flags { "LinkTimeOptimization" }
 		end
-   staticruntime "On"
+		if not _OPTIONS["uwp"] then
+			staticruntime "On"
+		end
 	 runtime "Release"
    optimize "Speed"
---		if _OPTIONS["clang"] then
---			floatingpoint "Default"
---		else
-			floatingpoint "Fast"
---		end
 
   filter { "configurations:ReleaseShared" }
    defines { "NDEBUG" }
@@ -226,11 +233,6 @@
 		end
 	 runtime "Release"
    optimize "Speed"
---		if _OPTIONS["clang"] then
---			floatingpoint "Default"
---		else
-			floatingpoint "Fast"
---		end
 
 
 	filter {}
@@ -242,6 +244,12 @@
 
 		filter { "architecture:x86" }
 			vectorextensions "IA32"
+		filter {}
+		filter { "architecture:x86", "configurations:Release" }
+			floatingpoint "Fast"
+		filter {}
+		filter { "architecture:x86", "configurations:ReleaseShared" }
+			floatingpoint "Fast"
 		filter {}
 
 	else
@@ -280,15 +288,33 @@
 
 	if _OPTIONS["win10"] then
 		defines { "_WIN32_WINNT=0x0A00" }
+		filter {}
+		filter { "architecture:x86" }
+			defines { "NTDDI_VERSION=0x0A000000" }
+		filter {}
+		filter { "architecture:x86_64" }
+			defines { "NTDDI_VERSION=0x0A000000" }
+		filter {}
+		filter { "architecture:ARM" }
+			defines { "NTDDI_VERSION=0x0A000004" } -- Windows 10 1709 Build 16299
+		filter {}
+		filter { "architecture:ARM64" }
+			defines { "NTDDI_VERSION=0x0A000004" } -- Windows 10 1709 Build 16299
+		filter {}
 	elseif _OPTIONS["win81"] then
 		defines { "_WIN32_WINNT=0x0603" }
+		defines { "NTDDI_VERSION=0x06030000" }
 	elseif _OPTIONS["win7"] then
 		defines { "_WIN32_WINNT=0x0601" }
+		defines { "NTDDI_VERSION=0x06010000" }
 	elseif _OPTIONS["winxp"] then
+		systemversion "7.0"
 		filter { "architecture:x86" }
 			defines { "_WIN32_WINNT=0x0501" }
+			defines { "NTDDI_VERSION=0x05010100" } -- Windows XP SP1
 		filter { "architecture:x86_64" }
 			defines { "_WIN32_WINNT=0x0502" }
+			defines { "NTDDI_VERSION=0x05020000" } -- Windows XP x64
 	end
 
   filter {}

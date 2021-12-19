@@ -12,7 +12,7 @@
 
 #include "openmpt/all/BuildSettings.hpp"
 
-#ifndef NO_VST
+#ifdef MPT_WITH_VST
 
 #include "../soundlib/Snd_defs.h"
 #include "../soundlib/plugins/PlugInterface.h"
@@ -77,7 +77,14 @@ public:
 	CVstPlugin(bool maskCrashes, HMODULE hLibrary, VSTPluginLib &factory, SNDMIXPLUGIN &mixPlugin, Vst::AEffect &effect, CSoundFile &sndFile);
 	~CVstPlugin();
 
-	static Vst::AEffect *LoadPlugin(bool maskCrashes, VSTPluginLib &plugin, HMODULE &library, bool forceBridge, bool forceLegacy);
+	enum class BridgeMode
+	{
+		Automatic,
+		ForceBridgeWithFallback,
+		DetectRequiredBridgeMode,
+	};
+
+	static Vst::AEffect *LoadPlugin(bool maskCrashes, VSTPluginLib &plugin, HMODULE &library, BridgeMode bridgeMode);
 
 protected:
 	void Initialize();
@@ -175,4 +182,4 @@ protected:
 
 OPENMPT_NAMESPACE_END
 
-#endif // NO_VST
+#endif // MPT_WITH_VST

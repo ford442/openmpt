@@ -44,15 +44,15 @@ call build\scriptlib\download.cmd %MPT_DOWNLOAD% x%1 "https://www.un4seen.com/fi
 call build\scriptlib\download.cmd %MPT_DOWNLOAD% x%1 "https://web.archive.org/web/20200918004813if_/http://download.microsoft.com/download/0/A/9/0A939EF6-E31C-430F-A3DF-DFAE7960D564/htmlhelp.exe" "build\externals\htmlhelp.exe"                 d91371244ea98c691b4674ee266c4a2496a296800c176adae069d21f5c52c0763b21cc7859cfffa865b89e50171a2c99a6d14620c32f7d72c0ef04045348f856 3509072 || goto error
 
 
-call build\scriptlib\download.cmd %MPT_DOWNLOAD% x%1 "https://www.python.org/ftp/python/3.9.4/python-3.9.4-embed-amd64.zip"                            "build\externals\python-3.9.4-embed-amd64.zip" 6e314c6f8b18da28c7702e7908ff3d64988f18b13b8fab54acfe32683e92e52bec1c8cbd94defd058faaeb700be805f1213a5e79ed0edb9039e107b7c5d89dbb 8419530 || goto error
+call build\scriptlib\download.cmd %MPT_DOWNLOAD% x%1 "https://www.python.org/ftp/python/3.10.0/python-3.10.0-embed-amd64.zip"                          "build\externals\python-3.10.0-embed-amd64.zip" 23d81d007698383d8dc088da532dcb86c6ceca7eb78ba5688fc2e18ee7f33f53a5632282873762293b8164556dfb15870f8ffb7abd368faba0a3d8d5d5bc6297 8474319 || goto error
 
 
 call build\scriptlib\download.cmd %MPT_DOWNLOAD% x%1 "https://netcologne.dl.sourceforge.net/project/innounp/innounp/innounp%%%%200.50/innounp050.rar"  "build\externals\innounp050.rar"               dbbc809308267a866db9d6b751fdeda6d179e1a65d8ddb14bb51984431ae91493f9a76105e1789b245732043a2c696c869ed10964b48cf59f81e55bd52f85330  141621 || goto error
 
-call build\scriptlib\download.cmd %MPT_DOWNLOAD% x%1 "http://files.jrsoftware.org/is/6/innosetup-6.1.2.exe"                                            "build\externals\innosetup-6.1.2.exe"  ea6e276479011c0c90f58a68e95e79cf3273e0e5d6794749942493e5eea5b99b4a3f2ec881ef14cf7231dbc902408d3a29d8225cf3228c9b0de266cd7e02582a 4516136 || goto error
+call build\scriptlib\download.cmd %MPT_DOWNLOAD% x%1 "https://files.jrsoftware.org/is/6/innosetup-6.2.0.exe"                                            "build\externals\innosetup-6.2.0.exe"  09799b39effeaa7b9ea3cd5757e2a202d5653a109d6748f902fc88f7bd3ec7072fccfe1ef2140274164e19a1727f1f19ec6679285b1c8a5569ff4a649e1e3a6b 4699720 || goto error
 
 
-call build\scriptlib\download.cmd %MPT_DOWNLOAD% x%1 "https://download.openmpt.org/resources/modules/example_songs_ompt_1_29.7z"                       "build\externals\example_songs_ompt_1_29.7z"  9cbe510b547ea52d8104dd4deddfadc698e8ef1e5aa4d089c867a879a021fceedeebf50acc2d996cbc23448c0b34c8f919256b100991ccd9325465952cb246ed 4882594 || goto error
+call build\scriptlib\download.cmd %MPT_DOWNLOAD% x%1 "https://download.openmpt.org/resources/modules/example_songs_ompt_1_30.7z"                       "build\externals\example_songs_ompt_1_30.7z"  bfecf7f97fd71bd52bcfb38307ccb98c751e6a0fa0c1f31208b22b9392f03ea3da8f9271327df2de4fc2e463e0c13c6a24107fbe18caf8f446b7e7cf93073fa5 4881392 || goto error
 
 
 call :killdir "build\tools\7zipold" || goto error
@@ -71,14 +71,14 @@ call build\scriptlib\unpack.cmd "build\tools\htmlhelp" "build\externals\htmlhelp
 call build\scriptlib\unpack.cmd "include\winamp"   "build\externals\WA5.55_SDK.exe" "."          || goto error
 call build\scriptlib\unpack.cmd "include\xmplay"   "build\externals\xmp-sdk.zip"    "."          || goto error
 
-call build\scriptlib\unpack.cmd "build\tools\python3" "build\externals\python-3.9.4-embed-amd64.zip" "." || goto error
+call build\scriptlib\unpack.cmd "build\tools\python3" "build\externals\python-3.10.0-embed-amd64.zip" "." || goto error
 
 call :killdir "build\tools\innounp"   || goto error
 call :killdir "build\tools\innosetup" || goto error
 call build\scriptlib\unpack.cmd "build\tools\innounp" "build\externals\innounp050.rar" "." || goto error
-build\tools\innounp\innounp.exe -x -dbuild\tools\innosetup "build\externals\innosetup-6.1.2.exe" || goto error
+build\tools\innounp\innounp.exe -x -dbuild\tools\innosetup "build\externals\innosetup-6.2.0.exe" || goto error
 
-call build\scriptlib\unpack.cmd "packageTemplate\ExampleSongs" "build\externals\example_songs_ompt_1_29.7z" "." || goto error
+call build\scriptlib\unpack.cmd "packageTemplate\ExampleSongs" "build\externals\example_songs_ompt_1_30.7z" "." || goto error
 
 
 goto ok

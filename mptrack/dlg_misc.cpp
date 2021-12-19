@@ -79,7 +79,7 @@ BOOL CModTypeDlg::OnInitDialog()
 	// Mod types
 
 	m_TypeBox.SetItemData(m_TypeBox.AddString(_T("ProTracker MOD")), MOD_TYPE_MOD);
-	m_TypeBox.SetItemData(m_TypeBox.AddString(_T("ScreamTracker S3M")), MOD_TYPE_S3M);
+	m_TypeBox.SetItemData(m_TypeBox.AddString(_T("Scream Tracker S3M")), MOD_TYPE_S3M);
 	m_TypeBox.SetItemData(m_TypeBox.AddString(_T("FastTracker XM")), MOD_TYPE_XM);
 	m_TypeBox.SetItemData(m_TypeBox.AddString(_T("Impulse Tracker IT")), MOD_TYPE_IT);
 	m_TypeBox.SetItemData(m_TypeBox.AddString(_T("OpenMPT MPTM")), MOD_TYPE_MPT);
@@ -298,13 +298,13 @@ void CModTypeDlg::OnTempoSwing()
 	const TempoMode oldMode = sndFile.m_nTempoMode;
 
 	// Temporarily apply new tempo signature for preview
-	ROWINDEX newRPB = std::max(1u, GetDlgItemInt(IDC_ROWSPERBEAT));
-	ROWINDEX newRPM = std::max(newRPB, GetDlgItemInt(IDC_ROWSPERMEASURE));
+	const ROWINDEX newRPB = std::clamp(static_cast<ROWINDEX>(GetDlgItemInt(IDC_ROWSPERBEAT)), ROWINDEX(1), MAX_ROWS_PER_BEAT);
+	const ROWINDEX newRPM = std::clamp(static_cast<ROWINDEX>(GetDlgItemInt(IDC_ROWSPERMEASURE)), newRPB, MAX_ROWS_PER_BEAT);
 	sndFile.m_nDefaultRowsPerBeat = newRPB;
 	sndFile.m_nDefaultRowsPerMeasure = newRPM;
 	sndFile.m_nTempoMode = TempoMode::Modern;
 
-	m_tempoSwing.resize(GetDlgItemInt(IDC_ROWSPERBEAT), TempoSwing::Unity);
+	m_tempoSwing.resize(newRPB, TempoSwing::Unity);
 	CTempoSwingDlg dlg(this, m_tempoSwing, sndFile);
 	if(dlg.DoModal() == IDOK)
 	{
@@ -336,13 +336,18 @@ void CModTypeDlg::OnDefaultBehaviour()
 
 bool CModTypeDlg::VerifyData()
 {
-
-	int temp_nRPB = GetDlgItemInt(IDC_ROWSPERBEAT);
-	int temp_nRPM = GetDlgItemInt(IDC_ROWSPERMEASURE);
-	if(temp_nRPB > temp_nRPM)
+	const int newRPB = GetDlgItemInt(IDC_ROWSPERBEAT);
+	const int newRPM = GetDlgItemInt(IDC_ROWSPERMEASURE);
+	if(newRPB > newRPM)
 	{
 		Reporting::Warning("Error: Rows per measure must be greater than or equal to rows per beat.");
 		GetDlgItem(IDC_ROWSPERMEASURE)->SetFocus();
+		return false;
+	}
+	if(newRPB == 0 && static_cast<TempoMode>(m_TempoModeBox.GetItemData(m_TempoModeBox.GetCurSel())) == TempoMode::Modern)
+	{
+		Reporting::Warning("Error: Rows per beat must be greater than 0 in modern tempo mode.");
+		GetDlgItem(IDC_ROWSPERBEAT)->SetFocus();
 		return false;
 	}
 
@@ -395,8 +400,8 @@ void CModTypeDlg::OnOK()
 		m_nChannels = static_cast<CHANNELINDEX>(m_ChannelsBox.GetItemData(sel));
 	}
 	
-	sndFile.m_nDefaultRowsPerBeat    = GetDlgItemInt(IDC_ROWSPERBEAT);
-	sndFile.m_nDefaultRowsPerMeasure = GetDlgItemInt(IDC_ROWSPERMEASURE);
+	sndFile.m_nDefaultRowsPerBeat    = std::min(static_cast<ROWINDEX>(GetDlgItemInt(IDC_ROWSPERBEAT)), MAX_ROWS_PER_BEAT);
+	sndFile.m_nDefaultRowsPerMeasure = std::min(static_cast<ROWINDEX>(GetDlgItemInt(IDC_ROWSPERMEASURE)), MAX_ROWS_PER_BEAT);
 
 	sel = m_TempoModeBox.GetCurSel();
 	if(sel >= 0)
@@ -414,7 +419,8 @@ void CModTypeDlg::OnOK()
 	if(sndFile.m_nTempoMode == TempoMode::Modern)
 	{
 		sndFile.m_tempoSwing = m_tempoSwing;
-		sndFile.m_tempoSwing.resize(sndFile.m_nDefaultRowsPerBeat);
+		if(!sndFile.m_tempoSwing.empty())
+			sndFile.m_tempoSwing.resize(sndFile.m_nDefaultRowsPerBeat);
 	} else
 	{
 		sndFile.m_tempoSwing.clear();
@@ -455,7 +461,7 @@ BOOL CModTypeDlg::OnToolTipNotify(UINT, NMHDR *pNMHDR, LRESULT *)
 		text = _T("Note slides always slide the same amount, not depending on the sample frequency.");
 		break;
 	case IDC_CHECK2:
-		text = _T("Old ScreamTracker 3 volume slide behaviour (not recommended).");
+		text = _T("Old Scream Tracker 3 volume slide behaviour (not recommended).");
 		break;
 	case IDC_CHECK3:
 		text = _T("Play some effects like in early versions of Impulse Tracker (not recommended).");
@@ -685,6 +691,9 @@ void CLegacyPlaybackSettingsDlg::OnFilterStringChanged()
 		case kOPLNoteOffOnNoteChange: desc = _T("Send OPL key-off when triggering notes"); break;
 		case kFT2PortaResetDirection: desc = _T("Tone Portamento direction resets after reaching portamento target from below"); break;
 		case kApplyUpperPeriodLimit: desc = _T("Apply lower frequency limit"); break;
+		case kApplyOffsetWithoutNote: desc = _T("Offset commands work without a note next to them"); break;
+		case kITPitchPanSeparation: desc = _T("Pitch / Pan Separation can be overridden by panning commands"); break;
+		case kImprecisePingPongLoops: desc = _T("Use old imprecise ping-pong loop end calculation"); break;
 
 		default: MPT_ASSERT_NOTREACHED();
 		}
@@ -1297,15 +1306,20 @@ BOOL CEditHistoryDlg::OnInitDialog()
 		totalTime += entry.openTime;
 
 		// Date
-		TCHAR szDate[32];
+		CString sDate;
 		if(entry.HasValidDate())
+		{
+			TCHAR szDate[32];
 			_tcsftime(szDate, std::size(szDate), _T("%d %b %Y, %H:%M:%S"), &entry.loadDate);
-		else
-			_tcscpy(szDate, _T("<unknown date>"));
+			sDate = szDate;
+		} else
+		{
+			sDate = _T("<unknown date>");
+		}
 		// Time + stuff
 		uint32 duration = mpt::saturate_round<uint32>(entry.openTime / HISTORY_TIMER_PRECISION);
 		s += MPT_CFORMAT("Loaded {}, open for {}h {}m {}s\r\n")(
-			CString(szDate), mpt::cfmt::dec(duration / 3600), mpt::cfmt::dec0<2>((duration / 60) % 60), mpt::cfmt::dec0<2>(duration % 60));
+			sDate, mpt::cfmt::dec(duration / 3600), mpt::cfmt::dec0<2>((duration / 60) % 60), mpt::cfmt::dec0<2>(duration % 60));
 	}
 	if(isEmpty)
 	{

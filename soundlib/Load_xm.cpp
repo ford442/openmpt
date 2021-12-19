@@ -602,6 +602,7 @@ bool CSoundFile::ReadXM(FileReader &file, ModLoadingFlags loadFlags)
 
 	FlagSet<TrackerVersions> madeWith(verUnknown);
 	mpt::ustring madeWithTracker;
+	bool isMadTracker = false;
 
 	if(!memcmp(fileHeader.trackerName, "FastTracker v2.00   ", 20) && fileHeader.size == 276)
 	{
@@ -644,9 +645,12 @@ bool CSoundFile::ReadXM(FileReader &file, ModLoadingFlags loadFlags)
 			m_playBehaviour.reset(kFT2PortaNoNote);
 			// Fix arpeggios in kragle_-_happy_day.xm
 			m_playBehaviour.reset(kFT2Arpeggio);
-		} else if(!memcmp(fileHeader.trackerName, "Skale Tracker\0", 14))
+			isMadTracker = true;
+		} else if(!memcmp(fileHeader.trackerName, "Skale Tracker\0", 14) || !memcmp(fileHeader.trackerName, "Sk@le Tracker\0", 14))
 		{
 			m_playBehaviour.reset(kFT2ST3OffsetOutOfRange);
+			// Fix arpeggios in KAPTENFL.XM
+			m_playBehaviour.reset(kFT2Arpeggio);
 		} else if(!memcmp(fileHeader.trackerName, "*Converted ", 11))
 		{
 			madeWith = verDigiTrakker;
@@ -1020,20 +1024,18 @@ bool CSoundFile::ReadXM(FileReader &file, ModLoadingFlags loadFlags)
 			Order().Replace(0xFF, Order.GetInvalidPatIndex());
 	}
 
+	m_modFormat.formatName = MPT_UFORMAT("FastTracker 2 v{}.{}")(fileHeader.version >> 8, mpt::ufmt::hex0<2>(fileHeader.version & 0xFF));
+	m_modFormat.madeWithTracker = std::move(madeWithTracker);
+	m_modFormat.charset = (m_dwLastSavedWithVersion || isMadTracker) ? mpt::Charset::Windows1252 : mpt::Charset::CP437;
 	if(isOXM)
 	{
+		m_modFormat.originalFormatName = std::move(m_modFormat.formatName);
 		m_modFormat.formatName = U_("OggMod FastTracker 2");
 		m_modFormat.type = U_("oxm");
-		m_modFormat.originalFormatName = MPT_UFORMAT("FastTracker 2 v{}.{}")(fileHeader.version >> 8, mpt::ufmt::hex0<2>(fileHeader.version & 0xFF));
 		m_modFormat.originalType = U_("xm");
-		m_modFormat.madeWithTracker = std::move(madeWithTracker);
-		m_modFormat.charset = m_dwLastSavedWithVersion ? mpt::Charset::Windows1252 : mpt::Charset::CP437;
 	} else
 	{
-		m_modFormat.formatName = MPT_UFORMAT("FastTracker 2 v{}.{}")(fileHeader.version >> 8, mpt::ufmt::hex0<2>(fileHeader.version & 0xFF));
 		m_modFormat.type = U_("xm");
-		m_modFormat.madeWithTracker = std::move(madeWithTracker);
-		m_modFormat.charset = m_dwLastSavedWithVersion ? mpt::Charset::Windows1252 : mpt::Charset::CP437;
 	}
 
 	return true;

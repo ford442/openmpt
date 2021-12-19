@@ -14,7 +14,7 @@
 
 #include "mpt/uuid/uuid.hpp"
 
-#include "ChunkReader.h"
+#include "../common/FileReader.h"
 #include "Loaders.h"
 
 #ifndef MODPLUG_NO_FILESAVE
@@ -290,9 +290,9 @@ MPT_BINARY_STRUCT(WAVCuePoint, 24)
 class WAVReader
 {
 protected:
-	ChunkReader file;
+	FileReader file;
 	FileReader sampleData, smplChunk, instChunk, xtraChunk, wsmpChunk, cueChunk;
-	ChunkReader::ChunkList<RIFFChunk> infoChunk;
+	FileReader::ChunkList<RIFFChunk> infoChunk;
 
 	FileReader::off_t sampleLength;
 	WAVFormatChunk formatInfo;
@@ -301,14 +301,14 @@ protected:
 	bool isDLS;
 	bool mayBeCoolEdit16_8;
 
-	uint16 GetFileCodePage(ChunkReader::ChunkList<RIFFChunk> &chunks);
+	uint16 GetFileCodePage(FileReader::ChunkList<RIFFChunk> &chunks);
 
 public:
 	WAVReader(FileReader &inputFile);
 
 	bool IsValid() const { return sampleData.IsValid(); }
 
-	void FindMetadataChunks(ChunkReader::ChunkList<RIFFChunk> &chunks);
+	void FindMetadataChunks(FileReader::ChunkList<RIFFChunk> &chunks);
 
 	// Self-explanatory getters.
 	WAVFormatChunk::SampleFormats GetSampleFormat() const { return IsExtensibleFormat() ? static_cast<WAVFormatChunk::SampleFormats>(subFormat) : static_cast<WAVFormatChunk::SampleFormats>(formatInfo.format.get()); }
@@ -322,7 +322,7 @@ public:
 	bool MayBeCoolEdit16_8() const { return mayBeCoolEdit16_8; }
 
 	// Get size of a single sample point, in bytes.
-	uint16 GetSampleSize() const { return ((GetNumChannels() * GetBitsPerSample()) + 7) / 8; }
+	uint16 GetSampleSize() const { return static_cast<uint16>(((static_cast<uint32>(GetNumChannels()) * static_cast<uint32>(GetBitsPerSample())) + 7) / 8); }
 
 	// Get sample length (in samples)
 	SmpLength GetSampleLength() const { return mpt::saturate_cast<SmpLength>(sampleLength); }

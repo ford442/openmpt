@@ -83,6 +83,8 @@ namespace openmpt {
 			return dynamic_cast< ext::pattern_vis * >( this );
 		} else if ( interface_id == ext::interactive_id ) {
 			return dynamic_cast< ext::interactive * >( this );
+		} else if ( interface_id == ext::interactive2_id ) {
+			return dynamic_cast< ext::interactive2 * >( this );
 
 
 
@@ -289,11 +291,58 @@ namespace openmpt {
 		if ( channel < 0 || channel >= OpenMPT::MAX_CHANNELS ) {
 			throw openmpt::exception("invalid channel");
 		}
-		OpenMPT::ModChannel &chn = m_sndFile->m_PlayState.Chn[channel];
+		auto & chn = m_sndFile->m_PlayState.Chn[channel];
 		chn.nLength = 0;
 		chn.pCurrentSample = nullptr;
 	}
 
+	void module_ext_impl::note_off(int32_t channel ) {
+		if ( channel < 0 || channel >= OpenMPT::MAX_CHANNELS ) {
+			throw openmpt::exception( "invalid channel" );
+		}
+		auto & chn = m_sndFile->m_PlayState.Chn[channel];
+		chn.dwFlags |= OpenMPT::CHN_KEYOFF;
+	}
+
+	void module_ext_impl::note_fade(int32_t channel ) {
+		if ( channel < 0 || channel >= OpenMPT::MAX_CHANNELS ) {
+			throw openmpt::exception( "invalid channel" );
+		}
+		auto & chn = m_sndFile->m_PlayState.Chn[channel];
+		chn.dwFlags |= OpenMPT::CHN_NOTEFADE;
+	}
+
+	void module_ext_impl::set_channel_panning( int32_t channel, double panning ) {
+		if ( channel < 0 || channel >= OpenMPT::MAX_CHANNELS ) {
+			throw openmpt::exception( "invalid channel" );
+		}
+		auto & chn = m_sndFile->m_PlayState.Chn[channel];
+		chn.nPan = mpt::saturate_round<int32_t>( std::clamp( panning, -1.0, 1.0 ) * 128.0 + 128.0 );
+	}
+
+	double module_ext_impl::get_channel_panning( int32_t channel ) {
+		if ( channel < 0 || channel >= OpenMPT::MAX_CHANNELS ) {
+			throw openmpt::exception( "invalid channel" );
+		}
+		auto & chn = m_sndFile->m_PlayState.Chn[channel];
+		return ( chn.nPan - 128 ) / 128.0;
+	}
+
+	void module_ext_impl::set_note_finetune( int32_t channel, double finetune ) {
+		if ( channel < 0 || channel >= OpenMPT::MAX_CHANNELS ) {
+			throw openmpt::exception( "invalid channel" );
+		}
+		auto & chn = m_sndFile->m_PlayState.Chn[channel];
+		chn.microTuning = mpt::saturate_round<int16_t>( finetune * 32768.0 );
+	}
+
+	double module_ext_impl::get_note_finetune( int32_t channel ) {
+		if ( channel < 0 || channel >= OpenMPT::MAX_CHANNELS ) {
+			throw openmpt::exception( "invalid channel" );
+		}
+		auto & chn = m_sndFile->m_PlayState.Chn[channel];
+		return chn.microTuning / 32768.0;
+	}
 
 	/* add stuff here */
 

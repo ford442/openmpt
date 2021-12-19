@@ -263,6 +263,7 @@ static constexpr FileFormatLoader ModuleFormatLoaders[] =
 	MPT_DECLARE_FORMAT(SFX),
 	MPT_DECLARE_FORMAT(STP),
 	MPT_DECLARE_FORMAT(DSym),
+	MPT_DECLARE_FORMAT(STX),
 	MPT_DECLARE_FORMAT(MOD),
 	MPT_DECLARE_FORMAT(ICE),
 	MPT_DECLARE_FORMAT(669),
@@ -483,6 +484,8 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags)
 		LimitMax(ChnSettings[chn].nVolume, uint16(64));
 		if(ChnSettings[chn].nPan > 256)
 			ChnSettings[chn].nPan = 128;
+		if(ChnSettings[chn].nMixPlugin > MAX_MIXPLUGINS)
+			ChnSettings[chn].nMixPlugin = 0;
 		m_PlayState.Chn[chn].Reset(ModChannel::resetTotal, *this, chn, muteFlag);
 	}
 
@@ -502,6 +505,7 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags)
 			{
 				filename = filename.RelativePathToAbsolute(GetpModDoc()->GetPathNameMpt().GetPath());
 			}
+			filename = filename.Simplify();
 			if(!LoadExternalSample(nSmp, filename))
 			{
 #ifndef MODPLUG_TRACKER
@@ -549,8 +553,15 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags)
 		LimitMax(m_nDefaultTempo, TEMPO(uint16_max, 0));
 	if(!m_nDefaultSpeed)
 		m_nDefaultSpeed = 6;
+
 	if(m_nDefaultRowsPerMeasure < m_nDefaultRowsPerBeat)
 		m_nDefaultRowsPerMeasure = m_nDefaultRowsPerBeat;
+	LimitMax(m_nDefaultRowsPerBeat, MAX_ROWS_PER_BEAT);
+	LimitMax(m_nDefaultRowsPerMeasure, MAX_ROWS_PER_BEAT);
+	LimitMax(m_nDefaultGlobalVolume, MAX_GLOBAL_VOLUME);
+	if(!m_tempoSwing.empty())
+		m_tempoSwing.resize(m_nDefaultRowsPerBeat);
+
 	m_PlayState.m_nMusicSpeed = m_nDefaultSpeed;
 	m_PlayState.m_nMusicTempo = m_nDefaultTempo;
 	m_PlayState.m_nCurrentRowsPerBeat = m_nDefaultRowsPerBeat;
@@ -570,6 +581,9 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags)
 	m_PlayState.m_nextPatStartRow = 0;
 	m_PlayState.m_nSeqOverride = ORDERINDEX_INVALID;
 
+	if(UseFinetuneAndTranspose())
+		m_playBehaviour.reset(kPeriodsAreHertz);
+
 	m_nMaxOrderPosition = 0;
 
 	RecalculateSamplesPerTick();
@@ -582,9 +596,6 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags)
 			order.SetRestartPos(0);
 		}
 	}
-
-	// Set up mix levels
-	SetMixLevels(m_nMixLevels);
 
 	if(GetType() == MOD_TYPE_NONE)
 	{
@@ -648,6 +659,9 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags)
 			}
 		}
 	}
+
+	// Set up mix levels (also recalculates plugin mix levels - must be done after plugins were loaded)
+	SetMixLevels(m_nMixLevels);
 
 #ifdef MODPLUG_TRACKER
 	// Display a nice message so the user sees which plugins are missing
@@ -1053,6 +1067,7 @@ PlayBehaviourSet CSoundFile::GetSupportedPlaybackBehaviour(MODTYPE type)
 		playBehaviour.set(kITInstrWithNoteOffOldEffects);
 		playBehaviour.set(kITDoNotOverrideChannelPan);
 		playBehaviour.set(kITDCTBehaviour);
+		playBehaviour.set(kITPitchPanSeparation);
 		if(type == MOD_TYPE_MPT)
 		{
 			playBehaviour.set(kOPLFlexibleNoteOff);
@@ -1181,6 +1196,7 @@ PlayBehaviourSet CSoundFile::GetDefaultPlaybackBehaviour(MODTYPE type)
 		playBehaviour.set(kITDoNotOverrideChannelPan);
 		playBehaviour.set(kITDCTBehaviour);
 		playBehaviour.set(kOPLwithNNA);
+		playBehaviour.set(kITPitchPanSeparation);
 		break;
 
 	case MOD_TYPE_S3M:
@@ -1362,30 +1378,27 @@ SAMPLEINDEX CSoundFile::DetectUnusedSamples(std::vector<bool> &sampleUsed) const
 				if(p->IsNote())
 				{
 					ModCommand::INSTR instr = p->instr;
-					if(!p->instr) instr = lastIns[c];
-					if (instr)
+					if(!p->instr)
+						instr = lastIns[c];
+					INSTRUMENTINDEX minInstr = 1, maxInstr = GetNumInstruments();
+					if(instr > 0)
 					{
-						if(mpt::is_in_range(instr, (INSTRUMENTINDEX)0, MAX_INSTRUMENTS))
+						if(instr <= GetNumInstruments())
 						{
-							ModInstrument *pIns = Instruments[p->instr];
-							if (pIns)
-							{
-								SAMPLEINDEX n = pIns->Keyboard[p->note - NOTE_MIN];
-								if (n <= GetNumSamples()) sampleUsed[n] = true;
-							}
+							minInstr = maxInstr = instr;
 						}
 						lastIns[c] = instr;
 					} else
 					{
 						// No idea which instrument this note belongs to, so mark it used in any instruments.
-						for (INSTRUMENTINDEX k = GetNumInstruments(); k >= 1; k--)
+					}
+					for(INSTRUMENTINDEX i = minInstr; i <= maxInstr; i++)
+					{
+						if(const auto *pIns = Instruments[i]; pIns != nullptr)
 						{
-							ModInstrument *pIns = Instruments[k];
-							if (pIns)
-							{
-								SAMPLEINDEX n = pIns->Keyboard[p->note - NOTE_MIN];
-								if (n <= GetNumSamples()) sampleUsed[n] = true;
-							}
+							SAMPLEINDEX n = pIns->Keyboard[p->note - NOTE_MIN];
+							if(n <= GetNumSamples())
+								sampleUsed[n] = true;
 						}
 					}
 				}
@@ -1662,6 +1675,22 @@ double CSoundFile::GetPlaybackTimeAt(ORDERINDEX ord, ROWINDEX row, bool updateVa
 	const GetLengthType t = GetLength(updateVars ? (updateSamplePos ? eAdjustSamplePositions : eAdjust) : eNoAdjust, GetLengthTarget(ord, row)).back();
 	if(t.targetReached) return t.duration;
 	else return -1; //Given position not found from play sequence.
+}
+
+
+std::vector<SubSong> CSoundFile::GetAllSubSongs()
+{
+	std::vector<SubSong> subSongs;
+	for(SEQUENCEINDEX seq = 0; seq < Order.GetNumSequences(); seq++)
+	{
+		const auto subSongsSeq = GetLength(eNoAdjust, GetLengthTarget(true).StartPos(seq, 0, 0));
+		subSongs.reserve(subSongs.size() + subSongsSeq.size());
+		for(const auto &song : subSongsSeq)
+		{
+			subSongs.push_back({song.duration, song.startRow, song.endRow, song.lastRow, song.startOrder, song.endOrder, song.lastOrder, seq});
+		}
+	}
+	return subSongs;
 }
 
 

@@ -16,6 +16,7 @@ return {
 	"base/test_premake_command.lua",
 	"base/test_table.lua",
 	"base/test_tree.lua",
+	"base/test_rule.lua",
 	"base/test_uuid.lua",
 	"base/test_versions.lua",
 	"base/test_http.lua",
@@ -61,5 +62,6 @@ return {
 	-- -- Toolset tests
 	"tools/test_dotnet.lua",
 	"tools/test_gcc.lua",
+	"tools/test_clang.lua",
 	"tools/test_msc.lua",
 }

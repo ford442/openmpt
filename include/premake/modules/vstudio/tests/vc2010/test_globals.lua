@@ -290,6 +290,42 @@ end
 	end
 
 
+	function suite.canSetXPDeprecationWarningToFalse_withV141XP()
+		toolset "v141_xp"
+		prepare()
+		test.capture [[
+<PropertyGroup Label="Globals">
+	<ProjectGuid>{42B5DBC6-AE1F-903D-F75D-41E363076E92}</ProjectGuid>
+	<Keyword>Win32Proj</Keyword>
+	<RootNamespace>MyProject</RootNamespace>
+</PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Globals">
+	<XPDeprecationWarning>false</XPDeprecationWarning>
+</PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Globals">
+	<XPDeprecationWarning>false</XPDeprecationWarning>
+</PropertyGroup>
+		]]
+	end
+
+
+	function suite.canSetXPDeprecationWarningToFalse_perConfig_withV141XP()
+		filter "Release"
+			toolset "v141_xp"
+		prepare()
+		test.capture [[
+<PropertyGroup Label="Globals">
+	<ProjectGuid>{42B5DBC6-AE1F-903D-F75D-41E363076E92}</ProjectGuid>
+	<Keyword>Win32Proj</Keyword>
+	<RootNamespace>MyProject</RootNamespace>
+</PropertyGroup>
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Globals">
+	<XPDeprecationWarning>false</XPDeprecationWarning>
+</PropertyGroup>
+		]]
+	end
+
+
 	function suite.windowsTargetPlatformVersion_latest_on2019()
 		p.action.set("vs2019")
 		systemversion "latest"
@@ -362,3 +398,48 @@ end
 		]]
 	end
 
+
+	function suite.disableFastUpToDateCheck()
+		fastuptodate "Off"
+		prepare()
+		test.capture [[
+<PropertyGroup Label="Globals">
+	<ProjectGuid>{42B5DBC6-AE1F-903D-F75D-41E363076E92}</ProjectGuid>
+	<Keyword>Win32Proj</Keyword>
+	<RootNamespace>MyProject</RootNamespace>
+	<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+</PropertyGroup>
+		]]
+	end
+
+
+	function suite.setToolsVersion2015()
+		toolsversion "14.27.29110"
+		p.action.set("vs2015")
+		prepare()
+		test.capture [[
+<PropertyGroup Label="Globals">
+	<ProjectGuid>{42B5DBC6-AE1F-903D-F75D-41E363076E92}</ProjectGuid>
+	<IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+	<Keyword>Win32Proj</Keyword>
+	<RootNamespace>MyProject</RootNamespace>
+</PropertyGroup>
+		]]
+	end
+
+
+	function suite.setToolsVersion2017()
+		toolsversion "14.27.29110"
+		p.action.set("vs2017")
+		prepare()
+		test.capture [[
+<PropertyGroup Label="Globals">
+	<ProjectGuid>{42B5DBC6-AE1F-903D-F75D-41E363076E92}</ProjectGuid>
+	<IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+	<Keyword>Win32Proj</Keyword>
+	<RootNamespace>MyProject</RootNamespace>
+	<LatestTargetPlatformVersion>$([Microsoft.Build.Utilities.ToolLocationHelper]::GetLatestSDKTargetPlatformVersion('Windows', '10.0'))</LatestTargetPlatformVersion>
+	<VCToolsVersion>14.27.29110</VCToolsVersion>
+</PropertyGroup>
+		]]
+	end

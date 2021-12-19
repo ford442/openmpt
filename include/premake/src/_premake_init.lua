@@ -165,6 +165,7 @@
 			"Pure",
 			"Safe",
 			"Unsafe",
+			"NetCore",
 		}
 	}
 
@@ -184,6 +185,9 @@
 			"C++",
 			"Objective-C",
 			"Objective-C++",
+			"Module",
+			"ModulePartition",
+			"HeaderUnit"
 		}
 	}
 
@@ -427,6 +431,12 @@
 		name = "entrypoint",
 		scope = "config",
 		kind = "string",
+	}
+
+	api.register {
+		name = "fastuptodate",
+		scope = "project",
+		kind = "boolean",
 	}
 
 	api.register {
@@ -768,6 +778,8 @@
 			"C++14",
 			"C++1z",
 			"C++17",
+			"C++2a",
+			"C++20",
 			"gnu++98",
 			"gnu++0x",
 			"gnu++11",
@@ -775,19 +787,39 @@
 			"gnu++14",
 			"gnu++1z",
 			"gnu++17",
+			"gnu++2a",
+			"gnu++20",
 		}
 	}
-	
-	api.register {  --OpenMPT
-		name = "standardconformance",  --OpenMPT
-		scope = "config",  --OpenMPT
-		kind = "string",  --OpenMPT
-		allowed = {  --OpenMPT
-			"Default",  --OpenMPT
-			"On",  --OpenMPT
-			"Off",  --OpenMPT
-		}  --OpenMPT
-	}  --OpenMPT
+
+	api.register {
+		name = "conformancemode",
+		scope = "config",
+		kind = "boolean"
+	}
+
+	api.register {
+		name = "usefullpaths",
+		scope = "config",
+		kind = "boolean"
+	}
+
+	api.register {
+		name = "removeunreferencedcodedata",
+		scope = "config",
+		kind = "boolean"
+	}
+
+	api.register {
+		name = "swiftversion",
+		scope = "config",
+		kind = "string",
+		allowed = {
+			"4.0",
+			"4.2",
+			"5.0",
+		}
+	}
 
 	api.register {
 		name = "libdirs",
@@ -1222,6 +1254,13 @@
 	}
 
 	api.register {
+		name = "toolsversion",
+		scope = "project",
+		kind = "string",
+		tokens = true,
+	}
+
+	api.register {
 		name = "customtoolnamespace",
 		scope = "config",
 		kind = "string",
@@ -1277,6 +1316,7 @@
 			"SSE3",
 			"SSSE3",
 			"SSE4.1",
+			"SSE4.2",
 		}
 	}
 
@@ -1316,6 +1356,7 @@
 			"Default",
 			"High",
 			"Extra",
+			"Everything",
 		}
 	}
 
@@ -1420,7 +1461,27 @@
 		name = "assemblydebug",
 		scope = "config",
 		kind  = "boolean"
-	}	
+	}
+
+	api.register {
+		name = "justmycode",
+		scope = "project",
+		kind = "string",
+		allowed = {
+			"On",
+			"Off"
+		}
+	}
+
+	api.register {
+		name = "openmp",
+		scope = "project",
+		kind = "string",
+		allowed = {
+			"On",
+			"Off"
+		}
+	}
 
 -----------------------------------------------------------------------------
 --

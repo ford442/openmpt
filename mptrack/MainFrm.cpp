@@ -104,7 +104,11 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 	ON_MESSAGE(WM_MOD_MIDIMAPPING,			&CMainFrame::OnViewMIDIMapping)
 	ON_MESSAGE(WM_MOD_UPDATEVIEWS,			&CMainFrame::OnUpdateViews)
 	ON_MESSAGE(WM_MOD_SETMODIFIED,			&CMainFrame::OnSetModified)
+#if defined(MPT_ENABLE_UPDATE)
+	ON_MESSAGE(WM_MOD_UPDATENOTIFY,			&CMainFrame::OnToolbarUpdateIndicatorClick)
+#endif // MPT_ENABLE_UPDATE
 	ON_COMMAND(ID_INTERNETUPDATE,			&CMainFrame::OnInternetUpdate)
+	ON_COMMAND(ID_UPDATE_AVAILABLE,			&CMainFrame::OnUpdateAvailable)
 	ON_COMMAND(ID_HELP_SHOWSETTINGSFOLDER,	&CMainFrame::OnShowSettingsFolder)
 #if defined(MPT_ENABLE_UPDATE)
 	ON_MESSAGE(MPT_WM_APP_UPDATECHECK_START, &CMainFrame::OnUpdateCheckStart)
@@ -188,7 +192,7 @@ void CMainFrame::Initialize()
 	{
 		title += _T(" DEBUG");
 	}
-	#ifdef NO_VST
+	#ifndef MPT_WITH_VST
 		title += _T(" NO_VST");
 	#endif
 	#ifndef MPT_WITH_DMO
@@ -292,7 +296,14 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	if(TrackerSettings::Instance().m_dwMidiSetup & MIDISETUP_ENABLE_RECORD_DEFAULT) midiOpenDevice(false);
 
+#if MPT_COMPILER_MSVC
+#pragma warning(push)
+#pragma warning(disable:6387) // '_Param_(2)' could be '0':  this does not adhere to the specification for the function 'HtmlHelpW'
+#endif
 	::HtmlHelp(m_hWnd, nullptr, HH_INITIALIZE, reinterpret_cast<DWORD_PTR>(&helpCookie));
+#if MPT_COMPILER_MSVC
+#pragma warning(pop)
+#endif
 
 	return 0;
 }
@@ -306,7 +317,14 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 
 BOOL CMainFrame::DestroyWindow()
 {
+#if MPT_COMPILER_MSVC
+#pragma warning(push)
+#pragma warning(disable:6387) // '_Param_(2)' could be '0':  this does not adhere to the specification for the function 'HtmlHelpW'
+#endif
 	::HtmlHelp(m_hWnd, nullptr, HH_UNINITIALIZE, reinterpret_cast<DWORD_PTR>(&helpCookie));
+#if MPT_COMPILER_MSVC
+#pragma warning(pop)
+#endif
 
 	// Uninstall Keyboard Hook
 	if (ghKbdHook)
@@ -1987,9 +2005,9 @@ void CMainFrame::OnAddDlsBank()
 {
 	FileDialog dlg = OpenFileDialog()
 		.AllowMultiSelect()
-		.ExtensionFilter("All Sound Banks|*.dls;*.sbk;*.sf2;*.mss|"
+		.ExtensionFilter("All Sound Banks|*.dls;*.sbk;*.sf2;*.sf3;*.sf4;*.mss|"
 			"Downloadable Sounds Banks (*.dls)|*.dls;*.mss|"
-			"SoundFont 2.0 Banks (*.sf2)|*.sbk;*.sf2|"
+			"SoundFont 2.0 Banks (*.sf2)|*.sbk;*.sf2;*.sf3;*.sf4|"
 			"All Files (*.*)|*.*||");
 	if(!dlg.Show()) return;
 
@@ -2011,9 +2029,9 @@ void CMainFrame::OnAddDlsBank()
 void CMainFrame::OnImportMidiLib()
 {
 	FileDialog dlg = OpenFileDialog()
-		.ExtensionFilter("Text and INI files (*.txt,*.ini)|*.txt;*.ini;*.dls;*.sf2;*.sbk|"
+		.ExtensionFilter("Text and INI files (*.txt,*.ini)|*.txt;*.ini;*.dls;*.sf2;*.sf3;*.sf4;*.sbk|"
 			"Downloadable Sound Banks (*.dls)|*.dls;*.mss|"
-			"SoundFont 2.0 banks (*.sf2)|*.sbk;*.sf2|"
+			"SoundFont 2.0 banks (*.sf2)|*.sbk;*.sf2;*.sf3;*.sf4|"
 			"Gravis UltraSound (ultrasnd.ini)|ultrasnd.ini|"
 			"All Files (*.*)|*.*||");
 	if(!dlg.Show()) return;
@@ -2430,6 +2448,7 @@ LRESULT CMainFrame::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		case kcFileSaveCopy:
 		case kcFileSaveAsWave:
 		case kcFileSaveMidi:
+		case kcFileSaveOPL:
 		case kcFileExportCompat:
 		case kcFileClose:
 		case kcFileSave:
@@ -2461,6 +2480,7 @@ LRESULT CMainFrame::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		case kcTempoDecreaseFine:
 		case kcSpeedIncrease:
 		case kcSpeedDecrease:
+		case kcViewToggle:
 			{
 				CModDoc *modDoc = GetActiveDoc();
 				if (modDoc)
@@ -2511,7 +2531,6 @@ LRESULT CMainFrame::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 void CMainFrame::OnInitMenu(CMenu* pMenu)
 {
 	m_InputHandler->SetModifierMask(ModNone);
-	// This used to not be called to prevent Alt key from activating the menu... but that never worked as imagined, I guess.
 	CMDIFrameWnd::OnInitMenu(pMenu);
 
 }
@@ -2536,7 +2555,7 @@ BOOL CMainFrame::StopRenderer(CSoundFile* pSndFile)
 }
 
 
-// We have swicthed focus to a new module - might need to update effect keys to reflect module type
+// We have switched focus to a new module - might need to update effect keys to reflect module type
 bool CMainFrame::UpdateEffectKeys(const CModDoc *modDoc)
 {
 	if(modDoc != nullptr)
@@ -2578,6 +2597,17 @@ void CMainFrame::OnInternetUpdate()
 }
 
 
+void CMainFrame::OnUpdateAvailable()
+{
+#if defined(MPT_ENABLE_UPDATE)
+	if(m_updateCheckResult)
+		CUpdateCheck::ShowSuccessGUI(false, *m_updateCheckResult);
+	else
+		CUpdateCheck::DoManualUpdateCheck();
+#endif  // MPT_ENABLE_UPDATE
+}
+
+
 void CMainFrame::OnShowSettingsFolder()
 {
 	theApp.OpenDirectory(theApp.GetConfigPath());
@@ -2605,9 +2635,28 @@ static std::unique_ptr<CUpdateCheckProgressDialog> g_UpdateCheckProgressDialog =
 #if defined(MPT_ENABLE_UPDATE)
 
 
+bool CMainFrame::ShowUpdateIndicator(const UpdateCheckResult &result, const CString &releaseVersion, const CString &infoURL, bool showHighlight)
+{
+	m_updateCheckResult = std::make_unique<UpdateCheckResult>(result);
+	if(m_wndToolBar.IsVisible())
+	{
+		return m_wndToolBar.ShowUpdateInfo(releaseVersion, infoURL, showHighlight);
+	} else
+	{
+		GetMenu()->RemoveMenu(ID_UPDATE_AVAILABLE, MF_BYCOMMAND);
+		GetMenu()->AppendMenu(MF_STRING, ID_UPDATE_AVAILABLE, _T("[Update Available]"));
+		DrawMenuBar();
+		return true;
+	}
+}
+
+
 LRESULT CMainFrame::OnUpdateCheckStart(WPARAM wparam, LPARAM lparam)
 {
-	bool isAutoUpdate = CUpdateCheck::IsAutoUpdateFromMessage(wparam, lparam);
+	GetMenu()->RemoveMenu(ID_UPDATE_AVAILABLE, MF_BYCOMMAND);
+	m_wndToolBar.RemoveUpdateInfo();
+
+	const bool isAutoUpdate = CUpdateCheck::IsAutoUpdateFromMessage(wparam, lparam);
 	CString updateText = _T("Checking for updates...");
 	if(isAutoUpdate)
 	{
@@ -2638,7 +2687,7 @@ LRESULT CMainFrame::OnUpdateCheckStart(WPARAM wparam, LPARAM lparam)
 
 LRESULT CMainFrame::OnUpdateCheckProgress(WPARAM wparam, LPARAM lparam)
 {
-	bool isAutoUpdate = wparam ? true : false;
+	bool isAutoUpdate = wparam != 0;
 	CString updateText = MPT_CFORMAT("Checking for updates... {}%")(lparam);
 	if(isAutoUpdate)
 	{
@@ -2663,6 +2712,7 @@ LRESULT CMainFrame::OnUpdateCheckProgress(WPARAM wparam, LPARAM lparam)
 
 LRESULT CMainFrame::OnUpdateCheckCanceled(WPARAM wparam, LPARAM lparam)
 {
+	m_updateCheckResult.reset();
 	bool isAutoUpdate = CUpdateCheck::IsAutoUpdateFromMessage(wparam, lparam);
 	CString updateText = _T("Checking for updates... Canceled.");
 	if(isAutoUpdate)
@@ -2683,12 +2733,6 @@ LRESULT CMainFrame::OnUpdateCheckCanceled(WPARAM wparam, LPARAM lparam)
 	if(isAutoUpdate)
 	{
 		SetHelpText(_T(""));
-	} else if(m_UpdateOptionsDialog)
-	{
-		// nothing
-	} else
-	{
-		// nothing
 	}
 	return TRUE;
 }
@@ -2696,8 +2740,10 @@ LRESULT CMainFrame::OnUpdateCheckCanceled(WPARAM wparam, LPARAM lparam)
 
 LRESULT CMainFrame::OnUpdateCheckFailure(WPARAM wparam, LPARAM lparam)
 {
-	bool isAutoUpdate = CUpdateCheck::IsAutoUpdateFromMessage(wparam, lparam);
-	CString updateText = MPT_CFORMAT("Checking for updates failed: {}")(CUpdateCheck::GetFailureMessage(wparam, lparam));
+	m_updateCheckResult.reset();
+	const bool isAutoUpdate = CUpdateCheck::IsAutoUpdateFromMessage(wparam, lparam);
+	const CUpdateCheck::Error &error = CUpdateCheck::MessageAsError(wparam, lparam);
+	CString updateText = MPT_CFORMAT("Checking for updates failed: {}")(mpt::get_exception_text<mpt::ustring>(error));
 	if(isAutoUpdate)
 	{
 		SetHelpText(updateText);
@@ -2713,16 +2759,10 @@ LRESULT CMainFrame::OnUpdateCheckFailure(WPARAM wparam, LPARAM lparam)
 			g_UpdateCheckProgressDialog = nullptr;
 		}
 	}
-	CUpdateCheck::ShowFailureGUI(wparam, lparam);
+	CUpdateCheck::ShowFailureGUI(isAutoUpdate, error);
 	if(isAutoUpdate)
 	{
 		SetHelpText(_T(""));
-	} else if(m_UpdateOptionsDialog)
-	{
-		// nothing
-	} else
-	{
-		// nothing
 	}
 	return TRUE;
 }
@@ -2730,45 +2770,47 @@ LRESULT CMainFrame::OnUpdateCheckFailure(WPARAM wparam, LPARAM lparam)
 
 LRESULT CMainFrame::OnUpdateCheckSuccess(WPARAM wparam, LPARAM lparam)
 {
-	CUpdateCheck::AcknowledgeSuccess(wparam, lparam);
-	bool isAutoUpdate = CUpdateCheck::IsAutoUpdateFromMessage(wparam, lparam);
-	CString updateText = _T("Checking for updates... Done.");
-	// TODO:
-	// UpdateToolbarUpdateIndicator(CUpdateCheck::ResultFromMessage(wparam, lparam));
-	if(isAutoUpdate)
+	m_updateCheckResult.reset();
+	const bool isAutoUpdate = CUpdateCheck::IsAutoUpdateFromMessage(wparam, lparam);
+	const UpdateCheckResult &result = CUpdateCheck::MessageAsResult(wparam, lparam);
+	CUpdateCheck::AcknowledgeSuccess(result);
+	if(result.CheckTime != time_t{})
+		TrackerSettings::Instance().UpdateLastUpdateCheck = mpt::Date::Unix(result.CheckTime);
+	if(!isAutoUpdate)
 	{
-		SetHelpText(updateText);
-	} else if(m_UpdateOptionsDialog)
-	{
-		m_UpdateOptionsDialog->SetDlgItemText(IDC_LASTUPDATE, updateText);
-	} else
-	{
-		SetHelpText(updateText);
-		if(g_UpdateCheckProgressDialog)
+		if(m_UpdateOptionsDialog)
 		{
-			g_UpdateCheckProgressDialog->DestroyWindow();
-			g_UpdateCheckProgressDialog = nullptr;
+			m_UpdateOptionsDialog->SetDlgItemText(IDC_LASTUPDATE, _T("Checking for updates... Done."));
+		} else
+		{
+			if(g_UpdateCheckProgressDialog)
+			{
+				g_UpdateCheckProgressDialog->DestroyWindow();
+				g_UpdateCheckProgressDialog = nullptr;
+			}
+			SetHelpText(_T(""));
 		}
 	}
-	CUpdateCheck::ShowSuccessGUI(wparam, lparam);
+	CUpdateCheck::ShowSuccessGUI(isAutoUpdate, result);
 	if(isAutoUpdate)
 	{
 		SetHelpText(_T(""));
-	} else if(m_UpdateOptionsDialog)
-	{
-		// nothing
-	} else
-	{
-		// nothing
 	}
 	return TRUE;
 }
 
 
-void CMainFrame::OnToolbarUpdateIndicatorClick()
+LPARAM CMainFrame::OnToolbarUpdateIndicatorClick(WPARAM action, LPARAM)
 {
-	// TODO
-	CUpdateCheck::DoManualUpdateCheck();
+	const auto popAction = static_cast<UpdateToolTip::PopAction>(action);
+	if(popAction != UpdateToolTip::PopAction::ClickBubble)
+		return 0;
+
+	if(m_updateCheckResult)
+		CUpdateCheck::ShowSuccessGUI(false, *m_updateCheckResult);
+	else
+		CUpdateCheck::DoManualUpdateCheck();
+	return 0;
 }
 
 
@@ -3158,14 +3200,14 @@ void AddPluginNamesToCombobox(CComboBox &CBox, const SNDMIXPLUGIN *plugarray, co
 			str += _T(" (") + mpt::ToWin(libName) + _T(")");
 		else if(plugName.empty() && (!libraryName || libName.empty()))
 			str += _T("--");
-#ifndef NO_VST
+#ifdef MPT_WITH_VST
 		auto *vstPlug = dynamic_cast<const CVstPlugin *>(plugin.pMixPlugin);
 		if(vstPlug != nullptr && vstPlug->isBridged)
 		{
 			VSTPluginLib &lib = vstPlug->GetPluginFactory();
 			str += MPT_TFORMAT(" ({} Bridged)")(lib.GetDllArchNameUser());
 		}
-#endif // NO_VST
+#endif // MPT_WITH_VST
 
 		insertAt = CBox.InsertString(insertAt, str.c_str());
 		CBox.SetItemData(insertAt, plug + 1);

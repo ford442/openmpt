@@ -6,7 +6,7 @@
 	It is envisioned to include this compat header instead of any of the "standard" headers, to catch compatibility issues.
 	So, don't include stdlib.h or string.h ... include compat.h.
 
-	copyright 2007-8 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright 2007-21 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Thomas Orgis
 */
@@ -15,14 +15,9 @@
 #define MPG123_COMPAT_H
 
 #include "config.h"
-#include "intsym.h"
 
-/* Disable inline for non-C99 compilers. */
-#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
-#ifndef inline
-#define inline
-#endif
-#endif
+// We are using C99 now, including possibly single-precision math.
+#define _ISO_C99_SOURCE
 
 #include <errno.h>
 
@@ -115,6 +110,9 @@ typedef ptrdiff_t ssize_t;
 #endif
 
 #endif
+
+// Not too early, leave system headers alone (strerror).
+#include "intsym.h"
 
 /* A safe realloc also for very old systems where realloc(NULL, size) returns NULL. */
 void *safe_realloc(void *ptr, size_t size);

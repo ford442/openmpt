@@ -77,6 +77,7 @@
 #  LOCAL_OGG=1         Build local copy of libogg, even if found
 #  LOCAL_VORBIS=1      Build local copy of libvorbis, even if found
 #
+#  NO_MINIZ=1       Do not fallback to miniz
 #  NO_MINIMP3=1     Do not fallback to minimp3
 #  NO_STBVORBIS=1   Do not fallback to stb_vorbis
 #
@@ -164,6 +165,7 @@ SHARED_SONAME=1
 DEBUG=0
 OPTIMIZE=1
 OPTIMIZE_SIZE=0
+OPTIMIZE_LTO=0
 TEST=1
 ONLY_TEST=0
 SOSUFFIX=.so
@@ -367,8 +369,8 @@ CXXFLAGS += -O0 -g -fno-omit-frame-pointer
 CFLAGS   += -O0 -g -fno-omit-frame-pointer
 else
 ifeq ($(OPTIMIZE_SIZE),1)
-CXXFLAGS += -Os -ffast-math
-CFLAGS   += -Os -ffast-math -fno-strict-aliasing
+CXXFLAGS += -Os
+CFLAGS   += -Os -fno-strict-aliasing
 LDFLAGS  += 
 ifeq ($(MPT_COMPILER_NOGCSECTIONS),1)
 else
@@ -378,8 +380,8 @@ LDFLAGS  += -Wl,--gc-sections
 endif
 else
 ifeq ($(OPTIMIZE),1)
-CXXFLAGS += -O3 -ffast-math
-CFLAGS   += -O3 -ffast-math -fno-strict-aliasing
+CXXFLAGS += -O3
+CFLAGS   += -O3 -fno-strict-aliasing
 endif
 endif
 endif
@@ -888,10 +890,13 @@ LIBOPENMPT_C_SOURCES += $(LOCAL_ZLIB_SOURCES)
 LIBOPENMPTTEST_C_SOURCES += $(LOCAL_ZLIB_SOURCES)
 else
 ifeq ($(NO_ZLIB),1)
+ifeq ($(NO_MINIZ),1)
+else
 LIBOPENMPT_C_SOURCES += include/miniz/miniz.c
 LIBOPENMPTTEST_C_SOURCES += include/miniz/miniz.c
 CPPFLAGS += -DMPT_WITH_MINIZ
 CPPFLAGS += -Iinclude
+endif
 endif
 endif
 
@@ -1010,7 +1015,7 @@ LIBOPENMPTTEST_CXX_SOURCES += \
  test/mpt_tests_parse.cpp \
  test/mpt_tests_random.cpp \
  test/mpt_tests_string.cpp \
- test/mpt_tests_string_convert.cpp \
+ test/mpt_tests_string_transcode.cpp \
  test/mpt_tests_uuid.cpp \
  test/test.cpp \
  test/TestToolsLib.cpp \
@@ -1295,7 +1300,7 @@ bin/dist-tar.tar: bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.ta
 	cd bin/dist-tar/ && rm -rf libopenmpt
 	cd bin/dist-tar/ && mkdir -p libopenmpt/src.makefile/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/dist-tar/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar.gz libopenmpt/src.makefile/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/dist-tar/ && tar cvf ../dist-tar.tar libopenmpt
+	cd bin/dist-tar/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-tar.tar libopenmpt
 
 .PHONY: dist-zip
 dist-zip: bin/dist-zip.tar
@@ -1305,7 +1310,7 @@ bin/dist-zip.tar: bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip
 	cd bin/dist-zip/ && rm -rf libopenmpt
 	cd bin/dist-zip/ && mkdir -p libopenmpt/src.msvc/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/dist-zip/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip libopenmpt/src.msvc/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/dist-zip/ && tar cvf ../dist-zip.tar libopenmpt
+	cd bin/dist-zip/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-zip.tar libopenmpt
 
 .PHONY: dist-doc
 dist-doc: bin/dist-doc.tar
@@ -1315,7 +1320,7 @@ bin/dist-doc.tar: bin/dist-doc/libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc.tar.gz
 	cd bin/dist-doc/ && rm -rf libopenmpt
 	cd bin/dist-doc/ && mkdir -p libopenmpt/doc/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/dist-doc/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc.tar.gz libopenmpt/doc/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/dist-doc/ && tar cvf ../dist-doc.tar libopenmpt
+	cd bin/dist-doc/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-doc.tar libopenmpt
 
 .PHONY: dist-js
 dist-js: bin/dist-js.tar
@@ -1325,7 +1330,7 @@ bin/dist-js.tar: bin/dist-js/libopenmpt-$(DIST_LIBOPENMPT_VERSION).dev.js.tar.gz
 	cd bin/dist-js/ && rm -rf libopenmpt
 	cd bin/dist-js/ && mkdir -p libopenmpt/dev.js/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/dist-js/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).dev.js.tar.gz libopenmpt/dev.js/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/dist-js/ && tar cvf ../dist-js.tar libopenmpt
+	cd bin/dist-js/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-js.tar libopenmpt
 
 .PHONY: dist-dos
 dist-dos: bin/dist-dos.tar
@@ -1335,7 +1340,7 @@ bin/dist-dos.tar: bin/dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.dos.zip
 	cd bin/dist-dos/ && rm -rf libopenmpt
 	cd bin/dist-dos/ && mkdir -p libopenmpt/bin.dos/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/dist-dos/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.dos.zip libopenmpt/bin.dos/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/dist-dos/ && tar cvf ../dist-dos.tar libopenmpt
+	cd bin/dist-dos/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-dos.tar libopenmpt
 
 .PHONY: dist-retro-win9x
 dist-retro-win9x: bin/dist-retro-win9x.tar
@@ -1345,7 +1350,7 @@ bin/dist-retro-win9x.tar: bin/dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERS
 	cd bin/dist-retro-win9x/ && rm -rf libopenmpt
 	cd bin/dist-retro-win9x/ && mkdir -p libopenmpt/bin.retro.win9x/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/dist-retro-win9x/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win9x.zip libopenmpt/bin.retro.win9x/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/dist-retro-win9x/ && tar cvf ../dist-retro-win9x.tar libopenmpt
+	cd bin/dist-retro-win9x/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-retro-win9x.tar libopenmpt
 
 .PHONY: bin/dist.mk
 bin/dist.mk:
@@ -1377,7 +1382,7 @@ bin/dist-doc/libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc.tar: docs
 	rm -rf bin/dist-doc/libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc
 	mkdir -p bin/dist-doc/libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc
 	cp -Rv bin/docs/html bin/dist-doc/libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc/docs
-	cd bin/dist-doc/ && tar cv libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc > libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc.tar
+	cd bin/dist-doc/ && tar cv --numeric-owner --owner=0 --group=0 libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc > libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc.tar
 
 .PHONY: bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar
 bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar: bin/dist.mk bin/svn_version_dist.h
@@ -1430,7 +1435,7 @@ bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar: bin/dist.mk bin
 	#svn export ./src/mpt/path           bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/path
 	svn export ./src/mpt/random         bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/random
 	svn export ./src/mpt/string         bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/string
-	svn export ./src/mpt/string_convert bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/string_convert
+	svn export ./src/mpt/string_transcode bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/string_transcode
 	svn export ./src/mpt/system_error   bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/system_error
 	svn export ./src/mpt/test           bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/test
 	svn export ./src/mpt/uuid           bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/uuid
@@ -1454,7 +1459,7 @@ bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar: bin/dist.mk bin
 	svn export ./include/stb_vorbis bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/include/stb_vorbis
 	cp bin/dist.mk bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/dist.mk
 	cp bin/svn_version_dist.h bin/dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/svn_version/svn_version.h
-	cd bin/dist-tar/ && tar cv libopenmpt-$(DIST_LIBOPENMPT_VERSION) > libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar
+	cd bin/dist-tar/ && tar cv --numeric-owner --owner=0 --group=0 libopenmpt-$(DIST_LIBOPENMPT_VERSION) > libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar
 
 .PHONY: bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip
 bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip: bin/dist.mk bin/svn_version_dist.h
@@ -1489,6 +1494,11 @@ bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip: bin/dist.mk bin/svn
 	svn export ./build/vs2019win81            bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/vs2019win81            --native-eol CRLF
 	svn export ./build/vs2019win10            bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/vs2019win10            --native-eol CRLF
 	svn export ./build/vs2019uwp              bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/vs2019uwp              --native-eol CRLF
+	svn export ./build/vs2022win7             bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/vs2022win7             --native-eol CRLF
+	svn export ./build/vs2022win81            bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/vs2022win81            --native-eol CRLF
+	svn export ./build/vs2022win10            bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/vs2022win10            --native-eol CRLF
+	svn export ./build/vs2022uwp              bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/vs2022uwp              --native-eol CRLF
+	svn export ./build/vs2022win10clang       bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/vs2022win10clang       --native-eol CRLF
 	svn export ./build/download_externals.cmd bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/download_externals.cmd --native-eol CRLF
 	svn export ./common                bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/common                --native-eol CRLF
 	svn export ./doc/contributing.md          bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/doc/contributing.md          --native-eol CRLF
@@ -1522,7 +1532,7 @@ bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip: bin/dist.mk bin/svn
 	#svn export ./src/mpt/path           bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/path           --native-eol CRLF
 	svn export ./src/mpt/random         bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/random         --native-eol CRLF
 	svn export ./src/mpt/string         bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/string         --native-eol CRLF
-	svn export ./src/mpt/string_convert bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/string_convert --native-eol CRLF
+	svn export ./src/mpt/string_transcode bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/string_transcode --native-eol CRLF
 	svn export ./src/mpt/system_error   bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/system_error   --native-eol CRLF
 	svn export ./src/mpt/test           bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/test           --native-eol CRLF
 	svn export ./src/mpt/uuid           bin/dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/uuid           --native-eol CRLF
@@ -1587,7 +1597,7 @@ bin/dist-js/libopenmpt-$(DIST_LIBOPENMPT_VERSION).dev.js.tar:
 	mkdir -p                                     bin/dist-js/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/bin/js
 	cp bin/stage/js/libopenmpt.js                bin/dist-js/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/bin/js/libopenmpt.js
 	cp bin/stage/js/libopenmpt.js.mem            bin/dist-js/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/bin/js/libopenmpt.js.mem
-	cd bin/dist-js/ && tar cv libopenmpt-$(DIST_LIBOPENMPT_VERSION) > libopenmpt-$(DIST_LIBOPENMPT_VERSION).dev.js.tar
+	cd bin/dist-js/ && tar cv --numeric-owner --owner=0 --group=0 libopenmpt-$(DIST_LIBOPENMPT_VERSION) > libopenmpt-$(DIST_LIBOPENMPT_VERSION).dev.js.tar
 
 .PHONY: bin/dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.dos.zip
 bin/dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.dos.zip:

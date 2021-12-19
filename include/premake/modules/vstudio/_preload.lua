@@ -21,6 +21,7 @@
 	include("vs2015.lua")
 	include("vs2017.lua")
 	include("vs2019.lua")
+	include("vs2022.lua")
 
 	-- Initialize Specific API
 
@@ -64,6 +65,8 @@
 			"Hull",
 			"Domain",
 			"Compute",
+			"Mesh",
+			"Amplification",
 			"Texture",
 			"RootSignature",
 		}
@@ -87,7 +90,9 @@
 			"6.0",
 			"6.1",
 			"6.2",
-			"6.3"
+			"6.3",
+			"6.4",
+			"6.5"
 		}
 	}
 

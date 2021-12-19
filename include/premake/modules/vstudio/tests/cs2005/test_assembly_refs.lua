@@ -35,7 +35,9 @@
 	function suite.emptyGroup_onNoLinks()
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 	</ItemGroup>
 		]]
 	end
@@ -49,7 +51,10 @@
 		links { "System" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="System" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="System" />
 	</ItemGroup>
 		]]
@@ -64,7 +69,12 @@
 		links { "../Libraries/nunit.framework" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="nunit.framework">
+			<HintPath>..\Libraries\nunit.framework.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="nunit.framework">
 			<HintPath>..\Libraries\nunit.framework.dll</HintPath>
 		</Reference>
@@ -82,9 +92,36 @@
 		links { "%{path.getdirectory(os.getcwd())}/Libraries/nunit.framework" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
 		<Reference Include="nunit.framework">
 			<HintPath>..\Libraries\nunit.framework.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<Reference Include="nunit.framework">
+			<HintPath>..\Libraries\nunit.framework.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+		]]
+	end
+
+
+--
+-- Add configuration condition to VS csproj references ItemGroup
+--
+
+	function suite.assemblyRef_onConfigurationCondition()
+		links { "%{path.getdirectory(os.getcwd())}/Libraries/%{cfg.buildcfg}/nunit.framework" }
+		prepare()
+		test.capture [[
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="nunit.framework">
+			<HintPath>..\Libraries\Debug\nunit.framework.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<Reference Include="nunit.framework">
+			<HintPath>..\Libraries\Release\nunit.framework.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 		]]
@@ -101,7 +138,13 @@
 		flags { "NoCopyLocal" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="nunit.framework">
+			<HintPath>..\Libraries\nunit.framework.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="nunit.framework">
 			<HintPath>..\Libraries\nunit.framework.dll</HintPath>
 			<Private>False</Private>
@@ -121,7 +164,13 @@
 		copylocal { "SomeOtherProject" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="nunit.framework">
+			<HintPath>..\Libraries\nunit.framework.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="nunit.framework">
 			<HintPath>..\Libraries\nunit.framework.dll</HintPath>
 			<Private>False</Private>
@@ -135,7 +184,12 @@
 		copylocal { "../Libraries/nunit.framework" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="nunit.framework">
+			<HintPath>..\Libraries\nunit.framework.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="nunit.framework">
 			<HintPath>..\Libraries\nunit.framework.dll</HintPath>
 		</Reference>
@@ -148,12 +202,19 @@
 -- NuGet packages should get references.
 --
 
+if _OPTIONS["test-all"] then
 	function suite.nuGetPackages_net45()
 		dotnetframework "4.5"
 		nuget { "Newtonsoft.Json:10.0.2" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="Newtonsoft.Json">
+			<HintPath>packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+			<Private>True</Private>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="Newtonsoft.Json">
 			<HintPath>packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
 			<Private>True</Private>
@@ -167,7 +228,13 @@
 		nuget { "Newtonsoft.Json:10.0.2" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="Newtonsoft.Json">
+			<HintPath>packages\Newtonsoft.Json.10.0.2\lib\net20\Newtonsoft.Json.dll</HintPath>
+			<Private>True</Private>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="Newtonsoft.Json">
 			<HintPath>packages\Newtonsoft.Json.10.0.2\lib\net20\Newtonsoft.Json.dll</HintPath>
 			<Private>True</Private>
@@ -175,18 +242,31 @@
 	</ItemGroup>
 		]]
 	end
+end
+
 
 --
 -- If there are multiple assemblies in the NuGet package, they all should be
 -- referenced.
 --
 
+if _OPTIONS["test-all"] then
 	function suite.nuGetPackages_multipleAssemblies()
 		dotnetframework "2.0"
 		nuget { "NUnit:3.6.1" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="nunit.framework">
+			<HintPath>packages\NUnit.3.6.1\lib\net20\nunit.framework.dll</HintPath>
+			<Private>True</Private>
+		</Reference>
+		<Reference Include="NUnit.System.Linq">
+			<HintPath>packages\NUnit.3.6.1\lib\net20\NUnit.System.Linq.dll</HintPath>
+			<Private>True</Private>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="nunit.framework">
 			<HintPath>packages\NUnit.3.6.1\lib\net20\nunit.framework.dll</HintPath>
 			<Private>True</Private>
@@ -198,19 +278,31 @@
 	</ItemGroup>
 		]]
 	end
+end
 
 
 --
 -- NuGet packages should respect copylocal() and the NoCopyLocal flag.
 --
 
+if _OPTIONS["test-all"] then
 	function suite.nugetPackages_onNoCopyLocal()
 		dotnetframework "2.0"
 		nuget { "NUnit:3.6.1" }
 		flags { "NoCopyLocal" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="nunit.framework">
+			<HintPath>packages\NUnit.3.6.1\lib\net20\nunit.framework.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="NUnit.System.Linq">
+			<HintPath>packages\NUnit.3.6.1\lib\net20\NUnit.System.Linq.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="nunit.framework">
 			<HintPath>packages\NUnit.3.6.1\lib\net20\nunit.framework.dll</HintPath>
 			<Private>False</Private>
@@ -229,7 +321,17 @@
 		copylocal { "SomeOtherProject" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="nunit.framework">
+			<HintPath>packages\NUnit.3.6.1\lib\net20\nunit.framework.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+		<Reference Include="NUnit.System.Linq">
+			<HintPath>packages\NUnit.3.6.1\lib\net20\NUnit.System.Linq.dll</HintPath>
+			<Private>False</Private>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="nunit.framework">
 			<HintPath>packages\NUnit.3.6.1\lib\net20\nunit.framework.dll</HintPath>
 			<Private>False</Private>
@@ -248,7 +350,17 @@
 		copylocal { "NUnit:3.6.1" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="nunit.framework">
+			<HintPath>packages\NUnit.3.6.1\lib\net20\nunit.framework.dll</HintPath>
+			<Private>True</Private>
+		</Reference>
+		<Reference Include="NUnit.System.Linq">
+			<HintPath>packages\NUnit.3.6.1\lib\net20\NUnit.System.Linq.dll</HintPath>
+			<Private>True</Private>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="nunit.framework">
 			<HintPath>packages\NUnit.3.6.1\lib\net20\nunit.framework.dll</HintPath>
 			<Private>True</Private>
@@ -260,18 +372,35 @@
 	</ItemGroup>
 		]]
 	end
+end
+
 
 --
 -- NuGet packages with unconventional folder structures should be handled
 -- properly.
 --
 
+if _OPTIONS["test-all"] then
 	function suite.nuGetPackages_netFolder()
 		dotnetframework "4.5"
 		nuget { "MetroModernUI:1.4.0" }
 		prepare()
 		test.capture [[
-	<ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<Reference Include="MetroFramework.Design">
+			<HintPath>packages\MetroModernUI.1.4.0.0\lib\net\MetroFramework.Design.dll</HintPath>
+			<Private>True</Private>
+		</Reference>
+		<Reference Include="MetroFramework">
+			<HintPath>packages\MetroModernUI.1.4.0.0\lib\net\MetroFramework.dll</HintPath>
+			<Private>True</Private>
+		</Reference>
+		<Reference Include="MetroFramework.Fonts">
+			<HintPath>packages\MetroModernUI.1.4.0.0\lib\net\MetroFramework.Fonts.dll</HintPath>
+			<Private>True</Private>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
 		<Reference Include="MetroFramework.Design">
 			<HintPath>packages\MetroModernUI.1.4.0.0\lib\net\MetroFramework.Design.dll</HintPath>
 			<Private>True</Private>
@@ -287,3 +416,4 @@
 	</ItemGroup>
 		]]
 	end
+end

@@ -25,6 +25,7 @@
 #include "../../common/mptFileIO.h"
 #include "../mod_specifications.h"
 #endif // MODPLUG_TRACKER
+#include "mpt/base/aligned_array.hpp"
 #include "mpt/io/base.hpp"
 #include "mpt/io/io.hpp"
 #include "mpt/io/io_span.hpp"
@@ -48,7 +49,7 @@ IMixPlugin::IMixPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN 
 	, m_pMixStruct(mixStruct)
 {
 	m_SndFile.m_loadedPlugins++;
-	m_MixState.pMixBuffer = (mixsample_t *)((((intptr_t)m_MixBuffer) + 7) & ~7);
+	m_MixState.pMixBuffer = mpt::align_bytes<8, MIXBUFFERSIZE * 2>(m_MixBuffer);
 	while(m_pMixStruct != &(m_SndFile.m_MixPlugins[m_nSlot]) && m_nSlot < MAX_MIXPLUGINS - 1)
 	{
 		m_nSlot++;
@@ -534,7 +535,8 @@ void IMixPlugin::RestoreAllParameters(int32 /*program*/)
 				BeginSetProgram();
 				for(uint32 i = 0; i < numParams; i++)
 				{
-					SetParameter(i, memFile.ReadFloatLE());
+					const auto value = memFile.ReadFloatLE();
+					SetParameter(i, std::isfinite(value) ? value : 0.0f);
 				}
 				EndSetProgram();
 			}

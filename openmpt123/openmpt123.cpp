@@ -46,6 +46,7 @@ static const char * const license =
 #include <limits>
 #include <locale>
 #include <map>
+#include <memory>
 #include <random>
 #include <set>
 #include <sstream>
@@ -507,7 +508,7 @@ static void show_info( std::ostream & log, bool verbose ) {
 	SDL_version sdlver;
 	std::memset( &sdlver, 0, sizeof( SDL_version ) );
 	SDL_GetVersion( &sdlver );
-	log << static_cast<int>( sdlver.major ) << "." << static_cast<int>( sdlver.minor ) << "." << static_cast<int>( sdlver.patch ) << "." << SDL_GetRevisionNumber();
+	log << static_cast<int>( sdlver.major ) << "." << static_cast<int>( sdlver.minor ) << "." << static_cast<int>( sdlver.patch );
 	const char * revision = SDL_GetRevision();
 	if ( revision ) {
 		log << " (" << revision << ")";
@@ -1601,7 +1602,7 @@ static void probe_file( commandlineflags & flags, const std::string & filename, 
 				// Only MSVC has std::ifstream::ifstream(std::wstring).
 				// Fake it for other compilers using _wfopen().
 				std::string data;
-				FILE * f = _wfopen( mpt::convert<std::wstring>( mpt::common_encoding::utf8, filename ).c_str(), L"rb" );
+				FILE * f = _wfopen( mpt::transcode<std::wstring>( mpt::common_encoding::utf8, filename ).c_str(), L"rb" );
 				if ( f ) {
 					while ( !feof( f ) ) {
 						static const std::size_t BUFFER_SIZE = 4096;
@@ -1615,7 +1616,7 @@ static void probe_file( commandlineflags & flags, const std::string & filename, 
 				file_stream.str( data );
 				filesize = data.length();
 			#elif defined(_MSC_VER) && defined(UNICODE)
-				file_stream.open( mpt::convert<std::wstring>( mpt::common_encoding::utf8, filename ), std::ios::binary );
+				file_stream.open( mpt::transcode<std::wstring>( mpt::common_encoding::utf8, filename ), std::ios::binary );
 				file_stream.seekg( 0, std::ios::end );
 				filesize = file_stream.tellg();
 				file_stream.seekg( 0, std::ios::beg );
@@ -1677,7 +1678,7 @@ static void render_file( commandlineflags & flags, const std::string & filename,
 				// Only MSVC has std::ifstream::ifstream(std::wstring).
 				// Fake it for other compilers using _wfopen().
 				std::string data;
-				FILE * f = _wfopen( mpt::convert<std::wstring>( mpt::common_encoding::utf8, filename ).c_str(), L"rb" );
+				FILE * f = _wfopen( mpt::transcode<std::wstring>( mpt::common_encoding::utf8, filename ).c_str(), L"rb" );
 				if ( f ) {
 					while ( !feof( f ) ) {
 						static const std::size_t BUFFER_SIZE = 4096;
@@ -1691,7 +1692,7 @@ static void render_file( commandlineflags & flags, const std::string & filename,
 				file_stream.str( data );
 				filesize = data.length();
 			#elif defined(_MSC_VER) && defined(UNICODE)
-				file_stream.open( mpt::convert<std::wstring>( mpt::common_encoding::utf8, filename ), std::ios::binary );
+				file_stream.open( mpt::transcode<std::wstring>( mpt::common_encoding::utf8, filename ), std::ios::binary );
 				file_stream.seekg( 0, std::ios::end );
 				filesize = file_stream.tellg();
 				file_stream.seekg( 0, std::ios::beg );
@@ -1844,7 +1845,7 @@ static bool parse_playlist( commandlineflags & flags, std::string filename, std:
 			// Only MSVC has std::ifstream::ifstream(std::wstring).
 			// Fake it for other compilers using _wfopen().
 			std::string data;
-			FILE * f = _wfopen( mpt::convert<std::wstring>( mpt::common_encoding::utf8, filename ).c_str(), L"rb" );
+			FILE * f = _wfopen( mpt::transcode<std::wstring>( mpt::common_encoding::utf8, filename ).c_str(), L"rb" );
 			if ( f ) {
 				while ( !feof( f ) ) {
 					static const std::size_t BUFFER_SIZE = 4096;
@@ -1857,7 +1858,7 @@ static bool parse_playlist( commandlineflags & flags, std::string filename, std:
 			}
 			file_stream.str( data );
 		#elif defined(_MSC_VER) && defined(UNICODE)
-			file_stream.open( mpt::convert<std::wstring>( mpt::common_encoding::utf8, filename ), std::ios::binary );
+			file_stream.open( mpt::transcode<std::wstring>( mpt::common_encoding::utf8, filename ), std::ios::binary );
 		#else
 			file_stream.open( filename, std::ios::binary );
 		#endif
@@ -1906,7 +1907,7 @@ static bool parse_playlist( commandlineflags & flags, std::string filename, std:
 					newfile = line;
 				} else {
 #if defined(WIN32)
-					newfile = mpt::convert<std::string>( mpt::common_encoding::utf8, mpt::logical_encoding::locale, line );
+					newfile = mpt::transcode<std::string>( mpt::common_encoding::utf8, mpt::logical_encoding::locale, line );
 #else
 					newfile = line;
 #endif
@@ -1916,7 +1917,7 @@ static bool parse_playlist( commandlineflags & flags, std::string filename, std:
 					newfile = line;
 				} else {
 #if defined(WIN32)
-					newfile = mpt::convert<std::string>( mpt::common_encoding::utf8, mpt::logical_encoding::locale, line );
+					newfile = mpt::transcode<std::string>( mpt::common_encoding::utf8, mpt::logical_encoding::locale, line );
 #else
 					newfile = line;
 #endif
@@ -2279,7 +2280,7 @@ static int main( int argc, char * argv [] ) {
 	std::vector<std::string> args;
 	#if defined(WIN32) && defined(UNICODE)
 		for ( int arg = 0; arg < wargc; ++arg ) {
-			args.push_back( mpt::convert<std::string>( mpt::common_encoding::utf8, wargv[arg] ) );
+			args.push_back( mpt::transcode<std::string>( mpt::common_encoding::utf8, wargv[arg] ) );
 		}
 	#else
 		args = std::vector<std::string>( argv, argv + argc );

@@ -85,6 +85,7 @@ enum CommandID
 	kcFileSaveAsWave,
 	kcFileSaveAsMP3,
 	kcFileSaveMidi,
+	kcFileSaveOPL,
 	kcFileExportCompat,
 	kcPrevDocument,
 	kcNextDocument,
@@ -151,6 +152,7 @@ enum CommandID
 	kcShowMacroConfig,
 	kcViewMIDImapping,
 	kcViewEditHistory,
+	kcViewToggle,
 	kcSwitchToInstrLibrary,
 	kcHelp,
 	kcEndView = kcHelp,
@@ -296,6 +298,8 @@ enum CommandID
 	kcChordEditor,
 	kcChangeLoopStatus,
 	kcShowEditMenu,
+	kcShowChannelCtxMenu,
+	kcShowChannelPluginCtxMenu,
 	kcTimeAtRow,
 	kcLockPlaybackToRows,
 	kcQuantizeSettings,
@@ -660,7 +664,6 @@ enum CommandID
 	kcSetFXEnd = kcSetFXFinetuneSmooth,
 
 	kcStartInstrumentMisc,
-	// Note: Order must be the same as kcStartSampleMisc because commands are propagated!
 	kcInstrumentLoad = kcStartInstrumentMisc,
 	kcInstrumentSave,
 	kcInstrumentNew,
@@ -721,6 +724,7 @@ enum CommandID
 
 	kcStartSampleMisc,
 	kcSampleLoad = kcStartSampleMisc,
+	kcSampleLoadRaw,
 	kcSampleSave,
 	kcSampleNew,
 	kcSampleDuplicate,
@@ -879,7 +883,8 @@ enum CommandID
 	kcStartCommentsCommands,
 	kcToggleSmpInsList = kcStartCommentsCommands,
 	kcExecuteSmpInsListItem,
-	kcEndCommentsCommands = kcExecuteSmpInsListItem,
+	kcRenameSmpInsListItem,
+	kcEndCommentsCommands = kcRenameSmpInsListItem,
 
 	kcNumCommands,
 };

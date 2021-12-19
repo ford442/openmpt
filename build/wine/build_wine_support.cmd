@@ -21,6 +21,7 @@ del /f /q "%OUTDIR%\openmpt-wine-support.zip"
  include\nlohmann-json\include\nlohmann\detail\input\*.hpp ^
  include\nlohmann-json\include\nlohmann\detail\iterators\*.hpp ^
  include\nlohmann-json\include\nlohmann\detail\meta\*.hpp ^
+ include\nlohmann-json\include\nlohmann\detail\meta\call_std\*.hpp ^
  include\nlohmann-json\include\nlohmann\detail\output\*.hpp ^
  include\nlohmann-json\include\nlohmann\thirdparty\hedley\*.hpp ^
  include\rtkit\rtkit.c ^
@@ -58,8 +59,8 @@ del /f /q "%OUTDIR%\openmpt-wine-support.zip"
  src\mpt\random\tests\*.hpp ^
  src\mpt\string\*.hpp ^
  src\mpt\string\tests\*.hpp ^
- src\mpt\string_convert\*.hpp ^
- src\mpt\string_convert\tests\*.hpp ^
+ src\mpt\string_transcode\*.hpp ^
+ src\mpt\string_transcode\tests\*.hpp ^
  src\mpt\system_error\*.hpp ^
  src\mpt\test\*.hpp ^
  src\mpt\uuid\*.hpp ^

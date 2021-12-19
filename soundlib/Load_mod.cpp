@@ -452,6 +452,8 @@ struct AMInstrument
 			pitchEnv.dwFlags.set(ENV_ENABLED);
 			pitchEnv.reserve(2);
 			pitchEnv.push_back(0, ENVELOPE_MID);
+			// cppcheck false-positive
+			// cppcheck-suppress zerodiv
 			pitchEnv.push_back(static_cast<EnvelopeNode::tick_t>(1024 / abs(pitchFall)), pitchFall > 0 ? ENVELOPE_MIN : ENVELOPE_MAX);
 		}
 	}
@@ -691,6 +693,7 @@ struct MODMagicResult
 {
 	const mpt::uchar *madeWithTracker = nullptr;
 	uint32 invalidByteThreshold = MODSampleHeader::INVALID_BYTE_THRESHOLD;
+	uint16 patternDataOffset    = 1084;
 	CHANNELINDEX numChannels    = 0;
 	bool isNoiseTracker         = false;
 	bool isStartrekker          = false;
@@ -739,6 +742,8 @@ static bool CheckMODMagic(const char magic[4], MODMagicResult &result)
 		// Digital Tracker on Atari Falcon
 		result.madeWithTracker = UL_("Digital Tracker");
 		result.numChannels = magic[3] - '0';
+		// Digital Tracker MODs contain four bytes (00 40 00 00) right after the magic bytes which don't seem to do anything special.
+		result.patternDataOffset = 1088;
 	} else if((!memcmp(magic, "FLT", 3) || !memcmp(magic, "EXO", 3)) && magic[3] >= '4' && magic[3] <= '9')
 	{
 		// FLTx / EXOx - Startrekker by Exolon / Fairlight
@@ -759,9 +764,9 @@ static bool CheckMODMagic(const char magic[4], MODMagicResult &result)
 		result.madeWithTracker = UL_("Generic MOD-compatible Tracker");
 		result.isGenericMultiChannel = true;
 		result.numChannels = (magic[0] - '0') * 10 + magic[1] - '0';
-	} else if(!memcmp(magic, "TDZ", 3) && magic[3] >= '4' && magic[3] <= '9')
+	} else if(!memcmp(magic, "TDZ", 3) && magic[3] >= '1' && magic[3] <= '9')
 	{
-		// TDZx - TakeTracker
+		// TDZx - TakeTracker (only TDZ1-TDZ3 should exist, but historically this code only supported 4-9 channels, so we keep those for the unlikely case that they were actually used for something)
 		result.madeWithTracker = UL_("TakeTracker");
 		result.numChannels = magic[3] - '0';
 	} else
@@ -895,7 +900,8 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 	// Read order information
 	MODFileHeader fileHeader;
 	file.ReadStruct(fileHeader);
-	file.Skip(4);  // Magic bytes (we already parsed these)
+
+	file.Seek(modMagicResult.patternDataOffset);
 
 	if(fileHeader.restartPos > 0)
 		maybeWOW = false;
@@ -1013,7 +1019,7 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 		}
 		fix7BitPanning = leftPanning && !extendedPanning && maxPanning >= ENABLE_MOD_PANNING_THRESHOLD;
 	}
-	file.Seek(1084);
+	file.Seek(modMagicResult.patternDataOffset);
 
 	const CHANNELINDEX readChannels = (isFLT8 ? 4 : m_nChannels); // 4 channels per pattern in FLT8 format.
 	if(isFLT8) numPatterns++; // as one logical pattern consists of two real patterns in FLT8 format, the highest pattern number has to be increased by one.
@@ -1160,7 +1166,7 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 		}
 	} else if(!onlyAmigaNotes && fileHeader.restartPos == 0x7F && isMdKd && fileHeader.restartPos + 1u >= realOrders)
 	{
-		modMagicResult.madeWithTracker = UL_("ScreamTracker");
+		modMagicResult.madeWithTracker = UL_("Scream Tracker");
 	}
 
 	if(onlyAmigaNotes && !isGenericMultiChannel && filterTransitions < 7)
@@ -1179,7 +1185,7 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 	// Reading samples
 	if(loadFlags & loadSampleData)
 	{
-		file.Seek(1084 + (readChannels * 64 * 4) * numPatterns);
+		file.Seek(modMagicResult.patternDataOffset + (readChannels * 64 * 4) * numPatterns);
 		for(SAMPLEINDEX smp = 1; smp <= 31; smp++)
 		{
 			ModSample &sample = Samples[smp];
@@ -1284,7 +1290,7 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 	}
 #endif  // MPT_EXTERNAL_SAMPLES || MPT_BUILD_FUZZER
 
-	// Fix VBlank MODs. Arbitrary threshold: 10 minutes.
+	// Fix VBlank MODs. Arbitrary threshold: 9 minutes (enough for Guitar Slinger...).
 	// Basically, this just converts all tempo commands into speed commands
 	// for MODs which are supposed to have VBlank timing (instead of CIA timing).
 	// There is no perfect way to do this, since both MOD types look the same,
@@ -1297,7 +1303,7 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 	if(isMdKd && hasTempoCommands && !definitelyCIA)
 	{
 		const double songTime = GetLength(eNoAdjust).front().duration;
-		if(songTime >= 600.0)
+		if(songTime >= 540.0)
 		{
 			m_playBehaviour.set(kMODVBlankTiming);
 			if(GetLength(eNoAdjust, GetLengthTarget(songTime)).front().targetReached)

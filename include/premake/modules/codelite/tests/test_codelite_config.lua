@@ -68,6 +68,17 @@
 		]]
 	end
 
+	function suite.OnProjectCfg_SysIncludes()
+		sysincludedirs { "sysdir", "sysdir2/"}
+		prepare()
+		codelite.project.compiler(cfg)
+		test.capture [[
+      <Compiler Options="-isystem sysdir;-isystem sysdir2" C_Options="-isystem sysdir;-isystem sysdir2" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+      </Compiler>
+		]]
+	end
+
+
 	function suite.OnProjectCfg_Defines()
 		defines { "TEST", "DEF", "VAL=1", "ESCAPE=\"WITH SPACE\"" }
 		prepare()
@@ -77,7 +88,17 @@
         <Preprocessor Value="TEST"/>
         <Preprocessor Value="DEF"/>
         <Preprocessor Value="VAL=1"/>
-        <Preprocessor Value="ESCAPE=\&quot;WITH\ SPACE\&quot;"/>
+        <Preprocessor Value="ESCAPE=&quot;WITH\ SPACE&quot;"/>
+      </Compiler>
+		]]
+	end
+
+	function suite.OnProjectCfg_Pch()
+		  pchheader "pch.h"
+		prepare()
+		codelite.project.compiler(cfg)
+		test.capture [[
+      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="pch.h" PCHInCommandLine="yes" UseDifferentPCHFlags="no" PCHFlags="">
       </Compiler>
 		]]
 	end
@@ -133,6 +154,52 @@
       <ResourceCompiler Options="" Required="yes">
         <IncludePath Value="dir"/>
       </ResourceCompiler>
+		]]
+	end
+
+	function suite.OnProjectCfg_ResRegularInclude()
+		files { "x.rc" }
+		includedirs { "regulardir/" }
+		prepare()
+		codelite.project.resourceCompiler(cfg)
+		test.capture [[
+      <ResourceCompiler Options="" Required="yes">
+        <IncludePath Value="regulardir"/>
+      </ResourceCompiler>
+		]]
+	end
+
+	function suite.OnProjectCfg_ResSysInclude()
+		files { "x.rc" }
+		sysincludedirs { "sysdir/" }
+		prepare()
+		codelite.project.resourceCompiler(cfg)
+		test.capture [[
+      <ResourceCompiler Options="" Required="yes">
+        <IncludePath Value="sysdir"/>
+      </ResourceCompiler>
+		]]
+	end
+
+	function suite.OnProjectCfg_PreBuildMessage()
+		prebuildmessage "test"
+		prepare()
+		codelite.project.preBuild(cfg)
+		test.capture [[
+      <PreBuild>
+        <Command Enabled="yes">@echo test</Command>
+      </PreBuild>
+		]]
+	end
+
+	function suite.OnProjectCfg_PostBuildMessage()
+		postbuildmessage "test"
+		prepare()
+		codelite.project.postBuild(cfg)
+		test.capture [[
+      <PostBuild>
+        <Command Enabled="yes">@echo test</Command>
+      </PostBuild>
 		]]
 	end
 
@@ -270,20 +337,6 @@ cmd2</StartupCommands>
         <Command Enabled="yes">touch "./build/copyright" &amp;&amp; echo OK</Command>
         <Command Enabled="yes">cat "./lib/copyright" &gt;&gt; "./build/copyright"</Command>
       </PostBuild>
-		]]
-	end
-
-	-- TODO: test custom build
-
-
-	function suite.OnProjectCfg_AdditionalRules()
-		prepare()
-		codelite.project.additionalRules(prj)
-		test.capture [[
-      <AdditionalRules>
-        <CustomPostBuild/>
-        <CustomPreBuild/>
-      </AdditionalRules>
 		]]
 	end
 

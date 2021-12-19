@@ -81,40 +81,31 @@ static_assert(std::size(effectColors) == MAX_EFFECT_TYPE);
 /////////////////////////////////////////////////////////////////////////////
 // CViewPattern Drawing Implementation
 
-static BYTE hilightcolor(int c0, int c1)
+static uint8 HighlightColor(int c0, int c1)
 {
-	int cf0, cf1;
+	int cf0 = 0xC0 - (c1 >> 2) - (c0 >> 3);
+	Limit(cf0, 0x40, 0xC0);
+	int cf1 = 0x100 - cf0;
+	return static_cast<uint8>((c0 * cf0 + c1 * cf1) >> 8);
+}
 
-	cf0 = 0xC0 - (c1>>2) - (c0>>3);
-	if (cf0 < 0x40) cf0 = 0x40;
-	if (cf0 > 0xC0) cf0 = 0xC0;
-	cf1 = 0x100 - cf0;
-	return (BYTE)((c0*cf0+c1*cf1)>>8);
+
+static void MixColors(CFastBitmap &dib, ModColor target, ModColor src1, ModColor src2)
+{
+	const auto c1 = TrackerSettings::Instance().rgbCustomColors[src1], c2 = TrackerSettings::Instance().rgbCustomColors[src2];
+	auto r = HighlightColor(GetRValue(c1), GetRValue(c2));
+	auto g = HighlightColor(GetGValue(c1), GetGValue(c2));
+	auto b = HighlightColor(GetBValue(c1), GetBValue(c2));
+	dib.SetColor(target, RGB(r, g, b));
 }
 
 
 void CViewPattern::UpdateColors()
 {
-	BYTE r,g,b;
-
 	m_Dib.SetAllColors(0, MAX_MODCOLORS, TrackerSettings::Instance().rgbCustomColors.data());
-
-	r = hilightcolor(GetRValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_BACKHILIGHT]),
-		GetRValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_BACKNORMAL]));
-	g = hilightcolor(GetGValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_BACKHILIGHT]),
-		GetGValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_BACKNORMAL]));
-	b = hilightcolor(GetBValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_BACKHILIGHT]),
-		GetBValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_BACKNORMAL]));
-	m_Dib.SetColor(MODCOLOR_2NDHIGHLIGHT, RGB(r,g,b));
-
-	r = hilightcolor(GetRValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_VOLUME]),
-					GetRValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_BACKNORMAL]));
-	g = hilightcolor(GetGValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_VOLUME]),
-					GetGValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_BACKNORMAL]));
-	b = hilightcolor(GetBValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_VOLUME]),
-					GetBValue(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_BACKNORMAL]));
-	m_Dib.SetColor(MODCOLOR_DEFAULTVOLUME, RGB(r,g,b));
-
+	MixColors(m_Dib, MODCOLOR_2NDHIGHLIGHT, MODCOLOR_BACKHILIGHT, MODCOLOR_BACKNORMAL);
+	MixColors(m_Dib, MODCOLOR_DEFAULTVOLUME, MODCOLOR_VOLUME, MODCOLOR_BACKNORMAL);
+	MixColors(m_Dib, MODCOLOR_DUMMYCOMMAND, MODCOLOR_TEXTNORMAL, MODCOLOR_BACKNORMAL);
 	m_Dib.SetBlendColor(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_BLENDCOLOR]);
 }
 
@@ -372,9 +363,15 @@ void CViewPattern::DrawLetter(int x, int y, char letter, int sizex, int ofsx)
 
 void CViewPattern::DrawLetter(int x, int y, wchar_t letter, int sizex, int ofsx)
 {
-	DrawLetter(x, y, static_cast<char>(letter), sizex, ofsx);
+	DrawLetter(x, y, mpt::unsafe_char_convert<char>(letter), sizex, ofsx);
 }
 
+#if MPT_CXX_AT_LEAST(20)
+void CViewPattern::DrawLetter(int x, int y, char8_t letter, int sizex, int ofsx)
+{
+	DrawLetter(x, y, mpt::unsafe_char_convert<char>(letter), sizex, ofsx);
+}
+#endif
 
 static MPT_FORCEINLINE void DrawPadding(CFastBitmap &dib, const PATTERNFONT *pfnt, int x, int y, int col)
 {
@@ -698,21 +695,22 @@ void CViewPattern::OnDraw(CDC *pDC)
 			rect.SetRect(xpaint, ypaint, xpaint + nColumnWidth, ypaint + m_szHeader.cy);
 			if (ncolhdr < ncols)
 			{
+				const auto &channel = sndFile.ChnSettings[ncolhdr];
 				const auto recordGroup = pModDoc->GetChannelRecordGroup(static_cast<CHANNELINDEX>(ncolhdr));
 				const char *pszfmt = sndFile.m_bChannelMuteTogglePending[ncolhdr]? "[Channel %u]" : "Channel %u";
-				if (sndFile.ChnSettings[ncolhdr].szName[0] != 0)
+				if(channel.szName[0] != 0)
 					pszfmt = sndFile.m_bChannelMuteTogglePending[ncolhdr] ? "%u: [%s]" : "%u: %s";
-				else if (m_nDetailLevel < PatternCursor::volumeColumn)
+				else if(m_nDetailLevel < PatternCursor::volumeColumn)
 					pszfmt = sndFile.m_bChannelMuteTogglePending[ncolhdr] ? "[Ch%u]" : "Ch%u";
-				else if (m_nDetailLevel < PatternCursor::effectColumn)
+				else if(m_nDetailLevel < PatternCursor::effectColumn)
 					pszfmt = sndFile.m_bChannelMuteTogglePending[ncolhdr] ? "[Chn %u]" : "Chn %u";
-				sprintf(s, pszfmt, ncolhdr + 1, sndFile.ChnSettings[ncolhdr].szName.buf);
+				sprintf(s, pszfmt, ncolhdr + 1, channel.szName.buf);
 				DrawButtonRect(hdc, &rect, s,
-					sndFile.ChnSettings[ncolhdr].dwFlags[CHN_MUTE] ? TRUE : FALSE,
+					channel.dwFlags[CHN_MUTE] ? TRUE : FALSE,
 					(m_bInItemRect && m_nDragItem.Type() == DragItem::ChannelHeader && m_nDragItem.Value() == ncolhdr) ? TRUE : FALSE,
 					recordGroup != RecordGroup::NoGroup ? DT_RIGHT : DT_CENTER, chanColorHeight);
 
-				if(sndFile.ChnSettings[ncolhdr].color != ModChannelSettings::INVALID_COLOR)
+				if(channel.color != ModChannelSettings::INVALID_COLOR)
 				{
 					// Channel color
 					CRect r;
@@ -721,7 +719,7 @@ void CViewPattern::OnDraw(CDC *pDC)
 					r.left = rect.left + chanColorOffset;
 					r.right = rect.right - chanColorOffset;
 
-					::SetDCBrushColor(hdc, sndFile.ChnSettings[ncolhdr].color);
+					::SetDCBrushColor(hdc, channel.color);
 					::FillRect(hdc, r, dcBrush);
 				}
 
@@ -768,12 +766,11 @@ void CViewPattern::OnDraw(CDC *pDC)
 				{
 					rect.top = rect.bottom;
 					rect.bottom = rect.top + m_szPluginHeader.cy;
-					PLUGINDEX mixPlug = sndFile.ChnSettings[ncolhdr].nMixPlugin;
-					if (mixPlug)
+					if(PLUGINDEX mixPlug = channel.nMixPlugin; mixPlug != 0)
 						sprintf(s, "%u: %s", mixPlug, (sndFile.m_MixPlugins[mixPlug - 1]).pMixPlugin ? sndFile.m_MixPlugins[mixPlug - 1].GetNameLocale() : "[empty]");
 					else
 						sprintf(s, "---");
-					DrawButtonRect(hdc, &rect, s, FALSE,
+					DrawButtonRect(hdc, &rect, s, channel.dwFlags[CHN_NOFX] ? TRUE : FALSE,
 						((m_bInItemRect) && (m_nDragItem.Type() == DragItem::PluginName) && (m_nDragItem.Value() == ncolhdr)) ? TRUE : FALSE, DT_CENTER);
 				}
 
@@ -1099,6 +1096,8 @@ void CViewPattern::DrawPatternData(HDC hdc, PATTERNINDEX nPattern, bool selEnabl
 				{
 					if(effectColors[m->GetEffectType()] != 0)
 						fx_col = effectColors[m->GetEffectType()];
+					else if(m->command == CMD_DUMMY)
+						fx_col = MODCOLOR_DUMMYCOMMAND;
 				}
 				if (!(dwSpeedUpMask & COLUMN_BITS_FXCMD))
 				{

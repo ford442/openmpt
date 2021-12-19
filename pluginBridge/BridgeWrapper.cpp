@@ -10,7 +10,7 @@
 
 #include "stdafx.h"
 
-#ifndef NO_VST
+#ifdef MPT_WITH_VST
 #include "BridgeWrapper.h"
 #include "../soundlib/plugins/PluginManager.h"
 #include "../mptrack/Mainfrm.h"
@@ -215,7 +215,9 @@ uint64 BridgeWrapper::GetFileVersion(const WCHAR *exePath)
 	DWORD verSize = GetFileVersionInfoSizeW(exePath, &verHandle);
 	uint64 result = 0;
 	if(verSize == 0)
+	{
 		return result;
+	}
 
 	char *verData = new(std::nothrow) char[verSize];
 	if(verData && GetFileVersionInfoW(exePath, verHandle, verSize, verData))
@@ -377,6 +379,10 @@ bool BridgeWrapper::Init(const mpt::PathString &pluginPath, Generation bridgeGen
 				(arch == PluginArch_arm64 && bridgeGeneration == Generation::Legacy) ? static_cast<const ComponentPluginBridge *>(pluginBridgeLegacy_arm64.get()) :
 #endif  // MPT_WITH_WINDOWS10
 		    nullptr;
+		if(!pluginBridge)
+		{
+			return false;
+		}
 		m_Generation = bridgeGeneration;
 		const mpt::PathString exeName = pluginBridge->GetFileName();
 
@@ -941,6 +947,8 @@ intptr_t BridgeWrapper::DispatchToPlugin(VstOpcodeToPlugin opcode, int32 index, 
 
 	const DispatchMsg &resultMsg = msg.dispatch;
 
+	// cppcheck false-positive
+	// cppcheck-suppress nullPointerRedundantCheck
 	const void *extraData = useAuxMem ? auxMem->memory.Data<const char>() : reinterpret_cast<const char *>(&resultMsg + 1);
 	// Post-fix some opcodes
 	switch(opcode)
@@ -1277,7 +1285,7 @@ LRESULT CALLBACK BridgeWrapper::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-#endif  // NO_VST
+#endif  // MPT_WITH_VST
 
 
 OPENMPT_NAMESPACE_END

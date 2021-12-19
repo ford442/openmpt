@@ -38,6 +38,20 @@ enum UpdateChannel : uint32
 	UpdateChannelDevelopment = 3,
 };
 
+struct UpdateCheckResult
+{
+	time_t CheckTime = time_t{};
+	std::vector<std::byte> json;
+#if MPT_UPDATE_LEGACY
+	bool UpdateAvailable = false;
+	CString Version;
+	CString Date;
+	CString URL;
+#endif  // MPT_UPDATE_LEGACY
+
+	bool IsFromCache() const noexcept { return CheckTime == time_t{}; }
+};
+
 class CUpdateCheck
 {
 
@@ -100,9 +114,12 @@ public:
 	class Error
 		: public std::runtime_error
 	{
+	private:
+		CString m_Message;
 	public:
 		Error(CString errorMessage);
 		Error(CString errorMessage, DWORD errorCode);
+		CString GetMessage() const;
 	protected:
 		static CString FormatErrorCode(CString errorMessage, DWORD errorCode);
 	};
@@ -114,29 +131,15 @@ public:
 		Cancel();
 	};
 
-	struct Result
-	{
-		time_t CheckTime = time_t{};
-		std::vector<std::byte> json;
-#if MPT_UPDATE_LEGACY
-		bool UpdateAvailable = false;
-		CString Version;
-		CString Date;
-		CString URL;
-#endif // MPT_UPDATE_LEGACY
-	};
-
 	static bool IsAutoUpdateFromMessage(WPARAM wparam, LPARAM lparam);
 
-	static CUpdateCheck::Result ResultFromMessage(WPARAM wparam, LPARAM lparam);
-	static CUpdateCheck::Error ErrorFromMessage(WPARAM wparam, LPARAM lparam);
+	static const UpdateCheckResult &MessageAsResult(WPARAM wparam, LPARAM lparam);
+	static const CUpdateCheck::Error &MessageAsError(WPARAM wparam, LPARAM lparam);
 
-	static void AcknowledgeSuccess(WPARAM wparam, LPARAM lparam);
+	static void AcknowledgeSuccess(const UpdateCheckResult &result);
 
-	static void ShowSuccessGUI(WPARAM wparam, LPARAM lparam);
-	static void ShowFailureGUI(WPARAM wparam, LPARAM lparam);
-
-	static mpt::ustring GetFailureMessage(WPARAM wparam, LPARAM lparam);
+	static void ShowSuccessGUI(const bool autoUpdate, const UpdateCheckResult &result);
+	static void ShowFailureGUI(const bool autoUpdate, const CUpdateCheck::Error &error);
 
 public:
 
@@ -162,16 +165,16 @@ protected:
 
 	static void CheckForUpdate(const CUpdateCheck::Settings &settings, const CUpdateCheck::Context &context);
 
-	static CUpdateCheck::Result SearchUpdate(const CUpdateCheck::Context &context, const CUpdateCheck::Settings &settings, const std::string &statistics); // may throw
+	static UpdateCheckResult SearchUpdate(const CUpdateCheck::Context &context, const CUpdateCheck::Settings &settings, const std::string &statistics); // may throw
 
 	static void CleanOldUpdates(const CUpdateCheck::Settings &settings, const CUpdateCheck::Context &context);
 
 	static void SendStatistics(HTTP::InternetSession &internet, const CUpdateCheck::Settings &settings, const std::string &statistics); // may throw
 
 #if MPT_UPDATE_LEGACY
-	static CUpdateCheck::Result SearchUpdateLegacy(HTTP::InternetSession &internet, const CUpdateCheck::Settings &settings); // may throw
+	static UpdateCheckResult SearchUpdateLegacy(HTTP::InternetSession &internet, const CUpdateCheck::Settings &settings); // may throw
 #endif // MPT_UPDATE_LEGACY
-	static CUpdateCheck::Result SearchUpdateModern(HTTP::InternetSession &internet, const CUpdateCheck::Settings &settings); // may throw
+	static UpdateCheckResult SearchUpdateModern(HTTP::InternetSession &internet, const CUpdateCheck::Settings &settings); // may throw
 
 };
 

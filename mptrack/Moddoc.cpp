@@ -58,7 +58,7 @@ OPENMPT_NAMESPACE_BEGIN
 
 const TCHAR FileFilterMOD[]	= _T("ProTracker Modules (*.mod)|*.mod||");
 const TCHAR FileFilterXM[]	= _T("FastTracker Modules (*.xm)|*.xm||");
-const TCHAR FileFilterS3M[] = _T("ScreamTracker Modules (*.s3m)|*.s3m||");
+const TCHAR FileFilterS3M[] = _T("Scream Tracker Modules (*.s3m)|*.s3m||");
 const TCHAR FileFilterIT[]	= _T("Impulse Tracker Modules (*.it)|*.it||");
 const TCHAR FileFilterMPT[] = _T("OpenMPT Modules (*.mptm)|*.mptm||");
 const TCHAR FileFilterNone[] = _T("");
@@ -88,6 +88,7 @@ BEGIN_MESSAGE_MAP(CModDoc, CDocument)
 	ON_COMMAND(ID_FILE_SAVEASTEMPLATE,	&CModDoc::OnSaveTemplateModule)
 	ON_COMMAND(ID_FILE_SAVEASWAVE,		&CModDoc::OnFileWaveConvert)
 	ON_COMMAND(ID_FILE_SAVEMIDI,		&CModDoc::OnFileMidiConvert)
+	ON_COMMAND(ID_FILE_SAVEOPL,			&CModDoc::OnFileOPLExport)
 	ON_COMMAND(ID_FILE_SAVECOMPAT,		&CModDoc::OnFileCompatibilitySave)
 	ON_COMMAND(ID_FILE_APPENDMODULE,	&CModDoc::OnAppendModule)
 	ON_COMMAND(ID_PLAYER_PLAY,			&CModDoc::OnPlayerPlay)
@@ -254,7 +255,7 @@ BOOL CModDoc::OnOpenDocument(LPCTSTR lpszPathName)
 		break;
 	default:
 		m_SndFile.ChangeModTypeTo(m_SndFile.GetBestSaveFormat(), false);
-		m_ShowSavedialog = true;
+		m_SndFile.m_SongFlags.set(SONG_IMPORTED);
 		break;
 	}
 	// If the file was packed in some kind of container (e.g. ZIP, or simply a format like MO3), prompt for new file extension as well
@@ -319,6 +320,26 @@ bool CModDoc::OnSaveDocument(const mpt::PathString &filename, const bool setPath
 		mpt::ofstream &f = sf;
 		if(f)
 		{
+			if(m_SndFile.m_SongFlags[SONG_IMPORTED] && !(GetModType() & (MOD_TYPE_MOD | MOD_TYPE_S3M)))
+			{
+				// Check if any non-supported playback behaviours are enabled due to being imported from a different format
+				const auto supportedBehaviours = m_SndFile.GetSupportedPlaybackBehaviour(GetModType());
+				bool showWarning = true;
+				for(size_t i = 0; i < kMaxPlayBehaviours; i++)
+				{
+					if(m_SndFile.m_playBehaviour[i] && !supportedBehaviours[i])
+					{
+						if(showWarning)
+						{
+							AddToLog(LogWarning, mpt::ToUnicode(mpt::Charset::ASCII, MPT_AFORMAT("Some imported Compatibility Settings that are not supported by the {} format have been disabled. Verify that the module still sounds as intended.")
+								(mpt::ToUpperCaseAscii(m_SndFile.GetModSpecifications().fileExtension))));
+							showWarning = false;
+						}
+						m_SndFile.m_playBehaviour.reset(i);
+					}
+				}
+			}
+
 			f.exceptions(f.exceptions() | std::ios::badbit | std::ios::failbit);
 			FixNullStrings();
 			switch(m_SndFile.GetType())
@@ -337,15 +358,16 @@ bool CModDoc::OnSaveDocument(const mpt::PathString &filename, const bool setPath
 	}
 	EndWaitCursor();
 
-	if (ok)
+	if(ok)
 	{
-		if (setPath)
+		if(setPath)
 		{
 			// Set new path for this file, unless we are saving a template or a copy, in which case we want to keep the old file path.
 			SetPathName(filename);
 		}
 		logcapturer.ShowLog(true);
-		if(TrackerSettings::Instance().rememberSongWindows) SerializeViews();
+		if(TrackerSettings::Instance().rememberSongWindows)
+			SerializeViews();
 	} else
 	{
 		ErrorBox(IDS_ERR_SAVESONG, CMainFrame::GetMainFrame());
@@ -926,9 +948,8 @@ void CModDoc::ProcessMIDI(uint32 midiData, INSTRUMENTINDEX ins, IMixPlugin *plug
 		if(ins > 0 && ins <= GetNumInstruments())
 		{
 			LimitMax(note, NOTE_MAX);
-			CheckNNA(note, ins, m_midiPlayingNotes[channel]);
 			vol = CMainFrame::ApplyVolumeRelatedSettings(midiData, midiVolume);
-			PlayNote(PlayNoteParam(note).Instrument(ins).Volume(vol), &m_noteChannel);
+			PlayNote(PlayNoteParam(note).Instrument(ins).Volume(vol).CheckNNA(m_midiPlayingNotes[channel]), &m_noteChannel);
 			return;
 		} else if(plugin != nullptr)
 		{
@@ -992,6 +1013,9 @@ CHANNELINDEX CModDoc::PlayNote(PlayNoteParam &params, NoteToChannelMap *noteChan
 		}
 
 		CriticalSection cs;
+
+		if(params.m_notesPlaying)
+			CheckNNA(note, params.m_instr, *params.m_notesPlaying);
 
 		// Find a channel to play on
 		channel = FindAvailableChannel();
@@ -1749,7 +1773,7 @@ void CModDoc::OnFileWaveConvert(ORDERINDEX nMinOrder, ORDERINDEX nMaxOrder, cons
 				if(!m_SndFile.ChnSettings[i].szName.empty())
 				{
 					fileNameAdd += MPT_UFORMAT("-{}_{}")(mpt::ufmt::dec0<3>(i + 1), mpt::ToUnicode(m_SndFile.GetCharsetInternal(), m_SndFile.ChnSettings[i].szName));
-					caption = MPT_CFORMAT("{}:{}")(i + 1, mpt::ToCString(m_SndFile.GetCharsetInternal(), m_SndFile.ChnSettings[i].szName));
+					caption = MPT_CFORMAT("{}: {}")(i + 1, mpt::ToCString(m_SndFile.GetCharsetInternal(), m_SndFile.ChnSettings[i].szName));
 				} else
 				{
 					fileNameAdd += MPT_UFORMAT("-{}")(mpt::ufmt::dec0<3>(i + 1));
@@ -1792,7 +1816,7 @@ void CModDoc::OnFileWaveConvert(ORDERINDEX nMinOrder, ORDERINDEX nMaxOrder, cons
 					if(!m_SndFile.Instruments[i + 1]->name.empty())
 					{
 						fileNameAdd += MPT_UFORMAT("-{}_{}")(mpt::ufmt::dec0<3>(i + 1), mpt::ToUnicode(m_SndFile.GetCharsetInternal(), m_SndFile.Instruments[i + 1]->name));
-						caption = MPT_CFORMAT("{}:{}")(i + 1, mpt::ToCString(m_SndFile.GetCharsetInternal(), m_SndFile.Instruments[i + 1]->name));
+						caption = MPT_CFORMAT("{}: {}")(i + 1, mpt::ToCString(m_SndFile.GetCharsetInternal(), m_SndFile.Instruments[i + 1]->name));
 					} else
 					{
 						fileNameAdd += MPT_UFORMAT("-{}")(mpt::ufmt::dec0<3>(i + 1));
@@ -2217,14 +2241,13 @@ void CModDoc::OnEditPatterns()
 
 void CModDoc::OnEditSamples()
 {
-	SendMessageToActiveView(WM_MOD_ACTIVATEVIEW, IDD_CONTROL_SAMPLES);
+	SendMessageToActiveView(WM_MOD_ACTIVATEVIEW, IDD_CONTROL_SAMPLES, -1);
 }
 
 
 void CModDoc::OnEditInstruments()
 {
-	//if (m_SndFile.m_nInstruments) rewbs.cosmetic: allow keyboard access to instruments even with no instruments
-	SendMessageToActiveView(WM_MOD_ACTIVATEVIEW, IDD_CONTROL_INSTRUMENTS);
+	SendMessageToActiveView(WM_MOD_ACTIVATEVIEW, IDD_CONTROL_INSTRUMENTS, -1);
 }
 
 
@@ -2300,15 +2323,46 @@ static CString FormatSongLength(double length)
 void CModDoc::OnEstimateSongLength()
 {
 	CString s = _T("Approximate song length: ");
-	std::vector<GetLengthType> lengths = m_SndFile.GetLength(eNoAdjust, GetLengthTarget(true));
-	double totalLength = 0.0;
-	for(size_t i = 0; i < lengths.size(); i++)
+	const auto subSongs = m_SndFile.GetAllSubSongs();
+	if (subSongs.empty())
 	{
-		double songLength = lengths[i].duration;
-		if(lengths.size() > 1)
+		Reporting::Information(_T("No patterns found!"));
+		return;
+	}
+
+	std::vector<uint32> songsPerSequence(m_SndFile.Order.GetNumSequences(), 0);
+	SEQUENCEINDEX prevSeq = subSongs[0].sequence;
+	for(const auto &song : subSongs)
+	{
+		songsPerSequence[song.sequence]++;
+		if(prevSeq != song.sequence)
+			prevSeq = SEQUENCEINDEX_INVALID;
+	}
+
+	double totalLength = 0.0;
+	uint32 songCount = 0;
+	// If there are multiple sequences, indent their subsongs
+	const TCHAR *indent = (prevSeq == SEQUENCEINDEX_INVALID) ? _T("\t") : _T("");
+	for(const auto &song : subSongs)
+	{
+		double songLength = song.duration;
+		if(subSongs.size() > 1)
 		{
 			totalLength += songLength;
-			s.AppendFormat(_T("\nSong %u, starting at order %u:\t"), i + 1, lengths[i].startOrder);
+			if(prevSeq != song.sequence)
+			{
+				songCount = 0;
+				prevSeq = song.sequence;
+				if(m_SndFile.Order(prevSeq).GetName().empty())
+					s.AppendFormat(_T("\nSequence %u:"), prevSeq + 1u);
+				else
+					s.AppendFormat(_T("\nSequence %u (%s):"), prevSeq + 1u, mpt::ToWin(m_SndFile.Order(prevSeq).GetName()).c_str());
+			}
+			songCount++;
+			if(songsPerSequence[song.sequence] > 1)
+				s.AppendFormat(_T("\n%sSong %u, starting at order %u:\t"), indent, songCount, song.startOrder);
+			else
+				s.AppendChar(_T('\t'));
 		}
 		if(songLength != std::numeric_limits<double>::infinity())
 		{
@@ -2319,7 +2373,7 @@ void CModDoc::OnEstimateSongLength()
 			s += _T("Song too long!");
 		}
 	}
-	if(lengths.size() > 1 && totalLength != std::numeric_limits<double>::infinity())
+	if(subSongs.size() > 1 && totalLength != std::numeric_limits<double>::infinity())
 	{
 		s += _T("\n\nTotal length:\t") + FormatSongLength(totalLength);
 	}
@@ -2655,6 +2709,7 @@ LRESULT CModDoc::OnCustomKeyMsg(WPARAM wParam, LPARAM /*lParam*/)
 
 		case kcFileSaveAsWave:	OnFileWaveConvert(); break;
 		case kcFileSaveMidi:	OnFileMidiConvert(); break;
+		case kcFileSaveOPL:		OnFileOPLExport(); break;
 		case kcFileExportCompat:  OnFileCompatibilitySave(); break;
 		case kcEstimateSongLength: OnEstimateSongLength(); break;
 		case kcApproxRealBPM:	OnApproximateBPM(); break;
@@ -2698,6 +2753,11 @@ LRESULT CModDoc::OnCustomKeyMsg(WPARAM wParam, LPARAM /*lParam*/)
 		case kcSpeedDecrease:
 			if(auto speed = m_SndFile.m_PlayState.m_nMusicSpeed; speed > modSpecs.speedMin)
 				m_SndFile.m_PlayState.m_nMusicSpeed = speed -  1;
+			break;
+
+		case kcViewToggle:
+			if(auto *lastActiveFrame = CChildFrame::LastActiveFrame(); lastActiveFrame != nullptr)
+				lastActiveFrame->ToggleViews();
 			break;
 
 		default: return kcNull;

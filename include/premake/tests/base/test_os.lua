@@ -23,7 +23,10 @@
 --
 
 	function suite.findlib_FindSystemLib()
-		if os.istarget("windows") then
+		if os.istarget("macosx") then
+			-- macOS no longer stores system libraries on filesystem; see
+			-- https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes
+		elseif os.istarget("windows") then
 			test.istrue(os.findlib("user32"))
 		elseif os.istarget("haiku") then
 			test.istrue(os.findlib("root"))
@@ -124,6 +127,20 @@
 		test.istrue(table.contains(result, "folder/subfolder/hello.txt"))
 	end
 
+	function suite.matchfiles_onSymbolicLink()
+		if os.istarget("macosx")
+			or os.istarget("linux")
+			or os.istarget("solaris")
+			or os.istarget("bsd")
+		then
+			os.execute("cd folder && ln -s subfolder symlinkfolder && cd ..")
+			local result = os.matchfiles("folder/**/*.txt")
+			os.execute("rm folder/symlinkfolder")
+			premake.modules.self_test.print(table.tostring(result))
+			test.istrue(table.contains(result, "folder/symlinkfolder/hello.txt"))
+		end
+	end
+
 
 --
 -- os.pathsearch() tests
@@ -171,6 +188,24 @@
 		end
 	end
 
+	-- Check outputof content
+	function suite.outputof_streams_output()
+		if (os.istarget("macosx")
+			or os.istarget("linux")
+			or os.istarget("solaris")
+			or os.istarget("bsd"))
+			and os.isdir (_TESTS_DIR)
+		then
+			local ob, e = os.outputof ("ls " .. _TESTS_DIR .. "/base")
+			local oo, e = os.outputof ("ls " .. _TESTS_DIR .. "/base", "output")
+			test.isequal (oo, ob)
+			local s, e = string.find (oo, "test_os.lua")
+			test.istrue(s ~= nil)
+
+			local o, e = os.outputof ("ls " .. cwd .. "/base", "error")
+			test.istrue(o == nil or #o == 0)
+		end
+	end
 
 --
 -- os.translateCommand() tests

@@ -43,6 +43,7 @@ using SmpLength = uint32;
 inline constexpr SmpLength MAX_SAMPLE_LENGTH = 0x10000000; // Sample length in frames. Sample size in bytes can be more than this (= 256 MB).
 
 inline constexpr ROWINDEX MAX_PATTERN_ROWS       = 1024;
+inline constexpr ROWINDEX MAX_ROWS_PER_BEAT      = 65536;
 inline constexpr ORDERINDEX MAX_ORDERS           = ORDERINDEX_MAX + 1;
 inline constexpr PATTERNINDEX MAX_PATTERNS       = 4000;
 inline constexpr SAMPLEINDEX MAX_SAMPLES         = 4000;
@@ -540,6 +541,9 @@ enum PlayBehaviour
 	kOPLNoteOffOnNoteChange,        // Send note-off events for old note on every note change
 	kFT2PortaResetDirection,        // Reset portamento direction when reaching portamento target from below
 	kApplyUpperPeriodLimit,         // Enforce m_nMaxPeriod
+	kApplyOffsetWithoutNote,        // Offset commands even work when there's no note next to them (e.g. DMF, MDL, PLM formats)
+	kITPitchPanSeparation,          // Pitch/Pan Separation can be overridden by panning commands (this also fixes a bug where any "special" notes affect PPS)
+	kImprecisePingPongLoops,        // Use old (less precise) ping-pong overshoot calculation
 
 	// Add new play behaviours here.
 
@@ -653,8 +657,8 @@ public:
 
 	MPT_CONSTEXPRINLINE FPInt() : v(0) { }
 	MPT_CONSTEXPRINLINE FPInt(T intPart, T fractPart) : v((intPart * fractFact) + (fractPart % fractFact)) { }
-	explicit MPT_CONSTEXPRINLINE FPInt(float f) : v(static_cast<T>(f * float(fractFact))) { }
-	explicit MPT_CONSTEXPRINLINE FPInt(double f) : v(static_cast<T>(f * double(fractFact))) { }
+	explicit MPT_CONSTEXPRINLINE FPInt(float f) : v(mpt::saturate_round<T>(f * float(fractFact))) { }
+	explicit MPT_CONSTEXPRINLINE FPInt(double f) : v(mpt::saturate_round<T>(f * double(fractFact))) { }
 
 	// Set integer and fractional part
 	MPT_CONSTEXPRINLINE FPInt<fractFact, T> &Set(T intPart, T fractPart = 0) { v = (intPart * fractFact) + (fractPart % fractFact); return *this; }

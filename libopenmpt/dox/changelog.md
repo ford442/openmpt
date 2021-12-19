@@ -16,19 +16,38 @@ is just a high-level summary.
  *  [**New**] `DSYM` files created with Digital Symphony are now supported.
  *  [**New**] openmpt123: openmpt123 will now expand file wildcards passed on
     the command line in Windows when built with MSVC.
+ *  [**New**] libopenmpt_ext: New interface `interactive2` adding
+    `openmpt::ext::interactive2::note_off()`,
+    `openmpt::ext::interactive2::note_fade()`,
+    `openmpt::ext::interactive2::set_channel_panning()`,
+    `openmpt::ext::interactive2::get_channel_panning()`,
+    `openmpt::ext::interactive2::set_note_finetune()`, and
+    `openmpt::ext::interactive2::get_note_finetune()` (C++) and
+    `openmpt_module_ext_interface_interactive2.note_off()`,
+    `openmpt_module_ext_interface_interactive2.note_fade()`,
+    `openmpt_module_ext_interface_interactive2.set_channel_panning()`,
+    `openmpt_module_ext_interface_interactive2.get_channel_panning()`,
+    `openmpt_module_ext_interface_interactive2.set_note_finetune()`, and
+    `openmpt_module_ext_interface_interactive2.get_note_finetune()` (C). 
  *  [**New**] `Makefile` `CONFIG=emscripten` now supports
     `EMSCRIPTEN_TARGET=audioworkletprocessor` which builds an ES6 module in
     a single file with reduced dependencies suitable to be used in an
     AudioWorkletProcessor.
- *  [**New**] `Makefile` `CONFIG=djgpp` now supports builds zlib, mpg123,
-    and vorbis locally instead of only uspporting miniz, minimp3, and
-    stb_vorbis via `ALLOW_LGPL=1`.
+ *  [**New**] `Makefile` `CONFIG=emscripten` now supports `EMSCRIPTEN_PORTS=1`
+    which uses dependencies (zlib, mp123, ogg, and vorbis) from Emscripten Ports
+    instead of using miniz, minimp3, and stb_vorbis locally or building zlib,
+    mp123, ogg, and vorbis locally.
+ *  [**New**] `Makefile` `CONFIG=emscripten` and `CONFIG=djgpp` can now build
+    zlib, mpg123, and vorbis locally instead of only supporting miniz, minimp3,
+    and stb_vorbis via `ALLOW_LGPL=1`.
 
  *  [**Change**] `Makefile` `CONFIG=emscripten` now supports
     `EMSCRIPTEN_TARGET=all` which provides WebAssembly as well as fallback to
     JavaScript in a single build.
  *  [**Change**] openmpt123: DOS builds now use the Mercury fork of
     `liballegro 4.2` for improved hardware compatibility.
+ *  [**Change**] libopenmpt no longer generates internal interpolation tables on
+    library load time, but instead only first module load time.
 
  *  [**Regression**] `Makefile` `CONFIG=emscripten` does not support
     `EMSCRIPTEN_TARGET=asmjs` or `EMSCRIPTEN_TARGET=asmjs128m` any more because

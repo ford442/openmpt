@@ -36,11 +36,31 @@ mpg123_handle attribute_align_arg *mpg123_new(const char* decoder, int *error)
 	return mpg123_parnew(NULL, decoder, error);
 }
 
+// Runtime table calculation is back for specific uses that want minimal
+// binary size. It's hidden in handle initialization, not in mpg123_init(),
+// any user of such a minimal build should ensure that there is no trouble
+// from concurrency or just call mpg123_new() once in single-threaded context.
+
 /* ...the full routine with optional initial parameters to override defaults. */
 mpg123_handle attribute_align_arg *mpg123_parnew(mpg123_pars *mp, const char* decoder, int *error)
 {
 	mpg123_handle *fr = NULL;
 	int err = MPG123_OK;
+
+#ifdef RUNTIME_TABLES
+	static char tables_initialized = 0;
+	if(!tables_initialized)
+	{
+#ifndef NO_LAYER12
+		init_layer12(); /* inits also shared tables with layer1 */
+#endif
+#ifndef NO_LAYER3
+		init_layer3();
+#endif
+		init_costabs();
+		tables_initialized = 1;
+	}
+#endif
 
 	// Silly paranoia checks. Really silly, but libmpg123 has been ported to strange
 	// platforms in the past.
@@ -604,6 +624,7 @@ int decode_update(mpg123_handle *mh)
 	long native_rate;
 	int b;
 
+	mh->state_flags &= ~FRAME_DECODER_LIVE;
 	if(mh->num < 0)
 	{
 		if(!(mh->p.flags & MPG123_QUIET)) error("decode_update() has been called before reading the first MPEG frame! Internal programming error.");
@@ -670,6 +691,7 @@ int decode_update(mpg123_handle *mh)
 	debug3("done updating decoder structure with native rate %li and af.rate %li and down_sample %i", frame_freq(mh), mh->af.rate, mh->down_sample);
 
 	mh->decoder_change = 0;
+	mh->state_flags |= FRAME_DECODER_LIVE;
 	return 0;
 }
 
@@ -862,12 +884,15 @@ int attribute_align_arg mpg123_framebyframe_decode(mpg123_handle *mh, off_t *num
 	if(mh == NULL)    return MPG123_BAD_HANDLE;
 	if(mh->buffer.size < mh->outblock) return MPG123_NO_SPACE;
 
+	*audio = NULL;
 	*bytes = 0;
 	mh->buffer.fill = 0; /* always start fresh */
 	if(!mh->to_decode) return MPG123_OK;
 
 	if(num != NULL) *num = mh->num;
 	debug("decoding");
+	if(!(mh->state_flags & FRAME_DECODER_LIVE))
+		return MPG123_ERR;
 	decode_the_frame(mh);
 	mh->to_decode = mh->to_ignore = FALSE;
 	mh->buffer.p = mh->buffer.data;
@@ -947,7 +972,8 @@ int attribute_align_arg mpg123_decode_frame(mpg123_handle *mh, off_t *num, unsig
 			}
 			debug("decoding");
 
-			if(mh->decoder_change && decode_update(mh) < 0)
+			if( (mh->decoder_change && decode_update(mh) < 0)
+			||	!(mh->state_flags & FRAME_DECODER_LIVE) )
 				return MPG123_ERR;
 			decode_the_frame(mh);
 
@@ -1052,7 +1078,8 @@ int attribute_align_arg mpg123_decode(mpg123_handle *mh, const unsigned char *in
 				ret = MPG123_NO_SPACE;
 				goto decodeend;
 			}
-			if(mh->decoder_change && decode_update(mh) < 0)
+			if( (mh->decoder_change && decode_update(mh) < 0)
+			||	! (mh->state_flags & FRAME_DECODER_LIVE) )
 			{
 				ret = MPG123_ERR;
 				goto decodeend;

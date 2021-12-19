@@ -202,29 +202,33 @@ BOOL CRawSampleDlg::OnInitDialog()
 
 void CRawSampleDlg::OnOK()
 {
-	if(IsDlgButtonChecked(IDC_RADIO1))
+	const int bitDepth = GetCheckedRadioButton(IDC_RADIO1, IDC_RADIO4);
+	const int channels = GetCheckedRadioButton(IDC_RADIO5, IDC_RADIO6);
+	const int encoding = GetCheckedRadioButton(IDC_RADIO7, IDC_RADIO10);
+	const int endianness = GetCheckedRadioButton(IDC_RADIO11, IDC_RADIO12);
+	if(bitDepth == IDC_RADIO1)
 		m_format |= SampleIO::_8bit;
-	else if(IsDlgButtonChecked(IDC_RADIO2))
+	else if(bitDepth == IDC_RADIO2)
 		m_format |= SampleIO::_16bit;
-	else if(IsDlgButtonChecked(IDC_RADIO3))
+	else if(bitDepth == IDC_RADIO3)
 		m_format |= SampleIO::_24bit;
-	else if(IsDlgButtonChecked(IDC_RADIO4))
+	else if(bitDepth == IDC_RADIO4)
 		m_format |= SampleIO::_32bit;
-	if(IsDlgButtonChecked(IDC_RADIO5))
+	if(channels == IDC_RADIO5)
 		m_format |= SampleIO::mono;
-	else if(IsDlgButtonChecked(IDC_RADIO6))
+	else if(channels == IDC_RADIO6)
 		m_format |= SampleIO::stereoInterleaved;
-	if(IsDlgButtonChecked(IDC_RADIO7))
+	if(encoding == IDC_RADIO7)
 		m_format |= SampleIO::signedPCM;
-	else if(IsDlgButtonChecked(IDC_RADIO8))
+	else if(encoding == IDC_RADIO8)
 		m_format |= SampleIO::unsignedPCM;
-	else if(IsDlgButtonChecked(IDC_RADIO9))
+	else if(encoding == IDC_RADIO9)
 		m_format |= SampleIO::deltaPCM;
-	else if(IsDlgButtonChecked(IDC_RADIO10))
+	else if(encoding == IDC_RADIO10)
 		m_format |= SampleIO::floatPCM;
-	if(IsDlgButtonChecked(IDC_RADIO11))
+	if(endianness == IDC_RADIO11)
 		m_format |= SampleIO::littleEndian;
-	else if(IsDlgButtonChecked(IDC_RADIO12))
+	else if(endianness == IDC_RADIO12)
 		m_format |= SampleIO::bigEndian;
 	m_rememberFormat = IsDlgButtonChecked(IDC_CHK_REMEMBERSETTINGS) != BST_UNCHECKED;
 	m_offset = GetDlgItemInt(IDC_EDIT1, nullptr, FALSE);
@@ -273,9 +277,10 @@ void CRawSampleDlg::OnBitDepthChanged(UINT id)
 	GetDlgItem(IDC_RADIO9)->EnableWindow(hasUnsignedDelta);
 	GetDlgItem(IDC_RADIO10)->EnableWindow(hasFloat);
 
-	if((IsDlgButtonChecked(IDC_RADIO8) && !hasUnsignedDelta)
-	   || (IsDlgButtonChecked(IDC_RADIO9) && !hasUnsignedDelta)
-	   || (IsDlgButtonChecked(IDC_RADIO10) && !hasFloat))
+	const int encoding = GetCheckedRadioButton(IDC_RADIO7, IDC_RADIO10);
+	if((encoding == IDC_RADIO8 && !hasUnsignedDelta)
+	   || (encoding == IDC_RADIO9 && !hasUnsignedDelta)
+	   || (encoding == IDC_RADIO10 && !hasFloat))
 		CheckRadioButton(IDC_RADIO7, IDC_RADIO10, IDC_RADIO7);
 }
 
@@ -290,9 +295,10 @@ void CRawSampleDlg::OnEncodingChanged(UINT id)
 	GetDlgItem(IDC_RADIO3)->EnableWindow((isFloat || isUnsignedDelta) ? FALSE : TRUE);
 	GetDlgItem(IDC_RADIO4)->EnableWindow(isUnsignedDelta ? FALSE : TRUE);
 
-	if(!IsDlgButtonChecked(IDC_RADIO4) && isFloat)
+	const int bitDepth = GetCheckedRadioButton(IDC_RADIO1, IDC_RADIO4);
+	if(bitDepth != IDC_RADIO4 && isFloat)
 		CheckRadioButton(IDC_RADIO1, IDC_RADIO4, IDC_RADIO4);
-	if((IsDlgButtonChecked(IDC_RADIO3) || IsDlgButtonChecked(IDC_RADIO4)) && isUnsignedDelta)
+	if((bitDepth == IDC_RADIO3 || bitDepth == IDC_RADIO4) && isUnsignedDelta)
 		CheckRadioButton(IDC_RADIO1, IDC_RADIO4, IDC_RADIO1);
 }
 
@@ -533,7 +539,11 @@ void AddSilenceDlg::OnEditModeChanged()
 
 void AddSilenceDlg::OnUnitChanged()
 {
-	m_unit = static_cast<Unit>(static_cast<CComboBox *>(GetDlgItem(IDC_COMBO1))->GetCurSel());
+	const auto unit = static_cast<Unit>(static_cast<CComboBox*>(GetDlgItem(IDC_COMBO1))->GetCurSel());
+	if(m_unit == unit)
+		return;
+
+	m_unit = unit;
 	SmpLength duration = GetDlgItemInt(IDC_EDIT_ADDSILENCE);
 	if(m_unit == kSamples)
 	{
@@ -740,8 +750,9 @@ BOOL CSampleXFadeDlg::OnToolTipText(UINT, NMHDR *pNMHDR, LRESULT *pResult)
 /////////////////////////////////////////////////////////////////////////
 // Resampling dialog
 
-CResamplingDlg::ResamplingOption CResamplingDlg::lastChoice = CResamplingDlg::Upsample;
-uint32 CResamplingDlg::lastFrequency = 0;
+CResamplingDlg::ResamplingOption CResamplingDlg::m_lastChoice = CResamplingDlg::Upsample;
+uint32 CResamplingDlg::m_lastFrequency = 0;
+bool CResamplingDlg::m_updatePatterns = false;
 
 BEGIN_MESSAGE_MAP(CResamplingDlg, CDialog)
 	ON_EN_SETFOCUS(IDC_EDIT1, &CResamplingDlg::OnFocusEdit)
@@ -752,7 +763,7 @@ BOOL CResamplingDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 	SetWindowText(m_resampleAll ? _T("Resample All") : _T("Resample"));
 
-	CheckRadioButton(IDC_RADIO1, IDC_RADIO3, IDC_RADIO1 + lastChoice);
+	CheckRadioButton(IDC_RADIO1, IDC_RADIO3, IDC_RADIO1 + m_lastChoice);
 	if(m_frequency > 0)
 	{
 		TCHAR s[32];
@@ -761,17 +772,17 @@ BOOL CResamplingDlg::OnInitDialog()
 		wsprintf(s, _T("&Downsample (%u Hz)"), m_frequency / 2);
 		SetDlgItemText(IDC_RADIO2, s);
 
-		if(!lastFrequency)
-			lastFrequency = m_frequency;
+		if(!m_lastFrequency)
+			m_lastFrequency = m_frequency;
 	}
-	if(!lastFrequency)
-		lastFrequency = 48000;
+	if(!m_lastFrequency)
+		m_lastFrequency = 48000;
 
 
-	SetDlgItemInt(IDC_EDIT1, lastFrequency, FALSE);
+	SetDlgItemInt(IDC_EDIT1, m_lastFrequency, FALSE);
 	CSpinButtonCtrl *spin = static_cast<CSpinButtonCtrl *>(GetDlgItem(IDC_SPIN1));
 	spin->SetRange32(1, 999999);
-	spin->SetPos32(lastFrequency);
+	spin->SetPos32(m_lastFrequency);
 
 	CComboBox *cbnResampling = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_FILTER));
 	cbnResampling->SetRedraw(FALSE);
@@ -789,27 +800,30 @@ BOOL CResamplingDlg::OnInitDialog()
 	}
 	cbnResampling->SetRedraw(TRUE);
 
+	CheckDlgButton(IDC_CHECK1, m_updatePatterns ? BST_CHECKED : BST_UNCHECKED);
+
 	return TRUE;
 }
 
 
 void CResamplingDlg::OnOK()
 {
-	if(IsDlgButtonChecked(IDC_RADIO1))
+	const int choice = GetCheckedRadioButton(IDC_RADIO1, IDC_RADIO3);
+	if(choice == IDC_RADIO1)
 	{
-		lastChoice = Upsample;
+		m_lastChoice = Upsample;
 		m_frequency *= 2;
-	} else if(IsDlgButtonChecked(IDC_RADIO2))
+	} else if(choice == IDC_RADIO2)
 	{
-		lastChoice = Downsample;
+		m_lastChoice = Downsample;
 		m_frequency /= 2;
 	} else
 	{
-		lastChoice = Custom;
+		m_lastChoice = Custom;
 		uint32 newFrequency = GetDlgItemInt(IDC_EDIT1, NULL, FALSE);
 		if(newFrequency > 0)
 		{
-			lastFrequency = m_frequency = newFrequency;
+			m_lastFrequency = m_frequency = newFrequency;
 		} else
 		{
 			MessageBeep(MB_ICONWARNING);
@@ -820,6 +834,8 @@ void CResamplingDlg::OnOK()
 
 	CComboBox *cbnResampling = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_FILTER));
 	m_srcMode = static_cast<ResamplingMode>(cbnResampling->GetItemData(cbnResampling->GetCurSel()));
+
+	m_updatePatterns = IsDlgButtonChecked(IDC_CHECK1) != BST_UNCHECKED;
 
 	CDialog::OnOK();
 }

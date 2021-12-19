@@ -273,50 +273,30 @@ BOOL CModTree::PreTranslateMessage(MSG *pMsg)
 				{
 					if(CMainFrame::GetInputHandler()->CtrlPressed())
 					{
-						if(IsSampleBrowser())
+						const ModItem modItem = GetModItem(hItem);
+						static constexpr ModItemType instrumentTypes[] = {MODITEM_INSLIB_SAMPLE, MODITEM_INSLIB_INSTRUMENT, MODITEM_MIDIINSTRUMENT, MODITEM_MIDIPERCUSSION, MODITEM_DLSBANK_INSTRUMENT};
+						if(mpt::contains(instrumentTypes, modItem.type))
 						{
 							// Ctrl+Enter: Load sample into currently selected sample or instrument slot
+							// Additionally pressing Shift creates a new sample or instrument slot. Shift key is handled in the Drag&drop handler
 							CModScrollView *view = static_cast<CModScrollView *>(CMainFrame::GetMainFrame()->GetActiveView());
-							const ModItem modItem = GetModItem(hItem);
-							if(view && (modItem.type == MODITEM_INSLIB_SAMPLE || modItem.type == MODITEM_INSLIB_INSTRUMENT))
+							if(view)
 							{
 								const char *className = view->GetRuntimeClass()->m_lpszClassName;
 								const bool isSampleView = !strcmp("CViewSample", className);
 								const bool isInstrumentView = !strcmp("CViewInstrument", className);
-								const bool createNew = CMainFrame::GetInputHandler()->ShiftPressed();
-								auto msg = CTRLMSG_BASE;
-								const void *lparam = nullptr;
 								mpt::PathString fullPath = InsLibGetFullPath(hItem);
 								DRAGONDROP dropInfo;
-
-								if(!m_SongFileName.empty())
+								m_hItemDrag = hItem;
+								m_itemDrag = modItem;
+								if((isSampleView || isInstrumentView) && GetDropInfo(dropInfo, fullPath))
 								{
-									m_hItemDrag = hItem;
-									m_itemDrag = modItem;
-									if(GetDropInfo(dropInfo, fullPath))
-									{
-										lparam = &dropInfo;
-										if(isSampleView)
-											msg = createNew ? CTRLMSG_SMP_SONGDROP_NEW : CTRLMSG_SMP_SONGDROP;
-										else if(isInstrumentView)
-											msg = createNew ? CTRLMSG_INS_SONGDROP_NEW : CTRLMSG_INS_SONGDROP;
-									}
-								} else
-								{
-									lparam = &fullPath;
-									if(isSampleView)
-										msg = createNew ? CTRLMSG_SMP_OPENFILE_NEW : CTRLMSG_SMP_OPENFILE;
-									else if(isInstrumentView)
-										msg = createNew ? CTRLMSG_INS_OPENFILE_NEW : CTRLMSG_INS_OPENFILE;
-								}
-								if(msg != CTRLMSG_BASE)
-								{
-									view->SendCtrlMessage(msg, reinterpret_cast<LPARAM>(lparam));
+									view->SendMessage(WM_MOD_DRAGONDROPPING, TRUE, reinterpret_cast<LPARAM>(&dropInfo));
 									// In case a message box like "create instrument for sample?" showed up
 									SetFocus();
 								}
 							}
-						} else
+						} else if(!IsSampleBrowser())
 						{
 							// Ctrl+Enter: Edit item
 							EditLabel(hItem);
@@ -347,7 +327,7 @@ BOOL CModTree::PreTranslateMessage(MSG *pMsg)
 			// Backspace: Go up one directory
 			if(GetParentRootItem(GetSelectedItem()) == m_hInsLib || IsSampleBrowser())
 			{
-				InstrumentLibraryChDir(P_(".."), false);
+				InstrumentLibraryChDir(P_(".."), !m_SongFileName.empty());
 				return TRUE;
 			}
 			break;
@@ -567,6 +547,22 @@ ModTreeDocInfo *CModTree::GetDocumentInfoFromModDoc(CModDoc &modDoc)
 }
 
 
+size_t CModTree::GetDLSBankIndexFromItem(HTREEITEM hItem) const
+{
+	return static_cast<size_t>(std::distance(m_tiDLS.begin(), std::find(m_tiDLS.begin(), m_tiDLS.end(), GetParentRootItem(hItem))));
+}
+
+
+CDLSBank *CModTree::GetDLSBankFromItem(HTREEITEM hItem) const
+{
+	const auto bank = GetDLSBankIndexFromItem(hItem);
+	if(bank < CTrackApp::gpDLSBanks.size())
+		return CTrackApp::gpDLSBanks[bank];
+	else
+		return nullptr;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CViewModTree drawing
 
@@ -678,10 +674,11 @@ void CModTree::RefreshDlsBanks()
 				// Memorize Banks
 				std::map<uint16, HTREEITEM> banks;
 				// Add Drum Kits folder
-				HTREEITEM hDrums = InsertItem(TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE,
-						_T("Drum Kits"), IMAGE_FOLDER, IMAGE_FOLDER, 0, 0, 0, m_tiDLS[iDls], TVI_LAST);
+				HTREEITEM hDrums = InsertItem(TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE | TVIF_PARAM,
+						_T("Drum Kits"), IMAGE_FOLDER, IMAGE_FOLDER, 0, 0, DLS_DRUM_FOLDER_LPARAM, m_tiDLS[iDls], TVI_LAST);
 				// Add Instruments
 				UINT nInstr = pDlsBank->GetNumInstruments();
+				MPT_ASSERT(nInstr <= 0x10000);
 				for(UINT iIns = 0; iIns < nInstr; iIns++)
 				{
 					const DLSINSTRUMENT *pDlsIns = pDlsBank->GetInstrument(iIns);
@@ -689,23 +686,28 @@ void CModTree::RefreshDlsBanks()
 					{
 						TCHAR szName[256];
 						wsprintf(szName, _T("%u: %s"), pDlsIns->ulInstrument & 0x7F, mpt::ToCString(charset, pDlsIns->szName).GetString());
+						const LPARAM lParamInstr = DlsItem::ToLPARAM(static_cast<uint16>(iIns), (pDlsIns->ulInstrument & 0x7F), false);
 						// Drum Kit
 						if(pDlsIns->ulBank & F_INSTRUMENT_DRUMS)
 						{
-							HTREEITEM hKit = InsertItem(TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE|TVIF_PARAM,
-								szName, IMAGE_FOLDER, IMAGE_FOLDER, 0, 0, pDlsIns->ulInstrument & 0x7F, hDrums, TVI_LAST);
-							for (UINT iRgn=0; iRgn<pDlsIns->nRegions; iRgn++)
+							HTREEITEM hKit = InsertItem(TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_PARAM,
+								szName, IMAGE_FOLDER, IMAGE_FOLDER, 0, 0, lParamInstr, hDrums, TVI_LAST);
+							MPT_ASSERT(pDlsIns->Regions.size() <= 0x8000);
+							for(uint32 iRgn = 0; iRgn < static_cast<uint32>(pDlsIns->Regions.size()); iRgn++)
 							{
+								if(pDlsIns->Regions[iRgn].IsDummy())
+									continue;
+
 								UINT keymin = pDlsIns->Regions[iRgn].uKeyMin;
 								UINT keymax = pDlsIns->Regions[iRgn].uKeyMax;
 
-								const CHAR *regionName = pDlsBank->GetRegionName(iIns, iRgn);
-								if(regionName == nullptr && (keymin >= 24) && (keymin <= 84))
+								const char *regionName = pDlsBank->GetRegionName(iIns, iRgn);
+								if(regionName == nullptr || !regionName[0])
 								{
-									regionName = szMidiPercussionNames[keymin - 24];
-								} else
-								{
-									regionName = "";
+									if(keymin >= 24 && keymin <= 84)
+										regionName = szMidiPercussionNames[keymin - 24];
+									else
+										regionName = "";
 								}
 
 								if(keymin >= keymax)
@@ -723,8 +725,8 @@ void CModTree::RefreshDlsBanks()
 										keymax / 12,
 										mpt::ToCString(charset, regionName).GetString());
 								}
-								LPARAM lParam = DlsItem::EncodeValuePerc((uint8)(iRgn), (uint16)iIns);
-								InsertItem(TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE|TVIF_PARAM,
+								LPARAM lParam = DlsItem::ToLPARAM(static_cast<uint16>(iIns), static_cast<uint16>(iRgn), true);
+								InsertItem(TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_PARAM,
 										szName, IMAGE_INSTRUMENTS, IMAGE_INSTRUMENTS, 0, 0, lParam, hKit, TVI_LAST);
 							}
 							tvs.hParent = hKit;
@@ -742,13 +744,12 @@ void CModTree::RefreshDlsBanks()
 								// Find out where to insert this bank in the tree
 								hbank = banks.insert(std::make_pair(mbank, nullptr)).first;
 								HTREEITEM insertAfter = (hbank == banks.begin()) ? TVI_FIRST : std::prev(hbank)->second;
-								hbank->second = InsertItem(TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE,
+								hbank->second = InsertItem(TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE,
 									s, IMAGE_FOLDER, IMAGE_FOLDER, 0, 0, 0,
 									m_tiDLS[iDls], insertAfter);
 							}
-							LPARAM lParam = DlsItem::EncodeValueInstr((pDlsIns->ulInstrument & 0x7F), (uint16)iIns);
-							InsertItem(TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE|TVIF_PARAM,
-								szName, IMAGE_INSTRUMENTS, IMAGE_INSTRUMENTS, 0, 0, lParam, hbank->second, TVI_LAST);
+							InsertItem(TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_PARAM,
+								szName, IMAGE_INSTRUMENTS, IMAGE_INSTRUMENTS, 0, 0, lParamInstr, hbank->second, TVI_LAST);
 						}
 					}
 				}
@@ -757,14 +758,14 @@ void CModTree::RefreshDlsBanks()
 				{
 					tvs.hParent = b.second;
 					tvs.lpfnCompare = ModTreeInsLibCompareProc;
-					tvs.lParam = (LPARAM)this;
+					tvs.lParam = reinterpret_cast<LPARAM>(this);
 					SortChildrenCB(&tvs);
 				}
-				if(hDrums != NULL)
+				if(hDrums)
 				{
 					tvs.hParent = hDrums;
 					tvs.lpfnCompare = ModTreeInsLibCompareProc;
-					tvs.lParam = (LPARAM)this;
+					tvs.lParam = reinterpret_cast<LPARAM>(this);
 					SortChildrenCB(&tvs);
 				}
 			}
@@ -791,11 +792,11 @@ void CModTree::RefreshInstrumentLibrary()
 	{
 		selectedName = GetItemText(GetSelectedItem());
 	}
-	if(!m_InstrLibHighlightPath.empty() && (!IsSampleBrowser() || TrackerSettings::Instance().showDirsInSampleBrowser))
+	if(!m_InstrLibHighlightPath.empty())
 	{
 		selectedName = m_InstrLibHighlightPath.ToCString();
 	}
-	m_InstrLibHighlightPath = mpt::PathString();
+	m_InstrLibHighlightPath = {};
 	EmptyInstrumentLibrary();
 	FillInstrumentLibrary(selectedName);
 	auto selectedItem = GetSelectedItem();
@@ -1417,14 +1418,10 @@ CModTree::ModItem CModTree::GetModItem(HTREEITEM hItem)
 	{
 		if(rootItemData < m_tiDLS.size() && m_tiDLS[rootItemData] == hRootParent)
 		{
-			if(hItem == m_tiDLS[rootItemData])
-				return ModItem(MODITEM_DLSBANK_FOLDER, (uint32)rootItemData);
-
-			if((itemData & DLS_TYPEMASK) == DLS_TYPEPERC
-			   || (itemData & DLS_TYPEMASK) == DLS_TYPEINST)
-			{
-				return DlsItem(rootItemData, itemData);
-			}
+			int image = 0, selImage = 0;
+			const bool isFolder = GetItemImage(hItem, image, selImage) && (image == IMAGE_FOLDER || image == IMAGE_OPENFOLDER);
+			if(!isFolder || GetItemData(hItemParent) == DLS_DRUM_FOLDER_LPARAM)
+				return DlsItem::FromLPARAM(itemData);
 		}
 	}
 	return ModItem(MODITEM_NULL);
@@ -1523,18 +1520,13 @@ bool CModTree::ExecuteItem(HTREEITEM hItem)
 }
 
 
-void CModTree::PlayDLSItem(CDLSBank &dlsBank, const DlsItem &item, ModCommand::NOTE note)
+void CModTree::PlayDLSItem(const CDLSBank &dlsBank, const DlsItem &item, ModCommand::NOTE note)
 {
-	UINT rgn = 0, instr = item.GetInstr();
+	UINT rgn, instr = item.GetInstr();
 	if(item.IsPercussion())
-	{
-		// Drum
 		rgn = item.GetRegion();
-	} else if(item.IsInstr())
-	{
-		// Melodic
+	else
 		rgn = dlsBank.GetRegionFromKey(instr, note - NOTE_MIN);
-	}
 	CMainFrame::GetMainFrame()->PlayDLSInstrument(dlsBank, instr, rgn, note);
 }
 
@@ -1658,14 +1650,12 @@ BOOL CModTree::PlayItem(HTREEITEM hItem, ModCommand::NOTE note, int volume)
 						if(modItemID < 0x80)
 						{
 							dlsBank->FindInstrument(false, 0xFFFF, modItemID, note - NOTE_MIN, &item);
-							item |= DLS_TYPEINST;
+							PlayDLSItem(*dlsBank, DlsItem(static_cast<uint16>(item)), note);
 						} else
 						{
 							dlsBank->FindInstrument(true, 0xFFFF, 0xFF, modItemID & 0x7F, &item);
-							item |= dlsBank->GetRegionFromKey(item, modItemID & 0x7F) << DLS_REGIONSHIFT;
-							item |= DLS_TYPEPERC;
+							PlayDLSItem(*dlsBank, DlsItem(static_cast<uint16>(item), static_cast<uint16>(dlsBank->GetRegionFromKey(item, modItemID & 0x7F))), note);
 						}
-						PlayDLSItem(*dlsBank, DlsItem(0, item), note);
 					} else
 					{
 						pMainFrm->PlaySoundFile(midiLib[modItemID], note, volume);
@@ -1676,12 +1666,11 @@ BOOL CModTree::PlayItem(HTREEITEM hItem, ModCommand::NOTE note, int volume)
 
 		case MODITEM_DLSBANK_INSTRUMENT:
 			{
-				const DlsItem &item = *static_cast<const DlsItem *>(&modItem);
-				CMainFrame *pMainFrm = CMainFrame::GetMainFrame();
-				uint32 bank = item.GetBankIndex();
-				if ((bank < CTrackApp::gpDLSBanks.size()) && (CTrackApp::gpDLSBanks[bank]) && (pMainFrm))
+				const DlsItem &item = static_cast<const DlsItem &>(modItem);
+				CDLSBank *dlsBank = GetDLSBankFromItem(hItem);
+				if(dlsBank != nullptr)
 				{
-					PlayDLSItem(*CTrackApp::gpDLSBanks[bank], item, note);
+					PlayDLSItem(*dlsBank, item, note);
 					return TRUE;
 				}
 			}
@@ -1786,29 +1775,35 @@ void CModTree::DeleteTreeItem(HTREEITEM hItem)
 		break;
 
 	case MODITEM_SAMPLE:
-		if(!sndFile->GetSample(static_cast<SAMPLEINDEX>(modItemID)).HasSampleData()
-		   || Reporting::Confirm(TreeDeletionString(UL_("sample"), modItemID, mpt::ToUnicode(sndFile->GetCharsetInternal(), sndFile->m_szNames[modItemID])), false, true) == cnfYes)
+		if(modDoc && sndFile)
 		{
-			const SAMPLEINDEX smp = static_cast<SAMPLEINDEX>(modItemID);
-			modDoc->GetSampleUndo().PrepareUndo(smp, sundo_replace, "Delete");
-			const SAMPLEINDEX oldNumSamples = modDoc->GetNumSamples();
-			if(modDoc->RemoveSample(smp))
+			if(!sndFile->GetSample(static_cast<SAMPLEINDEX>(modItemID)).HasSampleData()
+				 || Reporting::Confirm(TreeDeletionString(UL_("sample"), modItemID, mpt::ToUnicode(sndFile->GetCharsetInternal(), sndFile->m_szNames[modItemID])), false, true) == cnfYes)
 			{
-				modDoc->UpdateAllViews(nullptr, SampleHint(modDoc->GetNumSamples() != oldNumSamples ? 0 : smp).Info().Data().Names());
+				const SAMPLEINDEX smp = static_cast<SAMPLEINDEX>(modItemID);
+				modDoc->GetSampleUndo().PrepareUndo(smp, sundo_replace, "Delete");
+				const SAMPLEINDEX oldNumSamples = modDoc->GetNumSamples();
+				if(modDoc->RemoveSample(smp))
+				{
+					modDoc->UpdateAllViews(nullptr, SampleHint(modDoc->GetNumSamples() != oldNumSamples ? 0 : smp).Info().Data().Names());
+				}
 			}
 		}
 		break;
 
 	case MODITEM_INSTRUMENT:
-		if(sndFile->Instruments[modItemID] == nullptr
-		   || Reporting::Confirm(TreeDeletionString(UL_("instrument"), modItemID, mpt::ToUnicode(sndFile->GetCharsetInternal(), sndFile->Instruments[modItemID]->name)), false, true) == cnfYes)
+		if(modDoc && sndFile)
 		{
-			const INSTRUMENTINDEX ins = static_cast<INSTRUMENTINDEX>(modItemID);
-			modDoc->GetInstrumentUndo().PrepareUndo(ins, "Delete");
-			const INSTRUMENTINDEX oldNumInstrs = modDoc->GetNumInstruments();
-			if(modDoc->RemoveInstrument(ins))
+			if(sndFile->Instruments[modItemID] == nullptr
+				 || Reporting::Confirm(TreeDeletionString(UL_("instrument"), modItemID, mpt::ToUnicode(sndFile->GetCharsetInternal(), sndFile->Instruments[modItemID]->name)), false, true) == cnfYes)
 			{
-				modDoc->UpdateAllViews(nullptr, InstrumentHint(modDoc->GetNumInstruments() != oldNumInstrs ? 0 : ins).Info().Envelope().ModType());
+				const INSTRUMENTINDEX ins = static_cast<INSTRUMENTINDEX>(modItemID);
+				modDoc->GetInstrumentUndo().PrepareUndo(ins, "Delete");
+				const INSTRUMENTINDEX oldNumInstrs = modDoc->GetNumInstruments();
+				if(modDoc->RemoveInstrument(ins))
+				{
+					modDoc->UpdateAllViews(nullptr, InstrumentHint(modDoc->GetNumInstruments() != oldNumInstrs ? 0 : ins).Info().Envelope().ModType());
+				}
 			}
 		}
 		break;
@@ -1880,7 +1875,7 @@ BOOL CModTree::OpenMidiInstrument(DWORD dwItem)
 	FileDialog dlg = OpenFileDialog()
 		.EnableAudioPreview()
 		.ExtensionFilter(
-			"All Instruments and Banks|*.xi;*.pat;*.iti;*.sfz;*.wav;*.w64;*.caf;*.aif;*.aiff;*.sf2;*.sbk;*.dls;*.mss;*.flac;*.opus;*.ogg;*.oga;*.mp1;*.mp2;*.mp3" + ToFilterOnlyString(mediaFoundationTypes, true).ToLocale() + "|"
+			"All Instruments and Banks (*.xi,*.pat,*.iti,*.sfz,*.dls,*.sf2,...)|*.xi;*.pat;*.iti;*.sfz;*.wav;*.w64;*.caf;*.aif;*.aiff;*.sbk;*.sf2;*.sf3;*.sf4;*.dls;*.mss;*.flac;*.opus;*.ogg;*.oga;*.mp1;*.mp2;*.mp3" + ToFilterOnlyString(mediaFoundationTypes, true).ToLocale() + "|"
 			"FastTracker II Instruments (*.xi)|*.xi|"
 			"GF1 Patches (*.pat)|*.pat|"
 			"Wave Files (*.wav)|*.wav|"
@@ -1903,7 +1898,7 @@ BOOL CModTree::OpenMidiInstrument(DWORD dwItem)
 	#endif
 			"Impulse Tracker Instruments (*.iti)|*.iti;*.its|"
 			"SFZ Instruments (*.sfz)|*.sfz|"
-			"SoundFont 2.0 Banks (*.sf2)|*.sf2;*.sbk|"
+			"SoundFont 2.0 Banks (*.sf2)|*.sbk;*.sf2;*.sf3;*.sf4|"
 			"DLS Sound Banks (*.dls;*.mss)|*.dls;*.mss|"
 			"All Files (*.*)|*.*||");
 	if(!dlg.Show()) return FALSE;
@@ -2025,7 +2020,7 @@ void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 		const auto FilterFile = [this, showInstrs, showDirs, FILTER_REJECT_FILE](const mpt::PathString &fileName) -> int
 		{
 
-			static constexpr auto instrExts = {"xi", "iti", "sfz", "sf2", "sbk", "dls", "mss", "pat"};
+			static constexpr auto instrExts = {"xi", "iti", "sfz", "sf2", "sf3", "sf4", "sbk", "dls", "mss", "pat"};
 			static constexpr auto sampleExts = {"wav", "flac", "ogg", "opus", "mp1", "mp2", "mp3", "smp", "raw", "s3i", "its", "aif", "aiff", "au", "snd", "svx", "voc", "8sv", "8svx", "16sv", "16svx", "w64", "caf", "sb0", "sb2", "sbi"};
 			static constexpr auto allExtsBlacklist = {"txt", "diz", "nfo", "doc", "ini", "pdf", "zip", "rar", "lha", "exe", "dll", "lnk", "url"};
 
@@ -2049,7 +2044,7 @@ void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 					return IMAGE_SAMPLES;
 			} else if(mpt::contains(m_modExtensions, ext))
 			{
-				if(showDirs)
+				if(showDirs || m_showAllFiles)
 					return IMAGE_FOLDERSONG;
 			} else if(!extPS.empty() && mpt::contains(m_MediaFoundationExtensions, extPS))
 			{
@@ -2321,17 +2316,19 @@ int CALLBACK CModTree::ModTreeDrumCompareProc(LPARAM lParam1, LPARAM lParam2, LP
 {
 	lParam1 &= 0x7FFFFFFF;
 	lParam2 &= 0x7FFFFFFF;
-	if((lParam1 & 0xFF00FFFF) == (lParam2 & 0xFF00FFFF))
+	// Same drum instrument?
+	if((lParam1 & 0xFFFF) == (lParam2 & 0xFFFF))
 	{
 		if(pDLSBank)
 		{
+			// Compare minimum key of these regions
 			const DLSINSTRUMENT *pDlsIns = reinterpret_cast<CDLSBank *>(pDLSBank)->GetInstrument(lParam1 & 0xFFFF);
-			lParam1 = (lParam1 >> 16) & 0xFF;
-			lParam2 = (lParam2 >> 16) & 0xFF;
-			if((pDlsIns) && (lParam1 < (LONG)pDlsIns->nRegions) && (lParam2 < (LONG)pDlsIns->nRegions))
+			uint16 region1 = static_cast<uint16>((lParam1 >> 16) & 0xFFFF);
+			uint16 region2 = static_cast<uint16>((lParam2 >> 16) & 0xFFFF);
+			if(pDlsIns && region1 < pDlsIns->Regions.size() && region2 < pDlsIns->Regions.size())
 			{
-				lParam1 = pDlsIns->Regions[lParam1].uKeyMin;
-				lParam2 = pDlsIns->Regions[lParam2].uKeyMin;
+				lParam1 = pDlsIns->Regions[region1].uKeyMin;
+				lParam2 = pDlsIns->Regions[region2].uKeyMin;
 			}
 		}
 	}
@@ -2369,8 +2366,9 @@ void CModTree::InstrumentLibraryChDir(mpt::PathString dir, bool isSong)
 	BeginWaitCursor();
 
 	bool ok = false;
+	const bool goUp = (dir == P_(".."));
 	m_previousPath = {};
-	if(isSong)
+	if(isSong && !goUp)
 	{
 		ok = m_pDataTree->InsLibSetFullPath(m_InstrLibPath, dir);
 		if(ok)
@@ -2380,18 +2378,26 @@ void CModTree::InstrumentLibraryChDir(mpt::PathString dir, bool isSong)
 		}
 	} else
 	{
-		if(dir == P_(".."))
+		if(goUp)
 		{
-			// Go one dir up.
-			mpt::winstring prevDir = m_InstrLibPath.GetPath().AsNative();
-			mpt::winstring::size_type pos = prevDir.find_last_of(_T("\\/"), prevDir.length() - 2);
-			if(pos != mpt::winstring::npos)
+			if(isSong)
 			{
-				m_InstrLibHighlightPath = mpt::PathString::FromNative(prevDir.substr(pos + 1, prevDir.length() - pos - 2));  // Highlight previously accessed directory
-				prevDir = prevDir.substr(0, pos + 1);
+				// Leave song
+				m_InstrLibHighlightPath = std::move(m_pDataTree->m_SongFileName);
+				dir = m_InstrLibPath;
+			} else
+			{
+				// Go one dir up.
+				mpt::winstring prevDir = m_InstrLibPath.GetPath().AsNative();
+				mpt::winstring::size_type pos = prevDir.find_last_of(_T("\\/"), prevDir.length() - 2);
+				if(pos != mpt::winstring::npos)
+				{
+					m_InstrLibHighlightPath = mpt::PathString::FromNative(prevDir.substr(pos + 1, prevDir.length() - pos - 2));  // Highlight previously accessed directory
+					prevDir = prevDir.substr(0, pos + 1);
+				}
+				m_previousPath = m_InstrLibHighlightPath;
+				dir = mpt::PathString::FromNative(prevDir);
 			}
-			m_previousPath = m_InstrLibHighlightPath;
-			dir = mpt::PathString::FromNative(prevDir);
 		} else
 		{
 			// Drives are formatted like "E:\", folders are just folder name without slash.
@@ -2484,7 +2490,7 @@ bool CModTree::GetDropInfo(DRAGONDROP &dropInfo, mpt::PathString &fullPath)
 		{
 			fullPath = InsLibGetFullPath(m_hItemDrag);
 			dropInfo.dropType = DRAGONDROP_SOUNDFILE;
-			dropInfo.dropParam = (LPARAM)&fullPath;
+			dropInfo.dropParam = reinterpret_cast<uintptr_t>(&fullPath);
 		}
 		break;
 
@@ -2498,7 +2504,7 @@ bool CModTree::GetDropInfo(DRAGONDROP &dropInfo, mpt::PathString &fullPath)
 			{
 				fullPath = midiLib[dropInfo.dropItem & 0xFF];
 				dropInfo.dropType = DRAGONDROP_MIDIINSTR;
-				dropInfo.dropParam = (LPARAM)&fullPath;
+				dropInfo.dropParam = reinterpret_cast<uintptr_t>(&fullPath);
 			}
 		}
 		break;
@@ -2508,18 +2514,16 @@ bool CModTree::GetDropInfo(DRAGONDROP &dropInfo, mpt::PathString &fullPath)
 		dropInfo.sndFile = nullptr;
 		dropInfo.dropType = DRAGONDROP_SONG;
 		dropInfo.dropItem = 0;
-		dropInfo.dropParam = (LPARAM)&fullPath;
+		dropInfo.dropParam = reinterpret_cast<uintptr_t>(&fullPath);
 		break;
 
 	case MODITEM_DLSBANK_INSTRUMENT:
 		{
-			const DlsItem &item = *static_cast<const DlsItem *>(&m_itemDrag);
-			MPT_ASSERT(item.IsInstr() || item.IsPercussion());
 			dropInfo.dropType = DRAGONDROP_DLS;
-			dropInfo.dropItem = item.GetBankIndex();  // bank #
+			dropInfo.dropItem = static_cast<uint32>(GetDLSBankIndexFromItem(m_hItemDrag));  // bank #
 			// Melodic: (Instrument)
 			// Drums:   (0x80000000) | (Region << 16) | (Instrument)
-			dropInfo.dropParam = (LPARAM)((m_itemDrag.val1 & (DLS_TYPEPERC | DLS_REGIONMASK | DLS_INSTRMASK)));
+			dropInfo.dropParam = m_itemDrag.val1;
 		}
 		break;
 	}
@@ -3158,6 +3162,8 @@ void CModTree::OnItemRightClick(HTREEITEM hItem, CPoint pt)
 			case MODITEM_HDR_INSTRUMENTLIB:
 				if(!IsSampleBrowser())
 					break;
+				if(!m_SongFileName.empty())
+					AppendMenu(hMenu, MF_STRING, ID_MODTREE_CLOSE, _T("&Close Song"));
 				[[fallthrough]];
 			case MODITEM_INSLIB_FOLDER:
 				nDefault = ID_MODTREE_EXECUTE;
@@ -3286,10 +3292,10 @@ void CModTree::OnEndDrag(DWORD dwMask)
 		{
 			ReleaseCapture();
 			SetCursor(CMainFrame::curArrow);
-			SelectDropTarget(NULL);
-			if(m_hItemDrop != NULL)
+			SelectDropTarget(nullptr);
+			if(m_hItemDrop != nullptr)
 			{
-				CanDrop(m_hItemDrop, TRUE);
+				CanDrop(m_hItemDrop, true);
 			} else if(m_hDropWnd)
 			{
 				DRAGONDROP dropinfo;
@@ -3522,7 +3528,7 @@ void CModTree::OnMuteTreeItem()
 				return;
 			pPlugin->ToggleBypass();
 			modDoc.SetModified();
-			//UpdateView(GetDocumentIDFromModDoc(pModDoc), HINT_MIXPLUGINS);
+			//UpdateView(*info, PluginHint(static_cast<PLUGINDEX>(modItemID + 1)));
 		}
 	}
 }
@@ -4077,6 +4083,11 @@ bool CModTree::IsItemExpanded(HTREEITEM hItem)
 void CModTree::OnCloseItem()
 {
 	HTREEITEM hItem = GetSelectedItem();
+	if(hItem == m_hInsLib && !m_SongFileName.empty())
+	{
+		InstrumentLibraryChDir(P_(".."), true);
+		return;
+	}
 	CModDoc *pModDoc = GetDocumentFromItem(hItem);
 	if(pModDoc == nullptr)
 		return;

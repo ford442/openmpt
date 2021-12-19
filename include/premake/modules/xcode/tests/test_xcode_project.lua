@@ -61,6 +61,28 @@
 		]]
 	end
 
+	function suite.PBXBuildFile_ListsSwiftSources()
+		files { "source.swift", "Info.plist" }
+		prepare()
+		xcode.PBXBuildFile(tr)
+		test.capture [[
+/* Begin PBXBuildFile section */
+		4616E7383FD8A3AA79D7A578 /* source.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2BDAE0539CBF12983B9120 /* source.swift */; };
+/* End PBXBuildFile section */
+		]]
+	end
+
+	function suite.PBXBuildFile_ListsMetalFileInResources()
+		files { "source.metal", "Info.plist" }
+		prepare()
+		xcode.PBXBuildFile(tr)
+		test.capture [[
+/* Begin PBXBuildFile section */
+		3873A08432355CF66C345EC4 /* source.metal in Resources */ = {isa = PBXBuildFile; fileRef = 35B2856C7E23699EC2C23BAC /* source.metal */; };
+/* End PBXBuildFile section */
+		]]
+	end
+
 	function suite.PBXBuildFile_ListsResourceFilesOnlyOnceWithGroupID()
 		files { "English.lproj/MainMenu.xib", "French.lproj/MainMenu.xib" }
 		prepare()
@@ -80,6 +102,55 @@
 		test.capture [[
 /* Begin PBXBuildFile section */
 		F8E8DBA28B76A594F44F49E2 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D6BC6AA50D7885C8F7B2CEA /* Cocoa.framework */; };
+/* End PBXBuildFile section */
+		]]
+	end
+
+	function suite.PBXBuildFile_ListsDylibs()
+		links { "../libA.dylib", "libB.dylib", "/usr/lib/libC.dylib" }
+		prepare()
+		xcode.PBXBuildFile(tr)
+		test.capture [[
+/* Begin PBXBuildFile section */
+		3C98627697D9B5E86B3400B6 /* libB.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D413533EEB25EE70DB41E97E /* libB.dylib */; };
+		91686CDFDECB631154EA631F /* libA.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F9AE5C74A870BB9926CD407 /* libA.dylib */; };
+		A7E42B5676077F08FD15D196 /* libC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = CF0547FE2A469B70FDA0E63E /* libC.dylib */; };
+/* End PBXBuildFile section */
+		]]
+	end
+
+	function suite.PBXBuildFile_ListsFrameworksAndDylibsForSigning()
+		links
+		{
+			"../libA.dylib",
+			"libB.dylib",
+			"/usr/lib/libC.dylib",
+			"../D.framework",
+			"../E.framework",
+		}
+		embedAndSign
+		{
+			"libA.dylib",
+			"D.framework",
+		}
+		embed
+		{
+			"libB.dylib",
+			"E.framework",
+		}
+		prepare()
+		xcode.PBXBuildFile(tr)
+		test.capture [[
+/* Begin PBXBuildFile section */
+		12F1B82D44EB02DFBECA3E6D /* E.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A817AE35FEA518A7D71E2C75 /* E.framework */; };
+		6557012668C7D358EA347766 /* E.framework in Embed Libraries */ = {isa = PBXBuildFile; fileRef = A817AE35FEA518A7D71E2C75 /* E.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		3C98627697D9B5E86B3400B6 /* libB.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = D413533EEB25EE70DB41E97E /* libB.dylib */; };
+		AC7C2020DB2274123463CE60 /* libB.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = D413533EEB25EE70DB41E97E /* libB.dylib */; };
+		91686CDFDECB631154EA631F /* libA.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 5F9AE5C74A870BB9926CD407 /* libA.dylib */; };
+		E054F1BF0EFB45B1683C9FFF /* libA.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 5F9AE5C74A870BB9926CD407 /* libA.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		A7E42B5676077F08FD15D196 /* libC.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = CF0547FE2A469B70FDA0E63E /* libC.dylib */; };
+		F56B754B2764BFFDA143FB8B /* D.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F3987C734A25E6E5229EFAB3 /* D.framework */; };
+		966D8A4599DE5C771B4B0085 /* D.framework in Embed Libraries */ = {isa = PBXBuildFile; fileRef = F3987C734A25E6E5229EFAB3 /* D.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 		]]
 	end
@@ -356,6 +427,20 @@
 	end
 
 
+	function suite.PBXFileReference_ListDylibsCorrectly()
+		links { "../libA.dylib", "libB.dylib", "/usr/lib/libC.dylib" }
+		prepare()
+		xcode.PBXFileReference(tr)
+		test.capture [[
+/* Begin PBXFileReference section */
+		19A5C4E61D1697189E833B26 /* MyProject */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = MyProject; path = MyProject; sourceTree = BUILT_PRODUCTS_DIR; };
+		5F9AE5C74A870BB9926CD407 /* libA.dylib */ = {isa = PBXFileReference; lastKnownFileType = compiled.mach-o.dylib; name = libA.dylib; path = ../libA.dylib; sourceTree = SOURCE_ROOT; };
+		CF0547FE2A469B70FDA0E63E /* libC.dylib */ = {isa = PBXFileReference; lastKnownFileType = compiled.mach-o.dylib; name = libC.dylib; path = /usr/lib/libC.dylib; sourceTree = "<absolute>"; };
+		D413533EEB25EE70DB41E97E /* libB.dylib */ = {isa = PBXFileReference; lastKnownFileType = compiled.mach-o.dylib; name = libB.dylib; path = libB.dylib; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+		]]
+	end
+
 	function suite.PBXFileReference_leavesFrameworkLocationsAsIsWhenSupplied_pathIsSetToInput()
 		local inputFrameWork = 'somedir/Foo.framework'
 		links(inputFrameWork)
@@ -470,6 +555,59 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
+		]]
+	end
+
+
+---------------------------------------------------------------------------
+-- PBXCopyFilesBuildPhaseForEmbedFrameworks tests
+---------------------------------------------------------------------------
+
+	function suite.PBXCopyFilesBuildPhaseForEmbedFrameworks_OnNoFiles()
+		prepare()
+		xcode.PBXCopyFilesBuildPhaseForEmbedFrameworks(tr)
+		test.capture [[
+/* Begin PBXCopyFilesBuildPhase section */
+		E1D3B542862652F4985E9B82 /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+		]]
+	end
+
+
+	function suite.PBXCopyFilesBuildPhaseForEmbedFrameworks_ListsEmbeddedLibrariesCorrectly()
+		links
+		{
+			"../libA.dylib",
+			"../D.framework",
+		}
+		embed { "libA.dylib" }
+		embedAndSign { "D.framework" }
+		prepare()
+		xcode.PBXCopyFilesBuildPhaseForEmbedFrameworks(tr)
+		test.capture [[
+/* Begin PBXCopyFilesBuildPhase section */
+		E1D3B542862652F4985E9B82 /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				E054F1BF0EFB45B1683C9FFF /* libA.dylib in Frameworks */,
+				966D8A4599DE5C771B4B0085 /* D.framework in Frameworks */,
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 		]]
 	end
 
@@ -708,6 +846,7 @@
 				0FC4B7F6B3104128CDE10E36 /* Resources */,
 				7971D14D1CBD5A7F378E278D /* Sources */,
 				9FDD37564328C0885DF98D96 /* Frameworks */,
+				E1D3B542862652F4985E9B82 /* Embed Libraries */,
 			);
 			buildRules = (
 			);
@@ -737,6 +876,7 @@
 				0F791C0512E9EE3794569245 /* Resources */,
 				7926355C7C97078EFE03AB9C /* Sources */,
 				9F919B65A3026D97246F11A5 /* Frameworks */,
+				A0315911431F7FC3D2455F51 /* Embed Libraries */,
 			);
 			buildRules = (
 			);
@@ -766,6 +906,7 @@
 				A1093E0F9A6F3F818E0A9C4F /* Resources */,
 				0AB65766041C58D8F7B7B5A6 /* Sources */,
 				3121BD6F2A87BEE11E231BAF /* Frameworks */,
+				D652259BC13E4B8D092413DB /* Embed Libraries */,
 			);
 			buildRules = (
 			);
@@ -803,6 +944,7 @@
 				7971D14D1CBD5A7F378E278D /* Sources */,
 				9607AE3510C85E7E00CD1376 /* Prelink */,
 				9FDD37564328C0885DF98D96 /* Frameworks */,
+				E1D3B542862652F4985E9B82 /* Embed Libraries */,
 				9607AE3710C85E8F00CD1376 /* Postbuild */,
 			);
 			buildRules = (
@@ -845,6 +987,7 @@
 				0FC4B7F6B3104128CDE10E36 /* Resources */,
 				7971D14D1CBD5A7F378E278D /* Sources */,
 				9FDD37564328C0885DF98D96 /* Frameworks */,
+				E1D3B542862652F4985E9B82 /* Embed Libraries */,
 			);
 			buildRules = (
 			);
@@ -888,6 +1031,7 @@
 				0FC4B7F6B3104128CDE10E36 /* Resources */,
 				7971D14D1CBD5A7F378E278D /* Sources */,
 				9FDD37564328C0885DF98D96 /* Frameworks */,
+				E1D3B542862652F4985E9B82 /* Embed Libraries */,
 			);
 			buildRules = (
 			);
@@ -1165,6 +1309,42 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "set -e\nif [ \"${CONFIGURATION}\" = \"Debug\" ]; then\nls src\ncp a b\nfi\nif [ \"${CONFIGURATION}\" = \"Release\" ]; then\nls src\nfi";
+		};
+/* End PBXShellScriptBuildPhase section */
+		]]
+	end
+
+
+	function suite.PBXShellScriptBuildPhase_OnBuildInputsAnddOutputsOrder()
+		files { "file.a" }
+		filter { "files:file.a" }
+			buildcommands { "buildcmd" }
+			buildinputs { "file.3", "file.1", "file.2" }
+			buildoutputs { "file.5", "file.6", "file.4" }
+		prepare()
+		xcode.PBXShellScriptBuildPhase(tr)
+		test.capture [[
+/* Begin PBXShellScriptBuildPhase section */
+		0D594A1D2F24F74F6BDA205D /* Build "file.a" */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"file.a",
+				"file.3",
+				"file.1",
+				"file.2",
+			);
+			name = "Build \"file.a\"";
+			outputPaths = (
+				"file.5",
+				"file.6",
+				"file.4",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nif [ \"${CONFIGURATION}\" = \"Debug\" ]; then\n\tbuildcmd\nfi\nif [ \"${CONFIGURATION}\" = \"Release\" ]; then\n\tbuildcmd\nfi";
 		};
 /* End PBXShellScriptBuildPhase section */
 		]]
@@ -2233,15 +2413,15 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = (
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+				SYSTEM_HEADER_SEARCH_PATHS = (
 					../include,
 					../libs,
 					"\"../name with spaces\"",
 					"$(inherited)",
 				);
-				OBJROOT = obj/Debug;
-				ONLY_ACTIVE_ARCH = NO;
-				SYMROOT = bin/Debug;
 			};
 			name = Debug;
 		};
@@ -2276,6 +2456,32 @@
 		]]
 	end
 
+	function suite.XCBuildConfigurationProject_OnRunPathSearchPaths()
+		runpathdirs { "plugins" }
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"@loader_path/../../plugins",
+				);
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+	end
 
 	function suite.XCBuildConfigurationProject_OnLinks()
 		links { "Cocoa.framework", "ldap" }
@@ -2332,6 +2538,55 @@
 		]]
 	end
 
+	function suite.XCBuildConfigurationProject_OnNoWarnings()
+		warnings "Off"
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+				WARNING_CFLAGS = "-w";
+			};
+			name = Debug;
+		};
+		]]
+	end
+
+	function suite.XCBuildConfigurationProject_OnHighWarnings()
+		warnings "High"
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+				WARNING_CFLAGS = "-Wall";
+			};
+			name = Debug;
+		};
+		]]
+	end
 
 	function suite.XCBuildConfigurationProject_OnExtraWarnings()
 		warnings "Extra"
@@ -2352,6 +2607,32 @@
 				ONLY_ACTIVE_ARCH = NO;
 				SYMROOT = bin/Debug;
 				WARNING_CFLAGS = "-Wall -Wextra";
+			};
+			name = Debug;
+		};
+		]]
+	end
+
+
+	function suite.XCBuildConfigurationProject_OnEverythingWarnings()
+		warnings "Everything"
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+				WARNING_CFLAGS = "-Weverything";
 			};
 			name = Debug;
 		};
@@ -2673,6 +2954,38 @@
 				LIBRARY_SEARCH_PATHS = (
 					mylibs1,
 					mylibs2,
+				);
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+	end
+
+
+	function suite.XCBuildConfigurationProject_OnSysLibDirs()
+		libdirs { "mylibs1", "mylibs2" }
+		syslibdirs { "mysyslib3", "mysyslib4" }
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = (
+					mylibs1,
+					mylibs2,
+					mysyslib3,
+					mysyslib4,
 				);
 				OBJROOT = obj/Debug;
 				ONLY_ACTIVE_ARCH = NO;
@@ -3175,11 +3488,37 @@
 			name = Debug;
 		};
 		]]
-	end
-
-	function suite.XCBuildConfigurationProject_OnCpp11()
+    end
+    
+    function suite.XCBuildConfigurationProject_OnCpp11()
 		workspace("MyWorkspace")
 		cppdialect("C++11")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++11";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+	end
+
+	function suite.XCBuildConfigurationProject_OnCpp0x()
+		workspace("MyWorkspace")
+		cppdialect("C++0x")
 		prepare()
 		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
 		test.capture [[
@@ -3227,6 +3566,32 @@
 			name = Debug;
 		};
 		]]
+    end
+    
+    function suite.XCBuildConfigurationProject_OnCpp1y()
+		workspace("MyWorkspace")
+		cppdialect("C++1y")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
 	end
 
 	function suite.XCBuildConfigurationProject_OnCpp17()
@@ -3240,6 +3605,84 @@
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++1z";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+    end
+    
+    function suite.XCBuildConfigurationProject_OnCpp1z()
+		workspace("MyWorkspace")
+		cppdialect("C++1z")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++1z";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+	end
+
+	function suite.XCBuildConfigurationProject_OnCpp20()
+		workspace("MyWorkspace")
+		cppdialect("C++20")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++2a";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+    end
+    
+    function suite.XCBuildConfigurationProject_OnCpp2a()
+		workspace("MyWorkspace")
+		cppdialect("C++2a")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++2a";
 				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
 				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -3305,11 +3748,63 @@
 			name = Debug;
 		};
 		]]
+    end
+    
+    function suite.XCBuildConfigurationProject_OnCppGnu0x()
+		workspace("MyWorkspace")
+		cppdialect("gnu++0x")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
 	end
 
 	function suite.XCBuildConfigurationProject_OnCppGnu14()
 		workspace("MyWorkspace")
 		cppdialect("gnu++14")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+    end
+    
+    function suite.XCBuildConfigurationProject_OnCppGnu1y()
+		workspace("MyWorkspace")
+		cppdialect("gnu++1y")
 		prepare()
 		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
 		test.capture [[
@@ -3344,6 +3839,84 @@
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++1z";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+    end
+    
+    function suite.XCBuildConfigurationProject_OnCppGnu1z()
+		workspace("MyWorkspace")
+		cppdialect("gnu++1z")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++1z";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+	end
+
+	function suite.XCBuildConfigurationProject_OnCppGnu20()
+		workspace("MyWorkspace")
+		cppdialect("gnu++20")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++2a";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+    end
+    
+    function suite.XCBuildConfigurationProject_OnCppGnu2a()
+		workspace("MyWorkspace")
+		cppdialect("gnu++2a")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++2a";
 				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
 				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -3436,6 +4009,83 @@
 		]]
 	end
 
+	function suite.XCBuildConfigurationProject_OnSwift4_0()
+		workspace("MyWorkspace")
+		swiftversion("4.0")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SWIFT_VERSION = 4.0;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+	end
+
+	function suite.XCBuildConfigurationProject_OnSwift4_2()
+		workspace("MyWorkspace")
+		swiftversion("4.2")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SWIFT_VERSION = 4.2;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+	end
+
+	function suite.XCBuildConfigurationProject_OnSwift5_0()
+		workspace("MyWorkspace")
+		swiftversion("5.0")
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				SWIFT_VERSION = 5.0;
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+	end
 
 ---------------------------------------------------------------------------
 -- XCBuildConfigurationList tests

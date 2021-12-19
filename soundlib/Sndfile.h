@@ -117,6 +117,15 @@ struct GetLengthType
 };
 
 
+struct SubSong
+{
+	double duration;
+	ROWINDEX startRow, endRow, loopStartRow;
+	ORDERINDEX startOrder, endOrder, loopStartOrder;
+	SEQUENCEINDEX sequence;
+};
+
+
 // Target seek mode for GetLength()
 struct GetLengthTarget
 {
@@ -362,6 +371,8 @@ public:
 	// If updateSamplePos is also true, the sample positions of samples still playing from previous patterns will be kept in sync.
 	double GetPlaybackTimeAt(ORDERINDEX ord, ROWINDEX row, bool updateVars, bool updateSamplePos);
 
+	std::vector<SubSong> GetAllSubSongs();
+
 	//Tuning-->
 public:
 	static std::unique_ptr<CTuning> CreateTuning12TET(const mpt::ustring &name);
@@ -420,6 +431,8 @@ public:
 	MixerSettings m_MixerSettings;
 	CResampler m_Resampler;
 #ifndef NO_REVERB
+	mixsample_t ReverbSendBuffer[MIXBUFFERSIZE * 2];
+	mixsample_t m_RvbROfsVol = 0, m_RvbLOfsVol = 0;
 	CReverb m_Reverb;
 #endif
 #ifndef NO_DSP
@@ -633,7 +646,7 @@ protected:
 	std::vector<mpt::PathString> m_samplePaths;
 
 public:
-	void SetSamplePath(SAMPLEINDEX smp, const mpt::PathString &filename) { if(m_samplePaths.size() < smp) m_samplePaths.resize(smp); m_samplePaths[smp - 1] = filename.Simplify(); }
+	void SetSamplePath(SAMPLEINDEX smp, mpt::PathString filename) { if(m_samplePaths.size() < smp) m_samplePaths.resize(smp); m_samplePaths[smp - 1] = std::move(filename); }
 	void ResetSamplePath(SAMPLEINDEX smp) { if(m_samplePaths.size() >= smp) m_samplePaths[smp - 1] = mpt::PathString(); Samples[smp].uFlags.reset(SMP_KEEPONDISK | SMP_MODIFIED);}
 	mpt::PathString GetSamplePath(SAMPLEINDEX smp) const { if(m_samplePaths.size() >= smp) return m_samplePaths[smp - 1]; else return mpt::PathString(); }
 	bool SampleHasPath(SAMPLEINDEX smp) const { if(m_samplePaths.size() >= smp) return !m_samplePaths[smp - 1].empty(); else return false; }
@@ -848,6 +861,7 @@ public:
 	static ProbeResult ProbeFileHeaderSFX(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderSTM(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderSTP(MemoryFileReader file, const uint64 *pfilesize);
+	static ProbeResult ProbeFileHeaderSTX(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderSymMOD(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderULT(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderXM(MemoryFileReader file, const uint64 *pfilesize);
@@ -896,6 +910,7 @@ public:
 	bool ReadSFX(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadSTM(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadSTP(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
+	bool ReadSTX(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadULT(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadXM(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
@@ -962,6 +977,7 @@ public:
 		std::optional<std::reference_wrapper<IMonitorOutput>> outputMonitor = std::nullopt,
 		std::optional<std::reference_wrapper<IMonitorInput>> inputMonitor = std::nullopt
 		);
+	samplecount_t ReadOneTick();
 private:
 	void CreateStereoMix(int count);
 public:
@@ -985,7 +1001,7 @@ public:
 	void SetDspEffects(uint32 DSPMask);
 	uint32 GetSampleRate() const { return m_MixerSettings.gdwMixingFreq; }
 #ifndef NO_EQ
-	void SetEQGains(const uint32 *pGains, const uint32 *pFreqs, bool bReset = false){ m_EQ.SetEQGains(pGains, pFreqs, bReset, m_MixerSettings.gdwMixingFreq); } // 0=-12dB, 32=+12dB
+	void SetEQGains(const uint32 *pGains, const uint32 *pFreqs, bool bReset = false) { m_EQ.SetEQGains(pGains, pFreqs, bReset, m_MixerSettings.gdwMixingFreq); } // 0=-12dB, 32=+12dB
 #endif // NO_EQ
 public:
 	bool ReadNote();
@@ -1033,7 +1049,7 @@ protected:
 
 	void ProcessInstrumentFade(ModChannel &chn, int &vol) const;
 
-	void ProcessPitchPanSeparation(ModChannel &chn) const;
+	static void ProcessPitchPanSeparation(int32 &pan, int note, const ModInstrument &instr);
 	void ProcessPanbrello(ModChannel &chn) const;
 
 	void ProcessArpeggio(CHANNELINDEX nChn, int32 &period, Tuning::NOTEINDEXTYPE &arpeggioSteps);
@@ -1068,8 +1084,8 @@ protected:
 	void TonePortamento(ModChannel &chn, uint16 param) const;
 	void Vibrato(ModChannel &chn, uint32 param) const;
 	void FineVibrato(ModChannel &chn, uint32 param) const;
-	void VolumeSlide(ModChannel &chn, ModCommand::PARAM param);
-	void PanningSlide(ModChannel &chn, ModCommand::PARAM param, bool memory = true);
+	void VolumeSlide(ModChannel &chn, ModCommand::PARAM param) const;
+	void PanningSlide(ModChannel &chn, ModCommand::PARAM param, bool memory = true) const;
 	void ChannelVolSlide(ModChannel &chn, ModCommand::PARAM param) const;
 	void FineVolumeUp(ModChannel &chn, ModCommand::PARAM param, bool volCol) const;
 	void FineVolumeDown(ModChannel &chn, ModCommand::PARAM param, bool volCol) const;
@@ -1082,7 +1098,7 @@ protected:
 	void ReverseSampleOffset(ModChannel &chn, ModCommand::PARAM param) const;
 	void NoteCut(CHANNELINDEX nChn, uint32 nTick, bool cutSample);
 	void PatternLoop(PlayState &state, ModChannel &chn, ModCommand::PARAM param) const;
-	bool HandleNextRow(PlayState &state, bool honorPatternLoop) const;
+	bool HandleNextRow(PlayState &state, const ModSequence &order, bool honorPatternLoop) const;
 	void ExtendedMODCommands(CHANNELINDEX nChn, ModCommand::PARAM param);
 	void ExtendedS3MCommands(CHANNELINDEX nChn, ModCommand::PARAM param);
 	void ExtendedChannelEffect(ModChannel &chn, uint32 param);
@@ -1112,15 +1128,15 @@ public:
 	// Returns true if periods are actually plain frequency values in Hz.
 	bool PeriodsAreFrequencies() const noexcept
 	{
-		return m_playBehaviour[kPeriodsAreHertz] && GetType() != MOD_TYPE_XM;
+		return m_playBehaviour[kPeriodsAreHertz] && !UseFinetuneAndTranspose();
 	}
 	
 	// Returns true if the current format uses transpose+finetune rather than frequency in Hz to specify middle-C.
-	static constexpr bool UseFinetuneAndTranspose(MODTYPE type)
+	static constexpr bool UseFinetuneAndTranspose(MODTYPE type) noexcept
 	{
 		return (type & (MOD_TYPE_AMF0 | MOD_TYPE_DIGI | MOD_TYPE_MED | MOD_TYPE_MOD | MOD_TYPE_MTM | MOD_TYPE_OKT | MOD_TYPE_SFX | MOD_TYPE_STP | MOD_TYPE_XM));
 	}
-	bool UseFinetuneAndTranspose() const
+	bool UseFinetuneAndTranspose() const noexcept
 	{
 		return UseFinetuneAndTranspose(GetType());
 	}

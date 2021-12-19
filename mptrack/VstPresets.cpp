@@ -13,9 +13,9 @@
 #ifndef NO_PLUGINS
 #include "../soundlib/Sndfile.h"
 #include "../soundlib/plugins/PlugInterface.h"
-#ifndef NO_VST
+#ifdef MPT_WITH_VST
 #include "Vstplug.h"
-#endif // NO_VST
+#endif // MPT_WITH_VST
 #include "VstPresets.h"
 #include "../common/FileReader.h"
 #include <ostream>
@@ -53,16 +53,16 @@ VSTPresets::ErrorCode VSTPresets::LoadFile(FileReader &file, IMixPlugin &plugin)
 	{
 		return wrongPlugin;
 	}
-#ifndef NO_VST
+#ifdef MPT_WITH_VST
 	CVstPlugin *vstPlug = dynamic_cast<CVstPlugin *>(&plugin);
-#endif
+#endif // MPT_WITH_VST
 
 	if(!memcmp(header.fxMagic, "FxCk", 4) || !memcmp(header.fxMagic, "FPCh", 4))
 	{
 		// Program
 		PlugParamIndex numParams = file.ReadUint32BE();
 
-#ifndef NO_VST
+#ifdef MPT_WITH_VST
 		if(vstPlug != nullptr)
 		{
 			Vst::VstPatchChunkInfo info;
@@ -73,7 +73,7 @@ VSTPresets::ErrorCode VSTPresets::LoadFile(FileReader &file, IMixPlugin &plugin)
 			MemsetZero(info.reserved);
 			vstPlug->Dispatch(Vst::effBeginLoadProgram, 0, 0, &info, 0.0f);
 		}
-#endif
+#endif // MPT_WITH_VST
 		plugin.BeginSetProgram();
 
 		std::string prgName;
@@ -88,7 +88,8 @@ VSTPresets::ErrorCode VSTPresets::LoadFile(FileReader &file, IMixPlugin &plugin)
 			}
 			for(PlugParamIndex p = 0; p < numParams; p++)
 			{
-				plugin.SetParameter(p, file.ReadFloatBE());
+				const auto value = file.ReadFloatBE();
+				plugin.SetParameter(p, std::isfinite(value) ? value : 0.0f);
 			}
 		} else
 		{
@@ -114,7 +115,7 @@ VSTPresets::ErrorCode VSTPresets::LoadFile(FileReader &file, IMixPlugin &plugin)
 		uint32 currentProgram = file.ReadUint32BE();
 		file.Skip(124);
 
-#ifndef NO_VST
+#ifdef MPT_WITH_VST
 		if(vstPlug != nullptr)
 		{
 			Vst::VstPatchChunkInfo info;
@@ -125,7 +126,7 @@ VSTPresets::ErrorCode VSTPresets::LoadFile(FileReader &file, IMixPlugin &plugin)
 			MemsetZero(info.reserved);
 			vstPlug->Dispatch(Vst::effBeginLoadBank, 0, 0, &info, 0.0f);
 		}
-#endif
+#endif // MPT_WITH_VST
 
 		if(!memcmp(header.fxMagic, "FxBk", 4))
 		{
