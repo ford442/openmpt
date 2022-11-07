@@ -19,12 +19,12 @@ EMSCRIPTEN_PORTS?=0
 
 ifneq ($(STDCXX),)
 CXXFLAGS_STDCXX = -std=$(STDCXX)
-else ifeq ($(shell printf '\n' > bin/empty.cpp ; if $(CXX) -std=c++20 -c bin/empty.cpp -o bin/empty.out > /dev/null 2>&1 ; then echo 'c++20' ; fi ), c++20)
-CXXFLAGS_STDCXX = -std=c++20
+else ifeq ($(shell printf '\n' > bin/empty.cpp ; if $(CXX) -std=c++2b -c bin/empty.cpp -o bin/empty.out > /dev/null 2>&1 ; then echo 'c++20' ; fi ), c++20)
+CXXFLAGS_STDCXX = -std=c++2b
 else ifeq ($(shell printf '\n' > bin/empty.cpp ; if $(CXX) -std=c++17 -c bin/empty.cpp -o bin/empty.out > /dev/null 2>&1 ; then echo 'c++17' ; fi ), c++17)
 CXXFLAGS_STDCXX = -std=c++17
 endif
-CFLAGS_STDC = -std=c17
+CFLAGS_STDC = -std=c++2b
 CXXFLAGS += $(CXXFLAGS_STDCXX)
 CFLAGS += $(CFLAGS_STDC)
 
@@ -50,23 +50,23 @@ NO_MINIMP3=1
 NO_STBVORBIS=1
 endif
 
-CXXFLAGS += -Oz
-CFLAGS   += -Oz
-LDFLAGS  += -Oz
+CXXFLAGS += 
+CFLAGS   += 
+LDFLAGS  += 
 
 # Enable LTO as recommended by Emscripten
-#CXXFLAGS += -flto=thin
-#CFLAGS   += -flto=thin
-#LDFLAGS  += -flto=thin -Wl,--thinlto-jobs=all
+#CXXFLAGS += 
+#CFLAGS   += 
+#LDFLAGS  +=  -Wl,--thinlto-jobs=all
 # As per recommendation in <https://github.com/emscripten-core/emscripten/issues/15638#issuecomment-982772770>,
 # thinLTO is not as well tested as full LTO. Stick to full LTO for now.
-CXXFLAGS += -flto
-CFLAGS   += -flto
-LDFLAGS  += -flto
+CXXFLAGS += 
+CFLAGS   += 
+LDFLAGS  += 
 
 ifeq ($(EMSCRIPTEN_TARGET),default)
 # emits whatever is emscripten's default, currently (1.38.8) this is the same as "wasm" below.
-CPPFLAGS += -DMPT_BUILD_WASM
+CPPFLAGS += -DMPT_BUILD_WASM -DNDEBUG
 CXXFLAGS += 
 CFLAGS   += 
 LDFLAGS  += 
@@ -99,18 +99,18 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),wasmgro)
 # emits native wasm.
 CPPFLAGS += -DMPT_BUILD_WASM
-CXXFLAGS +=  -O3 
+CXXFLAGS +=  
 CFLAGS   += 
-LDFLAGS  += -s WASM=1 -s ENVIRONMENT=web -s MALLOC="emmalloc"
+LDFLAGS  += -s WASM=1
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
 else ifeq ($(EMSCRIPTEN_TARGET),wasmnogro)
 # emits native wasm.
 CPPFLAGS += -DMPT_BUILD_WASM
-CXXFLAGS +=  -O3 
+CXXFLAGS += 
 CFLAGS   += 
-LDFLAGS  += -s WASM=1 -s ENVIRONMENT=web -s INITIAL_MEMORY=700mb -s MALLOC="emmalloc"
+LDFLAGS  += -s WASM=1 -s INITIAL_MEMORY=700mb
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=0
 
