@@ -77,11 +77,11 @@ copy /y ..\..\include\vorbis\COPYING                         .\Licenses\License.
 copy /y ..\..\include\zlib\README                            .\Licenses\License.zlib.txt || goto error
 rem copy /y ..\..\include\zlib\contrib\minizip\MiniZip64_info.txt .\Licenses\License.minizip.txt || goto error
 copy /y ..\..\LICENSE .\LICENSE.txt || goto error
-copy /y ..\..\libopenmpt\dox\changelog.md .\ || goto error
-copy /y ..\..\libopenmpt\doc\xmp-openmpt.txt .\XMPlay\ || goto error
-copy /y ..\..\libopenmpt\doc\in_openmpt.txt .\Winamp\ || goto error
-copy /y ..\..\libopenmpt\doc\xmp-openmpt.txt .\XMPlay-legacy\ || goto error
-copy /y ..\..\libopenmpt\doc\in_openmpt.txt .\Winamp-legacy\ || goto error
+copy /y ..\..\doc\libopenmpt\changelog.md .\ || goto error
+copy /y ..\..\libopenmpt\xmp-openmpt\xmp-openmpt.txt .\XMPlay\ || goto error
+copy /y ..\..\libopenmpt\in_openmpt\in_openmpt.txt .\Winamp\ || goto error
+copy /y ..\..\libopenmpt\xmp-openmpt\xmp-openmpt.txt .\XMPlay-legacy\ || goto error
+copy /y ..\..\libopenmpt\in_openmpt\in_openmpt.txt .\Winamp-legacy\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win81-static\x86\openmpt123.exe .\openmpt123\x86\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win81-static\x86\openmpt-mpg123.dll .\openmpt123\x86\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win81-static\amd64\openmpt123.exe .\openmpt123\amd64\ || goto error
@@ -197,7 +197,7 @@ rem copy /y ..\..\include\unrar\license.txt                      .\Licenses\Lice
 copy /y ..\..\include\vorbis\COPYING                         .\Licenses\License.Vorbis.txt || goto error
 copy /y ..\..\include\zlib\README                            .\Licenses\License.zlib.txt || goto error
 rem copy /y ..\..\include\zlib\contrib\minizip\MiniZip64_info.txt .\Licenses\License.minizip.txt || goto error
-copy /y ..\..\libopenmpt\dox\changelog.md .\changelog.md || goto error
+copy /y ..\..\doc\libopenmpt\changelog.md .\changelog.md || goto error
 copy /y ..\..\libopenmpt\libopenmpt.h inc\libopenmpt\ || goto error
 copy /y ..\..\libopenmpt\libopenmpt.hpp inc\libopenmpt\ || goto error
 copy /y ..\..\libopenmpt\libopenmpt_config.h inc\libopenmpt\ || goto error
@@ -207,6 +207,10 @@ copy /y ..\..\libopenmpt\libopenmpt_ext.hpp inc\libopenmpt\ || goto error
 copy /y ..\..\libopenmpt\libopenmpt_stream_callbacks_buffer.h inc\libopenmpt\ || goto error
 copy /y ..\..\libopenmpt\libopenmpt_stream_callbacks_fd.h inc\libopenmpt\ || goto error
 copy /y ..\..\libopenmpt\libopenmpt_stream_callbacks_file.h inc\libopenmpt\ || goto error
+copy /y ..\..\libopenmpt\libopenmpt_stream_callbacks_file_mingw.h inc\libopenmpt\ || goto error
+copy /y ..\..\libopenmpt\libopenmpt_stream_callbacks_file_msvcrt.h inc\libopenmpt\ || goto error
+copy /y ..\..\libopenmpt\libopenmpt_stream_callbacks_file_posix.h inc\libopenmpt\ || goto error
+copy /y ..\..\libopenmpt\libopenmpt_stream_callbacks_file_posix_lfs64.h inc\libopenmpt\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\x86\libopenmpt.lib lib\x86\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\x86\libopenmpt.dll bin\x86\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\x86\openmpt-mpg123.dll bin\x86\ || goto error
@@ -256,6 +260,10 @@ copy /y ..\..\bin\release\%MPT_VS_VER%-win7-shared\amd64\openmpt-zlib.dll bin\am
  inc\libopenmpt\libopenmpt_stream_callbacks_buffer.h ^
  inc\libopenmpt\libopenmpt_stream_callbacks_fd.h ^
  inc\libopenmpt\libopenmpt_stream_callbacks_file.h ^
+ inc\libopenmpt\libopenmpt_stream_callbacks_file_mingw.h ^
+ inc\libopenmpt\libopenmpt_stream_callbacks_file_msvcrt.h ^
+ inc\libopenmpt\libopenmpt_stream_callbacks_file_posix.h ^
+ inc\libopenmpt\libopenmpt_stream_callbacks_file_posix_lfs64.h ^
  lib\x86\libopenmpt.lib ^
  lib\amd64\libopenmpt.lib ^
  lib\arm\libopenmpt.lib ^

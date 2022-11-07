@@ -21,13 +21,13 @@
 
 OPENMPT_NAMESPACE_BEGIN
 
-IMixPlugin* LFOPlugin::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct)
+IMixPlugin* LFOPlugin::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
 	return new (std::nothrow) LFOPlugin(factory, sndFile, mixStruct);
 }
 
 
-LFOPlugin::LFOPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct)
+LFOPlugin::LFOPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 	: IMixPlugin(factory, sndFile, mixStruct)
 	, m_PRNG(mpt::make_prng<mpt::fast_prng>(mpt::global_prng()))
 {
@@ -35,7 +35,6 @@ LFOPlugin::LFOPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *m
 	RecalculateIncrement();
 
 	m_mixBuffer.Initialize(2, 2);
-	InsertIntoFactoryList();
 }
 
 
@@ -228,6 +227,15 @@ void LFOPlugin::MidiPitchBend(int32 increment, int8 pwd, CHANNELINDEX trackChann
 	if(IMixPlugin *plugin = GetOutputPlugin())
 	{
 		plugin->MidiPitchBend(increment, pwd, trackChannel);
+	}
+}
+
+
+void LFOPlugin::MidiTonePortamento(int32 increment, uint8 newNote, int8 pwd, CHANNELINDEX trackChannel)
+{
+	if(IMixPlugin *plugin = GetOutputPlugin())
+	{
+		plugin->MidiTonePortamento(increment, newNote, pwd, trackChannel);
 	}
 }
 

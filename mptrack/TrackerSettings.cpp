@@ -28,10 +28,12 @@
 #include "ExceptionHandler.h"
 #include "../soundlib/mod_specifications.h"
 #include "../soundlib/Tables.h"
+#include "mpt/io_file/outputfile.hpp"
 #include "../common/mptFileIO.h"
+#include "mpt/fs/common_directories.hpp"
 #include "../soundlib/tuningcollection.h"
 #include "TuningDialog.h"
-
+#include "mpt/fs/fs.hpp"
 
 #include <algorithm>
 
@@ -43,7 +45,11 @@ OPENMPT_NAMESPACE_BEGIN
 #define OLD_SOUNDSETUP_SECONDARY             0x40
 #define OLD_SOUNDSETUP_NOBOOSTTHREADPRIORITY 0x80
 
+#ifndef NO_EQ
+
 constexpr EQPreset FlatEQPreset = {"Flat", {16, 16, 16, 16, 16, 16}, {125, 300, 600, 1250, 4000, 8000}};
+
+#endif // !NO_EQ
 
 
 TrackerSettings &TrackerSettings::Instance()
@@ -69,12 +75,12 @@ static Version GetPreviousSettingsVersion(const mpt::ustring &iniVersion)
 
 mpt::ustring SettingsModTypeToString(MODTYPE modtype)
 {
-	return mpt::ToUnicode(mpt::Charset::UTF8, CSoundFile::GetModSpecifications(modtype).fileExtension);
+	return CSoundFile::GetModSpecifications(modtype).GetFileExtension();
 }
 
 MODTYPE SettingsStringToModType(const mpt::ustring &str)
 {
-	return CModSpecifications::ExtensionToType(mpt::ToCharset(mpt::Charset::UTF8, str));
+	return CModSpecifications::ExtensionToType(str);
 }
 
 
@@ -197,7 +203,7 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 	, DefaultPlugVolumeHandling(conf, U_("Misc"), U_("DefaultPlugVolumeHandling"), PLUGIN_VOLUMEHANDLING_IGNORE)
 	, autoApplySmoothFT2Ramping(conf, U_("Misc"), U_("SmoothFT2Ramping"), false)
 	, MiscITCompressionStereo(conf, U_("Misc"), U_("ITCompressionStereo"), 4)
-	, MiscITCompressionMono(conf, U_("Misc"), U_("ITCompressionMono"), 4)
+	, MiscITCompressionMono(conf, U_("Misc"), U_("ITCompressionMono"), 7)
 	, MiscSaveChannelMuteStatus(conf, U_("Misc"), U_("SaveChannelMuteStatus"), true)
 	, MiscAllowMultipleCommandsPerKey(conf, U_("Misc"), U_("AllowMultipleCommandsPerKey"), false)
 	, MiscDistinguishModifiers(conf, U_("Misc"), U_("DistinguishModifiers"), false)
@@ -265,6 +271,8 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 	, patternFontDot(conf, U_("Pattern Editor"), U_("FontDot"), U_("."))
 	, effectVisWidth(conf, U_("Pattern Editor"), U_("EffectVisWidth"), -1)
 	, effectVisHeight(conf, U_("Pattern Editor"), U_("EffectVisHeight"), -1)
+	, effectVisX(conf, U_("Pattern Editor"), U_("EffectVisX"), int32_min)
+	, effectVisY(conf, U_("Pattern Editor"), U_("EffectVisY"), int32_min)
 	, patternAccessibilityFormat(conf, U_("Pattern Editor"), U_("AccessibilityFormat"), _T("Row %row%, Channel %channel%, %column_type%: %column_description%"))
 	, patternAlwaysDrawWholePatternOnScrollSlow(conf, U_("Pattern Editor"), U_("AlwaysDrawWholePatternOnScrollSlow"), false)
 	, orderListOldDropBehaviour(conf, U_("Pattern Editor"), U_("OrderListOldDropBehaviour"), false)
@@ -292,7 +300,7 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 	, AutosaveIntervalMinutes(conf, U_("AutoSave"), U_("IntervalMinutes"), 10)
 	, AutosaveHistoryDepth(conf, U_("AutoSave"), U_("BackupHistory"), 3)
 	, AutosaveUseOriginalPath(conf, U_("AutoSave"), U_("UseOriginalPath"), true)
-	, AutosavePath(conf, U_("AutoSave"), U_("Path"), mpt::GetTempDirectory())
+	, AutosavePath(conf, U_("AutoSave"), U_("Path"), mpt::common_directories::get_temp_directory())
 	// Paths
 	, PathSongs(conf, U_("Paths"), U_("Songs_Directory"), mpt::PathString())
 	, PathSamples(conf, U_("Paths"), U_("Samples_Directory"), mpt::PathString())
@@ -317,32 +325,22 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 	, vstHostVendorVersion(conf, U_("VST Plugins"), U_("HostVendorVersion"), Version::Current().GetRawVersion())
 	// Broken Plugins Workarounds
 	, BrokenPluginsWorkaroundVSTMaskAllCrashes(conf, U_("Broken Plugins Workarounds"), U_("VSTMaskAllCrashes"), true)  // TODO: really should be false
-	, BrokenPluginsWorkaroundVSTNeverUnloadAnyPlugin(conf, U_("BrokenPluginsWorkarounds"), U_("VSTNeverUnloadAnyPlugin"), false)
+	, BrokenPluginsWorkaroundVSTNeverUnloadAnyPlugin(conf, U_("Broken Plugins Workarounds"), U_("VSTNeverUnloadAnyPlugin"), false)
 #if defined(MPT_ENABLE_UPDATE)
 	// Update
 	, UpdateEnabled(conf, U_("Update"), U_("Enabled"), true)
 	, UpdateInstallAutomatically(conf, U_("Update"), U_("InstallAutomatically"), false)
-	, UpdateLastUpdateCheck(conf, U_("Update"), U_("LastUpdateCheck"), mpt::Date::Unix(time_t()))
+	, UpdateLastUpdateCheck(conf, U_("Update"), U_("LastUpdateCheck"), mpt::Date::Unix{})
 	, UpdateUpdateCheckPeriod_DEPRECATED(conf, U_("Update"), U_("UpdateCheckPeriod"), 7)
 	, UpdateIntervalDays(conf, U_("Update"), U_("UpdateCheckIntervalDays"), 7)
 	, UpdateChannel(conf, U_("Update"), U_("Channel"), UpdateChannelRelease)
-#if MPT_UPDATE_LEGACY
-	, UpdateUpdateURL_DEPRECATED(conf, U_("Update"), U_("UpdateURL"), CUpdateCheck::GetDefaultChannelReleaseURL())
-	, UpdateChannelReleaseURL(conf, U_("Update"), U_("ChannelReleaseURL"), CUpdateCheck::GetDefaultChannelReleaseURL())
-	, UpdateChannelNextURL(conf, U_("Update"), U_("ChannelStableURL"), CUpdateCheck::GetDefaultChannelNextURL())
-	, UpdateChannelDevelopmentURL(conf, U_("Update"), U_("ChannelDevelopmentURL"), CUpdateCheck::GetDefaultChannelDevelopmentURL())
-#else // !MPT_UPDATE_LEGACY
 	, UpdateUpdateURL_DEPRECATED(conf, U_("Update"), U_("UpdateURL"), U_("https://update.openmpt.org/check/$VERSION/$GUID"))
-#endif // MPT_UPDATE_LEGACY
 	, UpdateAPIURL(conf, U_("Update"), U_("APIURL"), CUpdateCheck::GetDefaultAPIURL())
 	, UpdateStatisticsConsentAsked(conf, U_("Update"), U_("StatistisConsentAsked"), false)
 	, UpdateStatistics(conf, U_("Update"), U_("Statistis"), false)
 	, UpdateSendGUID_DEPRECATED(conf, U_("Update"), U_("SendGUID"), false)
 	, UpdateShowUpdateHint(conf, U_("Update"), U_("ShowUpdateHint"), true)
 	, UpdateIgnoreVersion(conf, U_("Update"), U_("IgnoreVersion"), _T(""))
-#if MPT_UPDATE_LEGACY
-	, UpdateLegacyMethod(conf, U_("Update"), U_("LegacyMethod"), false)
-#endif // MPT_UPDATE_LEGACY
 	, UpdateSkipSignatureVerificationUNSECURE(conf, U_("Update"), U_("SkipSignatureVerification"), false)
 	, UpdateSigningKeysRootAnchors(conf, U_("Update"), U_("SigningKeysRootAnchors"), CUpdateCheck::GetDefaultUpdateSigningKeysRootAnchors())
 #endif // MPT_ENABLE_UPDATE
@@ -437,13 +435,13 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 	// Zxx Macros
 	MIDIMacroConfig macros;
 	theApp.GetDefaultMidiMacro(macros);
-	for(int isfx = 0; isfx < 16; isfx++)
+	for(int i = 0; i < kSFxMacros; i++)
 	{
-		mpt::String::WriteAutoBuf(macros.szMidiSFXExt[isfx]) = conf.Read<std::string>(U_("Zxx Macros"), MPT_UFORMAT("SF{}")(mpt::ufmt::HEX(isfx)), macros.szMidiSFXExt[isfx]);
+		macros.SFx[i] = conf.Read<std::string>(U_("Zxx Macros"), MPT_UFORMAT("SF{}")(mpt::ufmt::HEX(i)), macros.SFx[i]);
 	}
-	for(int izxx = 0; izxx < 128; izxx++)
+	for(int i = 0; i < kZxxMacros; i++)
 	{
-		mpt::String::WriteAutoBuf(macros.szMidiZXXExt[izxx]) = conf.Read<std::string>(U_("Zxx Macros"), MPT_UFORMAT("Z{}")(mpt::ufmt::HEX0<2>(izxx | 0x80)), macros.szMidiZXXExt[izxx]);
+		macros.Zxx[i] = conf.Read<std::string>(U_("Zxx Macros"), MPT_UFORMAT("Z{}")(mpt::ufmt::HEX0<2>(i | 0x80)), macros.Zxx[i]);
 	}
 
 
@@ -822,14 +820,15 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 		} else
 		{
 			UpdateChannel = UpdateChannelDevelopment;
-#if MPT_UPDATE_LEGACY
-			UpdateChannelDevelopmentURL = url;
-#endif // MPT_UPDATE_LEGACY
 		}
 		UpdateStatistics = UpdateSendGUID_DEPRECATED.Get();
 		conf.Forget(UpdateUpdateCheckPeriod_DEPRECATED.GetPath());
 		conf.Forget(UpdateUpdateURL_DEPRECATED.GetPath());
 		conf.Forget(UpdateSendGUID_DEPRECATED.GetPath());
+	}
+	if(storedVersion < MPT_V("1.31.00.12"))
+	{
+		UpdateLastUpdateCheck = mpt::Date::Unix{};
 	}
 #endif // MPT_ENABLE_UPDATE
 
@@ -989,33 +988,33 @@ void TrackerSettings::MigrateOldSoundDeviceSettings(SoundDevice::Manager &manage
 
 void TrackerSettings::MigrateTunings(const Version storedVersion)
 {
-	if(!PathTunings.GetDefaultDir().IsDirectory())
+	if(!mpt::native_fs{}.is_directory(PathTunings.GetDefaultDir()))
 	{
 		CreateDirectory(PathTunings.GetDefaultDir().AsNative().c_str(), 0);
 	}
-	if(!(PathTunings.GetDefaultDir() + P_("Built-in\\")).IsDirectory())
+	if(!mpt::native_fs{}.is_directory(PathTunings.GetDefaultDir() + P_("Built-in\\")))
 	{
 		CreateDirectory((PathTunings.GetDefaultDir() + P_("Built-in\\")).AsNative().c_str(), 0);
 	}
-	if(!(PathTunings.GetDefaultDir() + P_("Locale\\")).IsDirectory())
+	if(!mpt::native_fs{}.is_directory(PathTunings.GetDefaultDir() + P_("Locale\\")))
 	{
 		CreateDirectory((PathTunings.GetDefaultDir() + P_("Local\\")).AsNative().c_str(), 0);
 	}
 	{
 		mpt::PathString fn = PathTunings.GetDefaultDir() + P_("Built-in\\12TET.tun");
-		if(!fn.FileOrDirectoryExists())
+		if(!mpt::native_fs{}.exists(fn))
 		{
 			std::unique_ptr<CTuning> pT = CSoundFile::CreateTuning12TET(U_("12TET"));
-			mpt::SafeOutputFile sf(fn, std::ios::binary, mpt::FlushMode::Full);
+			mpt::IO::SafeOutputFile sf(fn, std::ios::binary, mpt::IO::FlushMode::Full);
 			pT->Serialize(sf);
 		}
 	}
 	{
 		mpt::PathString fn = PathTunings.GetDefaultDir() + P_("Built-in\\12TET [[fs15 1.17.02.49]].tun");
-		if(!fn.FileOrDirectoryExists())
+		if(!mpt::native_fs{}.exists(fn))
 		{
 			std::unique_ptr<CTuning> pT = CSoundFile::CreateTuning12TET(U_("12TET [[fs15 1.17.02.49]]"));
-			mpt::SafeOutputFile sf(fn, std::ios::binary, mpt::FlushMode::Full);
+			mpt::IO::SafeOutputFile sf(fn, std::ios::binary, mpt::IO::FlushMode::Full);
 			pT->Serialize(sf);
 		}
 	}
@@ -1270,6 +1269,8 @@ void TrackerSettings::GetDefaultColourScheme(std::array<COLORREF, MAX_MODCOLORS>
 }
 
 
+#ifndef NO_EQ
+
 void TrackerSettings::FixupEQ(EQPreset &eqSettings)
 {
 	for(UINT i = 0; i < MAX_EQ_BANDS; i++)
@@ -1281,6 +1282,8 @@ void TrackerSettings::FixupEQ(EQPreset &eqSettings)
 	}
 	mpt::String::SetNullTerminator(eqSettings.szName);
 }
+
+#endif // !NO_EQ
 
 
 void TrackerSettings::SaveSettings()
@@ -1334,13 +1337,13 @@ void TrackerSettings::SaveSettings()
 	// Save default macro configuration
 	MIDIMacroConfig macros;
 	theApp.GetDefaultMidiMacro(macros);
-	for(int isfx = 0; isfx < 16; isfx++)
+	for(int isfx = 0; isfx < kSFxMacros; isfx++)
 	{
-		conf.Write<std::string>(U_("Zxx Macros"), MPT_UFORMAT("SF{}")(mpt::ufmt::HEX(isfx)), macros.szMidiSFXExt[isfx]);
+		conf.Write<std::string>(U_("Zxx Macros"), MPT_UFORMAT("SF{}")(mpt::ufmt::HEX(isfx)), macros.SFx[isfx]);
 	}
-	for(int izxx = 0; izxx < 128; izxx++)
+	for(int izxx = 0; izxx < kZxxMacros; izxx++)
 	{
-		conf.Write<std::string>(U_("Zxx Macros"), MPT_UFORMAT("Z{}")(mpt::ufmt::HEX0<2>(izxx | 0x80)), macros.szMidiZXXExt[izxx]);
+		conf.Write<std::string>(U_("Zxx Macros"), MPT_UFORMAT("Z{}")(mpt::ufmt::HEX0<2>(izxx | 0x80)), macros.Zxx[izxx]);
 	}
 
 	// MRU list
@@ -1485,7 +1488,7 @@ UINT TrackerSettings::GetCurrentMIDIDevice()
 			else
 				break;
 		}
-		if(mic.szPname == deviceName)
+		if(CString(mic.szPname) == deviceName)
 		{
 			candidate = i;
 			numDevs = m_nMidiDevice + 1;
@@ -1584,8 +1587,8 @@ mpt::PathString DefaultAndWorkingDirectory::GetWorkingDir() const
 // Return true if the value changed.
 bool DefaultAndWorkingDirectory::InternalSet(mpt::PathString &dest, const mpt::PathString &filenameFrom, bool stripFilename)
 {
-	mpt::PathString newPath = (stripFilename ? filenameFrom.GetPath() : filenameFrom);
-	newPath.EnsureTrailingSlash();
+	mpt::PathString newPath = (stripFilename ? filenameFrom.GetDirectoryWithDrive() : filenameFrom);
+	newPath = newPath.WithTrailingSlash();
 	mpt::PathString oldPath = dest;
 	dest = newPath;
 	return newPath != oldPath;

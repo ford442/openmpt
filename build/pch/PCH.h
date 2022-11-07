@@ -17,9 +17,9 @@
 #include <afxcmn.h>
 #include <afxcview.h>
 #include <afxdlgs.h>
-#ifdef MPT_MFC_FULL
+#ifndef _AFX_NO_MFC_CONTROLS_IN_DIALOGS
 #include <afxlistctrl.h>
-#endif // MPT_MFC_FULL
+#endif // !_AFX_NO_MFC_CONTROLS_IN_DIALOGS
 #include <afxole.h>
 #endif // MPT_WITH_MFC
 #endif // MODPLUG_TRACKER
@@ -83,7 +83,10 @@
 
 #include "../common/ComponentManager.h"
 #include "../common/FileReader.h"
+#include "../common/mptCPU.h"
 #include "../common/mptFileIO.h"
+#include "../common/mptFileTemporary.h"
+#include "../common/mptFileType.h"
 #include "../common/mptRandom.h"
 #include "../common/mptStringBuffer.h"
 #include "../common/mptTime.h"
@@ -91,7 +94,6 @@
 #include "../common/serialization_utils.h"
 #include "../common/version.h"
 
-#include "../misc/mptCPU.h"
 #include "../misc/mptLibrary.h"
 #include "../misc/mptMutex.h"
 #include "../misc/mptOS.h"
@@ -151,7 +153,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 
 #endif // MPT_BUILD_ENABLE_PCH

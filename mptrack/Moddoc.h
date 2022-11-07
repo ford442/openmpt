@@ -14,10 +14,10 @@
 
 #include "Sndfile.h"
 #include "../common/misc_util.h"
+#include "../common/mptTime.h"
 #include "Undo.h"
 #include "Notification.h"
 #include "UpdateHints.h"
-#include <time.h>
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -130,7 +130,7 @@ protected:
 	CSampleUndo m_SampleUndo;
 	CInstrumentUndo m_InstrumentUndo;
 	SplitKeyboardSettings m_SplitKeyboardSettings;	// this is maybe not the best place to keep them, but it should do the job
-	time_t m_creationTime;
+	mpt::Date::Unix m_creationTime;
 
 	std::atomic<bool> m_modifiedAutosave = false; // Modified since last autosave?
 
@@ -221,7 +221,7 @@ public:
 	CInstrumentUndo &GetInstrumentUndo() { return m_InstrumentUndo; }
 	SplitKeyboardSettings &GetSplitKeyboardSettings() { return m_SplitKeyboardSettings; }
 
-	time_t GetCreationTime() const { return m_creationTime; }
+	mpt::Date::Unix GetCreationTime() const { return m_creationTime; }
 
 // operations
 public:
@@ -239,6 +239,7 @@ public:
 	bool ConvertInstrumentsToSamples();
 	bool ConvertSamplesToInstruments();
 	PLUGINDEX RemovePlugs(const std::vector<bool> &keepMask);
+	bool RemovePlugin(PLUGINDEX plugin);
 
 	void ClonePlugin(SNDMIXPLUGIN &target, const SNDMIXPLUGIN &source);
 	void AppendModule(const CSoundFile &source);
@@ -296,7 +297,9 @@ public:
 	BOOL ExpandPattern(PATTERNINDEX nPattern);
 	BOOL ShrinkPattern(PATTERNINDEX nPattern);
 
-	bool SetDefaultChannelColors();
+	bool SetDefaultChannelColors() { return SetDefaultChannelColors(0, GetNumChannels()); }
+	bool SetDefaultChannelColors(CHANNELINDEX channel) { return SetDefaultChannelColors(channel, channel + 1u); }
+	bool SetDefaultChannelColors(CHANNELINDEX minChannel, CHANNELINDEX maxChannel);
 	bool SupportsChannelColors() const { return GetModType() & (MOD_TYPE_XM | MOD_TYPE_IT | MOD_TYPE_MPT); }
 
 	bool CopyEnvelope(INSTRUMENTINDEX nIns, EnvelopeType nEnv);
@@ -399,6 +402,9 @@ protected:
 	SAMPLEINDEX GetSampleIndex(const ModCommand &m, ModCommand::INSTR lastInstr = 0) const;
 	// Get group (octave) size from given instrument (or sample in sample mode)
 	int GetInstrumentGroupSize(INSTRUMENTINDEX instr) const;
+	int GetBaseNote(INSTRUMENTINDEX instr) const;
+	ModCommand::NOTE GetNoteWithBaseOctave(int noteOffset, INSTRUMENTINDEX instr) const;
+	INSTRUMENTINDEX GetParentInstrumentWithSameName(SAMPLEINDEX smp) const;
 
 	// Convert a linear volume property to decibels
 	static CString LinearToDecibels(double value, double valueAtZeroDB);

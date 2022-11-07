@@ -73,6 +73,10 @@ namespace ASIO {
 
 
 
+inline namespace ASIO_VERSION_NAMESPACE {
+
+
+
 #define ASIO_PP_DEFER(m, ...) m(__VA_ARGS__)
 
 #define ASIO_PP_STRINGIFY(x) #x
@@ -167,10 +171,6 @@ namespace ASIO {
 
 
 inline namespace Core {
-
-
-
-inline namespace ASIO_VERSION_NAMESPACE {
 
 
 
@@ -283,11 +283,11 @@ private:
 	Char buf[size] = "";
 
 public:
-	CharBuf()                = default;
-	CharBuf(const CharBuf &) = default;
-	CharBuf(CharBuf &&)      = default;
+	CharBuf()                            = default;
+	CharBuf(const CharBuf &)             = default;
+	CharBuf(CharBuf &&)                  = default;
 	CharBuf & operator=(const CharBuf &) = default;
-	CharBuf & operator=(CharBuf &&) = default;
+	CharBuf & operator=(CharBuf &&)      = default;
 
 public:
 	constexpr CharBuf(std::nullptr_t) noexcept
@@ -370,11 +370,11 @@ static_assert(sizeof(CharBuf<1>) == 1);
 
 
 
-} // namespace ASIO_VERSION_NAMESPACE
-
-
-
 } // namespace Core
+
+
+
+} // namespace ASIO_VERSION_NAMESPACE
 
 
 

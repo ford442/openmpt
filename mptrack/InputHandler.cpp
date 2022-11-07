@@ -13,6 +13,7 @@
 #include "InputHandler.h"
 #include "resource.h"
 #include "Mainfrm.h"
+#include "mpt/fs/fs.hpp"
 #include "../soundlib/MIDIEvents.h"
 
 
@@ -45,14 +46,14 @@ CInputHandler::CInputHandler(CWnd *mainframe)
 		if (bNoExistingKbdFileSetting)
 			TrackerSettings::Instance().m_szKbdFile = sDefaultPath;
 		bool bSuccess = false;
-		if (sDefaultPath.IsFile())
+		if (mpt::native_fs{}.is_file(sDefaultPath))
 			bSuccess = m_activeCommandSet->LoadFile(sDefaultPath);
 		if (!bSuccess)
 		{
 			// Load keybindings from resources.
 			MPT_LOG_GLOBAL(LogDebug, "InputHandler", U_("Loading keybindings from resources\n"));
-			bSuccess = m_activeCommandSet->LoadDefaultKeymap();
-			if (bSuccess && bNoExistingKbdFileSetting)
+			m_activeCommandSet->LoadDefaultKeymap();
+			if (bNoExistingKbdFileSetting)
 			{
 				m_activeCommandSet->SaveFile(TrackerSettings::Instance().m_szKbdFile);
 			}
@@ -141,11 +142,11 @@ CommandID CInputHandler::GeneralKeyEvent(InputTargetContext context, int code, W
 }
 
 
-CommandID CInputHandler::KeyEvent(InputTargetContext context, UINT &nChar, UINT &/*nRepCnt*/, UINT &nFlags, KeyEventType keyEventType, CWnd *pSourceWnd)
+CommandID CInputHandler::KeyEvent(const InputTargetContext context, const KeyboardEvent &event, CWnd *pSourceWnd)
 {
-	if(InterceptSpecialKeys(nChar, nFlags, false))
+	if(InterceptSpecialKeys(event.key, event.flags, false))
 		return kcDummyShortcut;
-	KeyMapRange cmd = m_keyMap.equal_range(KeyCombination(context, m_modifierMask, nChar, keyEventType));
+	KeyMapRange cmd = m_keyMap.equal_range(KeyCombination(context, m_modifierMask, event.key, event.keyEventType));
 
 	if(pSourceWnd == nullptr)
 		pSourceWnd = m_pMainFrm;	// By default, send command message to main frame.
@@ -316,6 +317,35 @@ void CInputHandler::LogModifiers()
 	MPT_LOG_GLOBAL(LogDebug, "InputHandler", m_modifierMask[ModShift] ? U_("\tShft On") : U_("\tShft --"));
 	MPT_LOG_GLOBAL(LogDebug, "InputHandler", m_modifierMask[ModAlt] ? U_("\tAlt  On") : U_("\tAlt  --"));
 	MPT_LOG_GLOBAL(LogDebug, "InputHandler", m_modifierMask[ModWin] ? U_("\tWin  On\n") : U_("\tWin  --\n"));
+}
+
+
+CInputHandler::KeyboardEvent CInputHandler::Translate(const MSG &msg)
+{
+	MPT_ASSERT(msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN || msg.message == WM_KEYUP || msg.message == WM_SYSKEYUP);
+
+	uint32 key = static_cast<uint32>(msg.wParam);
+	if(key == VK_PACKET)
+	{
+		// This message was sent by something other than a physical keyboard.
+		// This behaviour can be observed when using Microsoft's RDP client for iOS.
+
+		// VK_PACKET is not the real virtual key code, and the message does not contain a real scancode.
+		// To get at the virtual key code, we must first force the WM_CHAR message to get posted to the queue.
+		::TranslateMessage(&msg);
+
+		// Now remove that WM_CHAR message to get the virtual key code.  (The WM_CHAR message will get
+		// re-posted by the main message pump after this call stack unwinds to it.)
+		MSG msgChar{};
+		if(::PeekMessage(&msgChar, msgChar.hwnd, WM_CHAR, WM_CHAR, PM_REMOVE | PM_QS_POSTMESSAGE))
+		{
+			key = VkKeyScanW(static_cast<WCHAR>(msgChar.wParam & 0xffffu));
+		}
+	}
+
+	const auto repCnt = LOWORD(msg.lParam);
+	const auto flags = HIWORD(msg.lParam);
+	return {key, repCnt, flags, GetKeyEventType(flags)};
 }
 
 

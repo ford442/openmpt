@@ -29,7 +29,6 @@
 #include "AutoSaver.h"
 #include "FileDialog.h"
 #include "Image.h"
-#include "BuildVariants.h"
 #include "../common/ComponentManager.h"
 #include "WelcomeDialog.h"
 #include "openmpt/sounddevice/SoundDeviceManager.hpp"
@@ -37,15 +36,49 @@
 #include "../soundlib/plugins/PluginManager.h"
 #include "MPTrackWine.h"
 #include "MPTrackUtil.h"
+#include "mpt/fs/common_directories.hpp"
+#include "mpt/io_file/outputfile.hpp"
+#include "../misc/mptOS.h"
+#include "mpt/arch/arch.hpp"
+#include "mpt/fs/fs.hpp"
+#if MPT_MSVC_AT_LEAST(2022, 2) && MPT_MSVC_BEFORE(2022, 3)
+// Work-around <https://developercommunity.visualstudio.com/t/warning-C4311-in-MFC-header-afxrecovery/10041328>,
+// see <https://developercommunity.visualstudio.com/t/Compiler-warnings-after-upgrading-to-17/10036311#T-N10061908>.
+template <class ARG_KEY>
+AFX_INLINE UINT AFXAPI HashKey(ARG_KEY key);
+template <>
+AFX_INLINE UINT AFXAPI HashKey<CDocument*>(CDocument *key)
+{
+	// (algorithm copied from STL hash in xfunctional)
+#pragma warning(suppress: 4302) // 'type cast' : truncation
+#pragma warning(suppress: 4311) // pointer truncation
+	ldiv_t HashVal = ldiv((long)(CDocument*)key, 127773);
+	HashVal.rem = 16807 * HashVal.rem - 2836 * HashVal.quot;
+	if(HashVal.rem < 0)
+		HashVal.rem += 2147483647;
+	return ((UINT)HashVal.rem);
+}
+#endif
 #include <afxdatarecovery.h>
 
 // GDI+
-#define max(a,b) (((a) > (b)) ? (a) : (b))
-#define min(a,b) (((a) < (b)) ? (a) : (b))
+#include <atlbase.h>
+#if MPT_MSVC_BEFORE(2019, 11)  // really < Windows 10 SDK 2104 (10.0.20348.0)
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+#if MPT_COMPILER_MSVC
 #pragma warning(push)
-#pragma warning(disable:4458) // declaration of 'x' hides class member
+#pragma warning(disable : 4458)  // declaration of 'x' hides class member
+#endif
 #include <gdiplus.h>
+#if MPT_COMPILER_MSVC
 #pragma warning(pop)
+#endif
+#if MPT_MSVC_BEFORE(2019, 11)  // really < Windows 10 SDK 2104 (10.0.20348.0)
+#undef min
+#undef max
+#endif
 
 #if MPT_COMPILER_MSVC
 #define _CRTDBG_MAP_ALLOC
@@ -339,7 +372,7 @@ void CTrackApp::ImportMidiConfig(const mpt::PathString &filename, bool hideWarni
 	}
 
 	IniFileSettingsContainer file(filename);
-	ImportMidiConfig(file, filename.GetPath());
+	ImportMidiConfig(file, filename.GetDirectoryWithDrive());
 }
 
 
@@ -351,7 +384,7 @@ static mpt::PathString GetUltraSoundPatchDir(SettingsContainer &file, const mpt:
 	if(patchDir.empty() || patchDir == P_(".\\"))
 		patchDir = path;
 	if(!patchDir.empty())
-		patchDir.EnsureTrailingSlash();
+		patchDir = patchDir.WithTrailingSlash();
 	return patchDir;
 }
 
@@ -418,18 +451,26 @@ void CTrackApp::ExportMidiConfig(SettingsContainer &file)
 /////////////////////////////////////////////////////////////////////////////
 // DLS Banks support
 
-std::vector<CDLSBank *> CTrackApp::gpDLSBanks;
+std::vector<std::unique_ptr<CDLSBank>> CTrackApp::gpDLSBanks;
 
 
-void CTrackApp::LoadDefaultDLSBanks()
+struct CompareLessPathStringNoCase
 {
+	inline bool operator()(const mpt::PathString &l, const mpt::PathString &r) const
+	{
+		return mpt::PathCompareNoCase(l, r) < 0;
+	}
+};
+
+std::future<std::vector<std::unique_ptr<CDLSBank>>> CTrackApp::LoadDefaultDLSBanks()
+{
+	std::set<mpt::PathString, CompareLessPathStringNoCase> paths;
+
 	uint32 numBanks = theApp.GetSettings().Read<uint32>(U_("DLS Banks"), U_("NumBanks"), 0);
-	gpDLSBanks.reserve(numBanks);
 	for(uint32 i = 0; i < numBanks; i++)
 	{
 		mpt::PathString path = theApp.GetSettings().Read<mpt::PathString>(U_("DLS Banks"), MPT_UFORMAT("Bank{}")(i + 1), mpt::PathString());
-		path = theApp.PathInstallRelativeToAbsolute(path);
-		AddDLSBank(path);
+		paths.insert(theApp.PathInstallRelativeToAbsolute(path));
 	}
 
 	HKEY key;
@@ -440,18 +481,49 @@ void CTrackApp::LoadDefaultDLSBanks()
 		if(RegQueryValueEx(key, _T("GMFilePath"), NULL, &dwRegType, nullptr, &dwSize) == ERROR_SUCCESS && dwSize > 0)
 		{
 			std::vector<TCHAR> filenameT(dwSize / sizeof(TCHAR));
-			if (RegQueryValueEx(key, _T("GMFilePath"), NULL, &dwRegType, reinterpret_cast<LPBYTE>(filenameT.data()), &dwSize) == ERROR_SUCCESS)
+			if(RegQueryValueEx(key, _T("GMFilePath"), NULL, &dwRegType, reinterpret_cast<LPBYTE>(filenameT.data()), &dwSize) == ERROR_SUCCESS)
 			{
 				mpt::winstring filenamestr = ParseMaybeNullTerminatedStringFromBufferWithSizeInBytes<mpt::winstring>(filenameT.data(), dwSize);
 				std::vector<TCHAR> filenameExpanded(::ExpandEnvironmentStrings(filenamestr.c_str(), nullptr, 0));
 				::ExpandEnvironmentStrings(filenamestr.c_str(), filenameExpanded.data(), static_cast<DWORD>(filenameExpanded.size()));
 				auto filename = mpt::PathString::FromNative(filenameExpanded.data());
-				AddDLSBank(filename);
 				ImportMidiConfig(filename, true);
+				paths.insert(std::move(filename));
 			}
 		}
 		RegCloseKey(key);
 	}
+
+	if(paths.empty())
+		return {};
+
+	return std::async(std::launch::async, [paths = std::move(paths)]()
+	{
+		std::vector<std::unique_ptr<CDLSBank>> banks;
+		banks.reserve(paths.size());
+		for(const auto &filename : paths)
+		{
+			if(filename.empty() || !CDLSBank::IsDLSBank(filename))
+				continue;
+			try
+			{
+				auto bank = std::make_unique<CDLSBank>();
+				if(bank->Open(filename))
+				{
+					banks.push_back(std::move(bank));
+					continue;
+				}
+			} catch(mpt::out_of_memory e)
+			{
+				mpt::delete_out_of_memory(e);
+			} catch(const std::exception &)
+			{
+			}
+		}
+		// Avoid the overhead of future::wait_for(0) until future::is_ready is finally non-experimental
+		theApp.m_scannedDlsBanksAvailable = true;
+		return banks;
+	});
 }
 
 
@@ -480,10 +552,8 @@ void CTrackApp::SaveDefaultDLSBanks()
 
 void CTrackApp::RemoveDLSBank(UINT nBank)
 {
-	if(nBank >= gpDLSBanks.size() || !gpDLSBanks[nBank]) return;
-	delete gpDLSBanks[nBank];
-	gpDLSBanks[nBank] = nullptr;
-	//gpDLSBanks.erase(gpDLSBanks.begin() + nBank);
+	if(nBank < gpDLSBanks.size())
+		gpDLSBanks[nBank] = nullptr;
 }
 
 
@@ -493,15 +563,15 @@ bool CTrackApp::AddDLSBank(const mpt::PathString &filename)
 	// Check for dupes
 	for(const auto &bank : gpDLSBanks)
 	{
-		if(bank && !mpt::PathString::CompareNoCase(filename, bank->GetFileName())) return true;
+		if(bank && !mpt::PathCompareNoCase(filename, bank->GetFileName()))
+			return true;
 	}
-	CDLSBank *bank = nullptr;
 	try
 	{
-		bank = new CDLSBank;
+		auto bank = std::make_unique<CDLSBank>();
 		if(bank->Open(filename))
 		{
-			gpDLSBanks.push_back(bank);
+			gpDLSBanks.push_back(std::move(bank));
 			return true;
 		}
 	} catch(mpt::out_of_memory e)
@@ -510,8 +580,28 @@ bool CTrackApp::AddDLSBank(const mpt::PathString &filename)
 	} catch(const std::exception &)
 	{
 	}
-	delete bank;
 	return false;
+}
+
+
+size_t CTrackApp::AddScannedDLSBanks()
+{
+	if(!m_scannedDlsBanks.valid())
+		return 0;
+
+	size_t numAdded = 0;
+	auto scannedBanks = m_scannedDlsBanks.get();
+	gpDLSBanks.reserve(gpDLSBanks.size() + scannedBanks.size());
+	const size_t existingBanks = gpDLSBanks.size();
+	for(auto &bank : scannedBanks)
+	{
+		if(std::find_if(gpDLSBanks.begin(), gpDLSBanks.begin() + existingBanks, [&bank](const auto &other) { return other && *bank == *other; }) == gpDLSBanks.begin() + existingBanks)
+		{
+			gpDLSBanks.push_back(std::move(bank));
+			numAdded++;
+		}
+	}
+	return numAdded;
 }
 
 
@@ -541,6 +631,24 @@ END_MESSAGE_MAP()
 CTrackApp::CTrackApp()
 {
 	m_dwRestartManagerSupportFlags = AFX_RESTART_MANAGER_SUPPORT_RESTART | AFX_RESTART_MANAGER_REOPEN_PREVIOUS_FILES;
+}
+
+
+CTrackApp::~CTrackApp()
+{
+#if !defined(MPT_LIBCXX_QUIRK_NO_CHRONO_DATE) && defined(MPT_LIBCXX_QUIRK_CHRONO_TZ_MEMLEAK)
+	// Work-around memleak (see <https://github.com/microsoft/STL/issues/2504#issuecomment-1068008937>)
+	try
+	{
+		std::chrono::get_tzdb_list().~tzdb_list();
+	} catch(const std::exception &)
+	{
+		// nothing
+	} catch(...)
+	{
+		// nothing
+	}
+#endif
 }
 
 
@@ -675,7 +783,7 @@ void CTrackApp::RemoveMruItem(const mpt::PathString &path)
 	auto &mruFiles = TrackerSettings::Instance().mruFiles;
 	for(auto i = mruFiles.begin(); i != mruFiles.end(); i++)
 	{
-		if(!mpt::PathString::CompareNoCase(*i, path))
+		if(!mpt::PathCompareNoCase(*i, path))
 		{
 			mruFiles.erase(i);
 			break;
@@ -745,7 +853,7 @@ bool CTrackApp::MoveConfigFile(const mpt::PathString &fileName, mpt::PathString 
 	else
 		newPath += fileName;
 
-	if(!newPath.IsFile() && oldPath.IsFile())
+	if(!mpt::native_fs{}.is_file(newPath) && mpt::native_fs{}.is_file(oldPath))
 	{
 		return MoveFile(oldPath.AsNative().c_str(), newPath.AsNative().c_str()) != 0;
 	}
@@ -760,8 +868,8 @@ void CTrackApp::SetupPaths(bool overridePortable)
 	// First, determine if the executable is installed in multi-arch mode or in the old standard mode.
 	bool modeMultiArch = false;
 	bool modeSourceProject = false;
-	const mpt::PathString exePath = mpt::GetExecutablePath();
-	auto exePathComponents = mpt::String::Split<mpt::ustring>(exePath.GetDir().WithoutTrailingSlash().ToUnicode(), P_("\\").ToUnicode());
+	const mpt::PathString exePath = mpt::common_directories::get_application_directory();
+	auto exePathComponents = mpt::String::Split<mpt::ustring>(exePath.GetDirectory().WithoutTrailingSlash().ToUnicode(), P_("\\").ToUnicode());
 	if(exePathComponents.size() >= 2)
 	{
 		if(exePathComponents[exePathComponents.size()-1] == mpt::OS::Windows::Name(mpt::OS::Windows::GetProcessArchitecture()))
@@ -820,14 +928,14 @@ void CTrackApp::SetupPaths(bool overridePortable)
 	// Check if the user has configured portable mode.
 	bool configInstallPortable = false;
 	mpt::PathString portableFlagFilename = (configPathPortable + P_("OpenMPT.portable"));
-	bool configPortableFlag = portableFlagFilename.IsFile();
+	bool configPortableFlag = mpt::native_fs{}.is_file(portableFlagFilename);
 	configInstallPortable = configInstallPortable || configPortableFlag;
 	// before 1.29.00.13:
 	configInstallPortable = configInstallPortable || (GetPrivateProfileInt(_T("Paths"), _T("UseAppDataDirectory"), 1, (configPathPortable + P_("mptrack.ini")).AsNative().c_str()) == 0);
 	// convert to new style
 	if(configInstallPortable && !configPortableFlag)
 	{
-		mpt::SafeOutputFile f(portableFlagFilename);
+		mpt::IO::SafeOutputFile f(portableFlagFilename);
 	}
 
 	// Determine portable mode.
@@ -859,16 +967,16 @@ void CTrackApp::CreatePaths()
 	// Create missing diretories
 	if(!IsPortableMode())
 	{
-		if(!m_ConfigPath.IsDirectory())
+		if(!mpt::native_fs{}.is_directory(m_ConfigPath))
 		{
 			CreateDirectory(m_ConfigPath.AsNative().c_str(), 0);
 		}
 	}
-	if(!(GetConfigPath() + P_("Components")).IsDirectory())
+	if(!mpt::native_fs{}.is_directory(GetConfigPath() + P_("Components")))
 	{
 		CreateDirectory((GetConfigPath() + P_("Components")).AsNative().c_str(), 0);
 	}
-	if(!(GetConfigPath() + P_("Components\\") + mpt::PathString::FromUnicode(mpt::OS::Windows::Name(mpt::OS::Windows::GetProcessArchitecture()))).IsDirectory())
+	if(!mpt::native_fs{}.is_directory(GetConfigPath() + P_("Components\\") + mpt::PathString::FromUnicode(mpt::OS::Windows::Name(mpt::OS::Windows::GetProcessArchitecture()))))
 	{
 		CreateDirectory((GetConfigPath() + P_("Components\\") + mpt::PathString::FromUnicode(mpt::OS::Windows::Name(mpt::OS::Windows::GetProcessArchitecture()))).AsNative().c_str(), 0);
 	}
@@ -885,7 +993,7 @@ void CTrackApp::CreatePaths()
 		// Import old tunings
 		const mpt::PathString oldTunings = GetInstallPath() + P_("tunings\\");
 
-		if(oldTunings.IsDirectory())
+		if(mpt::native_fs{}.is_directory(oldTunings))
 		{
 			const mpt::PathString searchPattern = oldTunings + P_("*.*");
 			WIN32_FIND_DATA FindFileData;
@@ -909,11 +1017,44 @@ void CTrackApp::CreatePaths()
 
 #if !defined(MPT_BUILD_RETRO)
 
+static bool ProcessorCanRunCurrentBuild()
+{
+#ifdef MPT_ENABLE_ARCH_INTRINSICS
+	if(!mpt::arch::get_cpu_info().has_features(mpt::arch::current::assumed_features()))
+	{
+		return false;
+	}
+#endif // MPT_ENABLE_ARCH_INTRINSICS
+	return true;
+}
+
+static bool SystemCanRunCurrentBuild() 
+{
+	if(mpt::OS::Windows::IsOriginal())
+	{
+		if(mpt::osinfo::windows::Version::Current().IsBefore(mpt::OS::Windows::Version::GetMinimumKernelLevel()))
+		{
+			return false;
+		}
+		if(mpt::osinfo::windows::Version::Current().IsBefore(mpt::OS::Windows::Version::GetMinimumAPILevel()))
+		{
+			return false;
+		}
+	} else if(mpt::OS::Windows::IsWine() && theApp.GetWineVersion()->Version().IsValid())
+	{
+		if(theApp.GetWineVersion()->Version().IsBefore(mpt::OS::Wine::GetMinimumWineVersion()))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 bool CTrackApp::CheckSystemSupport()
 {
 	const mpt::ustring lf = U_("\n");
 	const mpt::ustring url = Build::GetURL(Build::Url::Download);
-	if(!BuildVariants::ProcessorCanRunCurrentBuild())
+	if(!ProcessorCanRunCurrentBuild())
 	{
 		mpt::ustring text;
 		text += U_("Your CPU is too old to run this variant of OpenMPT.") + lf;
@@ -921,21 +1062,21 @@ bool CTrackApp::CheckSystemSupport()
 		Reporting::Error(text, "OpenMPT");
 		return false;
 	}
-	if(BuildVariants::IsKnownSystem() && !BuildVariants::SystemCanRunCurrentBuild())
+	if(!SystemCanRunCurrentBuild())
 	{
-		mpt::ustring text;
-		text += U_("Your system does not meet the minimum requirements for this variant of OpenMPT.") + lf;
 		if(mpt::OS::Windows::IsOriginal())
 		{
+			mpt::ustring text;
+			text += U_("Your system does not meet the minimum requirements for this variant of OpenMPT.") + lf;
 			text += U_("OpenMPT will exit now.") + lf;
-		}
-		Reporting::Error(text, "OpenMPT");
-		if(mpt::OS::Windows::IsOriginal())
-		{
+			Reporting::Error(text, "OpenMPT");
 			return false;
 		} else
 		{
-			return true; // may work though
+			mpt::ustring text;
+			text += U_("Your system does not meet the minimum requirements for this variant of OpenMPT.") + lf;
+			Reporting::Error(text, "OpenMPT");
+			// may work though
 		}
 	}
 	return true;
@@ -977,7 +1118,7 @@ BOOL CTrackApp::InitInstanceEarly(CMPTCommandLineInfo &cmdInfo)
 	#endif
 
 	// Avoid e.g. audio APIs trying to load wdmaud.drv from arbitrary working directory
-	::SetCurrentDirectory(mpt::GetExecutablePath().AsNative().c_str());
+	::SetCurrentDirectory(mpt::common_directories::get_application_directory().AsNative().c_str());
 
 	// Initialize OLE MFC support
 	BOOL oleinit = AfxOleInit();
@@ -1226,9 +1367,9 @@ BOOL CTrackApp::InitInstanceImpl(CMPTCommandLineInfo &cmdInfo)
 	{
 		if(mpt::OS::Windows::IsWine())
 		{
-			return SoundDevice::SysInfo(mpt::osinfo::get_class(), mpt::OS::Windows::Version::Current(), mpt::OS::Windows::IsWine(), GetWineVersion()->HostClass(), GetWineVersion()->Version());
+			return SoundDevice::SysInfo(mpt::osinfo::get_class(), mpt::osinfo::windows::Version::Current(), mpt::OS::Windows::IsWine(), GetWineVersion()->HostClass(), GetWineVersion()->Version());
 		}
-		return SoundDevice::SysInfo(mpt::osinfo::get_class(), mpt::OS::Windows::Version::Current(), mpt::OS::Windows::IsWine(), mpt::osinfo::osclass::Unknown, mpt::osinfo::windows::wine::version());
+		return SoundDevice::SysInfo(mpt::osinfo::get_class(), mpt::osinfo::windows::Version::Current(), mpt::OS::Windows::IsWine(), mpt::osinfo::osclass::Unknown, mpt::osinfo::windows::wine::version());
 	};
 	SoundDevice::SysInfo sysInfo = GetSysInfo();
 	SoundDevice::AppInfo appInfo;
@@ -1250,7 +1391,8 @@ BOOL CTrackApp::InitInstanceImpl(CMPTCommandLineInfo &cmdInfo)
 	CSoundFile::SetDefaultNoteNames();
 
 	// Load DLS Banks
-	if (!cmdInfo.m_noDls) LoadDefaultDLSBanks();
+	if (!cmdInfo.m_noDls)
+		m_scannedDlsBanks = LoadDefaultDLSBanks();
 
 	// Initialize Plugins
 	if (!cmdInfo.m_noPlugins) InitializeDXPlugins();
@@ -1467,11 +1609,8 @@ int CTrackApp::ExitInstanceImpl()
 	m_pSoundDevicesManager = nullptr;
 	m_pAllSoundDeviceComponents = nullptr;
 	ExportMidiConfig(theApp.GetSettings());
+	AddScannedDLSBanks();
 	SaveDefaultDLSBanks();
-	for(auto &bank : gpDLSBanks)
-	{
-		delete bank;
-	}
 	gpDLSBanks.clear();
 
 	// Uninitialize Plugins
@@ -1534,7 +1673,7 @@ CModDoc *CTrackApp::NewDocument(MODTYPE newType)
 			const mpt::PathString dirs[] = { GetConfigPath() + P_("TemplateModules\\"), GetInstallPath() + P_("TemplateModules\\"), mpt::PathString() };
 			for(const auto &dir : dirs)
 			{
-				if((dir + templateFile).IsFile())
+				if(mpt::native_fs{}.is_file(dir + templateFile))
 				{
 					if(CModDoc *modDoc = static_cast<CModDoc *>(m_pModTemplate->OpenTemplateFile(dir + templateFile)))
 					{
@@ -1755,6 +1894,12 @@ BOOL CTrackApp::OnIdle(LONG lCount)
 	if(CMainFrame::GetMainFrame())
 	{
 		CMainFrame::GetMainFrame()->IdleHandlerSounddevice();
+
+		if(m_scannedDlsBanksAvailable)
+		{
+			if(AddScannedDLSBanks())
+				CMainFrame::GetMainFrame()->RefreshDlsBanks();
+		}
 	}
 
 	// Call plugins idle routine for open editor

@@ -16,6 +16,7 @@
 #include "ProgressDialog.h"
 #include "../soundlib/OPL.h"
 #include "../soundlib/Tagging.h"
+#include "mpt/io_file/outputfile.hpp"
 
 #include <zlib/zlib.h>
 
@@ -150,8 +151,8 @@ public:
 			header.lengthBytes += WriteDRODelay(f, header.lengthMs - prevOffsetMs);
 		
 		MPT_ASSERT(mpt::IO::TellWrite(f) == static_cast<mpt::IO::Offset>(header.lengthBytes + sizeof(header)));
-		// AdPlug can read some metadata following the register dump, but DroTrimmer panics if it see that data.
-		// As the metadata is very limited (40 characters per field, unknown 8-bit encoding) we'll leave that feature to the VGM export.
+		// AdPlug can read some metadata following the register dump, but DroTrimmer panics if it sees that data.
+		// As the metadata is very limited (40 characters per field, unspecified 8-bit encoding) we'll leave that feature to the VGM export.
 #if 0
 		mpt::IO::Write(f, mpt::as_byte(0xFF));
 		mpt::IO::Write(f, mpt::as_byte(0xFF));
@@ -178,7 +179,7 @@ public:
 		std::ostringstream outStream;
 		WriteVGM(outStream, loopStart, fileTags);
 
-		std::string outData = std::move(outStream.str());
+		std::string outData = std::move(outStream).str();
 		z_stream strm{};
 		strm.avail_in = static_cast<uInt>(outData.size());
 		strm.next_in = reinterpret_cast<Bytef *>(outData.data());
@@ -223,7 +224,7 @@ public:
 				prevOffset = loopStart;
 				header.loopOffset = static_cast<uint32>(mpt::IO::TellWrite(f) - 0x1C);
 				wroteLoopStart = true;
-				for(const auto [loopReg, value] : m_registerDumpAtLoopStart)
+				for(const auto & [loopReg, value] : m_registerDumpAtLoopStart)
 				{
 					if(m_prevRegisters.count(loopReg))
 					{
@@ -262,7 +263,7 @@ public:
 		{
 			WriteVGMString(tagStream, mpt::ToWide(tag));
 		}
-		const auto tagsData = std::move(tagStream.str());
+		const auto tagsData = std::move(tagStream).str();
 
 		Gd3Header gd3Header{};
 		memcpy(gd3Header.magic, Gd3Header::Gd3Magic, 4);
@@ -397,7 +398,7 @@ public:
 		SetDlgItemText(IDC_EDIT2, mpt::ToWin(m_sndFile.GetCharsetFile(), m_sndFile.GetTitle()).c_str());
 		SetDlgItemText(IDC_EDIT3, mpt::ToWin(m_sndFile.m_songArtist).c_str());
 		if(!m_sndFile.GetFileHistory().empty())
-			SetDlgItemText(IDC_EDIT4, mpt::ToWin(mpt::String::Replace(m_sndFile.GetFileHistory().back().AsISO8601().substr(0, 10), U_("-"), U_("/"))).c_str());
+			SetDlgItemText(IDC_EDIT4, mpt::ToWin(mpt::String::Replace(m_sndFile.GetFileHistory().back().AsISO8601(m_sndFile.GetTimezoneInternal()).substr(0, 10), U_("-"), U_("/"))).c_str());
 		SetDlgItemText(IDC_EDIT5, mpt::ToWin(m_sndFile.GetCharsetFile(), m_sndFile.m_songMessage.GetFormatted(SongMessage::leCRLF)).c_str());
 
 		m_locked = false;
@@ -415,7 +416,7 @@ public:
 
 		FileDialog dlg = SaveFileDialog()
 			.DefaultExtension(extension)
-			.DefaultFilename(m_modDoc.GetPathNameMpt().GetFileName().ReplaceExt(P_(".") + extension))
+			.DefaultFilename(m_modDoc.GetPathNameMpt().GetFilenameBase().ReplaceExtension(P_(".") + extension))
 			.ExtensionFilter(MPT_UFORMAT("{} Files|*.{}||")(mpt::ToUpperCase(extension.ToUnicode()), extension))
 			.WorkingDirectory(TrackerSettings::Instance().PathExport.GetWorkingDir());
 		if(!dlg.Show())
@@ -425,6 +426,7 @@ public:
 		}
 		TrackerSettings::Instance().PathExport.SetWorkingDir(dlg.GetWorkingDirectory());
 
+		m_conversionRunning = true;
 		DoConversion(dlg.GetFirstFile());
 
 		CProgressDialog::OnOK();
@@ -520,7 +522,7 @@ public:
 
 		auto opl = std::move(m_sndFile.m_opl);
 
-		const auto songIndexFmt = mpt::FormatSpec{}.Dec().FillNul().Width(1 + static_cast<int>(std::log10(m_subSongs.size())));
+		const auto songIndexFmt = mpt::FormatSpec<mpt::ustring>{}.Dec().FillNul().Width(1 + static_cast<int>(std::log10(m_subSongs.size())));
 
 		size_t totalSamples = 0;
 		for(size_t i = 0; i < m_subSongs.size() && !m_abort; i++)
@@ -570,9 +572,9 @@ public:
 
 			mpt::PathString currentFileName = fileName;
 			if(m_subSongs.size() > 1)
-				currentFileName = fileName.ReplaceExt(mpt::PathString::FromNative(MPT_TFORMAT(" ({})")(mpt::ufmt::fmt(i + 1, songIndexFmt))) + fileName.GetFileExt());
-			mpt::SafeOutputFile sf(currentFileName, std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
-			mpt::ofstream &f = sf;
+				currentFileName = fileName.ReplaceExtension(mpt::PathString::FromNative(MPT_TFORMAT(" ({})")(mpt::ufmt::fmt(i + 1, songIndexFmt))) + fileName.GetFilenameExtension());
+			mpt::IO::SafeOutputFile sf(currentFileName, std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+			mpt::IO::ofstream &f = sf;
 			try
 			{
 				if(!f)
@@ -583,7 +585,7 @@ public:
 				else if(s_format == ExportFormat::VGM)
 					m_oplLogger.WriteVGM(f, loopStart, fileTags);
 				else
-					m_oplLogger.WriteVGZ(f, loopStart, fileTags, currentFileName.ReplaceExt(P_(".vgm")).GetFullFileName().ToUnicode());
+					m_oplLogger.WriteVGZ(f, loopStart, fileTags, currentFileName.ReplaceExtension(P_(".vgm")).GetFilename().ToUnicode());
 			} catch(const std::exception &)
 			{
 				Reporting::Error(MPT_UFORMAT("Unable to write to file {}!")(currentFileName));

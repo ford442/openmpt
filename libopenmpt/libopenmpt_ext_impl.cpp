@@ -85,6 +85,8 @@ namespace openmpt {
 			return dynamic_cast< ext::interactive * >( this );
 		} else if ( interface_id == ext::interactive2_id ) {
 			return dynamic_cast< ext::interactive2 * >( this );
+		} else if ( interface_id == ext::interactive3_id ) {
+			return dynamic_cast< ext::interactive3 * >( this );
 
 
 
@@ -100,8 +102,8 @@ namespace openmpt {
 	// pattern_vis
 
 	module_ext_impl::effect_type module_ext_impl::get_pattern_row_channel_volume_effect_type( std::int32_t pattern, std::int32_t row, std::int32_t channel ) const {
-		std::uint8_t byte = get_pattern_row_channel_command( pattern, row, channel, module::command_volumeffect );
-		switch ( OpenMPT::ModCommand::GetVolumeEffectType( byte ) ) {
+		auto volcmd = static_cast<OpenMPT::VolumeCommand>( get_pattern_row_channel_command( pattern, row, channel, module::command_volumeffect ) );
+		switch ( OpenMPT::ModCommand::GetVolumeEffectType( volcmd ) ) {
 			case OpenMPT::EFFECT_TYPE_NORMAL : return effect_general; break;
 			case OpenMPT::EFFECT_TYPE_GLOBAL : return effect_global ; break;
 			case OpenMPT::EFFECT_TYPE_VOLUME : return effect_volume ; break;
@@ -112,8 +114,8 @@ namespace openmpt {
 	}
 
 	module_ext_impl::effect_type module_ext_impl::get_pattern_row_channel_effect_type( std::int32_t pattern, std::int32_t row, std::int32_t channel ) const {
-		std::uint8_t byte = get_pattern_row_channel_command( pattern, row, channel, module::command_effect );
-		switch (OpenMPT::ModCommand::GetEffectType( byte ) ) {
+		auto command = static_cast<OpenMPT::EffectCommand>( get_pattern_row_channel_command( pattern, row, channel, module::command_effect ) );
+		switch (OpenMPT::ModCommand::GetEffectType( command ) ) {
 			case OpenMPT::EFFECT_TYPE_NORMAL : return effect_general; break;
 			case OpenMPT::EFFECT_TYPE_GLOBAL : return effect_global ; break;
 			case OpenMPT::EFFECT_TYPE_VOLUME : return effect_volume ; break;
@@ -212,7 +214,7 @@ namespace openmpt {
 		if ( channel < 0 || channel >= get_num_channels() ) {
 			throw openmpt::exception("invalid channel");
 		}
-		return m_sndFile->m_PlayState.Chn[channel].dwFlags[OpenMPT::CHN_MUTE];
+		return m_sndFile->m_PlayState.Chn[channel].dwFlags[OpenMPT::CHN_MUTE | OpenMPT::CHN_SYNCMUTE];
 	}
 	
 	void module_ext_impl::set_instrument_mute_status( std::int32_t instrument, bool mute ) {
@@ -342,6 +344,13 @@ namespace openmpt {
 		}
 		auto & chn = m_sndFile->m_PlayState.Chn[channel];
 		return chn.microTuning / 32768.0;
+	}
+
+	void module_ext_impl::set_current_tempo2( double tempo ) {
+		if ( tempo < 32.0 || tempo > 512.0 ) {
+			throw openmpt::exception("invalid tempo");
+		}
+		m_sndFile->m_PlayState.m_nMusicTempo = decltype( m_sndFile->m_PlayState.m_nMusicTempo )( tempo );
 	}
 
 	/* add stuff here */

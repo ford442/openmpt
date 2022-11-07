@@ -2398,8 +2398,8 @@
 		]]
 	end
 
-	function suite.XCBuildConfigurationProject_OnSysIncludeDirs()
-		sysincludedirs { "../include", "../libs", "../name with spaces" }
+	function suite.XCBuildConfigurationProject_OnExternalIncludeDirs()
+		externalincludedirs { "../include", "../libs", "../name with spaces" }
 		prepare()
 		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
 		test.capture [[
@@ -2693,6 +2693,32 @@
 		]]
 	end
 
+	function suite.XCBuildConfigurationProject_OnOpenMP()
+		openmp "On"
+		prepare()
+		xcode.XCBuildConfiguration_Project(tr, tr.configs[1])
+		test.capture [[
+		A14350AC4595EE5E57CE36EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				CONFIGURATION_TEMP_DIR = "$(OBJROOT)";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = obj/Debug;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_CFLAGS = (
+					"-fopenmp",
+				);
+				SYMROOT = bin/Debug;
+			};
+			name = Debug;
+		};
+		]]
+	end
 
 	function suite.XCBuildConfigurationProject_OnFloatStrict()
 		floatingpoint "Strict"
@@ -3489,7 +3515,7 @@
 		};
 		]]
     end
-    
+
     function suite.XCBuildConfigurationProject_OnCpp11()
 		workspace("MyWorkspace")
 		cppdialect("C++11")
@@ -3567,7 +3593,7 @@
 		};
 		]]
     end
-    
+
     function suite.XCBuildConfigurationProject_OnCpp1y()
 		workspace("MyWorkspace")
 		cppdialect("C++1y")
@@ -3619,7 +3645,7 @@
 		};
 		]]
     end
-    
+
     function suite.XCBuildConfigurationProject_OnCpp1z()
 		workspace("MyWorkspace")
 		cppdialect("C++1z")
@@ -3671,7 +3697,7 @@
 		};
 		]]
     end
-    
+
     function suite.XCBuildConfigurationProject_OnCpp2a()
 		workspace("MyWorkspace")
 		cppdialect("C++2a")
@@ -3749,7 +3775,7 @@
 		};
 		]]
     end
-    
+
     function suite.XCBuildConfigurationProject_OnCppGnu0x()
 		workspace("MyWorkspace")
 		cppdialect("gnu++0x")
@@ -3801,7 +3827,7 @@
 		};
 		]]
     end
-    
+
     function suite.XCBuildConfigurationProject_OnCppGnu1y()
 		workspace("MyWorkspace")
 		cppdialect("gnu++1y")
@@ -3853,7 +3879,7 @@
 		};
 		]]
     end
-    
+
     function suite.XCBuildConfigurationProject_OnCppGnu1z()
 		workspace("MyWorkspace")
 		cppdialect("gnu++1z")
@@ -3905,7 +3931,7 @@
 		};
 		]]
     end
-    
+
     function suite.XCBuildConfigurationProject_OnCppGnu2a()
 		workspace("MyWorkspace")
 		cppdialect("gnu++2a")

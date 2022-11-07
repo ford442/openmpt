@@ -2,17 +2,12 @@
  project "rtaudio"
   uuid "4886456b-1342-4ec8-ad3f-d92aeb8c1097"
   language "C++"
-  location ( "../../build/" .. mpt_projectpathname .. "/ext" )
-  mpt_projectname = "rtaudio"
-  dofile "../../build/premake/premake-defaults-LIB.lua"
-  dofile "../../build/premake/premake-defaults.lua"
+  location ( "%{wks.location}" .. "/ext" )
+  mpt_kind "static"
   targetname "openmpt-rtaudio"
 	filter {}
-	filter { "action:vs*" }
-		characterset "Unicode"
-	filter {}
 	filter { "action:vs2017" }
-		if _OPTIONS["winxp"] then
+		if _OPTIONS["windows-version"] == "winxp" then
 			defines {
 				"__WINDOWS_DS__",
 			}
@@ -22,7 +17,7 @@
 			}
 		end
 	filter { "not action:vs2017" }
-		if _OPTIONS["winxp"] then
+		if _OPTIONS["windows-version"] == "winxp" then
 			defines {
 				"__WINDOWS_DS__",
 			}
@@ -36,7 +31,7 @@
    "../../include/rtaudio/RtAudio.cpp",
    "../../include/rtaudio/RtAudio.h",
   }
-	if _OPTIONS["winxp"] then
+	if _OPTIONS["windows-version"] == "winxp" then
 		if _OPTIONS["clang"] then
 			filter { "not kind:StaticLib" }
 				links { "dsound" }
@@ -54,3 +49,20 @@
 	filter { "action:vs*" }
 		buildoptions { "/wd6031" } -- analyze
 	filter {}
+
+function mpt_use_rtaudio ()
+	filter {}
+	filter { "action:vs*" }
+		includedirs {
+			"../../include/rtaudio",
+		}
+	filter { "not action:vs*" }
+		externalincludedirs {
+			"../../include/rtaudio",
+		}
+	filter {}
+	links {
+		"rtaudio",
+	}
+	filter {}
+end

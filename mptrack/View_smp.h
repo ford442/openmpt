@@ -75,7 +75,7 @@ protected:
 	HitTestItem m_dragItem = HitTestItem::Nothing;
 	CPoint m_startDragPoint;
 	SmpLength m_startDragValue = MAX_SAMPLE_LENGTH;
-	bool m_dragPreparedUndo = false, m_forceRedrawWaveform = true;
+	bool m_dragPreparedUndo = false, m_fineDrag = false, m_forceRedrawWaveform = true, m_scrolledSinceLastMouseMove = false;
 
 	// Sample drawing
 	CPoint m_lastDrawPoint;		// For drawing horizontal lines
@@ -225,6 +225,7 @@ protected:
 	afx_msg void OnUpdateUndo(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateRedo(CCmdUI *pCmdUI);
 	afx_msg void OnSampleSlice();
+	afx_msg void OnSampleInsertCuePoint();
 	afx_msg void OnSampleDeleteCuePoint();
 	afx_msg void OnTimelineFormatSeconds() { SetTimelineFormat(TimelineFormat::Seconds); }
 	afx_msg void OnTimelineFormatSamples() { SetTimelineFormat(TimelineFormat::Samples); }

@@ -126,7 +126,7 @@ MPT_BINARY_STRUCT(DBMEnvelope, 136)
 
 
 // Note: Unlike in MOD, 1Fx, 2Fx, 5Fx / 5xF, 6Fx / 6xF and AFx / AxF are fine slides.
-static constexpr ModCommand::COMMAND dbmEffects[] =
+static constexpr EffectCommand dbmEffects[] =
 {
 	CMD_ARPEGGIO, CMD_PORTAMENTOUP, CMD_PORTAMENTODOWN, CMD_TONEPORTAMENTO,
 	CMD_VIBRATO, CMD_TONEPORTAVOL, CMD_VIBRATOVOL, CMD_TREMOLO,
@@ -146,19 +146,21 @@ static constexpr ModCommand::COMMAND dbmEffects[] =
 };
 
 
-static void ConvertDBMEffect(uint8 &command, uint8 &param)
+static std::pair<EffectCommand, uint8> ConvertDBMEffect(const uint8 cmd, uint8 param)
 {
-	uint8 oldCmd = command;
-	if(command < std::size(dbmEffects))
-		command = dbmEffects[command];
-	else
-		command = CMD_NONE;
+	EffectCommand command = CMD_NONE;
+	if(cmd < std::size(dbmEffects))
+		command = dbmEffects[cmd];
 
 	switch(command)
 	{
 	case CMD_ARPEGGIO:
 		if(param == 0)
 			command = CMD_NONE;
+		break;
+
+	case CMD_PATTERNBREAK:
+		param = ((param >> 4) * 10) + (param & 0x0F);
 		break;
 
 #ifdef MODPLUG_TRACKER
@@ -226,7 +228,7 @@ static void ConvertDBMEffect(uint8 &command, uint8 &param)
 		break;
 
 	case CMD_KEYOFF:
-		if (param == 0)
+		if(param == 0)
 		{
 			// TODO key off at tick 0
 		}
@@ -234,8 +236,13 @@ static void ConvertDBMEffect(uint8 &command, uint8 &param)
 
 	case CMD_MIDI:
 		// Encode echo parameters into fixed MIDI macros
-		param = 128 + (oldCmd - 32) * 32 + param / 8;
+		param = 128 + (cmd - 32) * 32 + param / 8;
+		break;
+
+	default:
+		break;
 	}
+	return {command, param};
 }
 
 
@@ -353,7 +360,7 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 	m_modFormat.formatName = U_("DigiBooster Pro");
 	m_modFormat.type = U_("dbm");
 	m_modFormat.madeWithTracker = MPT_UFORMAT("DigiBooster Pro {}.{}")(mpt::ufmt::hex(fileHeader.trkVerHi), mpt::ufmt::hex(fileHeader.trkVerLo));
-	m_modFormat.charset = mpt::Charset::ISO8859_1;
+	m_modFormat.charset = mpt::Charset::Amiga_no_C1;
 
 	// Name chunk
 	FileReader nameChunk = chunks.GetChunk(DBMChunk::idNAME);
@@ -380,7 +387,7 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 			if(Order.AddSequence() == SEQUENCEINDEX_INVALID)
 				break;
 		}
-		Order().SetName(mpt::ToUnicode(mpt::Charset::ISO8859_1, name));
+		Order().SetName(mpt::ToUnicode(mpt::Charset::Amiga_no_C1, name));
 		ReadOrderFromFile<uint16be>(Order(), songChunk, numOrders);
 #else
 		const ORDERINDEX startIndex = Order().GetLength();
@@ -425,7 +432,7 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 			ModSample &mptSmp = Samples[instrHeader.sample];
 			mptSmp.Initialize();
 			mptSmp.nVolume = std::min(static_cast<uint16>(instrHeader.volume), uint16(64)) * 4u;
-			mptSmp.nC5Speed = instrHeader.sampleRate;
+			mptSmp.nC5Speed = Util::muldivr(instrHeader.sampleRate, 8303, 8363);
 
 			if(instrHeader.loopLength && (instrHeader.flags & (DBMInstrument::smpLoop | DBMInstrument::smpPingPongLoop)))
 			{
@@ -519,28 +526,24 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 				}
 				if(b & 0x3C)
 				{
-					uint8 cmd1 = 0, cmd2 = 0, param1 = 0, param2 = 0;
-					if(b & 0x04) cmd2 = chunk.ReadUint8();
-					if(b & 0x08) param2 = chunk.ReadUint8();
-					if(b & 0x10) cmd1 = chunk.ReadUint8();
-					if(b & 0x20) param1 = chunk.ReadUint8();
-					ConvertDBMEffect(cmd1, param1);
-					ConvertDBMEffect(cmd2, param2);
+					uint8 c1 = 0, p1 = 0, c2 = 0, p2 = 0;
+					if(b & 0x04) c2 = chunk.ReadUint8();
+					if(b & 0x08) p2 = chunk.ReadUint8();
+					if(b & 0x10) c1 = chunk.ReadUint8();
+					if(b & 0x20) p1 = chunk.ReadUint8();
+					auto [cmd1, param1] = ConvertDBMEffect(c1, p1);
+					auto [cmd2, param2] = ConvertDBMEffect(c2, p2);
 
-					if (cmd2 == CMD_VOLUME || (cmd2 == CMD_NONE && cmd1 != CMD_VOLUME))
+					if(cmd2 == CMD_VOLUME || (cmd2 == CMD_NONE && cmd1 != CMD_VOLUME))
 					{
 						std::swap(cmd1, cmd2);
 						std::swap(param1, param2);
 					}
 
-					const auto lostCommand = ModCommand::TwoRegularCommandsToMPT(cmd1, param1, cmd2, param2);
+					const auto lostCommand = m.FillInTwoCommands(cmd1, param1, cmd2, param2);
 					if(ModCommand::IsGlobalCommand(lostCommand.first, lostCommand.second))
 						lostGlobalCommands.insert(lostGlobalCommands.begin(), lostCommand);  // Insert at front so that the last command of same type "wins"
 
-					m.volcmd = cmd1;
-					m.vol = param1;
-					m.command = cmd2;
-					m.param = param2;
 #ifdef MODPLUG_TRACKER
 					m.ExtendedMODtoS3MEffect();
 #endif // MODPLUG_TRACKER
@@ -624,10 +627,10 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 		for(uint32 i = 0; i < 32; i++)
 		{
 			uint32 param = (i * 127u) / 32u;
-			mpt::String::WriteAutoBuf(m_MidiCfg.szMidiZXXExt[i     ]) = MPT_AFORMAT("F0F080{}")(mpt::afmt::HEX0<2>(param));
-			mpt::String::WriteAutoBuf(m_MidiCfg.szMidiZXXExt[i + 32]) = MPT_AFORMAT("F0F081{}")(mpt::afmt::HEX0<2>(param));
-			mpt::String::WriteAutoBuf(m_MidiCfg.szMidiZXXExt[i + 64]) = MPT_AFORMAT("F0F082{}")(mpt::afmt::HEX0<2>(param));
-			mpt::String::WriteAutoBuf(m_MidiCfg.szMidiZXXExt[i + 96]) = MPT_AFORMAT("F0F083{}")(mpt::afmt::HEX0<2>(param));
+			m_MidiCfg.Zxx[i     ] = MPT_AFORMAT("F0F080{}")(mpt::afmt::HEX0<2>(param));
+			m_MidiCfg.Zxx[i + 32] = MPT_AFORMAT("F0F081{}")(mpt::afmt::HEX0<2>(param));
+			m_MidiCfg.Zxx[i + 64] = MPT_AFORMAT("F0F082{}")(mpt::afmt::HEX0<2>(param));
+			m_MidiCfg.Zxx[i + 96] = MPT_AFORMAT("F0F083{}")(mpt::afmt::HEX0<2>(param));
 		}
 	}
 #endif // NO_PLUGINS

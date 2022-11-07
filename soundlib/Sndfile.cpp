@@ -18,6 +18,9 @@
 #include "../mptrack/Mainfrm.h"
 #endif // MODPLUG_TRACKER
 #ifdef MPT_EXTERNAL_SAMPLES
+#include "mpt/io_file/inputfile.hpp"
+#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "../common/mptFileIO.h"
 #include "../common/mptFileIO.h"
 #endif // MPT_EXTERNAL_SAMPLES
 #include "../common/version.h"
@@ -54,19 +57,54 @@ bool SettingCacheCompleteFileBeforeLoading()
 }
 
 
-mpt::ustring FileHistory::AsISO8601() const
+mpt::ustring FileHistory::AsISO8601(mpt::Date::LogicalTimezone internalTimezone) const
 {
-	tm date = loadDate;
 	if(openTime > 0)
 	{
 		// Calculate the date when editing finished.
 		double openSeconds = static_cast<double>(openTime) / HISTORY_TIMER_PRECISION;
-		tm tmpLoadDate = loadDate;
-		int64 loadDateSinceEpoch = mpt::Date::Unix::FromUTC(tmpLoadDate);
-		int64 saveDateSinceEpoch = loadDateSinceEpoch + mpt::saturate_round<int64>(openSeconds);
-		date = mpt::Date::Unix(saveDateSinceEpoch).AsUTC();
+		mpt::Date::AnyGregorian tmpLoadDate = loadDate;
+		if (internalTimezone == mpt::Date::LogicalTimezone::UTC)
+		{
+			int64 loadDateSinceEpoch = mpt::Date::UnixAsSeconds(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(tmpLoadDate)));
+			int64 saveDateSinceEpoch = loadDateSinceEpoch + mpt::saturate_round<int64>(openSeconds);
+			return mpt::Date::ToShortenedISO8601(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(saveDateSinceEpoch)));
+#ifdef MODPLUG_TRACKER
+		} else if(internalTimezone == mpt::Date::LogicalTimezone::Local)
+		{
+			int64 loadDateSinceEpoch = mpt::Date::UnixAsSeconds(mpt::Date::UnixFromLocal(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::Local>(tmpLoadDate)));
+			int64 saveDateSinceEpoch = loadDateSinceEpoch + mpt::saturate_round<int64>(openSeconds);
+			return mpt::Date::ToShortenedISO8601(mpt::Date::UnixAsLocal(mpt::Date::UnixFromSeconds(saveDateSinceEpoch)));
+#endif // MODPLUG_TRACKER
+		} else
+		{
+			// assume UTC for unspecified timezone when calculating
+			int64 loadDateSinceEpoch = mpt::Date::UnixAsSeconds(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(tmpLoadDate)));
+			int64 saveDateSinceEpoch = loadDateSinceEpoch + mpt::saturate_round<int64>(openSeconds);
+			return mpt::Date::ToShortenedISO8601(mpt::Date::forget_timezone(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(saveDateSinceEpoch))));
+		}
+	} else
+	{
+		if(internalTimezone == mpt::Date::LogicalTimezone::UTC)
+		{
+			return mpt::Date::ToShortenedISO8601(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(loadDate));
+#ifdef MODPLUG_TRACKER
+		} else if(internalTimezone == mpt::Date::LogicalTimezone::Local)
+		{
+			return mpt::Date::ToShortenedISO8601(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::Local>(loadDate));
+#endif // MODPLUG_TRACKER
+		} else
+		{
+			return mpt::Date::ToShortenedISO8601(loadDate);
+		}
 	}
-	return mpt::Date::ToShortenedISO8601(date);
+}
+
+
+CSoundFile::PlayState::PlayState()
+{
+	std::fill(std::begin(Chn), std::end(Chn), ModChannel{});
+	m_midiMacroScratchSpace.reserve(kMacroLength);  // Note: If macros ever become variable-length, the scratch space needs to be at least one byte longer than the longest macro in the file for end-of-SysEx insertion to stay allocation-free in the mixer!
 }
 
 
@@ -84,12 +122,12 @@ CSoundFile::CSoundFile() :
 	m_pModSpecs(&ModSpecs::itEx),
 	m_nType(MOD_TYPE_NONE),
 	Patterns(*this),
-#ifdef MODPLUG_TRACKER
-	m_MIDIMapper(*this),
-#endif
 	Order(*this),
 	m_PRNG(mpt::make_prng<mpt::fast_prng>(mpt::global_prng())),
 	m_visitedRows(*this)
+#ifdef MODPLUG_TRACKER
+	, m_MIDIMapper(*this)
+#endif
 {
 	MemsetZero(MixSoundBuffer);
 	MemsetZero(MixRearBuffer);
@@ -256,6 +294,8 @@ static constexpr FileFormatLoader ModuleFormatLoaders[] =
 	MPT_DECLARE_FORMAT(PLM),
 	MPT_DECLARE_FORMAT(AM),
 	MPT_DECLARE_FORMAT(J2B),
+	MPT_DECLARE_FORMAT(GT2),
+	MPT_DECLARE_FORMAT(GTK),
 	MPT_DECLARE_FORMAT(PT36),
 	MPT_DECLARE_FORMAT(SymMOD),
 	MPT_DECLARE_FORMAT(MUS_KM),
@@ -367,115 +407,156 @@ CSoundFile::ProbeResult CSoundFile::Probe(ProbeFlags flags, mpt::span<const std:
 }
 
 
-#ifdef MODPLUG_TRACKER
 bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags, CModDoc *pModDoc)
 {
+	m_nMixChannels = 0;
+#ifdef MODPLUG_TRACKER
 	m_pModDoc = pModDoc;
 #else
-bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags)
-{
-#endif // MODPLUG_TRACKER
-
-	m_nMixChannels = 0;
-#ifndef MODPLUG_TRACKER
+	MPT_UNUSED(pModDoc);
 	m_nFreqFactor = m_nTempoFactor = 65536;
-#endif
+#endif  // MODPLUG_TRACKER
 
-	MemsetZero(Instruments);
 	Clear(m_szNames);
 #ifndef NO_PLUGINS
 	std::fill(std::begin(m_MixPlugins), std::end(m_MixPlugins), SNDMIXPLUGIN());
-#endif // NO_PLUGINS
+#endif  // NO_PLUGINS
 
+	if(CreateInternal(file, loadFlags))
+		return true;
+
+#ifndef NO_ARCHIVE_SUPPORT
+	if(!(loadFlags & skipContainer) && file.IsValid())
+	{
+		CUnarchiver unarchiver(file);
+		if(unarchiver.ExtractBestFile(GetSupportedExtensions(true)))
+		{
+			if(CreateInternal(unarchiver.GetOutputFile(), loadFlags))
+			{
+				// Read archive comment if there is no song comment
+				if(m_songMessage.empty())
+				{
+					m_songMessage.assign(mpt::ToCharset(mpt::Charset::Locale, unarchiver.GetComment()));
+				}
+				return true;
+			}
+		}
+	}
+#endif
+
+	return false;
+}
+
+
+bool CSoundFile::CreateInternal(FileReader file, ModLoadingFlags loadFlags)
+{
 	if(file.IsValid())
 	{
-
+		std::vector<ContainerItem> containerItems;
+		MODCONTAINERTYPE packedContainerType = MOD_CONTAINERTYPE_NONE;
+		if(!(loadFlags & skipContainer))
 		{
-
-#ifndef NO_ARCHIVE_SUPPORT
-			CUnarchiver unarchiver(file);
-			if(!(loadFlags & skipContainer))
-			{
-				if (unarchiver.ExtractBestFile(GetSupportedExtensions(true)))
-				{
-					file = unarchiver.GetOutputFile();
-				}
-			}
-#endif
-
-			std::vector<ContainerItem> containerItems;
-			MODCONTAINERTYPE packedContainerType = MOD_CONTAINERTYPE_NONE;
-			if(!(loadFlags & skipContainer))
-			{
-				ContainerLoadingFlags containerLoadFlags = (loadFlags == onlyVerifyHeader) ? ContainerOnlyVerifyHeader : ContainerUnwrapData;
+			ContainerLoadingFlags containerLoadFlags = (loadFlags == onlyVerifyHeader) ? ContainerOnlyVerifyHeader : ContainerUnwrapData;
 #if !defined(MPT_WITH_ANCIENT)
-				if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackXPK(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_XPK;
-				if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackPP20(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_PP20;
-				if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackMMCMP(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_MMCMP;
+			if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackXPK(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_XPK;
+			if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackPP20(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_PP20;
+			if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackMMCMP(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_MMCMP;
 #endif // !MPT_WITH_ANCIENT
-				if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackUMX(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_UMX;
-				if(packedContainerType != MOD_CONTAINERTYPE_NONE)
+			if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackUMX(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_UMX;
+			if(packedContainerType != MOD_CONTAINERTYPE_NONE)
+			{
+				if(loadFlags == onlyVerifyHeader)
 				{
-					if(loadFlags == onlyVerifyHeader)
-					{
-						return true;
-					}
-					if(!containerItems.empty())
-					{
-						// cppcheck false-positive
-						// cppcheck-suppress containerOutOfBounds
-						file = containerItems[0].file;
-					}
+					return true;
+				}
+				if(!containerItems.empty())
+				{
+					// cppcheck false-positive
+					// cppcheck-suppress containerOutOfBounds
+					file = containerItems[0].file;
 				}
 			}
-
-			if(loadFlags & skipModules)
-			{
-				return false;
-			}
-
-			// Try all module format loaders
-			bool loaderSuccess = false;
-			for(const auto &format : ModuleFormatLoaders)
-			{
-				loaderSuccess = (this->*(format.loader))(file, loadFlags);
-				if(loaderSuccess)
-					break;
-			}
-
-			if(!loaderSuccess)
-			{
-				m_nType = MOD_TYPE_NONE;
-				m_ContainerType = MOD_CONTAINERTYPE_NONE;
-			}
-			if(loadFlags == onlyVerifyHeader)
-			{
-				return loaderSuccess;
-			}
-
-			if(packedContainerType != MOD_CONTAINERTYPE_NONE && m_ContainerType == MOD_CONTAINERTYPE_NONE)
-			{
-				m_ContainerType = packedContainerType;
-			}
-
-#ifndef NO_ARCHIVE_SUPPORT
-			// Read archive comment if there is no song comment
-			if(m_songMessage.empty())
-			{
-				m_songMessage.assign(mpt::ToCharset(mpt::Charset::Locale, unarchiver.GetComment()));
-			}
-#endif
-
-			m_visitedRows.Initialize(true);
-
 		}
+
+		if(loadFlags & skipModules)
+		{
+			return false;
+		}
+
+		// Try all module format loaders
+		bool loaderSuccess = false;
+		for(const auto &format : ModuleFormatLoaders)
+		{
+			loaderSuccess = (this->*(format.loader))(file, loadFlags);
+			if(loaderSuccess)
+				break;
+		}
+
+		if(!loaderSuccess)
+		{
+			m_nType = MOD_TYPE_NONE;
+			m_ContainerType = MOD_CONTAINERTYPE_NONE;
+		}
+		if(loadFlags == onlyVerifyHeader)
+		{
+			return loaderSuccess;
+		}
+
+		if(packedContainerType != MOD_CONTAINERTYPE_NONE && m_ContainerType == MOD_CONTAINERTYPE_NONE)
+		{
+			m_ContainerType = packedContainerType;
+		}
+
+		m_visitedRows.Initialize(true);
 	} else
 	{
 		// New song
 		InitializeGlobals();
 		m_visitedRows.Initialize(true);
 		m_dwCreatedWithVersion = Version::Current();
+#if MPT_TIME_UTC_ON_DISK
+#ifdef MODPLUG_TRACKER
+		if(GetType() & MOD_TYPE_IT)
+		{
+			m_modFormat.timezone = mpt::Date::LogicalTimezone::UTC;
+		} else
+		{
+			m_modFormat.timezone = mpt::Date::LogicalTimezone::Local;
+		}
+#else // !MODPLUG_TRACKER
+		if (GetType() & MOD_TYPE_IT)
+		{
+			m_modFormat.timezone = mpt::Date::LogicalTimezone::UTC;
+		} else
+		{
+			m_modFormat.timezone = mpt::Date::LogicalTimezone::Unspecified;
+		}
+#endif // MODPLUG_TRACKER
+#else
+#ifdef MODPLUG_TRACKER
+		m_modFormat.timezone = mpt::Date::LogicalTimezone::Local;
+#else // !MODPLUG_TRACKER
+		m_modFormat.timezone = mpt::Date::LogicalTimezone::Unspecified;
+#endif // MODPLUG_TRACKER
+#endif
 	}
+
+#if MPT_TIME_UTC_ON_DISK
+#ifdef MODPLUG_TRACKER
+	// convert timestamps to UTC
+	if(m_modFormat.timezone == mpt::Date::LogicalTimezone::Local)
+	{
+		for(auto & fileHistoryEntry : m_FileHistory)
+		{
+			if(fileHistoryEntry.HasValidDate())
+			{
+				fileHistoryEntry.loadDate = mpt::Date::forget_timezone(mpt::Date::UnixAsUTC(mpt::Date::UnixFromLocal(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::Local>(fileHistoryEntry.loadDate))));
+			}
+		}
+		m_modFormat.timezone = mpt::Date::LogicalTimezone::UTC;
+	}
+#endif // MODPLUG_TRACKER
+#endif
 
 	// Adjust channels
 	const auto muteFlag = GetChannelMuteFlag();
@@ -500,10 +581,10 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags)
 			mpt::PathString filename = GetSamplePath(nSmp);
 			if(file.GetOptionalFileName())
 			{
-				filename = filename.RelativePathToAbsolute(file.GetOptionalFileName()->GetPath());
+				filename = mpt::RelativePathToAbsolute(filename, file.GetOptionalFileName()->GetDirectoryWithDrive());
 			} else if(GetpModDoc() != nullptr)
 			{
-				filename = filename.RelativePathToAbsolute(GetpModDoc()->GetPathNameMpt().GetPath());
+				filename = mpt::RelativePathToAbsolute(filename, GetpModDoc()->GetPathNameMpt().GetDirectoryWithDrive());
 			}
 			filename = filename.Simplify();
 			if(!LoadExternalSample(nSmp, filename))
@@ -554,6 +635,8 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags)
 	if(!m_nDefaultSpeed)
 		m_nDefaultSpeed = 6;
 
+	if(!m_nDefaultRowsPerBeat && m_nTempoMode == TempoMode::Modern)
+		m_nDefaultRowsPerBeat = 1;
 	if(m_nDefaultRowsPerMeasure < m_nDefaultRowsPerBeat)
 		m_nDefaultRowsPerMeasure = m_nDefaultRowsPerBeat;
 	LimitMax(m_nDefaultRowsPerBeat, MAX_ROWS_PER_BEAT);
@@ -1136,6 +1219,7 @@ PlayBehaviourSet CSoundFile::GetSupportedPlaybackBehaviour(MODTYPE type)
 		playBehaviour.set(kST3SampleSwap);
 		playBehaviour.set(kOPLNoteOffOnNoteChange);
 		playBehaviour.set(kApplyUpperPeriodLimit);
+		playBehaviour.set(kST3TonePortaWithAdlibNote);
 		break;
 
 	case MOD_TYPE_MOD:
@@ -1625,7 +1709,7 @@ void CSoundFile::ChangeModTypeTo(const MODTYPE newType, bool adjust)
 	Order.OnModTypeChanged(oldType);
 	Patterns.OnModTypeChanged(oldType);
 
-	m_modFormat.type = mpt::ToUnicode(mpt::Charset::UTF8, GetModSpecifications().fileExtension);
+	m_modFormat.type = GetModSpecifications().GetFileExtension();
 }
 
 #endif // MODPLUG_TRACKER
@@ -1956,7 +2040,7 @@ void CSoundFile::PrecomputeSampleLoops(bool updateChannels)
 bool CSoundFile::LoadExternalSample(SAMPLEINDEX smp, const mpt::PathString &filename)
 {
 	bool ok = false;
-	InputFile f(filename, SettingCacheCompleteFileBeforeLoading());
+	mpt::IO::InputFile f(filename, SettingCacheCompleteFileBeforeLoading());
 
 	if(f.IsValid())
 	{
@@ -2039,6 +2123,7 @@ void TempoSwing::Normalize()
 		sum += i;
 	}
 	sum /= size();
+	MPT_ASSERT(sum > 0); // clang-analyzer false-positive 
 	int64 remain = Unity * size();
 	for(auto &i : *this)
 	{

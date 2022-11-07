@@ -674,8 +674,8 @@ intptr_t VSTCALLBACK CVstPlugin::MasterCallBack(AEffect *effect, VstOpcodeToHost
 			{
 				pathStr = U_("%1");
 			}
-			const mpt::PathString projectPath = pVstPlugin->GetModDoc()->GetPathNameMpt().GetPath();
-			const mpt::PathString projectFile = pVstPlugin->GetModDoc()->GetPathNameMpt().GetFullFileName();
+			const mpt::PathString projectPath = pVstPlugin->GetModDoc()->GetPathNameMpt().GetDirectoryWithDrive();
+			const mpt::PathString projectFile = pVstPlugin->GetModDoc()->GetPathNameMpt().GetFilename();
 			pathStr = mpt::String::Replace(pathStr, U_("%1"), U_("?1?"));
 			pathStr = mpt::String::Replace(pathStr, U_("%2"), U_("?2?"));
 			pathStr = mpt::String::Replace(pathStr, U_("?1?"), projectPath.ToUnicode());
@@ -685,7 +685,7 @@ intptr_t VSTCALLBACK CVstPlugin::MasterCallBack(AEffect *effect, VstOpcodeToHost
 			{
 				return 0;
 			}
-			path.EnsureTrailingSlash();
+			path = path.WithTrailingSlash();
 			::SHCreateDirectoryEx(NULL, path.AsNative().c_str(), nullptr);
 			path += projectFile;
 			strcpy(static_cast<char*>(ptr), path.ToLocale().c_str());
@@ -764,7 +764,7 @@ intptr_t CVstPlugin::VstFileSelector(bool destructor, VstFileSelect &fileSel)
 			}
 			dlg.ExtensionFilter(extensions)
 				.WorkingDirectory(mpt::PathString::FromLocale(workingDir))
-				.AddPlace(GetPluginFactory().dllPath.GetPath());
+				.AddPlace(GetPluginFactory().dllPath.GetDirectoryWithDrive());
 			if(!dlg.Show(GetEditor()))
 				return 0;
 
@@ -868,7 +868,7 @@ intptr_t CVstPlugin::VstFileSelector(bool destructor, VstFileSelect &fileSel)
 //
 
 CVstPlugin::CVstPlugin(bool maskCrashes, HMODULE hLibrary, VSTPluginLib &factory, SNDMIXPLUGIN &mixStruct, AEffect &effect, CSoundFile &sndFile)
-	: IMidiPlugin(factory, sndFile, &mixStruct)
+	: IMidiPlugin(factory, sndFile, mixStruct)
 	, m_maskCrashes(maskCrashes)
 	, m_Effect(effect)
 	, timeInfo{}
@@ -880,7 +880,6 @@ CVstPlugin::CVstPlugin(bool maskCrashes, HMODULE hLibrary, VSTPluginLib &factory
 {
 	// Open plugin and initialize data structures
 	Initialize();
-	InsertIntoFactoryList();
 
 	m_isInitialized = true;
 }
@@ -1035,12 +1034,6 @@ CVstPlugin::~CVstPlugin()
 }
 
 
-void CVstPlugin::Release()
-{
-	delete this;
-}
-
-
 void CVstPlugin::Idle()
 {
 	if(m_needIdle)
@@ -1063,7 +1056,7 @@ int32 CVstPlugin::GetNumPrograms() const
 
 PlugParamIndex CVstPlugin::GetNumParameters() const
 {
-	return std::max(m_Effect.numParams, int32(0));
+	return m_Effect.numParams;
 }
 
 
@@ -1108,7 +1101,7 @@ intptr_t CVstPlugin::Dispatch(VstOpcodeToPlugin opCode, int32 index, intptr_t va
 #ifdef VST_LOG
 	{
 		mpt::ustring codeStr;
-		if(opCode < std::size(VstOpCodes))
+		if(opCode >= 0 && static_cast<std::size_t>(opCode) < std::size(VstOpCodes))
 		{
 			codeStr = mpt::ToUnicode(mpt::Charset::ASCII, VstOpCodes[opCode]);
 		} else
@@ -1267,7 +1260,7 @@ void CVstPlugin::SetParameter(PlugParamIndex nIndex, PlugParamValue fValue)
 
 
 // Helper function for retreiving parameter name / label / display
-CString CVstPlugin::GetParamPropertyString(int32 param, Vst::VstOpcodeToPlugin opcode)
+CString CVstPlugin::GetParamPropertyString(PlugParamIndex param, Vst::VstOpcodeToPlugin opcode)
 {
 	if(m_Effect.numParams > 0 && param < m_Effect.numParams)
 	{
@@ -1550,6 +1543,7 @@ void CVstPlugin::HardAllNotesOff()
 
 	const bool isWavestation = GetUID() == FourCC("KLWV");
 	const bool isSawer = GetUID() == FourCC("SaWR");
+	const bool isTranceGate = GetUID() == FourCC("TTGA");
 	for(uint8 mc = 0; mc < m_MidiCh.size(); mc++)
 	{
 		PlugInstrChannel &channel = m_MidiCh[mc];
@@ -1557,12 +1551,13 @@ void CVstPlugin::HardAllNotesOff()
 
 		SendMidiPitchBend(mc, EncodePitchBendParam(MIDIEvents::pitchBendCentre));  // centre pitch bend
 
-		if(!isWavestation && !isSawer)
+		if(!isWavestation && !isSawer && !isTranceGate)
 		{
 			// Korg Wavestation doesn't seem to like this CC, it can introduce ghost notes or
 			// prevent new notes from being played.
 			// Image-Line Sawer does not like it either and resets some parameters so that the plugin is all
 			// distorted afterwards.
+			// T-Force Trance Gate 2 also resets some controllers that are not desirable to be reset, such as user-configured resonance
 			MidiSend(MIDIEvents::CC(MIDIEvents::MIDICC_AllControllersOff, mc, 0));
 		}
 		if(!isSawer)

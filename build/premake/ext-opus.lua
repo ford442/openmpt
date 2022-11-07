@@ -2,19 +2,9 @@
  project "opus"
   uuid "9a2d9099-e1a2-4287-b845-e3598ad24d70"
   language "C"
-  location ( "../../build/" .. mpt_projectpathname .. "/ext" )
-  mpt_projectname = "opus"
-  dofile "../../build/premake/premake-defaults-LIBorDLL.lua"
-  dofile "../../build/premake/premake-defaults.lua"
+  location ( "%{wks.location}" .. "/ext" )
+  mpt_kind "default"
   targetname "openmpt-opus"
-  local extincludedirs = {
-   "../../include/ogg/include",
-	}
- 	filter { "action:vs*" }
-		includedirs ( extincludedirs )
-	filter { "not action:vs*" }
-		sysincludedirs ( extincludedirs )
-	filter {}
   includedirs {
    "../../include/opus/include",
    "../../include/opus/celt",
@@ -24,9 +14,6 @@
    "../../include/opus/win32",
    "../../include/opus",
   }
-	filter {}
-	filter { "action:vs*" }
-		characterset "Unicode"
 	filter {}
   files {
    "../../include/opus/include/opus.h",
@@ -74,3 +61,20 @@
 		if _OPTIONS["clang"] then
 			defines { "FLOAT_APPROX" }
 		end
+
+function mpt_use_opus ()
+	filter {}
+	filter { "action:vs*" }
+		includedirs {
+			"../../include/opus/include",
+		}
+	filter { "not action:vs*" }
+		externalincludedirs {
+			"../../include/opus/include",
+		}
+	filter {}
+	links {
+		"opus",
+	}
+	filter {}
+end

@@ -29,6 +29,9 @@
 #include "../tracklib/SampleEdit.h"
 #include "Autotune.h"
 #include "../common/mptStringBuffer.h"
+#include "mpt/io_file/inputfile.hpp"
+#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "mpt/io_file/outputfile.hpp"
 #include "../common/mptFileIO.h"
 #include "../common/FileReader.h"
 #include "openmpt/soundbase/Copy.hpp"
@@ -391,7 +394,6 @@ void CCtrlSamples::OnActivatePage(LPARAM lParam)
 		} else
 		{
 			if (nIns > 0) lParam = nIns;
-			m_parent.InstrumentChanged(-1);
 		}
 	} else if (lParam > 0)
 	{
@@ -718,7 +720,6 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 
 	const CModSpecifications &specs = m_sndFile.GetModSpecifications();
 	const bool isOPL = IsOPLInstrument();
-	const bool hasSustainLoop = !isOPL && (m_sndFile.GetType() & (MOD_TYPE_IT | MOD_TYPE_MPT));
 
 	LockControls();
 	// Updating Ranges
@@ -762,16 +763,8 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 		m_SpinSustainEnd.SetRange(-1, 1);
 		m_SpinSustainEnd.SetPos(0);
 
-		// Sustain Loops only available in IT
-		BOOL b = hasSustainLoop ? TRUE : FALSE;
-		m_ComboSustainType.EnableWindow(b);
-		m_SpinSustainStart.EnableWindow(b);
-		m_SpinSustainEnd.EnableWindow(b);
-		m_EditSustainStart.EnableWindow(b);
-		m_EditSustainEnd.EnableWindow(b);
-
 		// Finetune / C-5 Speed / BaseNote
-		b = m_sndFile.UseFinetuneAndTranspose() ? FALSE : TRUE;
+		BOOL b = m_sndFile.UseFinetuneAndTranspose() ? FALSE : TRUE;
 		SetDlgItemText(IDC_TEXT7, (b) ? _T("Freq. (Hz)") : _T("Finetune"));
 		m_SpinFineTune.SetRange(-1, 1);
 		m_EditFileName.EnableWindow(b);
@@ -829,7 +822,7 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 		if(isOPL)
 			s = _T("OPL instrument");
 		else
-			s = MPT_CFORMAT("{}-bit {}, len: {}")(sample.GetElementarySampleSize() * 8, CString(sample.uFlags[CHN_STEREO] ? _T("stereo") : _T("mono")), mpt::cfmt::dec(3, ',', sample.nLength));
+			s = MPT_CFORMAT("{}-bit {}, len: {}")(sample.GetElementarySampleSize() * 8, CString(sample.uFlags[CHN_STEREO] ? _T("stereo") : _T("mono")), mpt::cfmt::dec(3, _T(","), sample.nLength));
 		SetDlgItemText(IDC_TEXT5, s);
 		// File Name
 		s = mpt::ToCString(m_sndFile.GetCharsetInternal(), sample.filename);
@@ -911,19 +904,8 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 		m_EditSustainStart.SetWindowText(s);
 		s = mpt::cfmt::val(sample.nSustainEnd);
 		m_EditSustainEnd.SetWindowText(s);
-	}
-	if(hintType[HINT_MODTYPE | HINT_SAMPLEINFO | HINT_SMPNAMES])
-	{
-		// Name
-		SetDlgItemText(IDC_SAMPLE_NAME, mpt::ToWin(m_sndFile.GetCharsetInternal(), m_sndFile.m_szNames[m_nSample]).c_str());
 
-		CheckDlgButton(IDC_CHECK2, m_sndFile.GetSample(m_nSample).uFlags[SMP_KEEPONDISK] ? BST_CHECKED : BST_UNCHECKED);
-		GetDlgItem(IDC_CHECK2)->EnableWindow((m_sndFile.SampleHasPath(m_nSample) && m_sndFile.GetType() == MOD_TYPE_MPT) ? TRUE : FALSE);
-	}
-
-	// Update OPL instrument status
-	if(hintType[HINT_MODTYPE | HINT_SAMPLEINFO])
-	{
+		// Disable certain buttons for OPL instruments
 		BOOL b = isOPL ? FALSE : TRUE;
 		static constexpr int sampleButtons[] =
 		{
@@ -943,12 +925,22 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 		m_EditLoopStart.EnableWindow(b);
 		m_EditLoopEnd.EnableWindow(b);
 
+		const bool hasSustainLoop = !isOPL && ((m_sndFile.GetType() & (MOD_TYPE_IT | MOD_TYPE_MPT)) || (m_nSample <= m_sndFile.GetNumSamples() && m_sndFile.GetSample(m_nSample).uFlags[CHN_SUSTAINLOOP]));
 		b = hasSustainLoop ? TRUE : FALSE;
 		m_ComboSustainType.EnableWindow(b);
 		m_SpinSustainStart.EnableWindow(b);
 		m_SpinSustainEnd.EnableWindow(b);
 		m_EditSustainStart.EnableWindow(b);
 		m_EditSustainEnd.EnableWindow(b);
+
+	}
+	if(hintType[HINT_MODTYPE | HINT_SAMPLEINFO | HINT_SMPNAMES])
+	{
+		// Name
+		SetDlgItemText(IDC_SAMPLE_NAME, mpt::ToWin(m_sndFile.GetCharsetInternal(), m_sndFile.m_szNames[m_nSample]).c_str());
+
+		CheckDlgButton(IDC_CHECK2, m_sndFile.GetSample(m_nSample).uFlags[SMP_KEEPONDISK] ? BST_CHECKED : BST_UNCHECKED);
+		GetDlgItem(IDC_CHECK2)->EnableWindow((m_sndFile.SampleHasPath(m_nSample) && m_sndFile.GetType() == MOD_TYPE_MPT) ? TRUE : FALSE);
 	}
 
 	if (!m_bInitialized)
@@ -992,7 +984,7 @@ void CCtrlSamples::PrepareUndo(const char *description, sampleUndoTypes type, Sm
 bool CCtrlSamples::OpenSample(const mpt::PathString &fileName, FlagSet<OpenSampleTypes> types)
 {
 	BeginWaitCursor();
-	InputFile f(fileName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
+	mpt::IO::InputFile f(fileName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
 	if(!f.IsValid())
 	{
 		EndWaitCursor();
@@ -1007,7 +999,7 @@ bool CCtrlSamples::OpenSample(const mpt::PathString &fileName, FlagSet<OpenSampl
 	}
 
 	PrepareUndo("Replace", sundo_replace);
-	const auto parentIns = GetParentInstrumentWithSameName();
+	const auto parentIns = m_modDoc.GetParentInstrumentWithSameName(m_nSample);
 	bool bOk = false;
 	if(types[OpenSampleKnown])
 	{
@@ -1081,7 +1073,7 @@ bool CCtrlSamples::OpenSample(const mpt::PathString &fileName, FlagSet<OpenSampl
 		if(sample.filename.empty())
 		{
 			mpt::PathString name, ext;
-			fileName.SplitPath(nullptr, nullptr, &name, &ext);
+			fileName.SplitPath(nullptr, nullptr, nullptr, &name, &ext);
 
 			if(m_sndFile.m_szNames[m_nSample].empty()) m_sndFile.m_szNames[m_nSample] = name.ToLocale();
 
@@ -1117,7 +1109,7 @@ bool CCtrlSamples::OpenSample(const CSoundFile &sndFile, SAMPLEINDEX nSample)
 	BeginWaitCursor();
 
 	PrepareUndo("Replace", sundo_replace);
-	const auto parentIns = GetParentInstrumentWithSameName();
+	const auto parentIns = m_modDoc.GetParentInstrumentWithSameName(m_nSample);
 	if(m_sndFile.ReadSampleFromSong(m_nSample, sndFile, nSample))
 	{
 		SetModified(SampleHint().Info().Data().Names(), true, false);
@@ -1298,7 +1290,7 @@ static mpt::ustring ConstructFileFilter(bool includeRaw)
 #endif
 	if(includeRaw)
 	{
-		s += U_(";*.raw;*.snd;*.pcm");
+		s += U_(";*.raw;*.snd;*.pcm;*.sam");
 	}
 	s += U_("|");
 	for(const auto &[name, exts] : SampleFormats)
@@ -1311,7 +1303,7 @@ static mpt::ustring ConstructFileFilter(bool includeRaw)
 #endif
 	if(includeRaw)
 	{
-		s += U_("Raw Samples (*.raw,*.snd,*.pcm)|*.raw;*.snd;*.pcm|");
+		s += U_("Raw Samples (*.raw,*.snd,*.pcm,*.sam)|*.raw;*.snd;*.pcm;*.sam|");
 	}
 	s += U_("All Files (*.*)|*.*||");
 	return s;
@@ -1361,8 +1353,7 @@ void CCtrlSamples::OnSampleOpenRaw()
 	FileDialog dlg = OpenFileDialog()
 		.AllowMultiSelect()
 		.EnableAudioPreview()
-		.ExtensionFilter("Raw Samples (*.raw,*.snd,*.pcm)|*.raw;*.snd;*.pcm|"
-		"All Files (*.*)|*.*||")
+		.ExtensionFilter(U_("Raw Samples (*.raw,*.snd,*.pcm,*.sam)|*.raw;*.snd;*.pcm;*.sam|All Files (*.*)|*.*||"))
 		.WorkingDirectory(TrackerSettings::Instance().PathSamples.GetWorkingDir())
 		.FilterIndex(&nLastIndex);
 	if(!dlg.Show(this)) return;
@@ -1420,22 +1411,23 @@ void CCtrlSamples::SaveSample(bool doBatchSave)
 		{
 			// For on-disk samples, propose their original filename and location
 			auto path = m_sndFile.GetSamplePath(m_nSample);
-			fileName = path.GetFullFileName();
-			defaultPath = path.GetPath();
+			fileName = path.GetFilename();
+			defaultPath = path.GetDirectoryWithDrive();
 		}
 		if(fileName.empty()) fileName = mpt::PathString::FromLocale(sample.filename);
 		if(fileName.empty()) fileName = mpt::PathString::FromLocale(m_sndFile.m_szNames[m_nSample]);
 		if(fileName.empty()) fileName = P_("untitled");
 
-		const mpt::PathString ext = fileName.GetFileExt();
-		if(!mpt::PathString::CompareNoCase(ext, P_(".flac"))) defaultFormat = dfFLAC;
-		else if(!mpt::PathString::CompareNoCase(ext, P_(".wav"))) defaultFormat = dfWAV;
+		const mpt::PathString ext = fileName.GetFilenameExtension();
+		if(!mpt::PathCompareNoCase(ext, P_(".flac"))) defaultFormat = dfFLAC;
+		else if(!mpt::PathCompareNoCase(ext, P_(".wav"))) defaultFormat = dfWAV;
+		else if(!mpt::PathCompareNoCase(ext, P_(".s3i"))) defaultFormat = dfS3I;
 
 		hasAdlib = sample.uFlags[CHN_ADLIB];
 	} else
 	{
 		// Save all samples
-		fileName = m_sndFile.GetpModDoc()->GetPathNameMpt().GetFileName();
+		fileName = m_sndFile.GetpModDoc()->GetPathNameMpt().GetFilenameBase();
 		if(fileName.empty()) fileName = P_("untitled");
 
 		fileName += P_(" - %sample_number% - ");
@@ -1444,7 +1436,7 @@ void CCtrlSamples::SaveSample(bool doBatchSave)
 		else
 			fileName += P_("%sample_filename%");
 	}
-	SanitizeFilename(fileName);
+	fileName = fileName.AsSanitizedComponent();
 
 	int filter;
 	switch(defaultFormat)
@@ -1456,8 +1448,12 @@ void CCtrlSamples::SaveSample(bool doBatchSave)
 	default:
 		filter = 2;
 		break;
+	case dfS3I:
+		filter = 3;
+		break;
 	case dfRAW:
 		filter = 4;
+		break;
 	}
 	// Do we have to use a format that can save OPL instruments?
 	if(hasAdlib)
@@ -1484,7 +1480,7 @@ void CCtrlSamples::SaveSample(bool doBatchSave)
 		minSmp = 1;
 		maxSmp = m_sndFile.GetNumSamples();
 	}
-	const auto numberFmt = mpt::FormatSpec().Dec().FillNul().Width(1 + static_cast<int>(std::log10(maxSmp)));
+	const auto numberFmt = mpt::FormatSpec<mpt::ustring>().Dec().FillNul().Width(1 + static_cast<int>(std::log10(maxSmp)));
 
 	bool ok = false;
 	CString sampleName, sampleFilename;
@@ -1501,8 +1497,8 @@ void CCtrlSamples::SaveSample(bool doBatchSave)
 			{
 				sampleName = mpt::ToCString(m_sndFile.GetCharsetInternal(), (!m_sndFile.m_szNames[smp].empty()) ? std::string(m_sndFile.m_szNames[smp]) : "untitled");
 				sampleFilename = mpt::ToCString(m_sndFile.GetCharsetInternal(), (!sample.filename.empty()) ? sample.GetFilename() : m_sndFile.m_szNames[smp]);
-				SanitizeFilename(sampleName);
-				SanitizeFilename(sampleFilename);
+				sampleName = SanitizePathComponent(sampleName);
+				sampleFilename = SanitizePathComponent(sampleFilename);
 
 				mpt::ustring fileNameU = fileName.ToUnicode();
 				fileNameU = mpt::String::Replace(fileNameU, U_("%sample_number%"), mpt::ufmt::fmt(smp, numberFmt));
@@ -1512,13 +1508,13 @@ void CCtrlSamples::SaveSample(bool doBatchSave)
 
 				// Need to enforce S3I for Adlib samples
 				if(isAdlib && saveFormat != dfS3I)
-					fileName = fileName.ReplaceExt(P_(".s3i"));
+					fileName = fileName.ReplaceExtension(P_(".s3i"));
 			}
 
 			try
 			{
-				mpt::SafeOutputFile sf(fileName, std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
-				mpt::ofstream &f = sf;
+				mpt::IO::SafeOutputFile sf(fileName, std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+				mpt::IO::ofstream &f = sf;
 				if(!f)
 				{
 					ok = false;
@@ -2719,9 +2715,6 @@ void CCtrlSamples::OnSignUnSign()
 {
 	if(!m_sndFile.GetSample(m_nSample).HasSampleData()) return;
 
-	if(m_modDoc.IsNotePlaying(0, m_nSample, 0))
-		MsgBoxHidable(ConfirmSignUnsignWhenPlaying);
-
 	BeginWaitCursor();
 	ModSample &sample = m_sndFile.GetSample(m_nSample);
 	SampleSelectionPoints selection = GetSelectionPoints();
@@ -2791,7 +2784,7 @@ void CCtrlSamples::OnNameChanged()
 		if(!m_startedEdit)
 		{
 			PrepareUndo("Set Name");
-			m_editInstrumentName = GetParentInstrumentWithSameName();
+			m_editInstrumentName = m_modDoc.GetParentInstrumentWithSameName(m_nSample);
 			if(m_editInstrumentName != INSTRUMENTINDEX_INVALID)
 				m_modDoc.GetInstrumentUndo().PrepareUndo(m_editInstrumentName, "Set Name");
 		}
@@ -2986,6 +2979,14 @@ void CCtrlSamples::OnBaseNoteChanged()
 			sample.nC5Speed = newFreq;
 			LockControls();
 			SetDlgItemInt(IDC_EDIT5, newFreq, FALSE);
+
+			// Due to rounding imprecisions if the base note is below 0, we recalculate it here to make sure that the value stays consistent.
+			int basenote = (NOTE_MIDDLEC - NOTE_MIN) + ModSample::FrequencyToTranspose(newFreq).first;
+			Limit(basenote, BASENOTE_MIN, BASENOTE_MAX);
+			basenote -= BASENOTE_MIN;
+			if(basenote != m_CbnBaseNote.GetCurSel())
+				m_CbnBaseNote.SetCurSel(basenote);
+
 			OnFineTuneChangedDone();
 			UnlockControls();
 			SetModified(SampleHint().Info(), false, false);
@@ -3443,15 +3444,7 @@ BOOL CCtrlSamples::PreTranslateMessage(MSG *pMsg)
 			(pMsg->message == WM_SYSKEYDOWN) || (pMsg->message == WM_KEYDOWN))
 		{
 			CInputHandler* ih = CMainFrame::GetInputHandler();
-
-			//Translate message manually
-			UINT nChar = (UINT)pMsg->wParam;
-			UINT nRepCnt = LOWORD(pMsg->lParam);
-			UINT nFlags = HIWORD(pMsg->lParam);
-			KeyEventType kT = ih->GetKeyEventType(nFlags);
-			InputTargetContext ctx = (InputTargetContext)(kCtxViewSamples);
-
-			if (ih->KeyEvent(ctx, nChar, nRepCnt, nFlags, kT) != kcNull)
+			if (ih->KeyEvent(kCtxViewSamples, ih->Translate(*pMsg)) != kcNull)
 				return true; // Mapped to a command, no need to pass message on.
 		}
 
@@ -3769,21 +3762,6 @@ void CCtrlSamples::OnInitOPLInstrument()
 		SetModified(SampleHint().Info().Data().Names(), true, true);
 		SwitchToView();
 	}
-}
-
-
-INSTRUMENTINDEX CCtrlSamples::GetParentInstrumentWithSameName() const
-{
-	auto ins = m_modDoc.FindSampleParent(m_nSample);
-	if(ins == INSTRUMENTINDEX_INVALID)
-		return INSTRUMENTINDEX_INVALID;
-	auto instr = m_sndFile.Instruments[ins];
-	if(instr == nullptr)
-		return INSTRUMENTINDEX_INVALID;
-	if((!instr->name.empty() && instr->name != m_sndFile.m_szNames[m_nSample]) || instr->GetSamples().size() != 1)
-		return INSTRUMENTINDEX_INVALID;
-
-	return ins;
 }
 
 

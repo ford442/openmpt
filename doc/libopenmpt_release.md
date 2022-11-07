@@ -39,3 +39,11 @@ https://source.openmpt.org/svn/openmpt/branches/OpenMPT-1.29/doc/libopenmpt_rele
     releases are done on the svn side (either libopenmpt only, or both
     libopenmpt and OpenMPT)
 
+release candidate
+-----------------
+
+ 1. `./build/update_libopenmpt_version.sh release-rc 1`
+ 2. `svn commit -m '[Mod] libopenmpt: Bump rc version.'`
+ 3. `./build/svn/do_libopenmpt_release_rc.sh`
+ 4. `./build/update_libopenmpt_version.sh release-rc 2`
+ 5. `svn commit -m '[Mod] libopenmpt: Bump rc version.'`

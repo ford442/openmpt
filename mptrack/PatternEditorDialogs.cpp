@@ -738,13 +738,6 @@ void CEditCommand::OnCommandChanged()
 		newCommand = static_cast<ModCommand::COMMAND>((ndx >= 0) ? effectInfo.GetEffectFromIndex(ndx, newParam) : CMD_NONE);
 	}
 
-	if(newCommand == CMD_XPARAM || mpt::contains(ExtendedCommands, newCommand))
-	{
-		xParam = 0;
-		xMultiplier = 1;
-		getXParam(newCommand, editPattern, editRow, editChannel, sndFile, xParam, xMultiplier);
-	}
-
 	if(m->command != newCommand || m->param != newParam)
 	{
 		PrepareUndo("Effect Entry");
@@ -754,6 +747,14 @@ void CEditCommand::OnCommandChanged()
 		{
 			m->param = newParam;
 		}
+
+		xParam = 0;
+		xMultiplier = 1;
+		if(newCommand == CMD_XPARAM || mpt::contains(ExtendedCommands, newCommand))
+		{
+			getXParam(newCommand, editPattern, editRow, editChannel, sndFile, xParam, xMultiplier);
+		}
+
 		UpdateEffectRange(true);
 
 		sndFile.GetpModDoc()->UpdateAllViews(nullptr, RowHint(editRow), nullptr);
@@ -816,7 +817,7 @@ void CEditCommand::UpdateEffectValue(bool set)
 		if(fxndx >= 0)
 		{
 			newParam = static_cast<ModCommand::PARAM>(effectInfo.MapPosToValue(fxndx, sldParam.GetPos()));
-			effectInfo.GetEffectNameEx(s, fxndx, newParam * xMultiplier + xParam, editChannel);
+			effectInfo.GetEffectNameEx(s, *m, newParam * xMultiplier + xParam, editChannel);
 		}
 	}
 	SetDlgItemText(IDC_TEXT1, s);
@@ -1589,14 +1590,7 @@ BOOL QuickChannelProperties::PreTranslateMessage(MSG *pMsg)
 			(pMsg->message == WM_SYSKEYDOWN) || (pMsg->message == WM_KEYDOWN))
 		{
 			CInputHandler *ih = CMainFrame::GetInputHandler();
-
-			//Translate message manually
-			UINT nChar = static_cast<UINT>(pMsg->wParam);
-			UINT nRepCnt = LOWORD(pMsg->lParam);
-			UINT nFlags = HIWORD(pMsg->lParam);
-			KeyEventType kT = ih->GetKeyEventType(nFlags);
-
-			if(ih->KeyEvent(kCtxChannelSettings, nChar, nRepCnt, nFlags, kT, this) != kcNull)
+			if(ih->KeyEvent(kCtxChannelSettings, ih->Translate(*pMsg), this) != kcNull)
 			{
 				return TRUE;  // Mapped to a command, no need to pass message on.
 			}

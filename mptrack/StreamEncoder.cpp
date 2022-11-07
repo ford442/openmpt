@@ -12,6 +12,10 @@
 
 #include "StreamEncoder.h"
 
+#include "mpt/endian/floatingpoint.hpp"
+#include "mpt/endian/int24.hpp"
+#include "mpt/endian/integer.hpp"
+#include "mpt/endian/type_traits.hpp"
 #include "mpt/io/base.hpp"
 #include "mpt/io/io.hpp"
 #include "mpt/io/io_stdstream.hpp"
@@ -92,50 +96,16 @@ static inline std::pair<bool, std::size_t> WriteInterleavedImpl(std::ostream &f,
 			}
 		} else
 		{
-			if constexpr(std::is_floating_point<Tsample>::value)
+			for(std::size_t frame = 0; frame < frameCount; ++frame)
 			{
-				std::vector<typename mpt::make_float_endian<endian, Tsample>::type> frameData(channels);
-				for(std::size_t frame = 0; frame < frameCount; ++frame)
+				for(uint16 channel = 0; channel < channels; ++channel)
 				{
-					for(uint16 channel = 0; channel < channels; ++channel)
-					{
-						frameData[channel] = typename mpt::make_float_endian<endian, Tsample>::type(interleaved[channel]);
-					}
-					mpt::IO::WriteRaw(bf, reinterpret_cast<const std::byte*>(frameData.data()), channels * format.GetSampleFormat().GetSampleSize());
-					written += channels * format.GetSampleFormat().GetSampleSize();
-					interleaved += channels;
+					typename mpt::make_endian<endian, Tsample>::type sample{};
+					sample = interleaved[channel];
+					mpt::IO::Write(bf, sample);
 				}
-			} else if constexpr(std::is_same<Tsample, int24>::value)
-			{
-				MPT_ASSERT(!mpt::endian_is_weird());
-				for(std::size_t frame = 0; frame < frameCount; ++frame)
-				{
-					for(uint16 channel = 0; channel < channels; ++channel)
-					{
-						std::array<std::byte, 3> data;
-						std::memcpy(data.data(), interleaved, 3);
-						MPT_MAYBE_CONSTANT_IF(endian != mpt::get_endian())
-						{
-							std::reverse(data.begin(), data.end());
-						}
-						mpt::IO::Write(bf, data);
-						written += data.size();
-						interleaved += 3;
-					}
-				}
-			} else
-			{
-				std::vector<typename mpt::make_endian<endian, Tsample>::type> frameData(channels);
-				for(std::size_t frame = 0; frame < frameCount; ++frame)
-				{
-					for(uint16 channel = 0; channel < channels; ++channel)
-					{
-						frameData[channel] = interleaved[channel];
-					}
-					mpt::IO::WriteRaw(bf, reinterpret_cast<const std::byte*>(frameData.data()), channels * format.GetSampleFormat().GetSampleSize());
-					written += channels * format.GetSampleFormat().GetSampleSize();
-					interleaved += channels;
-				}
+				written += channels * format.GetSampleFormat().GetSampleSize();
+				interleaved += channels;
 			}
 		}
 		if(bf.HasWriteError())

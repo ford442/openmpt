@@ -2,15 +2,10 @@
  project "minimp3"
   uuid "e88c4285-efb1-4226-bcac-e904ba792a48"
   language "C"
-  location ( "../../build/" .. mpt_projectpathname .. "/ext" )
-  mpt_projectname = "minimp3"
-  dofile "../../build/premake/premake-defaults-LIBorDLL.lua"
-  dofile "../../build/premake/premake-defaults.lua"
+  location ( "%{wks.location}" .. "/ext" )
+  mpt_kind "default"
   targetname "openmpt-minimp3"
   includedirs { }
-	filter {}
-	filter { "action:vs*" }
-		characterset "Unicode"
 	filter {}
   defines { }
   files {
@@ -20,3 +15,20 @@
   filter { "action:vs*", "kind:SharedLib" }
     files { "../../build/premake/def/ext-minimp3.def" }
   filter {}
+
+function mpt_use_minimp3 ()
+	filter {}
+	filter { "action:vs*" }
+		includedirs {
+			"../../include",
+		}
+	filter { "not action:vs*" }
+		externalincludedirs {
+			"../../include",
+		}
+	filter {}
+	links {
+		"minimp3",
+	}
+	filter {}
+end

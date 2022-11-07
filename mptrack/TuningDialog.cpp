@@ -16,6 +16,7 @@
 #include "mpt/io/io_stdstream.hpp"
 #include "TrackerSettings.h"
 #include <algorithm>
+#include "mpt/io_file/outputfile.hpp"
 #include "../common/mptFileIO.h"
 #include "../common/misc_util.h"
 #include "TuningDialog.h"
@@ -618,8 +619,8 @@ void CTuningDialog::OnBnClickedButtonExport()
 		BeginWaitCursor();
 		try
 		{
-			mpt::SafeOutputFile sfout(dlg.GetFirstFile(), std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
-			mpt::ofstream &fout = sfout;
+			mpt::IO::SafeOutputFile sfout(dlg.GetFirstFile(), std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+			mpt::IO::ofstream &fout = sfout;
 			fout.exceptions(fout.exceptions() | std::ios::badbit | std::ios::failbit);
 
 			if(tuningFilter != -1 && filterIndex == tuningFilter)
@@ -656,9 +657,7 @@ void CTuningDialog::OnBnClickedButtonExport()
 		}
 		if(!m_TuningCollectionsNames[pTC].IsEmpty())
 		{
-			mpt::PathString name = mpt::PathString::FromUnicode(mpt::ToUnicode(m_TuningCollectionsNames[pTC]));
-			SanitizeFilename(name);
-			fileName += name + P_(" - ");
+			fileName += mpt::PathString::FromUnicode(mpt::ToUnicode(m_TuningCollectionsNames[pTC])).AsSanitizedComponent() + P_(" - ");
 		}
 		fileName += P_("%tuning_number% - %tuning_name%");
 
@@ -676,7 +675,7 @@ void CTuningDialog::OnBnClickedButtonExport()
 
 		failure = false;
 
-		auto numberFmt = mpt::FormatSpec().Dec().FillNul().Width(1 + static_cast<int>(std::log10(pTC->GetNumTunings())));
+		auto numberFmt = mpt::FormatSpec<mpt::ustring>().Dec().FillNul().Width(1 + static_cast<int>(std::log10(pTC->GetNumTunings())));
 
 		for(std::size_t i = 0; i < pTC->GetNumTunings(); ++i)
 		{
@@ -689,17 +688,17 @@ void CTuningDialog::OnBnClickedButtonExport()
 			}
 			mpt::ustring fileNameW = fileName.ToUnicode();
 			mpt::ustring numberW = mpt::ufmt::fmt(i + 1, numberFmt);
-			SanitizeFilename(numberW);
+			numberW = SanitizePathComponent(numberW);
 			fileNameW = mpt::String::Replace(fileNameW, U_("%tuning_number%"), numberW);
 			mpt::ustring nameW = mpt::ToUnicode(tuningName);
-			SanitizeFilename(nameW);
+			nameW = SanitizePathComponent(nameW);
 			fileNameW = mpt::String::Replace(fileNameW, U_("%tuning_name%"), nameW);
 			fileName = mpt::PathString::FromUnicode(fileNameW);
 
 			try
 			{
-				mpt::SafeOutputFile sfout(fileName, std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
-				mpt::ofstream &fout = sfout;
+				mpt::IO::SafeOutputFile sfout(fileName, std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+				mpt::IO::ofstream &fout = sfout;
 				fout.exceptions(fout.exceptions() | std::ios::badbit | std::ios::failbit);
 				if(tuning.Serialize(fout) != Tuning::SerializationResult::Success)
 				{
@@ -785,12 +784,12 @@ void CTuningDialog::OnBnClickedButtonImport()
 	{
 		mpt::PathString fileName;
 		mpt::PathString fileExt;
-		file.SplitPath(nullptr, nullptr, &fileName, &fileExt);
+		file.SplitPath(nullptr, nullptr, nullptr, &fileName, &fileExt);
 		const mpt::ustring fileNameExt = (fileName + fileExt).ToUnicode();
 
-		const bool bIsTun = (mpt::PathString::CompareNoCase(fileExt, mpt::PathString::FromUTF8(CTuning::s_FileExtension)) == 0);
-		const bool bIsScl = (mpt::PathString::CompareNoCase(fileExt, P_(".scl")) == 0);
-		//const bool bIsTc = (mpt::PathString::CompareNoCase(fileExt, mpt::PathString::FromUTF8(CTuningCollection::s_FileExtension)) == 0);
+		const bool bIsTun = (mpt::PathCompareNoCase(fileExt, mpt::PathString::FromUTF8(CTuning::s_FileExtension)) == 0);
+		const bool bIsScl = (mpt::PathCompareNoCase(fileExt, P_(".scl")) == 0);
+		//const bool bIsTc = (mpt::PathCompareNoCase(fileExt, mpt::PathString::FromUTF8(CTuningCollection::s_FileExtension)) == 0);
 
 		mpt::ifstream fin(file, std::ios::binary);
 

@@ -18,6 +18,7 @@
 #include "../mptrack/Vstplug.h"
 #include "../mptrack/ExceptionHandler.h"
 #include "../common/mptFileIO.h"
+#include "mpt/fs/fs.hpp"
 #include "../common/mptStringBuffer.h"
 #include "../common/misc_util.h"
 
@@ -108,13 +109,12 @@ bool ComponentPluginBridge::DoInitialize()
 	const mpt::PathString generationSuffix = (generation == Generation::Legacy) ? P_("Legacy") : P_("");
 	const mpt::PathString exeNames[] =
 	{
-		theApp.GetInstallPath() + P_("PluginBridge") + generationSuffix + P_("-") + archName + P_(".exe"),                          // Local
-		theApp.GetInstallBinPath() + archName + P_("\\") + P_("PluginBridge") + generationSuffix + P_(".exe"),                      // Multi-arch
-		theApp.GetInstallBinPath() + archName + P_("\\") + P_("PluginBridge") + generationSuffix + P_("-") + archName + P_(".exe")  // Multi-arch transitional
+		theApp.GetInstallBinPath() + archName + P_("\\") + P_("PluginBridge") + generationSuffix + P_("-") + archName + P_(".exe"),  // Multi-arch
+		theApp.GetInstallPath() + P_("PluginBridge") + generationSuffix + P_("-") + archName + P_(".exe")                            // Local
 	};
 	for(const auto &candidate : exeNames)
 	{
-		if(candidate.IsFile())
+		if(mpt::native_fs{}.is_file(candidate))
 		{
 			exeName = candidate;
 			break;

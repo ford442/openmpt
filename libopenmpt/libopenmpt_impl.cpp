@@ -51,36 +51,32 @@
 #include "soundlib/mod_specifications.h"
 #include "soundlib/AudioReadTarget.h"
 
+#if MPT_OS_WINDOWS && MPT_OS_WINDOWS_WINRT
+#include <windows.h>
+#endif // MPT_OS_WINDOWS && MPT_OS_WINDOWS_WINRT
+
 OPENMPT_NAMESPACE_BEGIN
 
 #if !defined(MPT_BUILD_SILENCE_LIBOPENMPT_CONFIGURATION_WARNINGS)
 
 #if MPT_OS_WINDOWS && MPT_OS_WINDOWS_WINRT
-#if defined(_WIN32_WINNT)
+#if defined(NTDDI_VERSION)
+#if (NTDDI_VERSION < 0x06020000)
+MPT_WARNING("Warning: libopenmpt for WinRT is built with reduced functionality. Please #define NTDDI_VERSION 0x0602000.")
+#endif
+#elif defined(_WIN32_WINNT)
 #if (_WIN32_WINNT < 0x0602)
 MPT_WARNING("Warning: libopenmpt for WinRT is built with reduced functionality. Please #define _WIN32_WINNT 0x0602.")
 #endif // _WIN32_WINNT
 #endif // _WIN32_WINNT
 #endif // MPT_OS_WINDOWS && MPT_OS_WINDOWS_WINRT
 
-#if defined(MPT_BUILD_MSVC) || defined(MPT_BUILD_VCPKG)
-#if MPT_OS_WINDOWS_WINRT
-#pragma comment(lib, "ole32.lib")
-#else
-#pragma comment(lib, "rpcrt4.lib")
-#endif
-#ifndef NO_DMO
-#pragma comment(lib, "dmoguids.lib")
-#pragma comment(lib, "strmiids.lib")
-#endif // !NO_DMO
-#endif // MPT_BUILD_MSVC
-
 #if MPT_PLATFORM_MULTITHREADED && MPT_MUTEX_NONE
 MPT_WARNING("Warning: libopenmpt built in non thread-safe mode because mutexes are not supported by the C++ standard library available.")
 #endif // MPT_MUTEX_NONE
 
-#if (defined(__MINGW32__) || defined(__MINGW64__)) && !defined(_GLIBCXX_HAS_GTHREADS) && !defined(MPT_WITH_MINGWSTDTHREADS)
-MPT_WARNING("Warning: Building libopenmpt with MinGW-w64 without std::thread support is not recommended and is deprecated. Please use MinGW-w64 with posix threading model (as opposed to win32 threading model), or build with mingw-std-threads.")
+#if MPT_OS_WINDOWS && (defined(__MINGW32__) || defined(__MINGW64__)) && MPT_LIBCXX_GNU && !defined(_GLIBCXX_HAS_GTHREADS)
+MPT_WARNING("Warning: Platform (Windows) supports multi-threading, however the toolchain (MinGW/GCC) does not. The resulting libopenmpt may not be thread-safe. This is a MinGW/GCC issue. You can avoid this warning by using a MinGW toolchain built with posix threading model as opposed to win32 threading model.")
 #endif // MINGW
 
 #if MPT_CLANG_AT_LEAST(5,0,0) && MPT_CLANG_BEFORE(11,0,0) && defined(__powerpc__) && !defined(__powerpc64__)
@@ -91,8 +87,7 @@ MPT_WARNING("Warning: libopenmpt is known to trigger bad code generation with Cl
 
 #if defined(MPT_ASSERT_HANDLER_NEEDED) && !defined(ENABLE_TESTS)
 
-MPT_NOINLINE void AssertHandler(const mpt::source_location &loc, const char *expr, const char *msg)
-{
+MPT_NOINLINE void AssertHandler(const mpt::source_location &loc, const char *expr, const char *msg) {
 	if(msg) {
 		mpt::log::GlobalLogger().SendLogMessage(loc, LogError, "ASSERT",
 			MPT_USTRING("ASSERTION FAILED: ") + mpt::ToUnicode(mpt::CharsetSource, msg) + MPT_USTRING(" (") + mpt::ToUnicode(mpt::CharsetSource, expr) + MPT_USTRING(")")
@@ -156,56 +151,56 @@ static std::string get_library_version_string() {
 }
 
 static std::string get_library_features_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, mpt::trim(OpenMPT::Build::GetBuildFeaturesString()));
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, mpt::trim( OpenMPT::Build::GetBuildFeaturesString() ) );
 }
 
 static std::string get_core_version_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetVersionStringExtended());
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetVersionStringExtended() );
 }
 
 static std::string get_source_url_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::SourceInfo::Current().GetUrlWithRevision());
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::SourceInfo::Current().GetUrlWithRevision() );
 }
 
 static std::string get_source_date_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::SourceInfo::Current().Date());
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::SourceInfo::Current().Date() );
 }
 
 static std::string get_source_revision_string() {
 	const OpenMPT::SourceInfo sourceInfo = OpenMPT::SourceInfo::Current();
-	return sourceInfo.Revision() ? mpt::format_value_default<std::string>(sourceInfo.Revision()) : std::string();
+	return sourceInfo.Revision() ? mpt::format_value_default<std::string>( sourceInfo.Revision() ) : std::string();
 }
 
 static std::string get_build_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetBuildDateString());
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetBuildDateString() );
 }
 
 static std::string get_build_compiler_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetBuildCompilerString());
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetBuildCompilerString() );
 }
 
 static std::string get_credits_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetFullCreditsString());
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetFullCreditsString() );
 }
 
 static std::string get_contact_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, MPT_USTRING("Forum: ") + OpenMPT::Build::GetURL(OpenMPT::Build::Url::Forum));
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, MPT_USTRING("Forum: ") + OpenMPT::Build::GetURL( OpenMPT::Build::Url::Forum ) );
 }
 
 static std::string get_license_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetLicenseString());
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetLicenseString() );
 }
 
 static std::string get_url_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetURL(OpenMPT::Build::Url::Website));
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetURL( OpenMPT::Build::Url::Website ) );
 }
 
 static std::string get_support_forum_url_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetURL(OpenMPT::Build::Url::Forum));
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetURL( OpenMPT::Build::Url::Forum ) );
 }
 
 static std::string get_bugtracker_url_string() {
-	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetURL(OpenMPT::Build::Url::Bugtracker));
+	return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::Build::GetURL( OpenMPT::Build::Url::Bugtracker ) );
 }
 
 std::string get_string( const std::string & key ) {
@@ -473,7 +468,7 @@ void module_impl::ctor( const std::map< std::string, std::string > & ctls ) {
 	m_ctl_load_skip_patterns = false;
 	m_ctl_load_skip_plugins = false;
 	m_ctl_load_skip_subsongs_init = false;
-	m_ctl_seek_sync_samples = false;
+	m_ctl_seek_sync_samples = true;
 	// init member variables that correspond to ctls
 	for ( const auto & ctl : ctls ) {
 		ctl_set( ctl.first, ctl.second, false );
@@ -1234,7 +1229,7 @@ std::string module_impl::get_metadata( const std::string & key ) const {
 		if ( m_sndFile->GetFileHistory().empty() || !m_sndFile->GetFileHistory().back().HasValidDate() ) {
 			return std::string();
 		}
-		return mpt::transcode<std::string>( mpt::common_encoding::utf8, m_sndFile->GetFileHistory().back().AsISO8601() );
+		return mpt::transcode<std::string>( mpt::common_encoding::utf8, m_sndFile->GetFileHistory().back().AsISO8601( m_sndFile->GetTimezoneInternal() ) );
 	} else if ( key == std::string("message") ) {
 		std::string retval = m_sndFile->m_songMessage.GetFormatted( OpenMPT::SongMessage::leLF );
 		if ( retval.empty() ) {
@@ -1315,6 +1310,9 @@ std::int32_t module_impl::get_current_speed() const {
 }
 std::int32_t module_impl::get_current_tempo() const {
 	return static_cast<std::int32_t>( m_sndFile->m_PlayState.m_nMusicTempo.GetInt() );
+}
+double module_impl::get_current_tempo2() const {
+	return m_sndFile->m_PlayState.m_nMusicTempo.ToDouble();
 }
 std::int32_t module_impl::get_current_order() const {
 	return m_sndFile->GetCurrentOrder();

@@ -22,13 +22,13 @@ OPENMPT_NAMESPACE_BEGIN
 namespace DMO
 {
 
-IMixPlugin* WavesReverb::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct)
+IMixPlugin* WavesReverb::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
 	return new (std::nothrow) WavesReverb(factory, sndFile, mixStruct);
 }
 
 
-WavesReverb::WavesReverb(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct)
+WavesReverb::WavesReverb(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 	: IMixPlugin(factory, sndFile, mixStruct)
 {
 	m_param[kRvbInGain] = 1.0f;
@@ -37,7 +37,6 @@ WavesReverb::WavesReverb(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGI
 	m_param[kRvbHighFreqRTRatio] = 0.0f;
 
 	m_mixBuffer.Initialize(2, 2);
-	InsertIntoFactoryList();
 }
 
 
@@ -122,7 +121,7 @@ void WavesReverb::Process(float *pOutL, float *pOutR, uint32 numFrames)
 
 PlugParamValue WavesReverb::GetParameter(PlugParamIndex index)
 {
-	if(index < kDistNumParameters)
+	if(index < kRvbNumParameters)
 	{
 		return m_param[index];
 	}
@@ -132,7 +131,7 @@ PlugParamValue WavesReverb::GetParameter(PlugParamIndex index)
 
 void WavesReverb::SetParameter(PlugParamIndex index, PlugParamValue value)
 {
-	if(index < kDistNumParameters)
+	if(index < kRvbNumParameters)
 	{
 		value = mpt::safe_clamp(value, 0.0f, 1.0f);
 		m_param[index] = value;

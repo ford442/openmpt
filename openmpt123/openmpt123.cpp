@@ -8,7 +8,7 @@
  */
 
 static const char * const license =
-"Copyright (c) 2004-2021, OpenMPT Project Developers and Contributors" "\n"
+"Copyright (c) 2004-2022, OpenMPT Project Developers and Contributors" "\n"
 "Copyright (c) 1997-2003, Olivier Lapicque" "\n"
 "All rights reserved." "\n"
 "" "\n"
@@ -37,6 +37,12 @@ static const char * const license =
 
 #include "openmpt123_config.hpp"
 
+#if defined(__MINGW32__) && !defined(__MINGW64__)
+#include <sys/types.h>
+#endif
+
+#include "mpt/base/check_platform.hpp"
+
 #include <algorithm>
 #include <deque>
 #include <fstream>
@@ -64,6 +70,7 @@ static const char * const license =
 
 #if defined(__DJGPP__)
 #include <conio.h>
+#include <crt0.h>
 #include <dpmi.h>
 #include <fcntl.h>
 #include <io.h>
@@ -464,7 +471,7 @@ static std::string seconds_to_string( double time ) {
 
 static void show_info( std::ostream & log, bool verbose ) {
 	log << "openmpt123" << " v" << OPENMPT123_VERSION_STRING << ", libopenmpt " << openmpt::string::get( "library_version" ) << " (" << "OpenMPT " << openmpt::string::get( "core_version" ) << ")" << std::endl;
-	log << "Copyright (c) 2013-2021 OpenMPT Project Developers and Contributors <https://lib.openmpt.org/>" << std::endl;
+	log << "Copyright (c) 2013-2022 OpenMPT Project Developers and Contributors <https://lib.openmpt.org/>" << std::endl;
 	if ( !verbose ) {
 		log << std::endl;
 		return;
@@ -541,7 +548,7 @@ static void show_info( std::ostream & log, bool verbose ) {
 static void show_man_version( textout & log ) {
 	log << "openmpt123" << " v" << OPENMPT123_VERSION_STRING << std::endl;
 	log << std::endl;
-	log << "Copyright (c) 2013-2021 OpenMPT Project Developers and Contributors <https://lib.openmpt.org/>" << std::endl;
+	log << "Copyright (c) 2013-2022 OpenMPT Project Developers and Contributors <https://lib.openmpt.org/>" << std::endl;
 }
 
 static void show_short_version( textout & log ) {
@@ -587,6 +594,34 @@ static std::string get_device_string( const std::string & device ) {
 	return device;
 }
 
+static void show_help_keyboard( textout & log, bool man_version = false ) {
+	if ( !man_version ) {
+		show_info( log, false );
+	}
+	log << "Keyboard hotkeys (use 'openmpt123 --ui'):" << std::endl;
+	log << std::endl;
+	log << " [q]      quit" << std::endl;
+	log << " [ ]      pause / unpause" << std::endl;
+	log << " [N]      skip 10 files backward" << std::endl;
+	log << " [n]      prev file" << std::endl;
+	log << " [m]      next file" << std::endl;
+	log << " [M]      skip 10 files forward" << std::endl;
+	log << " [h]      seek 10 seconds backward" << std::endl;
+	log << " [j]      seek 1 seconds backward" << std::endl;
+	log << " [k]      seek 1 seconds forward" << std::endl;
+	log << " [l]      seek 10 seconds forward" << std::endl;
+	log << " [u]|[i]  +/- tempo" << std::endl;
+	log << " [o]|[p]  +/- pitch" << std::endl;
+	log << " [3]|[4]  +/- gain" << std::endl;
+	log << " [5]|[6]  +/- stereo separation" << std::endl;
+	log << " [7]|[8]  +/- filter taps" << std::endl;
+	log << " [9]|[0]  +/- volume ramping" << std::endl;
+	log << std::endl;
+	if ( !man_version ) {
+		log.writeout();
+	}
+}
+
 static void show_help( textout & log, bool with_info = true, bool longhelp = false, bool man_version = false, const std::string & message = std::string() ) {
 	if ( with_info ) {
 		show_info( log, false );
@@ -600,6 +635,7 @@ static void show_help( textout & log, bool with_info = true, bool longhelp = fal
 		}
 		if ( man_version ) {
 			log << "Options:" << std::endl;
+			log << std::endl;
 		}
 		log << " -h, --help                 Show help" << std::endl;
 		log << "     --help-keyboard        Show keyboard hotkeys in ui mode" << std::endl;
@@ -685,6 +721,8 @@ static void show_help( textout & log, bool with_info = true, bool longhelp = fal
 				log << extension;
 			}
 			log << std::endl;
+		} else {
+			show_help_keyboard( log, true );
 		}
 	}
 
@@ -694,30 +732,6 @@ static void show_help( textout & log, bool with_info = true, bool longhelp = fal
 		log << message;
 		log << std::endl;
 	}
-	log.writeout();
-}
-
-static void show_help_keyboard( textout & log ) {
-	show_info( log, false );
-	log << "Keyboard hotkeys (use 'openmpt123 --ui'):" << std::endl;
-	log << std::endl;
-	log << " [q]     quit" << std::endl;
-	log << " [ ]     pause / unpause" << std::endl;
-	log << " [N]     skip 10 files backward" << std::endl;
-	log << " [n]     prev file" << std::endl;
-	log << " [m]     next file" << std::endl;
-	log << " [M]     skip 10 files forward" << std::endl;
-	log << " [h]     seek 10 seconds backward" << std::endl;
-	log << " [j]     seek 1 seconds backward" << std::endl;
-	log << " [k]     seek 1 seconds forward" << std::endl;
-	log << " [l]     seek 10 seconds forward" << std::endl;
-	log << " [u]|[i] +/- tempo" << std::endl;
-	log << " [o]|[p] +/- pitch" << std::endl;
-	log << " [3]|[4] +/- gain" << std::endl;
-	log << " [5]|[6] +/- stereo separation" << std::endl;
-	log << " [7]|[8] +/- filter taps" << std::endl;
-	log << " [9]|[0] +/- volume ramping" << std::endl;
-	log << std::endl;
 	log.writeout();
 }
 
@@ -1057,6 +1071,7 @@ void render_loop( commandlineflags & flags, Tmod & mod, double & duration, texto
 	
 	if ( multiline ) {
 		lines += 1;
+		// cppcheck-suppress identicalInnerCondition
 		if ( flags.show_ui ) {
 			lines += 1;
 		}
@@ -1174,7 +1189,7 @@ void render_loop( commandlineflags & flags, Tmod & mod, double & duration, texto
 				cpu /= ( static_cast<double>( count ) ) / static_cast<double>( flags.samplerate );
 				double mix = ( static_cast<double>( count ) ) / static_cast<double>( flags.samplerate );
 				cpu_smooth = ( 1.0 - mix ) * cpu_smooth + mix * cpu;
-				sprintf( cpu_str, "%.2f%%", cpu_smooth * 100.0 );
+				std::snprintf( cpu_str, 64, "%.2f%%", cpu_smooth * 100.0 );
 			}
 		}
 
@@ -1286,7 +1301,7 @@ void render_loop( commandlineflags & flags, Tmod & mod, double & duration, texto
 					log << "   ";
 					log << "Spd:" << std::setw(2) << std::setfill(':') << mod.get_current_speed();
 					log << " ";
-					log << "Tmp:" << std::setw(3) << std::setfill(':') << mod.get_current_tempo();
+					log << "Tmp:" << std::setw(6) << std::setfill(':') << std::fixed << std::setprecision(2) << mod.get_current_tempo2();
 					log << "   ";
 					log << std::endl;
 				}
@@ -1347,7 +1362,7 @@ void render_loop( commandlineflags & flags, Tmod & mod, double & duration, texto
 					log << " ";
 					log << "Spd:" << std::setw(2) << std::setfill(':') << mod.get_current_speed();
 					log << "|";
-					log << "Tmp:" << std::setw(3) << std::setfill(':') << mod.get_current_tempo();
+					log << "Tmp:" << std::setw(3) << std::setfill(':') << std::fixed << std::setprecision(2) << mod.get_current_tempo2();
 				}
 			}
 			if ( flags.show_progress ) {
@@ -2272,11 +2287,27 @@ public:
 
 #endif
 
+#if defined( __DJGPP__ )
+#if 0
+/* Work-around <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=45977> */
+/* clang-format off */
+extern "C" int _crt0_startup_flags = 0
+	| _CRT0_FLAG_NONMOVE_SBRK          /* force interrupt compatible allocation */
+	| _CRT0_DISABLE_SBRK_ADDRESS_WRAP  /* force NT compatible allocation */
+	| _CRT0_FLAG_LOCK_MEMORY           /* lock all code and data at program startup */
+	| 0;
+/* clang-format on */
+#endif /* __DJGPP__ */
+#endif
 #if defined(WIN32) && defined(UNICODE)
 static int wmain( int wargc, wchar_t * wargv [] ) {
 #else
 static int main( int argc, char * argv [] ) {
 #endif
+	#if defined( __DJGPP__ )
+		_crt0_startup_flags &= ~_CRT0_FLAG_LOCK_MEMORY;  /* disable automatic locking for all further memory allocations */
+		assert(mpt::platform::libc().is_ok());
+	#endif /* __DJGPP__ */
 	std::vector<std::string> args;
 	#if defined(WIN32) && defined(UNICODE)
 		for ( int arg = 0; arg < wargc; ++arg ) {
@@ -2528,7 +2559,7 @@ static int main( int argc, char * argv [] ) {
 } // namespace openmpt123
 
 #if defined(WIN32) && defined(UNICODE)
-#if defined(__GNUC__)
+#if defined(__GNUC__) || (defined(__clang__) && !defined(_MSC_VER))
 // mingw64 does only default to special C linkage for "main", but not for "wmain".
 extern "C" int wmain( int wargc, wchar_t * wargv [] );
 extern "C"

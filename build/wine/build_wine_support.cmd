@@ -26,6 +26,7 @@ del /f /q "%OUTDIR%\openmpt-wine-support.zip"
  include\nlohmann-json\include\nlohmann\thirdparty\hedley\*.hpp ^
  include\rtkit\rtkit.c ^
  include\rtkit\rtkit.h ^
+ src\mpt\arch\*.hpp ^
  src\mpt\audio\*.hpp ^
  src\mpt\base\*.hpp ^
  src\mpt\base\tests\*.hpp ^
@@ -43,8 +44,10 @@ del /f /q "%OUTDIR%\openmpt-wine-support.zip"
  src\mpt\exception_text\*.hpp ^
  src\mpt\format\*.hpp ^
  src\mpt\format\test\*.hpp ^
+ src\mpt\fs\*.hpp ^
  src\mpt\io\*.hpp ^
  src\mpt\io\tests\*.hpp ^
+ src\mpt\io_file\*.hpp ^
  src\mpt\io_read\*.hpp ^
  src\mpt\io_write\*.hpp ^
  src\mpt\json\*.hpp ^
@@ -94,6 +97,7 @@ del /f /q "%OUTDIR%\openmpt-wine-support.zip"
  || goto error
 
 cd %BATCH_DIR%
+mkdir "%OUTDIR%"
 move ..\..\openmpt-wine-support.zip "%OUTDIR%\" || goto error
 
 goto noerror

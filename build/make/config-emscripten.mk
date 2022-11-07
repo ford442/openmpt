@@ -1,8 +1,16 @@
 
+ifeq ($(origin CC),default)
 CC  = emcc -c
+endif
+ifeq ($(origin CXX),default)
 CXX = em++ -c
+endif
+ifeq ($(origin LD),default)
 LD  = em++
+endif
+ifeq ($(origin AR),default)
 AR  = emar
+endif
 LINK.cc = em++ $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) $(TARGET_ARCH)
 
 EMSCRIPTEN_TARGET?=default
@@ -11,12 +19,12 @@ EMSCRIPTEN_PORTS?=0
 
 ifneq ($(STDCXX),)
 CXXFLAGS_STDCXX = -std=$(STDCXX)
-else
-ifeq ($(shell printf '\n' > bin/empty.cpp ; if $(CXX) -std=c++17 -c bin/empty.cpp -o bin/empty.out > /dev/null 2>&1 ; then echo 'c++17' ; fi ), c++17)
+else ifeq ($(shell printf '\n' > bin/empty.cpp ; if $(CXX) -std=c++20 -c bin/empty.cpp -o bin/empty.out > /dev/null 2>&1 ; then echo 'c++20' ; fi ), c++20)
+CXXFLAGS_STDCXX = -std=c++20
+else ifeq ($(shell printf '\n' > bin/empty.cpp ; if $(CXX) -std=c++17 -c bin/empty.cpp -o bin/empty.out > /dev/null 2>&1 ; then echo 'c++17' ; fi ), c++17)
 CXXFLAGS_STDCXX = -std=c++17
 endif
-endif
-CFLAGS_STDC = -std=c99
+CFLAGS_STDC = -std=c17
 CXXFLAGS += $(CXXFLAGS_STDCXX)
 CFLAGS += $(CFLAGS_STDC)
 
@@ -67,11 +75,15 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
 else ifeq ($(EMSCRIPTEN_TARGET),all)
 # emits native wasm AND javascript with full wasm optimizations.
-# as of emscripten 1.38, this is equivalent to default.
 CPPFLAGS += -DMPT_BUILD_WASM
 CXXFLAGS += 
 CFLAGS   += 
-LDFLAGS  += -s WASM=2 -s LEGACY_VM_SUPPORT=1
+LDFLAGS  += -s WASM=2 -s LEGACY_VM_SUPPORT=1 -Wno-transpile
+
+# work-around <https://github.com/emscripten-core/emscripten/issues/17897>.
+CXXFLAGS += -fno-inline-functions
+CFLAGS   += -fno-inline-functions
+LDFLAGS  += -fno-inline-functions
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
@@ -107,7 +119,12 @@ else ifeq ($(EMSCRIPTEN_TARGET),js)
 CPPFLAGS += -DMPT_BUILD_ASMJS
 CXXFLAGS += 
 CFLAGS   += 
-LDFLAGS  += -s WASM=0 -s LEGACY_VM_SUPPORT=1
+LDFLAGS  += -s WASM=0 -s LEGACY_VM_SUPPORT=1 -Wno-transpile
+
+# work-around <https://github.com/emscripten-core/emscripten/issues/17897>.
+CXXFLAGS += -fno-inline-functions
+CFLAGS   += -fno-inline-functions
+LDFLAGS  += -fno-inline-functions
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
@@ -141,8 +158,7 @@ NO_SHARED_LINKER_FLAG=1
 # Disable the generic compiler optimization flags as emscripten is sufficiently different.
 # Optimization flags are hard-coded for emscripten in this file.
 DEBUG=0
-OPTIMIZE=0
-OPTIMIZE_SIZE=0
+OPTIMIZE=none
 
 IS_CROSS=1
 
@@ -158,12 +174,9 @@ NO_OGG=1
 NO_VORBIS=1
 NO_VORBISFILE=1
 endif
-NO_LTDL=1
-NO_DL=1
 NO_PORTAUDIO=1
 NO_PORTAUDIOCPP=1
 NO_PULSEAUDIO=1
-NO_SDL=1
 NO_SDL2=1
 NO_FLAC=1
 NO_SNDFILE=1

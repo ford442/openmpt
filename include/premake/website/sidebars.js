@@ -47,7 +47,8 @@ module.exports = {
 			type: 'category',
 			label: 'Guides',
 			items: [
-				'Sharing-Configuration-Settings'
+				'Sharing-Configuration-Settings',
+				'Embedding-Frameworks-in-Xcode'
 			]
 		},
 		{
@@ -60,6 +61,7 @@ module.exports = {
 					type: 'category',
 					label: 'Project Settings',
 					items: [
+						'allmodulespublic',
 						'androidapilevel',
 						'androidapplibname',
 						'architecture',
@@ -94,6 +96,7 @@ module.exports = {
 						'configuration',
 						'configurations',
 						'conformancemode',
+						'consumewinrtextension',
 						'copylocal',
 						'cppdialect',
 						'csversion',
@@ -141,8 +144,11 @@ module.exports = {
 						'entrypoint',
 						'exceptionhandling',
 						'external',
+						'externalanglebrackets',
+						'externalincludedirs',
 						'externalproject',
 						'externalrule',
+						'externalwarnings',
 						'fastuptodate',
 						'fatalwarnings',
 						'fileextension',
@@ -174,6 +180,7 @@ module.exports = {
 						'implibsuffix',
 						'importdirs',
 						'includedirs',
+						'inheritdependencies',
 						'inlinesvisibility',
 						'inlining',
 						'intrinsics',
@@ -228,6 +235,7 @@ module.exports = {
 						'rules',
 						'runpathdirs',
 						'runtime',
+						'scanformoduledependencies',
 						'shaderassembler',
 						'shaderassembleroutput',
 						'shaderdefines',

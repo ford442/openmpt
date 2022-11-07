@@ -2,23 +2,12 @@
  project "PluginBridge"
   uuid "1A147336-891E-49AC-9EAD-A750599A224C"
   language "C++"
-  location ( "../../build/" .. mpt_projectpathname )
   vpaths { ["*"] = "../../" }
-  mpt_projectname = "PluginBridge"
-  dofile "../../build/premake/premake-defaults-EXEGUI.lua"
-  dofile "../../build/premake/premake-defaults.lua"
-  local extincludedirs = {
-  }
-	filter { "action:vs*" }
-		includedirs ( extincludedirs )
-	filter { "not action:vs*" }
-		sysincludedirs ( extincludedirs )
-	filter {}
+  mpt_kind "GUI"
   includedirs {
    "../../src",
    "../../common",
    "$(IntDir)/svn_version",
-   "../../build/svn_version",
   }
   files {
    "../../src/mpt/**.cpp",
@@ -42,23 +31,15 @@
   files {
    "../../pluginBridge/PluginBridge.rc",
   }
-	if _OPTIONS["win10"] then
-		files {
-			"../../pluginBridge/PluginBridge-win10.manifest",
-		}
-	elseif _OPTIONS["win81"] then
-		files {
-			"../../pluginBridge/PluginBridge-win81.manifest",
-		}
-	elseif _OPTIONS["win7"] then
-		files {
-			"../../pluginBridge/PluginBridge-win7.manifest",
-		}
-	end
+	files {
+		"../../pluginBridge/PluginBridge.manifest",
+	}
   defines { "MODPLUG_TRACKER" }
   dpiawareness "None"
-  largeaddressaware ( true )
-  characterset "Unicode"
+	characterset "Unicode"
+	if _OPTIONS["charset"] ~= "Unicode" then
+		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
+	end
   warnings "Extra"
   prebuildcommands { "..\\..\\build\\svn_version\\update_svn_version_vs_premake.cmd $(IntDir)" }
   filter { "architecture:x86" }
@@ -73,23 +54,12 @@
  project "PluginBridgeLegacy"
   uuid "BDEC2D44-C957-4940-A32B-02824AF6E21D"
   language "C++"
-  location ( "../../build/" .. mpt_projectpathname )
   vpaths { ["*"] = "../../" }
-  mpt_projectname = "PluginBridgeLegacy"
-  dofile "../../build/premake/premake-defaults-EXEGUI.lua"
-  dofile "../../build/premake/premake-defaults.lua"
-  local extincludedirs = {
-  }
-	filter { "action:vs*" }
-		includedirs ( extincludedirs )
-	filter { "not action:vs*" }
-		sysincludedirs ( extincludedirs )
-	filter {}
+  mpt_kind "GUI"
   includedirs {
    "../../src",
    "../../common",
    "$(IntDir)/svn_version",
-   "../../build/svn_version",
   }
   files {
    "../../src/mpt/**.cpp",
@@ -113,15 +83,9 @@
   files {
    "../../pluginBridge/PluginBridge.rc",
   }
-	if _OPTIONS["win10"] then
-		files {
-			"../../pluginBridge/PluginBridge-win10.manifest",
-		}
-	else
-		files {
-			"../../pluginBridge/PluginBridge-win7.manifest",
-		}
-	end
+	files {
+		"../../pluginBridge/PluginBridge.manifest",
+	}
   defines { "MODPLUG_TRACKER" }
   dpiawareness "None"
   largeaddressaware ( false )
@@ -135,7 +99,10 @@
 	filter { "action:vs*", "architecture:ARM64" }
 		-- dataexecutionprevention "Off" -- not supported by windows loader on arm64
 	filter {}
-  characterset "Unicode"
+	characterset "Unicode"
+	if _OPTIONS["charset"] ~= "Unicode" then
+		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
+	end
   warnings "Extra"
   prebuildcommands { "..\\..\\build\\svn_version\\update_svn_version_vs_premake.cmd $(IntDir)" }
   filter { "architecture:x86" }

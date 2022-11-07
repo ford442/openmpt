@@ -38,13 +38,13 @@ private:
 
 protected:
 	FileDataUnseekable()
-		: cachesize(0), streamFullyCached(false) {
+		: cachesize(0)
+		, streamFullyCached(false) {
 		return;
 	}
 
 private:
-	enum : std::size_t
-	{
+	enum : std::size_t {
 		QUANTUM_SIZE = mpt::IO::BUFFERSIZE_SMALL,
 		BUFFER_SIZE = mpt::IO::BUFFERSIZE_NORMAL
 	};

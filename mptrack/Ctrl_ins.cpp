@@ -26,6 +26,9 @@
 #include "../common/misc_util.h"
 #include "../common/mptStringBuffer.h"
 #include "SelectPluginDialog.h"
+#include "mpt/io_file/inputfile.hpp"
+#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "mpt/io_file/outputfile.hpp"
 #include "../common/mptFileIO.h"
 #include "../common/FileReader.h"
 #include "FileDialog.h"
@@ -47,20 +50,21 @@ BEGIN_MESSAGE_MAP(CNoteMapWnd, CStatic)
 	ON_WM_RBUTTONDOWN()
 	ON_WM_LBUTTONDBLCLK()
 	ON_WM_MOUSEWHEEL()
-	ON_COMMAND(ID_NOTEMAP_TRANS_UP,		&CNoteMapWnd::OnMapTransposeUp)
-	ON_COMMAND(ID_NOTEMAP_TRANS_DOWN,	&CNoteMapWnd::OnMapTransposeDown)
-	ON_COMMAND(ID_NOTEMAP_COPY_NOTE,	&CNoteMapWnd::OnMapCopyNote)
-	ON_COMMAND(ID_NOTEMAP_COPY_SMP,		&CNoteMapWnd::OnMapCopySample)
-	ON_COMMAND(ID_NOTEMAP_RESET,		&CNoteMapWnd::OnMapReset)
-	ON_COMMAND(ID_NOTEMAP_REMOVE,		&CNoteMapWnd::OnMapRemove)
-	ON_COMMAND(ID_INSTRUMENT_SAMPLEMAP, &CNoteMapWnd::OnEditSampleMap)
-	ON_COMMAND(ID_INSTRUMENT_DUPLICATE, &CNoteMapWnd::OnInstrumentDuplicate)
-	ON_COMMAND_RANGE(ID_NOTEMAP_EDITSAMPLE, ID_NOTEMAP_EDITSAMPLE+MAX_SAMPLES, &CNoteMapWnd::OnEditSample)
-	ON_MESSAGE(WM_MOD_KEYCOMMAND,		&CNoteMapWnd::OnCustomKeyMsg)
+	ON_COMMAND(ID_NOTEMAP_TRANS_UP,          &CNoteMapWnd::OnMapTransposeUp)
+	ON_COMMAND(ID_NOTEMAP_TRANS_DOWN,        &CNoteMapWnd::OnMapTransposeDown)
+	ON_COMMAND(ID_NOTEMAP_COPY_NOTE,         &CNoteMapWnd::OnMapCopyNote)
+	ON_COMMAND(ID_NOTEMAP_COPY_SMP,          &CNoteMapWnd::OnMapCopySample)
+	ON_COMMAND(ID_NOTEMAP_RESET,             &CNoteMapWnd::OnMapReset)
+	ON_COMMAND(ID_NOTEMAP_TRANSPOSE_SAMPLES, &CNoteMapWnd::OnTransposeSamples)
+	ON_COMMAND(ID_NOTEMAP_REMOVE,            &CNoteMapWnd::OnMapRemove)
+	ON_COMMAND(ID_INSTRUMENT_SAMPLEMAP,      &CNoteMapWnd::OnEditSampleMap)
+	ON_COMMAND(ID_INSTRUMENT_DUPLICATE,      &CNoteMapWnd::OnInstrumentDuplicate)
+	ON_MESSAGE(WM_MOD_KEYCOMMAND,            &CNoteMapWnd::OnCustomKeyMsg)
+	ON_COMMAND_RANGE(ID_NOTEMAP_EDITSAMPLE, ID_NOTEMAP_EDITSAMPLE + MAX_SAMPLES, &CNoteMapWnd::OnEditSample)
 END_MESSAGE_MAP()
 
 
-BOOL CNoteMapWnd::PreTranslateMessage(MSG* pMsg)
+BOOL CNoteMapWnd::PreTranslateMessage(MSG *pMsg)
 {
 	if(!pMsg)
 		return TRUE;
@@ -71,22 +75,14 @@ BOOL CNoteMapWnd::PreTranslateMessage(MSG* pMsg)
 		if ((pMsg->message == WM_SYSKEYUP)   || (pMsg->message == WM_KEYUP) ||
 			(pMsg->message == WM_SYSKEYDOWN) || (pMsg->message == WM_KEYDOWN))
 		{
-			CInputHandler* ih = CMainFrame::GetInputHandler();
+			CInputHandler *ih = CMainFrame::GetInputHandler();
+			const auto event = ih->Translate(*pMsg);
 
-			//Translate message manually
-			UINT nChar = wParam;
-			UINT nRepCnt = LOWORD(pMsg->lParam);
-			UINT nFlags = HIWORD(pMsg->lParam);
-			KeyEventType kT = ih->GetKeyEventType(nFlags);
-			InputTargetContext ctx = (InputTargetContext)(kCtxInsNoteMap);
-
-			if (ih->KeyEvent(ctx, nChar, nRepCnt, nFlags, kT) != kcNull)
+			if (ih->KeyEvent(kCtxInsNoteMap, event) != kcNull)
 				return true; // Mapped to a command, no need to pass message on.
 
 			// a bit of a hack...
-			ctx = (InputTargetContext)(kCtxCtrlInstruments);
-
-			if (ih->KeyEvent(ctx, nChar, nRepCnt, nFlags, kT) != kcNull)
+			if (ih->KeyEvent(kCtxCtrlInstruments, event) != kcNull)
 				return true; // Mapped to a command, no need to pass message on.
 		}
 	}
@@ -349,19 +345,20 @@ void CNoteMapWnd::OnRButtonDown(UINT, CPoint pt)
 				AppendMenu(hMenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hSubMenu), ih->GetKeyTextFromCommand(kcInsNoteMapEditSample, _T("&Edit Sample")));
 				AppendMenu(hMenu, MF_SEPARATOR, 0, NULL);
 			}
-			AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_COPY_SMP, ih->GetKeyTextFromCommand(kcInsNoteMapCopyCurrentSample, MPT_CFORMAT("Map all notes to &sample {}")(pIns->Keyboard[m_nNote])));
+			AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_COPY_SMP, ih->GetKeyTextFromCommand(kcInsNoteMapCopyCurrentSample, MPT_CFORMAT("Map All Notes to &Sample {}")(pIns->Keyboard[m_nNote])));
 
 			if(sndFile.GetType() != MOD_TYPE_XM)
 			{
 				if(ModCommand::IsNote(pIns->NoteMap[m_nNote]))
 				{
-					AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_COPY_NOTE, ih->GetKeyTextFromCommand(kcInsNoteMapCopyCurrentNote, MPT_CFORMAT("Map all &notes to {}")(mpt::ToCString(sndFile.GetNoteName(pIns->NoteMap[m_nNote], m_nInstrument)))));
+					AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_COPY_NOTE, ih->GetKeyTextFromCommand(kcInsNoteMapCopyCurrentNote, MPT_CFORMAT("Map All &Notes to {}")(mpt::ToCString(sndFile.GetNoteName(pIns->NoteMap[m_nNote], m_nInstrument)))));
 				}
-				AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_TRANS_UP, ih->GetKeyTextFromCommand(kcInsNoteMapTransposeUp, _T("Transpose map &up")));
-				AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_TRANS_DOWN, ih->GetKeyTextFromCommand(kcInsNoteMapTransposeDown, _T("Transpose map &down")));
+				AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_TRANS_UP, ih->GetKeyTextFromCommand(kcInsNoteMapTransposeUp, _T("Transpose Map &Up")));
+				AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_TRANS_DOWN, ih->GetKeyTextFromCommand(kcInsNoteMapTransposeDown, _T("Transpose Map &Down")));
 			}
-			AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_RESET, ih->GetKeyTextFromCommand(kcInsNoteMapReset, _T("&Reset note mapping")));
-			AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_REMOVE, ih->GetKeyTextFromCommand(kcInsNoteMapRemove, _T("Remo&ve all samples")));
+			AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_RESET, ih->GetKeyTextFromCommand(kcInsNoteMapReset, _T("&Reset Note Mapping")));
+			AppendMenu(hMenu, MF_STRING | (pIns->CanConvertToDefaultNoteMap().empty() ? MF_GRAYED : 0), ID_NOTEMAP_TRANSPOSE_SAMPLES, ih->GetKeyTextFromCommand(kcInsNoteMapTransposeSamples, _T("&Transpose Samples / Reset Map")));
+			AppendMenu(hMenu, MF_STRING, ID_NOTEMAP_REMOVE, ih->GetKeyTextFromCommand(kcInsNoteMapRemove, _T("Remo&ve All Samples")));
 			AppendMenu(hMenu, MF_STRING, ID_INSTRUMENT_DUPLICATE, ih->GetKeyTextFromCommand(kcInstrumentCtrlDuplicate, _T("Duplicate &Instrument")));
 			SetMenuDefaultItem(hMenu, ID_INSTRUMENT_SAMPLEMAP, FALSE);
 			ClientToScreen(&pt);
@@ -455,6 +452,35 @@ void CNoteMapWnd::OnMapReset()
 			UpdateAccessibleTitle();
 		}
 	}
+}
+
+
+void CNoteMapWnd::OnTransposeSamples()
+{
+	auto &sndFile = m_modDoc.GetSoundFile();
+	ModInstrument *pIns = sndFile.Instruments[m_nInstrument];
+	if(!pIns)
+		return;
+	const auto samples = pIns->CanConvertToDefaultNoteMap();
+	if(samples.empty())
+		return;
+
+	PrepareUndo("Transpose Samples");
+	for(const auto &[smp, transpose] : samples)
+	{
+		if(smp > sndFile.GetNumSamples())
+			continue;
+		m_modDoc.GetSampleUndo().PrepareUndo(smp, sundo_none, "Transpose");
+		auto &sample = sndFile.GetSample(smp);
+		if(sndFile.UseFinetuneAndTranspose())
+			sample.RelativeTone += transpose;
+		else
+			sample.Transpose(transpose / 12.0);
+		m_modDoc.UpdateAllViews(nullptr, SampleHint(smp).Info(), &m_pParent);
+	}
+	pIns->ResetNoteMap();
+	m_pParent.SetModified(InstrumentHint().Info(), false);
+	Invalidate(FALSE);
 }
 
 
@@ -561,7 +587,6 @@ void CNoteMapWnd::OnInstrumentDuplicate()
 
 LRESULT CNoteMapWnd::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 {
-	CMainFrame *pMainFrm = CMainFrame::GetMainFrame();
 	ModInstrument *pIns = m_modDoc.GetSoundFile().Instruments[m_nInstrument];
 
 	// Handle notes
@@ -573,7 +598,7 @@ LRESULT CNoteMapWnd::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		if(m_bIns && ((key >= '0' && key <= '9') || (key == ' ')))
 			HandleChar(key);
 		else
-			EnterNote(static_cast<uint32>(wParam - kcInsNoteMapStartNotes + 1 + pMainFrm->GetBaseOctave() * 12));
+			EnterNote(m_modDoc.GetNoteWithBaseOctave(static_cast<int>(wParam - kcInsNoteMapStartNotes), m_nInstrument));
 
 		return wParam;
 	}
@@ -596,6 +621,7 @@ LRESULT CNoteMapWnd::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 	case kcInsNoteMapCopyCurrentSample:	OnMapCopySample(); return wParam;
 	case kcInsNoteMapCopyCurrentNote:	OnMapCopyNote(); return wParam;
 	case kcInsNoteMapReset:				OnMapReset(); return wParam;
+	case kcInsNoteMapTransposeSamples:	OnTransposeSamples(); return wParam;
 	case kcInsNoteMapRemove:			OnMapRemove(); return wParam;
 
 	case kcInsNoteMapEditSample:		if(pIns) OnEditSample(pIns->Keyboard[m_nNote] + ID_NOTEMAP_EDITSAMPLE); return wParam;
@@ -1163,7 +1189,6 @@ void CCtrlInstruments::OnActivatePage(LPARAM lParam)
 	{
 		int nIns = m_parent.GetInstrumentChange();
 		if (nIns > 0) lParam = nIns;
-		m_parent.InstrumentChanged(-1);
 	} else if(lParam > 0)
 	{
 		m_parent.InstrumentChanged(static_cast<INSTRUMENTINDEX>(lParam));
@@ -1573,7 +1598,7 @@ void CCtrlInstruments::UpdateFilterText()
 bool CCtrlInstruments::OpenInstrument(const mpt::PathString &fileName)
 {
 	BeginWaitCursor();
-	InputFile f(fileName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
+	mpt::IO::InputFile f(fileName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
 	if(!f.IsValid())
 	{
 		EndWaitCursor();
@@ -1621,7 +1646,7 @@ bool CCtrlInstruments::OpenInstrument(const mpt::PathString &fileName)
 		if (pIns)
 		{
 			mpt::PathString name, ext;
-			fileName.SplitPath(nullptr, nullptr, &name, &ext);
+			fileName.SplitPath(nullptr, nullptr, nullptr, &name, &ext);
 
 			if (!pIns->name[0] && m_sndFile.GetModSpecifications().instrNameLengthMax > 0)
 			{
@@ -2023,7 +2048,7 @@ void CCtrlInstruments::SaveInstrument(bool doBatchSave)
 	} else
 	{
 		// Save all samples
-		fileName = m_sndFile.GetpModDoc()->GetPathNameMpt().GetFileName();
+		fileName = m_sndFile.GetpModDoc()->GetPathNameMpt().GetFilenameBase();
 		if(fileName.empty()) fileName = P_("untitled");
 
 		fileName += P_(" - %instrument_number% - ");
@@ -2033,7 +2058,7 @@ void CCtrlInstruments::SaveInstrument(bool doBatchSave)
 			fileName += P_("%instrument_filename%");
 
 	}
-	SanitizeFilename(fileName);
+	fileName = fileName.AsSanitizedComponent();
 
 	int index;
 	if(TrackerSettings::Instance().compressITI)
@@ -2044,7 +2069,7 @@ void CCtrlInstruments::SaveInstrument(bool doBatchSave)
 		index = 1;
 
 	FileDialog dlg = SaveFileDialog()
-		.DefaultExtension(m_sndFile.GetType() == MOD_TYPE_XM ? "xi" : "iti")
+		.DefaultExtension(m_sndFile.GetType() == MOD_TYPE_XM ? U_("xi") : U_("iti"))
 		.DefaultFilename(fileName)
 		.ExtensionFilter(
 			"Impulse Tracker Instruments (*.iti)|*.iti|"
@@ -2065,12 +2090,12 @@ void CCtrlInstruments::SaveInstrument(bool doBatchSave)
 		minIns = 1;
 		maxIns = m_sndFile.GetNumInstruments();
 	}
-	auto numberFmt = mpt::FormatSpec().Dec().FillNul().Width(1 + static_cast<int>(std::log10(maxIns)));
+	auto numberFmt = mpt::FormatSpec<mpt::ustring>().Dec().FillNul().Width(1 + static_cast<int>(std::log10(maxIns)));
 	CString instrName, instrFilename;
 
 	bool ok = true;
-	const bool saveXI = !mpt::PathString::CompareNoCase(dlg.GetExtension(), P_("xi"));
-	const bool saveSFZ = !mpt::PathString::CompareNoCase(dlg.GetExtension(), P_("sfz"));
+	const bool saveXI = !mpt::PathCompareNoCase(dlg.GetExtension(), P_("xi"));
+	const bool saveSFZ = !mpt::PathCompareNoCase(dlg.GetExtension(), P_("sfz"));
 	const bool doCompress = index == 2 || index == 6;
 	const bool allowExternal = index == 3;
 
@@ -2084,8 +2109,8 @@ void CCtrlInstruments::SaveInstrument(bool doBatchSave)
 			{
 				instrName = mpt::ToCString(m_sndFile.GetCharsetInternal(), pIns->name[0] ? pIns->GetName() : "untitled");
 				instrFilename = mpt::ToCString(m_sndFile.GetCharsetInternal(), pIns->filename[0] ? pIns->GetFilename() : pIns->GetName());
-				SanitizeFilename(instrName);
-				SanitizeFilename(instrFilename);
+				instrName = SanitizePathComponent(instrName);
+				instrFilename = SanitizePathComponent(instrFilename);
 
 				mpt::ustring fileNameW = fileName.ToUnicode();
 				fileNameW = mpt::String::Replace(fileNameW, U_("%instrument_number%"), mpt::ufmt::fmt(ins, numberFmt));
@@ -2097,8 +2122,8 @@ void CCtrlInstruments::SaveInstrument(bool doBatchSave)
 			try
 			{
 				ScopedLogCapturer logcapturer(m_modDoc);
-				mpt::SafeOutputFile sf(fileName, std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
-				mpt::ofstream &f = sf;
+				mpt::IO::SafeOutputFile sf(fileName, std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+				mpt::IO::ofstream &f = sf;
 				if(!f)
 				{
 					ok = false;
@@ -2860,16 +2885,8 @@ BOOL CCtrlInstruments::PreTranslateMessage(MSG *pMsg)
 		if ((pMsg->message == WM_SYSKEYUP)   || (pMsg->message == WM_KEYUP) ||
 			(pMsg->message == WM_SYSKEYDOWN) || (pMsg->message == WM_KEYDOWN))
 		{
-			CInputHandler* ih = CMainFrame::GetInputHandler();
-
-			//Translate message manually
-			UINT nChar = static_cast<UINT>(pMsg->wParam);
-			UINT nRepCnt = LOWORD(pMsg->lParam);
-			UINT nFlags = HIWORD(pMsg->lParam);
-			KeyEventType kT = ih->GetKeyEventType(nFlags);
-			InputTargetContext ctx = (InputTargetContext)(kCtxCtrlInstruments);
-
-			if (ih->KeyEvent(ctx, nChar, nRepCnt, nFlags, kT) != kcNull)
+			CInputHandler *ih = CMainFrame::GetInputHandler();
+			if (ih->KeyEvent(kCtxCtrlInstruments, ih->Translate(*pMsg)) != kcNull)
 				return true; // Mapped to a command, no need to pass message on.
 		}
 

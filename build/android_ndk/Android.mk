@@ -6,12 +6,12 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := openmpt
 
-LOCAL_CFLAGS   +=#-std=c99
+LOCAL_CFLAGS   += -std=c17
 LOCAL_CPPFLAGS += -std=c++17 -fexceptions -frtti
 
 LOCAL_CPP_FEATURES += exceptions rtti
 
-LOCAL_C_INCLUDES += $(LOCAL_PATH) $(LOCAL_PATH)/src $(LOCAL_PATH)/common $(LOCAL_PATH)/build/svn_version
+LOCAL_C_INCLUDES += $(LOCAL_PATH) $(LOCAL_PATH)/src $(LOCAL_PATH)/common
 
 LOCAL_CFLAGS   += -fvisibility=hidden -Wall -DLIBOPENMPT_BUILD -DMPT_WITH_ZLIB
 LOCAL_CPPFLAGS +=#-fvisibility=hidden -Wall -DLIBOPENMPT_BUILD -DMPT_WITH_ZLIB
@@ -88,6 +88,8 @@ LOCAL_SRC_FILES += \
 	common/ComponentManager.cpp \
 	common/Logging.cpp \
 	common/mptFileIO.cpp \
+	common/mptFileTemporary.cpp \
+	common/mptFileType.cpp \
 	common/mptPathString.cpp \
 	common/mptRandom.cpp \
 	common/mptString.cpp \
@@ -125,6 +127,7 @@ LOCAL_SRC_FILES += \
 	soundlib/Load_far.cpp \
 	soundlib/Load_fmt.cpp \
 	soundlib/Load_gdm.cpp \
+	soundlib/Load_gt2.cpp \
 	soundlib/Load_imf.cpp \
 	soundlib/Load_it.cpp \
 	soundlib/Load_itp.cpp \
@@ -215,8 +218,7 @@ LOCAL_SRC_FILES += \
 	sounddsp/DSP.cpp \
 	sounddsp/EQ.cpp \
 	sounddsp/Reverb.cpp \
-	test/TestToolsLib.cpp \
-	test/test.cpp
+	
 
 include $(BUILD_SHARED_LIBRARY)
 

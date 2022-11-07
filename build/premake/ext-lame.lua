@@ -2,18 +2,13 @@
  project "lame"
   uuid "b545694a-ce2a-44f8-ba88-147c36369308"
   language "C"
-  location ( "../../build/" .. mpt_projectpathname .. "/ext" )
-  mpt_projectname = "lame"
-  dofile "../../build/premake/premake-defaults-DLL.lua"
-  dofile "../../build/premake/premake-defaults.lua"
+  location ( "%{wks.location}" .. "/ext" )
+  mpt_kind "shared"
   targetname "openmpt-lame"
   includedirs { "../../include/lame/include" }
   includedirs { "../../include/lame/mpglib" }
   includedirs { "../../include/lame/libmp3lame" }
   includedirs { "../../build/premake/inc/lame" }
-	filter {}
-	filter { "action:vs*" }
-		characterset "Unicode"
 	filter {}
   files {
    "../../include/lame/include/lame.def",
@@ -64,3 +59,20 @@
 	filter { "action:vs*" }
 		buildoptions { "/wd6031", "/wd6262" } -- analyze
 	filter {}
+
+function mpt_use_lame ()
+	filter {}
+	filter { "action:vs*" }
+		includedirs {
+			"../../include/lame/include",
+		}
+	filter { "not action:vs*" }
+		externalincludedirs {
+			"../../include/lame/include",
+		}
+	filter {}
+	links {
+		"lame",
+	}
+	filter {}
+end

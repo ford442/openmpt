@@ -126,6 +126,7 @@ static constexpr MPTEffectInfo gFXInfo[] =
 	{CMD_FINETUNE,			0,0,	0,	MOD_TYPE_MPT,	_T("Finetune")},
 	{CMD_FINETUNE_SMOOTH,	0,0,	0,	MOD_TYPE_MPT,	_T("Finetune (Smooth)")},
 	{CMD_DUMMY,	0,0,	0,	MOD_TYPE_NONE,	_T("Empty") },
+	{CMD_DIGIREVERSESAMPLE, 0, 0, 0, MOD_TYPE_NONE, _T("Reverse Sample")}, // DIGI effect
 };
 
 
@@ -309,6 +310,8 @@ bool EffectInfo::GetEffectInfo(UINT ndx, CString *s, bool bXX, ModCommand::PARAM
 			if(sndFile.GetType() & (MOD_TYPE_MOD | MOD_TYPE_S3M | MOD_TYPE_XM))
 				nmax = 63;
 			break;
+		default:
+			break;
 		}
 		*prangeMin = nmin;
 		*prangeMax = nmax;
@@ -364,6 +367,8 @@ UINT EffectInfo::MapValueToPos(UINT ndx, UINT param) const
 				pos = 0x81;
 		}
 		break;
+	default:
+		break;
 	}
 	return pos;
 }
@@ -408,18 +413,23 @@ UINT EffectInfo::MapPosToValue(UINT ndx, UINT pos) const
 		if(sndFile.GetType() == MOD_TYPE_S3M)
 			param = (pos <= 0x80) ? pos : 0xA4;
 		break;
+	default:
+		break;
 	}
 	return param;
 }
 
 
-bool EffectInfo::GetEffectNameEx(CString &pszName, UINT ndx, UINT param, CHANNELINDEX chn) const
+bool EffectInfo::GetEffectNameEx(CString &pszName, const ModCommand &m, uint32 param, CHANNELINDEX chn) const
 {
 	CString s;
 	const TCHAR *continueOrIgnore;
 
-	if (ndx >= std::size(gFXInfo) || !gFXInfo[ndx].name) return false;
-	pszName = CString(gFXInfo[ndx].name) + _T(": ");
+	auto ndx = GetIndexFromEffect(m.command, static_cast<ModCommand::PARAM>(param));
+
+	if(ndx < 0 || static_cast<std::size_t>(ndx) >= std::size(gFXInfo) || !gFXInfo[ndx].name)
+		return false;
+	pszName = CString{gFXInfo[ndx].name} + _T(": ");
 
 	// for effects that don't have effect memory in MOD format.
 	if(sndFile.GetType() == MOD_TYPE_MOD)
@@ -435,7 +445,7 @@ bool EffectInfo::GetEffectNameEx(CString &pszName, UINT ndx, UINT param, CHANNEL
 		if(sndFile.GetType() == MOD_TYPE_XM)	// XM also ignores this!
 			continueOrIgnore = _T("ignore");
 
-		if (param)
+		if(param)
 			s.Format(_T("note+%d note+%d"), param >> 4, param & 0x0F);
 		else
 			s = continueOrIgnore;
@@ -447,9 +457,9 @@ bool EffectInfo::GetEffectNameEx(CString &pszName, UINT ndx, UINT param, CHANNEL
 		{
 			TCHAR sign = (gFXInfo[ndx].effect == CMD_PORTAMENTOUP) ? _T('+') : _T('-');
 
-			if((sndFile.GetType() & MOD_TYPE_S3MITMPT) && ((param & 0xF0) == 0xF0))
+			if((sndFile.UseCombinedPortamentoCommands()) && ((param & 0xF0) == 0xF0))
 				s.Format(_T("fine %c%d"), sign, (param & 0x0F));
-			else if((sndFile.GetType() & MOD_TYPE_S3MITMPT) && ((param & 0xF0) == 0xE0))
+			else if((sndFile.UseCombinedPortamentoCommands()) && ((param & 0xF0) == 0xE0))
 				s.Format(_T("extra fine %c%d"), sign, (param & 0x0F));
 			else
 				s.Format(_T("%c%d"), sign, param);
@@ -470,7 +480,11 @@ bool EffectInfo::GetEffectNameEx(CString &pszName, UINT ndx, UINT param, CHANNEL
 	case CMD_TREMOLO:
 	case CMD_PANBRELLO:
 	case CMD_FINEVIBRATO:
-		if (param)
+		if(param && !(param & 0xF0))
+			s.Format(_T("speed=continue depth=%d"), param & 0x0F);
+		else if(param && !(param & 0x0F))
+			s.Format(_T("speed=%d depth=continue"), param >> 4);
+		else if(param)
 			s.Format(_T("speed=%d depth=%d"), param >> 4, param & 0x0F);
 		else
 			s = _T("continue");
@@ -581,10 +595,25 @@ bool EffectInfo::GetEffectNameEx(CString &pszName, UINT ndx, UINT param, CHANNEL
 		break;
 
 	case CMD_OFFSET:
-		if (param)
-			pszName.Format(_T("Set Offset to %s"), mpt::cfmt::dec(3, ',', param).GetString());
-		else
+		if (m.volcmd == VOLCMD_OFFSET && m.vol == 0)
+		{
+			pszName.Format(_T("Percentage: %d%%"), m.param * 100 / 256);
+		} else if(param || m.volcmd == VOLCMD_OFFSET)
+		{
+			if (m.volcmd == VOLCMD_OFFSET && m.IsNote() && m.instr)
+			{
+				if(SAMPLEINDEX smp = sndFile.GetSampleIndex(m.note, m.instr); smp > 0 && smp <= sndFile.GetNumSamples())
+				{
+					const ModSample &sample = sndFile.GetSample(smp);
+					if(m.vol > 0 && m.vol <= std::size(sample.cues))
+						param += sample.cues[m.vol - 1];
+				}
+			}
+			pszName.Format(_T("Set Offset to %s"), mpt::cfmt::dec(3, _T(","), param).GetString());
+		} else
+		{
 			s = _T("continue");
+		}
 		break;
 
 	case CMD_CHANNELVOLUME:
@@ -630,7 +659,7 @@ bool EffectInfo::GetEffectNameEx(CString &pszName, UINT ndx, UINT param, CHANNEL
 			if(chn != CHANNELINDEX_INVALID)
 			{
 				const uint8 macroIndex = sndFile.m_PlayState.Chn[chn].nActiveMacro;
-				const PLUGINDEX plugin = sndFile.GetBestPlugin(chn, PrioritiseChannel, EvenIfMuted) - 1;
+				const PLUGINDEX plugin = sndFile.GetBestPlugin(sndFile.m_PlayState, chn, PrioritiseChannel, EvenIfMuted) - 1;
 				IMixPlugin *pPlugin = (plugin < MAX_MIXPLUGINS ? sndFile.m_MixPlugins[plugin].pMixPlugin : nullptr);
 				pszName.Format(_T("SFx MIDI Macro z=%d (SF%X: %s)"), param, macroIndex, sndFile.m_MidiCfg.GetParameteredMacroName(macroIndex, pPlugin).GetString());
 			} else
@@ -651,13 +680,19 @@ bool EffectInfo::GetEffectNameEx(CString &pszName, UINT ndx, UINT param, CHANNEL
 	case CMD_FINETUNE_SMOOTH:
 		{
 			int8 pwd = 1;
-			if(chn != CHANNELINDEX_INVALID && sndFile.m_PlayState.Chn[chn].pModInstrument != nullptr)
+			const TCHAR *unit = _T(" cents");
+			if(m.instr > 0 && m.instr <= sndFile.GetNumInstruments() && sndFile.Instruments[m.instr] != nullptr)
+				pwd = sndFile.Instruments[m.instr]->midiPWD;
+			else if(chn != CHANNELINDEX_INVALID && sndFile.m_PlayState.Chn[chn].pModInstrument != nullptr)
 				pwd = sndFile.m_PlayState.Chn[chn].pModInstrument->midiPWD;
+			else if(sndFile.GetNumInstruments())
+				unit = _T("");
 
-			pszName = MPT_CFORMAT("Finetune{}: {}{} cents")(
+			pszName = MPT_CFORMAT("Finetune{}: {}{}{}")(
 				CString(gFXInfo[ndx].effect == CMD_FINETUNE ? _T("") : _T(" (Smooth)")),
 				CString(param >= 0x8000 ? _T("+") : _T("")),
-				mpt::cfmt::val((static_cast<int32>(param) - 0x8000) * pwd / 256.0));
+				mpt::cfmt::val((static_cast<int32>(param) - 0x8000) * pwd / 327.68),
+				CString(unit));
 		}
 		break;
 
@@ -1020,7 +1055,10 @@ bool EffectInfo::GetVolCmdParamInfo(const ModCommand &m, CString *s) const
 				s->Append(_T("unknown"));
 		} else
 		{
-			*s = _T("continue");
+			if(m.command == CMD_OFFSET)
+				s->Format(_T("Percentage: %d%%"), m.param * 100 / 256);
+			else
+				*s = _T("continue");
 		}
 		break;
 

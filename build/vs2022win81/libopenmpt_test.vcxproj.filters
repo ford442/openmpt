@@ -25,6 +25,9 @@
     <Filter Include="src\mpt">
       <UniqueIdentifier>{0D1E30A9-79FD-AE44-8215-3A1BEE7315A6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\mpt\arch">
+      <UniqueIdentifier>{BA90CF03-A6F3-5EA8-4F79-975E3BBB2A2B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\mpt\audio">
       <UniqueIdentifier>{EE51C37D-5A12-3FB4-234D-88318FCC8390}</UniqueIdentifier>
     </Filter>
@@ -76,14 +79,14 @@
     <Filter Include="src\mpt\io\tests">
       <UniqueIdentifier>{B68E2391-A287-42E3-CBB9-2768B71122EF}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\mpt\io_file">
+      <UniqueIdentifier>{D34C5655-3FD8-C319-48E9-460EB4F31F1A}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\mpt\io_read">
       <UniqueIdentifier>{EFCE5C55-5B5A-CA19-646B-4D0ED075261A}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\mpt\io_write">
       <UniqueIdentifier>{BE6C5801-AA65-7753-D397-5CD8BFEF565F}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\mpt\library">
-      <UniqueIdentifier>{31CC822E-9D57-F0F2-A668-73E712734CF3}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\mpt\mutex">
       <UniqueIdentifier>{8FBB9C7E-FB7B-18B5-C4B6-613230365D91}</UniqueIdentifier>
@@ -192,7 +195,16 @@
     <ClInclude Include="..\..\common\mptBaseUtils.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\common\mptCPU.h">
+      <Filter>common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\common\mptFileIO.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\mptFileTemporary.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\mptFileType.h">
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\mptPathString.h">
@@ -259,6 +271,18 @@
       <Filter>libopenmpt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libopenmpt\libopenmpt_stream_callbacks_file.h">
+      <Filter>libopenmpt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libopenmpt\libopenmpt_stream_callbacks_file_mingw.h">
+      <Filter>libopenmpt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libopenmpt\libopenmpt_stream_callbacks_file_msvcrt.h">
+      <Filter>libopenmpt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libopenmpt\libopenmpt_stream_callbacks_file_posix.h">
+      <Filter>libopenmpt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\libopenmpt\libopenmpt_stream_callbacks_file_posix_lfs64.h">
       <Filter>libopenmpt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libopenmpt\libopenmpt_version.h">
@@ -489,6 +513,15 @@
     <ClInclude Include="..\..\soundlib\tuningcollection.h">
       <Filter>soundlib</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\arch\arch.hpp">
+      <Filter>src\mpt\arch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\arch\feature_flags.hpp">
+      <Filter>src\mpt\arch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\arch\x86_amd64.hpp">
+      <Filter>src\mpt\arch</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\audio\sample.hpp">
       <Filter>src\mpt\audio</Filter>
     </ClInclude>
@@ -523,6 +556,9 @@
       <Filter>src\mpt\base</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\base\detect.hpp">
+      <Filter>src\mpt\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\base\detect_arch.hpp">
       <Filter>src\mpt\base</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\base\detect_compiler.hpp">
@@ -627,6 +663,9 @@
     <ClInclude Include="..\..\src\mpt\binary\tests\tests_binary.hpp">
       <Filter>src\mpt\binary\tests</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\check\compiler.hpp">
+      <Filter>src\mpt\check</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\check\libc.hpp">
       <Filter>src\mpt\check</Filter>
     </ClInclude>
@@ -666,8 +705,14 @@
     <ClInclude Include="..\..\src\mpt\endian\tests\tests_endian_floatingpoint.hpp">
       <Filter>src\mpt\endian\tests</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\endian\tests\tests_endian_int24.hpp">
+      <Filter>src\mpt\endian\tests</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\endian\tests\tests_endian_integer.hpp">
       <Filter>src\mpt\endian\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\endian\type_traits.hpp">
+      <Filter>src\mpt\endian</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\environment\environment.hpp">
       <Filter>src\mpt\environment</Filter>
@@ -735,6 +780,30 @@
     <ClInclude Include="..\..\src\mpt\io\tests\tests_io.hpp">
       <Filter>src\mpt\io\tests</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\fileadapter.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\fileref.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\fstream.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\inputfile.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\inputfile_filecursor.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\outputfile.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\unique_basename.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\unique_tempfilename.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\io_read\callbackstream.hpp">
       <Filter>src\mpt\io_read</Filter>
     </ClInclude>
@@ -789,16 +858,22 @@
     <ClInclude Include="..\..\src\mpt\io_write\buffer.hpp">
       <Filter>src\mpt\io_write</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\mpt\library\library.hpp">
-      <Filter>src\mpt\library</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\mpt\mutex\mutex.hpp">
       <Filter>src\mpt\mutex</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\osinfo\class.hpp">
       <Filter>src\mpt\osinfo</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\osinfo\dos_memory.hpp">
+      <Filter>src\mpt\osinfo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\osinfo\dos_version.hpp">
+      <Filter>src\mpt\osinfo</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\osinfo\windows_version.hpp">
+      <Filter>src\mpt\osinfo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\osinfo\windows_wine_version.hpp">
       <Filter>src\mpt\osinfo</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\out_of_memory\out_of_memory.hpp">
@@ -812,6 +887,18 @@
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\parse\tests\tests_parse.hpp">
       <Filter>src\mpt\parse\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\path\basic_path.hpp">
+      <Filter>src\mpt\path</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\path\native_path.hpp">
+      <Filter>src\mpt\path</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\path\os_path.hpp">
+      <Filter>src\mpt\path</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\path\os_path_long.hpp">
+      <Filter>src\mpt\path</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\path\path.hpp">
       <Filter>src\mpt\path</Filter>
@@ -974,6 +1061,12 @@
     <ClCompile Include="..\..\common\mptFileIO.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\common\mptFileTemporary.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\mptFileType.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\common\mptPathString.cpp">
       <Filter>common</Filter>
     </ClCompile>
@@ -1011,9 +1104,6 @@
       <Filter>libopenmpt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\libopenmpt\libopenmpt_impl.cpp">
-      <Filter>libopenmpt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\libopenmpt\libopenmpt_test.cpp">
       <Filter>libopenmpt</Filter>
     </ClCompile>
     <ClCompile Include="..\..\sounddsp\AGC.cpp">
@@ -1095,6 +1185,9 @@
       <Filter>soundlib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\soundlib\Load_gdm.cpp">
+      <Filter>soundlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\soundlib\Load_gt2.cpp">
       <Filter>soundlib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\soundlib\Load_imf.cpp">
@@ -1356,6 +1449,9 @@
       <Filter>soundlib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\TestToolsLib.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\test\libopenmpt_test.cpp">
       <Filter>test</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\mpt_tests_base.cpp">

@@ -12,6 +12,7 @@
 #include "FileDialog.h"
 #include "Mainfrm.h"
 #include "InputHandler.h"
+#include "mpt/fs/fs.hpp"
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -53,7 +54,7 @@ public:
 	// Avoid this by re-implementing our own version which doesn't throw.
 	void AddPlace(const mpt::PathString &path)
 	{
-		if(m_bVistaStyle && path.IsDirectory())
+		if(m_bVistaStyle && mpt::native_fs{}.is_directory(path))
 		{
 			CComPtr<IShellItem> shellItem;
 			HRESULT hr = SHCreateItemFromParsingName(path.ToWide().c_str(), nullptr, IID_IShellItem, reinterpret_cast<void **>(&shellItem));
@@ -102,7 +103,7 @@ bool FileDialog::Show(CWnd *parent)
 		m_extFilter.c_str(),
 		parent != nullptr ? parent : CMainFrame::GetMainFrame(),
 		0,
-		(mpt::OS::Windows::IsWine() || mpt::OS::Windows::Version::Current().IsBefore(mpt::OS::Windows::Version::WinVista)) ? FALSE : TRUE,
+		(mpt::OS::Windows::IsWine() || mpt::osinfo::windows::Version::Current().IsBefore(mpt::osinfo::windows::Version::WinVista)) ? FALSE : TRUE,
 		m_preview && TrackerSettings::Instance().previewInFileDialogs);
 	OPENFILENAME &ofn = dlg.GetOFN();
 	ofn.nFilterIndex = m_filterIndex != nullptr ? *m_filterIndex : 0;

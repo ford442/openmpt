@@ -1,9 +1,4 @@
 
--- premake gets a tiny bit confused if the same project appears in multiple
--- solutions in a single run. premake adds a bogus $projectname path to the
--- intermediate objects directory in that case. work-around using multiple
--- invocations of premake and a custom option to distinguish them.
-
 MPT_PREMAKE_VERSION = ""
 
 MPT_PREMAKE_VERSION = "5.0"
@@ -22,30 +17,42 @@ newoption {
   { "openmpt123", "openmpt123" },
   { "PluginBridge", "PluginBridge" },
   { "OpenMPT", "OpenMPT" },
-  { "all-externals", "all-externals" }
  }
 }
 
 newoption {
-	trigger = "winxp",
-	description = "Generate XP targetting projects",
-}
-newoption {
-	trigger = "win7",
-	description = "Generate Windows 7 Desktop targetting projects",
-}
-newoption {
-	trigger = "win81",
-	description = "Generate Windows 8.1 Desktop targetting projects",
-}
-newoption {
-	trigger = "win10",
-	description = "Generate Windows 10 Desktop targetting projects",
+	trigger = "windows-version",
+	value = "Windows Version",
+	description = "Target Windows Version",
+	default = "win81",
+	allowed = {
+		{ "winxp", "Windows XP" },
+		{ "win7", "Windows 7" },
+		{ "win81", "Windows 8.1" },
+		{ "win10", "Wiondows 10" }
+	}
 }
 
 newoption {
-	trigger = "uwp",
-	description = "Generate Windows UWP targetting projects",
+	trigger = "windows-family",
+	value = "Windows Family",
+	description = "Target Windows Family",
+	default = "desktop",
+	allowed = {
+		{ "desktop", "Win32" },
+		{ "uwp", "UWP" }
+	}
+}
+
+newoption {
+	trigger = "charset",
+	value = "Character Set",
+	description = "Windows Default Character Set",
+	default = "Unicode",
+	allowed = {
+		{ "Unicode", "Unicode" },
+		{ "MBCS", "MBCS" }
+	}
 }
 
 newoption {
@@ -53,69 +60,137 @@ newoption {
 	description = "ClangCL projects",
 }
 
-mpt_projectpathname = _ACTION
-mpt_bindirsuffix = ""
-mpt_bindirsuffix32 = ""
-mpt_bindirsuffix64 = ""
 
-if _OPTIONS["uwp"] then
+
+require('vstudio')
+
+
+
+premake.api.register {
+	name = "spectremitigations",
+	scope = "config",
+	kind = "string",
+	allowed = {
+		"Default",
+		"On",
+		"Off",
+	}
+}
+
+function premake.vstudio.vc2010.spectreMitigations(cfg)
+	if (cfg.spectremitigations == 'On') then
+		if _ACTION >= "vs2017" then
+			premake.vstudio.vc2010.element("SpectreMitigation", nil, "Spectre")
+		end
+	end
+end
+
+premake.override(premake.vstudio.vc2010.elements, "configurationProperties", function(base, prj)
+	local calls = base(prj)
+	table.insertafter(calls, premake.vstudio.vc2010.wholeProgramOptimization, premake.vstudio.vc2010.spectreMitigations)
+	return calls
+end)
+
+
+
+premake.api.register {
+	name = "dataexecutionprevention",
+	scope = "config",
+	kind = "string",
+	allowed = {
+		"Default",
+		"Off",
+		"On",
+	}
+}
+
+function premake.vstudio.vc2010.dataExecutionPrevention(cfg)
+	if (cfg.dataexecutionprevention == 'Off') then
+		premake.vstudio.vc2010.element("DataExecutionPrevention", nil, 'false')
+	end
+end
+
+premake.override(premake.vstudio.vc2010.elements, "link", function(base, prj)
+	local calls = base(prj)
+	table.insertafter(calls, premake.vstudio.vc2010.ignoreDefaultLibraries, premake.vstudio.vc2010.dataExecutionPrevention)
+	return calls
+end)
+
+
+
+premake.api.register {
+	name = "preprocessor",
+	scope = "config",
+	kind = "string",
+	allowed = {
+		"Default",
+		"Standard",
+		"Legacy",
+	}
+}
+
+function premake.vstudio.vc2010.preprocessor(cfg)
+	if _ACTION >= "vs2019" then
+		if (cfg.preprocessor == 'Standard') then
+			premake.vstudio.vc2010.element("UseStandardPreprocessor", nil, "true")
+		elseif (cfg.preprocessor == 'Legacy') then
+			premake.vstudio.vc2010.element("UseStandardPreprocessor", nil, "false")
+		end
+	end
+end
+
+premake.override(premake.vstudio.vc2010.elements, "clCompile", function(base, prj)
+	local calls = base(prj)
+	table.insertafter(calls, premake.vstudio.vc2010.externalAngleBrackets, premake.vstudio.vc2010.preprocessor)
+	return calls
+end)
+
+
+
+mpt_projectpathname = _ACTION .. _OPTIONS["windows-version"]
+mpt_bindirsuffix = _OPTIONS["windows-version"]
+
+if _OPTIONS["windows-version"] == "win10" then
 	allplatforms = { "x86", "x86_64", "arm", "arm64" }
-	trkplatforms = { "x86", "x86_64", "arm", "arm64" }
+elseif _OPTIONS["windows-version"] == "win81" then
+	allplatforms = { "x86", "x86_64" }
+elseif _OPTIONS["windows-version"] == "win7" then
+	allplatforms = { "x86", "x86_64" }
+elseif _OPTIONS["windows-version"] == "winxp" then
+	allplatforms = { "x86", "x86_64" }
+else
+	allplatforms = { "x86", "x86_64" }
+end
+
+if _OPTIONS["windows-family"] == "uwp" then
 	mpt_projectpathname = mpt_projectpathname .. "uwp"
 	mpt_bindirsuffix = mpt_bindirsuffix .. "uwp"
-	mpt_bindirsuffix32 = mpt_bindirsuffix32 .. "uwp"
-	mpt_bindirsuffix64 = mpt_bindirsuffix64 .. "uwp"
-elseif _OPTIONS["win10"] then
-	allplatforms = { "x86", "x86_64", "arm", "arm64" }
-	trkplatforms = { "x86", "x86_64", "arm", "arm64" }
-	mpt_projectpathname = mpt_projectpathname .. "win10"
-	mpt_bindirsuffix = mpt_bindirsuffix .. "win10"
-	mpt_bindirsuffix32 = mpt_bindirsuffix32 .. "win10"
-	mpt_bindirsuffix64 = mpt_bindirsuffix64 .. "win10"
-elseif _OPTIONS["win81"] then
-	allplatforms = { "x86", "x86_64" }
-	trkplatforms = { "x86", "x86_64" }
-	mpt_projectpathname = mpt_projectpathname .. "win81"
-	mpt_bindirsuffix = mpt_bindirsuffix .. "win81"
-	mpt_bindirsuffix32 = mpt_bindirsuffix32 .. "win81"
-	mpt_bindirsuffix64 = mpt_bindirsuffix64 .. "win81"
-elseif _OPTIONS["win7"] then
-	allplatforms = { "x86", "x86_64" }
-	trkplatforms = { "x86", "x86_64" }
-	mpt_projectpathname = mpt_projectpathname .. "win7"
-	mpt_bindirsuffix = mpt_bindirsuffix .. "win7"
-	mpt_bindirsuffix32 = mpt_bindirsuffix32 .. "win7"
-	mpt_bindirsuffix64 = mpt_bindirsuffix64 .. "win7"
-elseif _OPTIONS["winxp"] then
-	allplatforms = { "x86", "x86_64" }
-	trkplatforms = { "x86", "x86_64" }
-	mpt_projectpathname = mpt_projectpathname .. "winxp"
-	mpt_bindirsuffix = mpt_bindirsuffix .. "winxp"
-	mpt_bindirsuffix32 = mpt_bindirsuffix32 .. "winxp"
-	mpt_bindirsuffix64 = mpt_bindirsuffix64 .. "winxp"
 end
 
 if _OPTIONS["clang"] then
 	mpt_projectpathname = mpt_projectpathname .. "clang"
 	mpt_bindirsuffix = mpt_bindirsuffix .. "clang"
-	mpt_bindirsuffix32 = mpt_bindirsuffix32 .. "clang"
-	mpt_bindirsuffix64 = mpt_bindirsuffix64 .. "clang"
 end
+
+if _OPTIONS["charset"] == "MBCS" then
+	mpt_projectpathname = mpt_projectpathname .. "ansi"
+	mpt_bindirsuffix = mpt_bindirsuffix .. "ansi"
+end
+
+
+dofile "../../build/premake/premake-defaults.lua"
+
 
 if _OPTIONS["group"] == "libopenmpt_test" then
 
 solution "libopenmpt_test"
 	startproject "libopenmpt_test"
- location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked", "DebugShared", "ReleaseShared", "CheckedShared" }
- platforms ( allplatforms )
-	dofile "../../build/premake/premake-defaults-solution.lua"
 
- dofile "../../build/premake/mpt-libopenmpt_test.lua"
  dofile "../../build/premake/ext-mpg123.lua"
  dofile "../../build/premake/ext-ogg.lua"
  dofile "../../build/premake/ext-vorbis.lua"
  dofile "../../build/premake/ext-zlib.lua"
+ dofile "../../build/premake/mpt-libopenmpt_test.lua"
 
 end
 
@@ -123,17 +198,15 @@ if _OPTIONS["group"] == "in_openmpt" then
 
 solution "in_openmpt"
 	startproject "in_openmpt"
- location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked" }
- platforms { "x86" }
-	dofile "../../build/premake/premake-defaults-solution.lua"
 
- dofile "../../build/premake/mpt-in_openmpt.lua"
- dofile "../../build/premake/mpt-libopenmpt.lua"
+ dofile "../../build/premake/sys-mfc.lua"
  dofile "../../build/premake/ext-mpg123.lua"
  dofile "../../build/premake/ext-ogg.lua"
  dofile "../../build/premake/ext-vorbis.lua"
+ dofile "../../build/premake/ext-winamp.lua"
  dofile "../../build/premake/ext-zlib.lua"
+ dofile "../../build/premake/mpt-libopenmpt.lua"
+ dofile "../../build/premake/mpt-in_openmpt.lua"
 
 end
 
@@ -141,18 +214,16 @@ if _OPTIONS["group"] == "xmp-openmpt" then
 
 solution "xmp-openmpt"
 	startproject "xmp-openmpt"
- location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked" }
- platforms { "x86" }
-	dofile "../../build/premake/premake-defaults-solution.lua"
 
- dofile "../../build/premake/mpt-xmp-openmpt.lua"
- dofile "../../build/premake/mpt-libopenmpt.lua"
+ dofile "../../build/premake/sys-mfc.lua"
  dofile "../../build/premake/ext-mpg123.lua"
  dofile "../../build/premake/ext-ogg.lua"
  dofile "../../build/premake/ext-pugixml.lua"
  dofile "../../build/premake/ext-vorbis.lua"
+ dofile "../../build/premake/ext-xmplay.lua"
  dofile "../../build/premake/ext-zlib.lua"
+ dofile "../../build/premake/mpt-libopenmpt.lua"
+ dofile "../../build/premake/mpt-xmp-openmpt.lua"
 
 end
 
@@ -160,15 +231,11 @@ if _OPTIONS["group"] == "libopenmpt-small" then
 
 solution "libopenmpt-small"
 	startproject "libopenmpt-small"
- location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked", "DebugShared", "ReleaseShared", "CheckedShared" }
- platforms ( allplatforms )
-	dofile "../../build/premake/premake-defaults-solution.lua"
 
- dofile "../../build/premake/mpt-libopenmpt-small.lua"
  dofile "../../build/premake/ext-minimp3.lua"
  dofile "../../build/premake/ext-miniz.lua"
  dofile "../../build/premake/ext-stb_vorbis.lua"
+ dofile "../../build/premake/mpt-libopenmpt-small.lua"
 
 end
 
@@ -177,23 +244,19 @@ if _OPTIONS["group"] == "libopenmpt" then
 
 solution "libopenmpt"
 	startproject "libopenmpt"
- location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked", "DebugShared", "ReleaseShared", "CheckedShared" }
- platforms ( allplatforms )
-	dofile "../../build/premake/premake-defaults-solution.lua"
 
- dofile "../../build/premake/mpt-libopenmpt.lua"
- if not _OPTIONS["uwp"] then
-  dofile "../../build/premake/mpt-libopenmpt_examples.lua"
- end
  dofile "../../build/premake/ext-mpg123.lua"
  dofile "../../build/premake/ext-ogg.lua"
- if not _OPTIONS["uwp"] then
+ if _OPTIONS["windows-family"] ~= "uwp" then
   dofile "../../build/premake/ext-portaudio.lua"
   dofile "../../build/premake/ext-portaudiocpp.lua"
  end
  dofile "../../build/premake/ext-vorbis.lua"
  dofile "../../build/premake/ext-zlib.lua"
+ dofile "../../build/premake/mpt-libopenmpt.lua"
+ if _OPTIONS["windows-family"] ~= "uwp" then
+  dofile "../../build/premake/mpt-libopenmpt_examples.lua"
+ end
 
 end
 
@@ -201,19 +264,15 @@ if _OPTIONS["group"] == "openmpt123" then
 
 solution "openmpt123"
 	startproject "openmpt123"
- location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked", "DebugShared", "ReleaseShared", "CheckedShared" }
- platforms ( allplatforms )
-	dofile "../../build/premake/premake-defaults-solution.lua"
 
- dofile "../../build/premake/mpt-openmpt123.lua"
- dofile "../../build/premake/mpt-libopenmpt.lua"
  dofile "../../build/premake/ext-flac.lua"
  dofile "../../build/premake/ext-mpg123.lua"
  dofile "../../build/premake/ext-ogg.lua"
  dofile "../../build/premake/ext-portaudio.lua"
  dofile "../../build/premake/ext-vorbis.lua"
  dofile "../../build/premake/ext-zlib.lua"
+ dofile "../../build/premake/mpt-libopenmpt.lua"
+ dofile "../../build/premake/mpt-openmpt123.lua"
 
 end
 
@@ -221,10 +280,6 @@ if _OPTIONS["group"] == "PluginBridge" then
 
 solution "PluginBridge"
 	startproject "PluginBridge"
- location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked" }
- platforms ( trkplatforms )
-	dofile "../../build/premake/premake-defaults-solution.lua"
 
  dofile "../../build/premake/mpt-PluginBridge.lua"
 
@@ -236,20 +291,15 @@ charset = "Unicode"
 stringmode = "UTF8"
 solution "OpenMPT-UTF8"
 	startproject "OpenMPT-UTF8"
- location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked", "DebugShared", "ReleaseShared", "CheckedShared" }
- platforms ( trkplatforms )
-	dofile "../../build/premake/premake-defaults-solution.lua"
 
- dofile "../../build/premake/mpt-OpenMPT.lua"
- dofile "../../build/premake/mpt-PluginBridge.lua"
- dofile "../../build/premake/mpt-updatesigntool.lua"
+ dofile "../../build/premake/sys-mfc.lua"
  dofile "../../build/premake/ext-ancient.lua"
+ dofile "../../build/premake/ext-asiomodern.lua"
  dofile "../../build/premake/ext-flac.lua"
  dofile "../../build/premake/ext-lame.lua"
  dofile "../../build/premake/ext-lhasa.lua"
- dofile "../../build/premake/ext-minizip.lua"
  dofile "../../build/premake/ext-mpg123.lua"
+ dofile "../../build/premake/ext-nlohmann-json.lua"
  dofile "../../build/premake/ext-ogg.lua"
  dofile "../../build/premake/ext-opus.lua"
  dofile "../../build/premake/ext-opusenc.lua"
@@ -263,25 +313,26 @@ solution "OpenMPT-UTF8"
  dofile "../../build/premake/ext-UnRAR.lua"
  dofile "../../build/premake/ext-vorbis.lua"
  dofile "../../build/premake/ext-zlib.lua"
+ dofile "../../build/premake/ext-minizip.lua"
+ dofile "../../build/premake/mpt-updatesigntool.lua"
+ dofile "../../build/premake/mpt-PluginBridge.lua"
+ dofile "../../build/premake/mpt-OpenMPT-NativeSupport.lua"
+ dofile "../../build/premake/mpt-OpenMPT-WineWrapper.lua"
+ dofile "../../build/premake/mpt-OpenMPT.lua"
 
 charset = "MBCS"
 stringmode = "WCHAR"
 solution "OpenMPT-ANSI"
 	startproject "OpenMPT-ANSI"
- location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked", "DebugShared", "ReleaseShared", "CheckedShared" }
- platforms ( trkplatforms )
-	dofile "../../build/premake/premake-defaults-solution.lua"
 
- dofile "../../build/premake/mpt-OpenMPT.lua"
- dofile "../../build/premake/mpt-PluginBridge.lua"
- dofile "../../build/premake/mpt-updatesigntool.lua"
+ dofile "../../build/premake/sys-mfc.lua"
  dofile "../../build/premake/ext-ancient.lua"
+ dofile "../../build/premake/ext-asiomodern.lua"
  dofile "../../build/premake/ext-flac.lua"
  dofile "../../build/premake/ext-lame.lua"
  dofile "../../build/premake/ext-lhasa.lua"
- dofile "../../build/premake/ext-minizip.lua"
  dofile "../../build/premake/ext-mpg123.lua"
+ dofile "../../build/premake/ext-nlohmann-json.lua"
  dofile "../../build/premake/ext-ogg.lua"
  dofile "../../build/premake/ext-opus.lua"
  dofile "../../build/premake/ext-opusenc.lua"
@@ -295,80 +346,51 @@ solution "OpenMPT-ANSI"
  dofile "../../build/premake/ext-UnRAR.lua"
  dofile "../../build/premake/ext-vorbis.lua"
  dofile "../../build/premake/ext-zlib.lua"
+ dofile "../../build/premake/ext-minizip.lua"
+ dofile "../../build/premake/mpt-updatesigntool.lua"
+ dofile "../../build/premake/mpt-PluginBridge.lua"
+ dofile "../../build/premake/mpt-OpenMPT-NativeSupport.lua"
+ dofile "../../build/premake/mpt-OpenMPT-WineWrapper.lua"
+ dofile "../../build/premake/mpt-OpenMPT.lua"
 
 charset = "Unicode"
 stringmode = "WCHAR"
 solution "OpenMPT"
 	startproject "OpenMPT"
- location ( "../../build/" .. mpt_projectpathname )
- configurations { "Debug", "Release", "Checked", "DebugShared", "ReleaseShared", "CheckedShared" }
- platforms ( trkplatforms )
-	dofile "../../build/premake/premake-defaults-solution.lua"
 
- dofile "../../build/premake/mpt-OpenMPT.lua"
- dofile "../../build/premake/mpt-PluginBridge.lua"
+ dofile "../../build/premake/sys-mfc.lua"
+ dofile "../../build/premake/ext-ancient.lua"
+ dofile "../../build/premake/ext-asiomodern.lua"
+ dofile "../../build/premake/ext-flac.lua"
+ dofile "../../build/premake/ext-lame.lua"
+ dofile "../../build/premake/ext-lhasa.lua"
+ dofile "../../build/premake/ext-mpg123.lua"
+ dofile "../../build/premake/ext-nlohmann-json.lua"
+ dofile "../../build/premake/ext-ogg.lua"
+ dofile "../../build/premake/ext-opus.lua"
+ dofile "../../build/premake/ext-opusenc.lua"
+ dofile "../../build/premake/ext-opusfile.lua"
+ dofile "../../build/premake/ext-portaudio.lua"
+ dofile "../../build/premake/ext-r8brain.lua"
+ dofile "../../build/premake/ext-rtaudio.lua"
+ dofile "../../build/premake/ext-rtmidi.lua"
+ dofile "../../build/premake/ext-smbPitchShift.lua"
+ dofile "../../build/premake/ext-soundtouch.lua"
+ dofile "../../build/premake/ext-UnRAR.lua"
+ dofile "../../build/premake/ext-vorbis.lua"
+ dofile "../../build/premake/ext-zlib.lua"
+ dofile "../../build/premake/ext-minizip.lua"
  dofile "../../build/premake/mpt-updatesigntool.lua"
- dofile "../../build/premake/ext-ancient.lua"
- dofile "../../build/premake/ext-flac.lua"
- dofile "../../build/premake/ext-lame.lua"
- dofile "../../build/premake/ext-lhasa.lua"
- dofile "../../build/premake/ext-minizip.lua"
- dofile "../../build/premake/ext-mpg123.lua"
- dofile "../../build/premake/ext-ogg.lua"
- dofile "../../build/premake/ext-opus.lua"
- dofile "../../build/premake/ext-opusenc.lua"
- dofile "../../build/premake/ext-opusfile.lua"
- dofile "../../build/premake/ext-portaudio.lua"
- dofile "../../build/premake/ext-r8brain.lua"
- dofile "../../build/premake/ext-rtaudio.lua"
- dofile "../../build/premake/ext-rtmidi.lua"
- dofile "../../build/premake/ext-smbPitchShift.lua"
- dofile "../../build/premake/ext-soundtouch.lua"
- dofile "../../build/premake/ext-UnRAR.lua"
- dofile "../../build/premake/ext-vorbis.lua"
- dofile "../../build/premake/ext-zlib.lua"
-
-end
-
--- overwrite all external projects once again with the full matrix of possible build config combinations
-if _OPTIONS["group"] == "all-externals" then
-
-solution "all-externals"
- location ( "../../build/" .. mpt_projectpathname .. "/ext" )
- configurations { "Debug", "Release", "Checked", "DebugShared", "ReleaseShared", "CheckedShared" }
- platforms ( allplatforms )
-	dofile "../../build/premake/premake-defaults-solution.lua"
-
- dofile "../../build/premake/ext-ancient.lua"
- dofile "../../build/premake/ext-flac.lua"
- dofile "../../build/premake/ext-lame.lua"
- dofile "../../build/premake/ext-lhasa.lua"
- dofile "../../build/premake/ext-minimp3.lua"
- dofile "../../build/premake/ext-miniz.lua"
- dofile "../../build/premake/ext-minizip.lua"
- dofile "../../build/premake/ext-mpg123.lua"
- dofile "../../build/premake/ext-ogg.lua"
- dofile "../../build/premake/ext-opus.lua"
- dofile "../../build/premake/ext-opusenc.lua"
- dofile "../../build/premake/ext-opusfile.lua"
- dofile "../../build/premake/ext-portaudio.lua"
- dofile "../../build/premake/ext-portaudiocpp.lua"
- dofile "../../build/premake/ext-pugixml.lua"
- dofile "../../build/premake/ext-r8brain.lua"
- dofile "../../build/premake/ext-rtaudio.lua"
- dofile "../../build/premake/ext-rtmidi.lua"
- dofile "../../build/premake/ext-smbPitchShift.lua"
- dofile "../../build/premake/ext-soundtouch.lua"
- dofile "../../build/premake/ext-stb_vorbis.lua"
- dofile "../../build/premake/ext-UnRAR.lua"
- dofile "../../build/premake/ext-vorbis.lua"
- dofile "../../build/premake/ext-zlib.lua"
+ dofile "../../build/premake/mpt-PluginBridge.lua"
+ dofile "../../build/premake/mpt-OpenMPT-NativeSupport.lua"
+ dofile "../../build/premake/mpt-OpenMPT-WineWrapper.lua"
+ dofile "../../build/premake/mpt-OpenMPT.lua"
 
 end
 
 
 
-if _OPTIONS["uwp"] then
+if _OPTIONS["windows-family"] == "uwp" then
 
 	require('vstudio')
 

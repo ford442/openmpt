@@ -269,7 +269,7 @@ bool CSoundFile::ReadInstrumentFromSong(INSTRUMENTINDEX targetInstr, const CSoun
 #ifdef MODPLUG_TRACKER
 	if(pIns->filename.empty() && srcSong.GetpModDoc() != nullptr && &srcSong != this)
 	{
-		pIns->filename = srcSong.GetpModDoc()->GetPathNameMpt().GetFullFileName().ToLocale();
+		pIns->filename = srcSong.GetpModDoc()->GetPathNameMpt().GetFilename().ToLocale();
 	}
 #endif
 	pIns->Convert(srcSong.GetType(), GetType());
@@ -1163,8 +1163,7 @@ bool CSoundFile::ReadS3ISample(SAMPLEINDEX nSample, FileReader &file)
 bool CSoundFile::SaveS3ISample(SAMPLEINDEX smp, std::ostream &f) const
 {
 	const ModSample &sample = Samples[smp];
-	S3MSampleHeader sampleHeader;
-	MemsetZero(sampleHeader);
+	S3MSampleHeader sampleHeader{};
 	SmpLength length = sampleHeader.ConvertToS3M(sample);
 	mpt::String::WriteBuf(mpt::String::nullTerminated, sampleHeader.name) = m_szNames[smp];
 	mpt::String::WriteBuf(mpt::String::maybeNullTerminated, sampleHeader.reserved2) = mpt::ToCharset(mpt::Charset::UTF8, Version::Current().GetOpenMPTVersionString());
@@ -1186,9 +1185,10 @@ bool CSoundFile::SaveS3ISample(SAMPLEINDEX smp, std::ostream &f) const
 bool CSoundFile::ReadSBISample(SAMPLEINDEX sample, FileReader &file)
 {
 	file.Rewind();
-	if(!file.ReadMagic("SBI\x1A")
-		|| !file.CanRead(32 + sizeof(OPLPatch))
-		|| file.CanRead(64))	// Arbitrary threshold to reject files that are unlikely to be SBI files
+	const auto magic = file.ReadArray<char, 4>();
+	if((memcmp(magic.data(), "SBI\x1A", 4) && memcmp(magic.data(), "SBI\x1D", 4))  // 1D =  broken JuceOPLVSTi files
+	   || !file.CanRead(32 + sizeof(OPLPatch))
+	   || file.CanRead(64))  // Arbitrary threshold to reject files that are unlikely to be SBI files
 		return false;
 
 	if(!SupportsOPL())
@@ -1751,7 +1751,6 @@ bool CSoundFile::ReadCAFSample(SAMPLEINDEX nSample, FileReader &file, bool mayNo
 }
 
 
-
 /////////////////////////////////////////////////////////////////////////////////////////
 // AIFF File I/O
 
@@ -2266,7 +2265,7 @@ bool CSoundFile::ReadITSSample(SAMPLEINDEX nSample, FileReader &file, bool rewin
 		{
 			if(file.GetOptionalFileName())
 			{
-				filename = filename.RelativePathToAbsolute(file.GetOptionalFileName()->GetPath());
+				filename = mpt::RelativePathToAbsolute(filename, file.GetOptionalFileName()->GetDirectoryWithDrive());
 			}
 			if(!LoadExternalSample(nSample, filename))
 			{
@@ -2446,7 +2445,7 @@ bool CSoundFile::SaveITIInstrument(INSTRUMENTINDEX nInstr, std::ostream &f, cons
 		} else
 		{
 #ifdef MPT_EXTERNAL_SAMPLES
-			const std::string filenameU8 = GetSamplePath(smp).AbsolutePathToRelative(filename.GetPath()).ToUTF8();
+			const std::string filenameU8 = mpt::AbsolutePathToRelative(GetSamplePath(smp), filename.GetDirectoryWithDrive()).ToUTF8();
 			const size_t strSize = filenameU8.size();
 			size_t intBytes = 0;
 			if(mpt::IO::WriteVarInt(f, strSize, &intBytes))

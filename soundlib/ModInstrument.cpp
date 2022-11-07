@@ -285,7 +285,7 @@ void ModInstrument::Sanitize(MODTYPE modType)
 	MPT_UNREFERENCED_PARAMETER(modType);
 	const uint8 range = ENVELOPE_MAX;
 #else
-	const uint8 range = modType == MOD_TYPE_AMS ? uint8_max : ENVELOPE_MAX;
+	const uint8 range = modType == MOD_TYPE_AMS ? uint8_max : uint8(ENVELOPE_MAX);
 #endif
 	VolEnv.Sanitize();
 	PanEnv.Sanitize();
@@ -305,6 +305,25 @@ void ModInstrument::Sanitize(MODTYPE modType)
 }
 
 
+std::map<SAMPLEINDEX, int8> ModInstrument::CanConvertToDefaultNoteMap() const
+{
+	std::map<SAMPLEINDEX, int8> transposeMap;
+	for(size_t i = 0; i < std::size(NoteMap); i++)
+	{
+		if(Keyboard[i] == 0)
+			continue;
+		if(!NoteMap[i] || NoteMap[i] == (i + 1))
+			continue;
+
+		const int8 relativeNote = static_cast<int8>(NoteMap[i] - (i + NOTE_MIN));
+		if(transposeMap.count(Keyboard[i]) && transposeMap[Keyboard[i]] != relativeNote)
+			return {};
+		transposeMap[Keyboard[i]] = relativeNote;
+	}
+	return transposeMap;
+}
+
+
 void ModInstrument::Transpose(int8 amount)
 {
 	for(auto &note : NoteMap)
@@ -314,13 +333,9 @@ void ModInstrument::Transpose(int8 amount)
 }
 
 
-uint8 ModInstrument::GetMIDIChannel(const CSoundFile &sndFile, CHANNELINDEX chn) const
+uint8 ModInstrument::GetMIDIChannel(const ModChannel &channel, CHANNELINDEX chn) const
 {
-	if(chn >= std::size(sndFile.m_PlayState.Chn))
-		return 0;
-
 	// For mapped channels, return their pattern channel, modulo 16 (because there are only 16 MIDI channels)
-	const ModChannel &channel = sndFile.m_PlayState.Chn[chn];
 	if(nMidiChannel == MidiMappedChannel)
 		return static_cast<uint8>((channel.nMasterChn ? (channel.nMasterChn - 1u) : chn) % 16u);
 	else if(HasValidMIDIChannel())

@@ -104,7 +104,7 @@ enum ModColor : uint8
 #define PATTERN_EFFECTHILIGHT		0x40		// effect syntax highlighting
 #define PATTERN_HEXDISPLAY			0x80		// display row number in hex
 #define PATTERN_FLATBUTTONS			0x100		// flat toolbar buttons
-//#define PATTERN_CREATEBACKUP		0x200		// create .bak files when saving
+#define PATTERN_PLAYNAVIGATEROW		0x200		// play whole row when navigating
 #define PATTERN_SINGLEEXPAND		0x400		// single click to expand tree
 #define PATTERN_PLAYEDITROW			0x800		// play all notes on the current row while entering notes
 #define PATTERN_NOEXTRALOUD			0x1000		// no loud samples in sample editor
@@ -144,6 +144,8 @@ enum ModColor : uint8
 #define MIDISETUP_MIDIMACROPITCHBEND		0x400	// Record MIDI pitch bend messages a MIDI macro changes in pattern
 
 
+#ifndef NO_EQ
+
 // EQ
 
 struct EQPresetPacked
@@ -180,6 +182,8 @@ template<> inline EQPreset FromSettingValue(const SettingValue &val)
 	std::copy(valpacked.Freqs, valpacked.Freqs + MAX_EQ_BANDS, valresult.Freqs);
 	return valresult;
 }
+
+#endif // !NO_EQ
 
 
 template<> inline SettingValue ToSettingValue(const mpt::UUID &val) { return SettingValue(val.ToUString()); }
@@ -318,7 +322,7 @@ template<> inline std::vector<uint32> FromSettingValue(const SettingValue &val) 
 template<> inline SettingValue ToSettingValue(const std::vector<mpt::ustring> &val) { return mpt::String::Combine(val, U_(";")); }
 template<> inline std::vector<mpt::ustring> FromSettingValue(const SettingValue &val) { return mpt::String::Split<mpt::ustring>(val, U_(";")); }
 
-template<> inline SettingValue ToSettingValue(const SampleFormat &val) { return SettingValue(val.AsInt()); }
+template<> inline SettingValue ToSettingValue(const SampleFormat &val) { return SettingValue(SampleFormat::ToInt(val)); }
 template<> inline SampleFormat FromSettingValue(const SettingValue &val) { return SampleFormat::FromInt(val.as<int32>()); }
 
 template<> inline SettingValue ToSettingValue(const SoundDevice::ChannelMapping &val) { return SettingValue(val.ToUString(), "ChannelMapping"); }
@@ -467,32 +471,12 @@ template<> inline ProcessPriorityClass FromSettingValue(const SettingValue &val)
 
 template<> inline SettingValue ToSettingValue(const mpt::Date::Unix &val)
 {
-	time_t t = val;
-	const tm* lastUpdate = gmtime(&t);
-	CString outDate;
-	if(lastUpdate)
-	{
-		outDate.Format(_T("%04d-%02d-%02d %02d:%02d"), lastUpdate->tm_year + 1900, lastUpdate->tm_mon + 1, lastUpdate->tm_mday, lastUpdate->tm_hour, lastUpdate->tm_min);
-	}
-	return SettingValue(mpt::ToUnicode(outDate), "UTC");
+	return SettingValue(mpt::ufmt::val(mpt::Date::UnixAsSeconds(val)), "UnixTime");
 }
 template<> inline mpt::Date::Unix FromSettingValue(const SettingValue &val)
 {
-	MPT_ASSERT(val.GetTypeTag() == "UTC");
-	std::string s = mpt::ToCharset(mpt::Charset::Locale, val.as<mpt::ustring>());
-	tm lastUpdate;
-	MemsetZero(lastUpdate);
-	if(sscanf(s.c_str(), "%04d-%02d-%02d %02d:%02d", &lastUpdate.tm_year, &lastUpdate.tm_mon, &lastUpdate.tm_mday, &lastUpdate.tm_hour, &lastUpdate.tm_min) == 5)
-	{
-		lastUpdate.tm_year -= 1900;
-		lastUpdate.tm_mon--;
-	}
-	time_t outTime = mpt::Date::Unix::FromUTC(lastUpdate);
-	if(outTime < 0)
-	{
-		outTime = 0;
-	}
-	return mpt::Date::Unix(outTime);
+	MPT_ASSERT(val.GetTypeTag() == "UnixTime");
+	return mpt::Date::UnixFromSeconds(mpt::ConvertStringTo<int64>(val.as<mpt::ustring>()));
 }
 
 struct FontSetting
@@ -696,8 +680,8 @@ public:
 	CachedSetting<bool> MiscAllowMultipleCommandsPerKey;
 	CachedSetting<bool> MiscDistinguishModifiers;
 	Setting<ProcessPriorityClass> MiscProcessPriorityClass;
-	Setting<bool> MiscFlushFileBuffersOnSave;
-	Setting<bool> MiscCacheCompleteFileBeforeLoading;
+	CachedSetting<bool> MiscFlushFileBuffersOnSave;
+	CachedSetting<bool> MiscCacheCompleteFileBeforeLoading;
 	Setting<bool> MiscUseSingleInstance;
 
 	// Sound Settings
@@ -787,6 +771,8 @@ public:
 	Setting<mpt::ustring> patternFontDot;
 	Setting<int32> effectVisWidth;
 	Setting<int32> effectVisHeight;
+	Setting<int32> effectVisX;
+	Setting<int32> effectVisY;
 	Setting<CString> patternAccessibilityFormat;
 	CachedSetting<bool> patternAlwaysDrawWholePatternOnScrollSlow;
 	CachedSetting<bool> orderListOldDropBehaviour;
@@ -901,20 +887,12 @@ public:
 	Setting<int32> UpdateIntervalDays;
 	Setting<uint32> UpdateChannel;
 	Setting<mpt::ustring> UpdateUpdateURL_DEPRECATED;
-#if MPT_UPDATE_LEGACY
-	Setting<mpt::ustring> UpdateChannelReleaseURL;
-	Setting<mpt::ustring> UpdateChannelNextURL;
-	Setting<mpt::ustring> UpdateChannelDevelopmentURL;
-#endif // MPT_UPDATE_LEGACY
 	Setting<mpt::ustring> UpdateAPIURL;
 	Setting<bool> UpdateStatisticsConsentAsked;
 	Setting<bool> UpdateStatistics;
 	Setting<bool> UpdateSendGUID_DEPRECATED;
 	Setting<bool> UpdateShowUpdateHint;
 	Setting<CString> UpdateIgnoreVersion;
-#if MPT_UPDATE_LEGACY
-	Setting<bool> UpdateLegacyMethod;
-#endif // MPT_UPDATE_LEGACY
 	Setting<bool> UpdateSkipSignatureVerificationUNSECURE;
 	Setting<std::vector<mpt::ustring>> UpdateSigningKeysRootAnchors;
 
@@ -963,7 +941,11 @@ protected:
 
 	static std::vector<uint32> GetDefaultSampleRates();
 
+#ifndef NO_EQ
+
 	void FixupEQ(EQPreset &eqSettings);
+
+#endif // !NO_EQ
 
 	void LoadChords(MPTChords &chords);
 	void SaveChords(MPTChords &chords);

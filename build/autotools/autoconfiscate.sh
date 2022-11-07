@@ -12,8 +12,8 @@ set -e
 echo "Gathering version ..."
 . libopenmpt/libopenmpt_version.mk
 
-echo "Cleaning local buid ..."
-make NO_SDL=1 NO_SDL2=1 clean
+echo "Cleaning local build ..."
+make clean
 
 echo "Cleaning dist-autotools.tar ..."
 rm -rf bin/dist-autotools.tar || true
@@ -38,12 +38,14 @@ svn export ./doc/contributing.md          bin/dist-autotools/doc/contributing.md
 svn export ./doc/libopenmpt_styleguide.md bin/dist-autotools/doc/libopenmpt_styleguide.md
 svn export ./doc/module_formats.md        bin/dist-autotools/doc/module_formats.md
 svn export ./doc/openmpt_styleguide.md    bin/dist-autotools/doc/openmpt_styleguide.md
+svn export ./doc/libopenmpt               bin/dist-autotools/doc/libopenmpt
 svn export ./soundlib        bin/dist-autotools/soundlib
 svn export ./sounddsp        bin/dist-autotools/sounddsp
 mkdir -p bin/dist-autotools/src/mpt
 svn export ./src/mpt/.clang-format bin/dist-autotools/src/mpt/.clang-format
 svn export ./src/mpt/LICENSE.BSD-3-Clause.txt bin/dist-autotools/src/mpt/LICENSE.BSD-3-Clause.txt
 svn export ./src/mpt/LICENSE.BSL-1.0.txt bin/dist-autotools/src/mpt/LICENSE.BSL-1.0.txt
+svn export ./src/mpt/arch           bin/dist-autotools/src/mpt/arch
 svn export ./src/mpt/audio          bin/dist-autotools/src/mpt/audio
 svn export ./src/mpt/base           bin/dist-autotools/src/mpt/base
 svn export ./src/mpt/binary         bin/dist-autotools/src/mpt/binary
@@ -55,14 +57,18 @@ svn export ./src/mpt/endian         bin/dist-autotools/src/mpt/endian
 svn export ./src/mpt/environment    bin/dist-autotools/src/mpt/environment
 svn export ./src/mpt/exception_text bin/dist-autotools/src/mpt/exception_text
 svn export ./src/mpt/format         bin/dist-autotools/src/mpt/format
+#svn export ./src/mpt/fs             bin/dist-autotools/src/mpt/fs
 svn export ./src/mpt/io             bin/dist-autotools/src/mpt/io
+svn export ./src/mpt/io_file        bin/dist-autotools/src/mpt/io_file
 svn export ./src/mpt/io_read        bin/dist-autotools/src/mpt/io_read
 svn export ./src/mpt/io_write       bin/dist-autotools/src/mpt/io_write
 #svn export ./src/mpt/json           bin/dist-autotools/src/mpt/json
+#svn export ./src/mpt/library        bin/dist-autotools/src/mpt/library
 svn export ./src/mpt/mutex          bin/dist-autotools/src/mpt/mutex
 svn export ./src/mpt/out_of_memory  bin/dist-autotools/src/mpt/out_of_memory
 svn export ./src/mpt/osinfo         bin/dist-autotools/src/mpt/osinfo
 svn export ./src/mpt/parse          bin/dist-autotools/src/mpt/parse
+svn export ./src/mpt/path           bin/dist-autotools/src/mpt/path
 svn export ./src/mpt/random         bin/dist-autotools/src/mpt/random
 svn export ./src/mpt/string         bin/dist-autotools/src/mpt/string
 svn export ./src/mpt/string_transcode bin/dist-autotools/src/mpt/string_transcode
@@ -89,6 +95,7 @@ mkdir bin/dist-autotools/m4
 touch bin/dist-autotools/m4/emptydir
 svn export ./build/autotools/configure.ac bin/dist-autotools/configure.ac
 svn export ./build/autotools/Makefile.am bin/dist-autotools/Makefile.am
+svn export ./build/autotools/ax_cxx_compile_stdcxx.m4 bin/dist-autotools/m4/ax_cxx_compile_stdcxx.m4
 else
 echo "Exporting git ..."
 cp -r ./LICENSE         bin/dist-autotools/LICENSE
@@ -100,12 +107,14 @@ cp -r ./doc/contributing.md          bin/dist-autotools/doc/contributing.md
 cp -r ./doc/libopenmpt_styleguide.md bin/dist-autotools/doc/libopenmpt_styleguide.md
 cp -r ./doc/module_formats.md        bin/dist-autotools/doc/module_formats.md
 cp -r ./doc/openmpt_styleguide.md    bin/dist-autotools/doc/openmpt_styleguide.md
+cp -r ./doc/libopenmpt               bin/dist-autotools/doc/libopenmpt
 cp -r ./soundlib        bin/dist-autotools/soundlib
 cp -r ./sounddsp        bin/dist-autotools/sounddsp
 mkdir -p bin/dist-autotools/src/mpt
 cp -r ./src/mpt/.clang-format bin/dist-autotools/src/mpt/.clang-format
 cp -r ./src/mpt/LICENSE.BSD-3-Clause.txt bin/dist-autotools/src/mpt/LICENSE.BSD-3-Clause.txt
 cp -r ./src/mpt/LICENSE.BSL-1.0.txt bin/dist-autotools/src/mpt/LICENSE.BSL-1.0.txt
+cp -r ./src/mpt/arch           bin/dist-autotools/src/mpt/arch
 cp -r ./src/mpt/audio          bin/dist-autotools/src/mpt/audio
 cp -r ./src/mpt/base           bin/dist-autotools/src/mpt/base
 cp -r ./src/mpt/binary         bin/dist-autotools/src/mpt/binary
@@ -117,14 +126,18 @@ cp -r ./src/mpt/endian         bin/dist-autotools/src/mpt/endian
 cp -r ./src/mpt/environment    bin/dist-autotools/src/mpt/environment
 cp -r ./src/mpt/exception_text bin/dist-autotools/src/mpt/exception_text
 cp -r ./src/mpt/format         bin/dist-autotools/src/mpt/format
+#cp -r ./src/mpt/fs             bin/dist-autotools/src/mpt/fs
 cp -r ./src/mpt/io             bin/dist-autotools/src/mpt/io
+cp -r ./src/mpt/io_file        bin/dist-autotools/src/mpt/io_file
 cp -r ./src/mpt/io_read        bin/dist-autotools/src/mpt/io_read
 cp -r ./src/mpt/io_write       bin/dist-autotools/src/mpt/io_write
 #cp -r ./src/mpt/json           bin/dist-autotools/src/mpt/json
+#cp -r ./src/mpt/library        bin/dist-autotools/src/mpt/library
 cp -r ./src/mpt/mutex          bin/dist-autotools/src/mpt/mutex
 cp -r ./src/mpt/out_of_memory  bin/dist-autotools/src/mpt/out_of_memory
 cp -r ./src/mpt/osinfo         bin/dist-autotools/src/mpt/osinfo
 cp -r ./src/mpt/parse          bin/dist-autotools/src/mpt/parse
+cp -r ./src/mpt/path           bin/dist-autotools/src/mpt/path
 cp -r ./src/mpt/random         bin/dist-autotools/src/mpt/random
 cp -r ./src/mpt/string         bin/dist-autotools/src/mpt/string
 cp -r ./src/mpt/string_transcode bin/dist-autotools/src/mpt/string_transcode
@@ -151,6 +164,7 @@ mkdir bin/dist-autotools/m4
 touch bin/dist-autotools/m4/emptydir
 cp -r ./build/autotools/configure.ac bin/dist-autotools/configure.ac
 cp -r ./build/autotools/Makefile.am bin/dist-autotools/Makefile.am
+cp -r ./build/autotools/ax_cxx_compile_stdcxx.m4 bin/dist-autotools/m4/ax_cxx_compile_stdcxx.m4
 fi
 
 echo "Querying svn version ..."
@@ -168,14 +182,14 @@ echo " BUILD_SVNVERSION=${BUILD_SVNVERSION}"
 echo " BUILD_SVNDATE=${BUILD_SVNDATE}"
 
 echo "Building man pages ..."
-make NO_SDL=1 NO_SDL2=1 bin/openmpt123.1
+make bin/openmpt123.1
 
 echo "Copying man pages ..."
 mkdir bin/dist-autotools/man
 cp bin/openmpt123.1 bin/dist-autotools/man/openmpt123.1
 
 echo "Cleaning local buid ..."
-make NO_SDL=1 NO_SDL2=1 clean
+make clean
 
 echo "Changing to autotools package directory ..."
 OLDDIR="$(pwd)"
@@ -236,7 +250,7 @@ make check
 
 echo "Building dist-autotools.tar ..."
 cd "$OLDDIR"
-MPT_LIBOPENMPT_VERSION=$(make NO_SDL=1 NO_SDL2=1 distversion-tarball)
+MPT_LIBOPENMPT_VERSION=$(make distversion-tarball)
 cd bin/dist-autotools
 rm -rf libopenmpt
 mkdir -p libopenmpt/src.autotools/$MPT_LIBOPENMPT_VERSION/

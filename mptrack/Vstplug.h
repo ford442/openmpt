@@ -136,7 +136,6 @@ public:
 	void CacheParameterNames(int32 firstParam, int32 lastParam) override;
 
 public:
-	void Release() override;
 	void SaveAllParameters() override;
 	void RestoreAllParameters(int32 program) override;
 	void Process(float *pOutL, float *pOutR, uint32 numFrames) override;
@@ -162,7 +161,7 @@ public:
 
 protected:
 	// Helper function for retreiving parameter name / label / display
-	CString GetParamPropertyString(int32 param, Vst::VstOpcodeToPlugin opcode);
+	CString GetParamPropertyString(PlugParamIndex param, Vst::VstOpcodeToPlugin opcode);
 
 	// Set up input / output buffers.
 	bool InitializeIOBuffers();

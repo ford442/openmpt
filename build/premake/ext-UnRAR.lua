@@ -2,15 +2,10 @@
  project "UnRAR"
   uuid "95CC809B-03FC-4EDB-BB20-FD07A698C05F"
   language "C++"
-  location ( "../../build/" .. mpt_projectpathname .. "/ext" )
-  mpt_projectname = "unrar"
-  dofile "../../build/premake/premake-defaults-LIBorDLL.lua"
-  dofile "../../build/premake/premake-defaults.lua"
+  location ( "%{wks.location}" .. "/ext" )
+  mpt_kind "default"
   targetname "openmpt-unrar"
   includedirs { "../../include/unrar" }
-	filter {}
-	filter { "action:vs*" }
-		characterset "Unicode"
 	filter {}
   defines {
    "NOMINMAX",
@@ -150,3 +145,20 @@
   filter { "kind:SharedLib" }
    files { "../../include/unrar/dll_nocrypt.def" }
   filter {}
+
+function mpt_use_unrar ()
+	filter {}
+	filter { "action:vs*" }
+		includedirs {
+			"../../include",
+		}
+	filter { "not action:vs*" }
+		externalincludedirs {
+			"../../include",
+		}
+	filter {}
+	links {
+		"UnRAR",
+	}
+	filter {}
+end

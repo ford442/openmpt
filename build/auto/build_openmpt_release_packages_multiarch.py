@@ -166,8 +166,8 @@ if singleThreaded:
 		raise Exception("Something went wrong during manual creation!")
 
 
-sourcePathModern = "bin/release/vs2019-win10-static/"
-sourcePathLegacy = "bin/release/vs2019-win7-static/"
+sourcePathModern = "bin/release/vs2022-win10-static/"
+sourcePathLegacy = "bin/release/vs2022-win7-static/"
 
 signToolCmdLine = ["signtool", "sign", "/fd", "sha256", "/a", "/tr", "http://time.certum.pl", "/td", "sha256"]
 
@@ -221,7 +221,7 @@ copy_pluginbridge(sourcePathLegacy, "amd64", openmpt_zip_amd64_legacy_path)
 Path(openmpt_zip_amd64_legacy_path + "OpenMPT.portable").touch()
 print("Copying arm binaries...")
 shutil.rmtree(openmpt_zip_arm_basepath, ignore_errors=True)
-copy_binaries("bin/release/vs2019-win10-static/arm/", openmpt_zip_arm_path)
+copy_binaries(sourcePathModern + "arm/", openmpt_zip_arm_path)
 copy_pluginbridge(sourcePathModern, "x86", openmpt_zip_arm_path)
 copy_pluginbridge(sourcePathModern, "amd64", openmpt_zip_arm_path)
 copy_pluginbridge(sourcePathModern, "arm", openmpt_zip_arm_path)
@@ -229,7 +229,7 @@ copy_pluginbridge(sourcePathModern, "arm64", openmpt_zip_arm_path)
 Path(openmpt_zip_arm_path + "OpenMPT.portable").touch()
 print("Copying arm64 binaries...")
 shutil.rmtree(openmpt_zip_arm64_basepath, ignore_errors=True)
-copy_binaries("bin/release/vs2019-win10-static/arm64/", openmpt_zip_arm64_path)
+copy_binaries(sourcePathModern + "arm64/", openmpt_zip_arm64_path)
 copy_pluginbridge(sourcePathModern, "x86", openmpt_zip_arm64_path)
 copy_pluginbridge(sourcePathModern, "amd64", openmpt_zip_arm64_path)
 copy_pluginbridge(sourcePathModern, "arm", openmpt_zip_arm64_path)

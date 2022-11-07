@@ -23,7 +23,10 @@
 #include "AboutDialog.h"
 #include "TrackerSettings.h"
 #include "../common/ComponentManager.h"
+#include "mpt/io_file/inputfile.hpp"
+#include "mpt/io_file/inputfile_filecursor.hpp"
 #include "../common/mptFileIO.h"
+#include "mpt/fs/fs.hpp"
 #include "../misc/mptOS.h"
 #include "mpt/crc/crc.hpp"
 #include "../common/FileReader.h"
@@ -110,7 +113,7 @@ static mpt::crc64_jones WineHashVersion(mpt::crc64_jones crc)
 
 static mpt::crc64_jones WineHashFile(mpt::crc64_jones crc, mpt::PathString filename)
 {
-	InputFile file(filename, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
+	mpt::IO::InputFile file(filename, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
 	if(!file.IsValid())
 	{
 		return crc;
@@ -308,7 +311,7 @@ void Initialize()
 			std::string Host_Native_OpenMPT_Wine_WineVersion_OpenMPTVersion;
 			static void CreatePath(mpt::PathString path)
 			{
-				if(path.IsDirectory())
+				if(mpt::native_fs{}.is_directory(path))
 				{
 					return;
 				}
@@ -352,7 +355,7 @@ void Initialize()
 
 		if(!TrackerSettings::Instance().WineSupportAlwaysRecompile)
 		{
-			if((paths.AppData_Wine_WineVersion_OpenMPTVersion.WithTrailingSlash() + P_("success.txt")).IsFile())
+			if(mpt::native_fs{}.is_file(paths.AppData_Wine_WineVersion_OpenMPTVersion.WithTrailingSlash() + P_("success.txt")))
 			{
 				theApp.SetWineWrapperDllFilename(paths.AppData_Wine_WineVersion_OpenMPTVersion.WithTrailingSlash() + P_("openmpt_wine_wrapper.dll"));
 				return;

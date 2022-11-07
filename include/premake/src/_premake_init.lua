@@ -192,6 +192,12 @@
 	}
 
 	api.register {
+		name = "allmodulespublic",
+		scope = "config",
+		kind = "boolean"
+	}
+
+	api.register {
 		name = "configmap",
 		scope = "project",
 		kind = "list:keyed:array:string",
@@ -201,6 +207,12 @@
 		name = "configurations",
 		scope = "project",
 		kind = "list:string",
+	}
+
+	api.register {
+		name = "consumewinrtextension",
+		scope = "config",
+		kind = "boolean",
 	}
 
 	api.register {
@@ -633,6 +645,12 @@
 	}
 
 	api.register {
+		name = "inheritdependencies",
+		scope = "config",
+		kind = "boolean",
+	}
+
+	api.register {
 		name = "icon",
 		scope = "project",
 		kind = "file",
@@ -757,10 +775,12 @@
 			"C90",
 			"C99",
 			"C11",
+			"C17",
 			"gnu89",
 			"gnu90",
 			"gnu99",
 			"gnu11",
+			"gnu17"
 		}
 	}
 
@@ -1099,6 +1119,16 @@
 	}
 
 	api.register {
+		name = "sanitize",
+		scope = "config",
+		kind = "list:string",
+		allowed = {
+			"Address",
+			"Fuzzer",              -- Visual Studio 2022+ only
+		}
+	}
+
+	api.register {
 		name = "startproject",
 		scope = "workspace",
 		kind = "string",
@@ -1151,13 +1181,6 @@
 		name = "symbolspath",
 		scope = "config",
 		kind = "path",
-		tokens = true,
-	}
-
-	api.register {
-		name = "sysincludedirs",
-		scope = "config",
-		kind = "list:directory",
 		tokens = true,
 	}
 
@@ -1360,28 +1383,6 @@
 		}
 	}
 
-	api.register {  --OpenMPT
-		name = "spectremitigations",  --OpenMPT
-		scope = "config",  --OpenMPT
-		kind = "string",  --OpenMPT
-		allowed = {  --OpenMPT
-			"Default",  --OpenMPT
-			"On",  --OpenMPT
-			"Off",  --OpenMPT
-		}  --OpenMPT
-	}  --OpenMPT
-
-	api.register {  --OpenMPT
-		name = "dataexecutionprevention",  --OpenMPT
-		scope = "config",  --OpenMPT
-		kind = "string",  --OpenMPT
-		allowed = {  --OpenMPT
-			"Default",  --OpenMPT
-			"Off",  --OpenMPT
-			"On",  --OpenMPT
-		}  --OpenMPT
-	}  --OpenMPT
-
 	api.register {
 		name = "largeaddressaware",
 		scope = "config",
@@ -1482,6 +1483,38 @@
 			"Off"
 		}
 	}
+
+	api.register {
+		name = "externalincludedirs",
+		scope = "config",
+		kind = "list:directory",
+		tokens = true,
+	}
+
+	api.register {
+		name = "externalwarnings",
+		scope = "config",
+		kind = "string",
+		allowed = {
+			"Off",
+			"Default",
+			"High",
+			"Extra",
+			"Everything",
+		}
+	}
+
+	api.register {   -- DEPRECATED 2021-11-16
+		name = "sysincludedirs",
+		scope = "config",
+		kind = "list:directory",
+		tokens = true,
+	}
+
+	api.deprecateField("sysincludedirs", 'Use `externalincludedirs` instead.',
+	function(value)
+		externalincludedirs(value)
+	end)
 
 -----------------------------------------------------------------------------
 --

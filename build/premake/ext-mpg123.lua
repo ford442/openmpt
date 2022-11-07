@@ -2,10 +2,8 @@
  project "mpg123"
   uuid "7adfafb9-0a83-4d35-9891-fb24fdf30b53"
   language "C"
-  location ( "../../build/" .. mpt_projectpathname .. "/ext" )
-  mpt_projectname = "mpg123"
-  dofile "../../build/premake/premake-defaults-DLL.lua"
-  dofile "../../build/premake/premake-defaults.lua"
+  location ( "%{wks.location}" .. "/ext" )
+  mpt_kind "shared"
   targetname "openmpt-mpg123"
   includedirs {
    "../../include/mpg123/ports/MSVC++",
@@ -13,9 +11,6 @@
    "../../include/mpg123/src/compat",
    "../../include/mpg123/src",
   }
-	filter {}
-	filter { "action:vs*" }
-		characterset "Unicode"
 	filter {}
   files {
    "../../include/mpg123/src/compat/compat.c",
@@ -61,3 +56,22 @@
   filter { "action:vs*" }
     buildoptions { "/wd6011", "/wd6285", "/wd6297", "/wd6305", "/wd6385", "/wd6386" } -- /analyze
   filter {}
+
+function mpt_use_mpg123 ()
+	filter {}
+	filter { "action:vs*" }
+		includedirs {
+			"../../include/mpg123/ports/MSVC++",
+			"../../include/mpg123/src/libmpg123",
+		}
+	filter { "not action:vs*" }
+		externalincludedirs {
+			"../../include/mpg123/ports/MSVC++",
+			"../../include/mpg123/src/libmpg123",
+		}
+	filter {}
+	links {
+		"mpg123",
+	}
+	filter {}
+end

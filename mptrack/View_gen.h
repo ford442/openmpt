@@ -135,6 +135,7 @@ protected:
 	afx_msg void OnLoadParam();
 	afx_msg void OnSaveParam();
 	afx_msg void OnSelectPlugin();
+	afx_msg void OnRemovePlugin();
 	afx_msg void OnSetParameter();
 	afx_msg void OnEditPlugin();
 	afx_msg void OnMixModeChanged();
@@ -144,8 +145,10 @@ protected:
 	afx_msg void OnInsertSlot();
 	afx_msg void OnClonePlug();
 	LRESULT OnParamAutomated(WPARAM plugin, LPARAM param);
+	LRESULT OnDryWetRatioChangedFromPlayer(WPARAM plugin, LPARAM);
 
 	afx_msg void OnWetDryExpandChanged();
+	afx_msg void OnAutoSuspendChanged();
 	afx_msg void OnSpecialMixProcessingChanged();
 
 	afx_msg void OnOutputRoutingChanged();

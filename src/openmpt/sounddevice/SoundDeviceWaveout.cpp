@@ -419,7 +419,7 @@ void CWaveDevice::InternalFillAudioBuffer()
 	ULONG oldBuffersPending = InterlockedExchangeAdd(&m_nBuffersPending, 0);  // read
 	ULONG nLatency = oldBuffersPending * m_nWaveBufferSize;
 
-	ULONG nBytesWritten = 0;
+	[[maybe_unused]] ULONG nBytesWritten = 0;
 	while((oldBuffersPending < m_nPreparedHeaders) && !m_Failed)
 	{
 #if(_WIN32_WINNT >= 0x0600)
@@ -650,10 +650,14 @@ SoundDevice::Statistics CWaveDevice::GetStatistics() const
 
 std::vector<SoundDevice::Info> CWaveDevice::EnumerateDevices(ILogger &logger, SoundDevice::SysInfo sysInfo)
 {
+#if 0
 	auto GetLogger = [&]() -> ILogger &
 	{
 		return logger;
 	};
+#else
+	MPT_UNREFERENCED_PARAMETER(logger);
+#endif
 	MPT_SOUNDDEV_TRACE_SCOPE();
 	std::vector<SoundDevice::Info> devices;
 	UINT numDevs = waveOutGetNumDevs();

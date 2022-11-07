@@ -72,13 +72,13 @@ MPT_FORCEINLINE float I3DL2Reverb::DelayLine::Get() const
 }
 
 
-IMixPlugin* I3DL2Reverb::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct)
+IMixPlugin* I3DL2Reverb::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
 	return new (std::nothrow) I3DL2Reverb(factory, sndFile, mixStruct);
 }
 
 
-I3DL2Reverb::I3DL2Reverb(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct)
+I3DL2Reverb::I3DL2Reverb(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 	: IMixPlugin(factory, sndFile, mixStruct)
 {
 	m_param[kI3DL2ReverbRoom] = 0.9f;
@@ -98,7 +98,6 @@ I3DL2Reverb::I3DL2Reverb(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGI
 	SetCurrentProgram(m_program);
 
 	m_mixBuffer.Initialize(2, 2);
-	InsertIntoFactoryList();
 }
 
 
@@ -309,7 +308,7 @@ int32 I3DL2Reverb::GetNumPrograms() const
 void I3DL2Reverb::SetCurrentProgram(int32 program)
 {
 #ifdef MODPLUG_TRACKER
-	if(program < NUM_REVERBTYPES)
+	if(program < static_cast<int32>(NUM_REVERBTYPES))
 	{
 		m_program = program;
 		const auto &preset = *GetReverbPreset(m_program);
@@ -625,6 +624,7 @@ float I3DL2Reverb::CalcDecayCoeffs(int32 index)
 		c2 = (c23 - c22) / (c21 + c21);
 		if(std::abs(c2) > 1.0f)
 			c2 = (-c22 - c23) / (c21 + c21);
+		c2 = mpt::sanitize_nan(c2);
 	}
 	m_delayCoeffs[index][0] = c1;
 	m_delayCoeffs[index][1] = c2;

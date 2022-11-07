@@ -12,9 +12,16 @@
 #include "Sndfile.h"
 #ifdef MODPLUG_TRACKER
 #include "../mptrack/TrackerSettings.h"
+#include "mpt/io_file/inputfile.hpp"
+#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "../common/mptFileIO.h"
 #endif // MODPLUG_TRACKER
 #ifndef MODPLUG_NO_FILESAVE
+#include "mpt/io_file/outputfile.hpp"
 #include "../common/mptFileIO.h"
+#ifdef MODPLUG_TRACKER
+#include "mpt/fs/fs.hpp"
+#endif // MODPLUG_TRACKER
 #endif // !MODPLUG_NO_FILESAVE
 #include "modsmp_ctrl.h"
 #include "mpt/base/numbers.hpp"
@@ -182,8 +189,8 @@ protected:
 
 	static EnvelopeNode::value_t ToValue(double value, double scale, double minVal, double maxVal, const std::function<double(double)> &conversionFunc)
 	{
-		value = conversionFunc((value * scale - minVal) / (maxVal - minVal)) * ENVELOPE_MAX + ENVELOPE_MIN;
-		Limit<double, double>(value, ENVELOPE_MIN, ENVELOPE_MAX);
+		value = conversionFunc((value * scale - minVal) / (maxVal - minVal)) * double(ENVELOPE_MAX) + double(ENVELOPE_MIN);
+		Limit(value, double(ENVELOPE_MIN), double(ENVELOPE_MAX));
 		return mpt::saturate_round<EnvelopeNode::value_t>(value);
 	}
 
@@ -491,10 +498,10 @@ struct SFZRegion
 struct SFZInputFile
 {
 	FileReader file;
-	std::unique_ptr<InputFile> inputFile;  // FileReader has pointers into this so its address must not change
+	std::unique_ptr<mpt::IO::InputFile> inputFile;  // FileReader has pointers into this so its address must not change
 	std::string remain;
 
-	SFZInputFile(FileReader f = {}, std::unique_ptr<InputFile> i = {}, std::string r = {})
+	SFZInputFile(FileReader f = {}, std::unique_ptr<mpt::IO::InputFile> i = {}, std::string r = {})
 		: file{std::move(f)}, inputFile{std::move(i)}, remain{std::move(r)} {}
 	SFZInputFile(SFZInputFile &&) = default;
 };
@@ -647,12 +654,12 @@ bool CSoundFile::ReadSFZInstrument(INSTRUMENTINDEX nInstr, FileReader &file)
 				if(!filename.empty())
 				{
 					if(filenameU8.find(':') == std::string::npos)
-						filename = file.GetOptionalFileName().value_or(P_("")).GetPath() + filename;
+						filename = file.GetOptionalFileName().value_or(P_("")).GetDirectoryWithDrive() + filename;
 					filename = filename.Simplify();
 					// Avoid recursive #include
 					if(std::find_if(files.begin(), files.end(), [&filename](const SFZInputFile &f) { return f.file.GetOptionalFileName().value_or(P_("")) == filename; }) == files.end())
 					{
-						auto f = std::make_unique<InputFile>(filename);
+						auto f = std::make_unique<mpt::IO::InputFile>(filename);
 						if(f->IsValid())
 						{
 							s.erase(0, charsRead);
@@ -814,11 +821,11 @@ bool CSoundFile::ReadSFZInstrument(INSTRUMENTINDEX nInstr, FileReader &file)
 		{
 			if(region.filename.find(':') == std::string::npos)
 			{
-				filename = file.GetOptionalFileName().value_or(P_("")).GetPath() + filename;
+				filename = file.GetOptionalFileName().value_or(P_("")).GetDirectoryWithDrive() + filename;
 			}
 			filename = filename.Simplify();
 			SetSamplePath(smp, filename);
-			InputFile f(filename, SettingCacheCompleteFileBeforeLoading());
+			mpt::IO::InputFile f(filename, SettingCacheCompleteFileBeforeLoading());
 			FileReader smpFile = GetFileReader(f);
 			if(!ReadSampleFromFile(smp, smpFile, false))
 			{
@@ -836,7 +843,7 @@ bool CSoundFile::ReadSFZInstrument(INSTRUMENTINDEX nInstr, FileReader &file)
 		if(!region.name.empty())
 			m_szNames[smp] = mpt::ToCharset(GetCharsetInternal(), mpt::Charset::UTF8, region.name);
 		if(!m_szNames[smp][0])
-			m_szNames[smp] = mpt::ToCharset(GetCharsetInternal(), mpt::PathString::FromUTF8(region.filename).GetFileName().ToUnicode());
+			m_szNames[smp] = mpt::ToCharset(GetCharsetInternal(), mpt::PathString::FromUTF8(region.filename).GetFilenameBase().ToUnicode());
 
 		if(region.useSampleKeyRoot)
 		{
@@ -913,13 +920,13 @@ bool CSoundFile::ReadSFZInstrument(INSTRUMENTINDEX nInstr, FileReader &file)
 			switch(region.loopMode)
 			{
 			case SFZRegion::LoopMode::kContinuous:
-			case SFZRegion::LoopMode::kOneShot:
 				sample.uFlags.set(CHN_LOOP);
 				break;
 			case SFZRegion::LoopMode::kSustain:
 				sample.uFlags.set(CHN_SUSTAINLOOP);
 				break;
 			case SFZRegion::LoopMode::kNoLoop:
+			case SFZRegion::LoopMode::kOneShot:
 				sample.uFlags.reset(CHN_LOOP | CHN_SUSTAINLOOP);
 			}
 		}
@@ -1004,7 +1011,7 @@ bool CSoundFile::ReadSFZInstrument(INSTRUMENTINDEX nInstr, FileReader &file)
 			// Avoid ruining the original samples
 			if(auto filename = GetSamplePath(smp); !filename.empty())
 			{
-				filename = filename.GetPath() + filename.GetFileName() + filenameModifier + filename.GetFileExt();
+				filename = filename.GetDirectoryWithDrive() + filename.GetFilenameBase() + filenameModifier + filename.GetFilenameExtension();
 				SetSamplePath(smp, filename);
 			}
 		}
@@ -1065,9 +1072,9 @@ static void WriteSFZEnvelope(std::ostream &f, double tickDuration, int index, co
 bool CSoundFile::SaveSFZInstrument(INSTRUMENTINDEX nInstr, std::ostream &f, const mpt::PathString &filename, bool useFLACsamples) const
 {
 #ifdef MODPLUG_TRACKER
-	const mpt::FlushMode flushMode = mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave);
+	const mpt::IO::FlushMode flushMode = mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave);
 #else
-	const mpt::FlushMode flushMode = mpt::FlushMode::Full;
+	const mpt::IO::FlushMode flushMode = mpt::IO::FlushMode::Full;
 #endif
 	const ModInstrument *ins = Instruments[nInstr];
 	if(ins == nullptr)
@@ -1075,10 +1082,10 @@ bool CSoundFile::SaveSFZInstrument(INSTRUMENTINDEX nInstr, std::ostream &f, cons
 
 	// Creating directory names with trailing spaces or dots is a bad idea, as they are difficult to remove in Windows.
 	const mpt::RawPathString whitespaceDirName = PL_(" \n\r\t.");
-	const mpt::PathString sampleBaseName = mpt::PathString::FromNative(mpt::trim(filename.GetFileName().AsNative(), whitespaceDirName));
+	const mpt::PathString sampleBaseName = mpt::PathString::FromNative(mpt::trim(filename.GetFilenameBase().AsNative(), whitespaceDirName));
 	const mpt::PathString sampleDirName = (sampleBaseName.empty() ? P_("Samples") : sampleBaseName)  + P_("/");
-	const mpt::PathString sampleBasePath = filename.GetPath() + sampleDirName;
-	if(!sampleBasePath.IsDirectory() && !::CreateDirectory(sampleBasePath.AsNative().c_str(), nullptr))
+	const mpt::PathString sampleBasePath = filename.GetDirectoryWithDrive() + sampleDirName;
+	if(!mpt::native_fs{}.is_directory(sampleBasePath) && !::CreateDirectory(sampleBasePath.AsNative().c_str(), nullptr))
 		return false;
 
 	const double tickDuration = m_PlayState.m_nSamplesPerTick / static_cast<double>(m_MixerSettings.gdwMixingFreq);
@@ -1183,10 +1190,10 @@ bool CSoundFile::SaveSFZInstrument(INSTRUMENTINDEX nInstr, std::ostream &f, cons
 		bool success = false;
 		try
 		{
-			mpt::SafeOutputFile sfSmp(sampleName, std::ios::binary, flushMode);
+			mpt::IO::SafeOutputFile sfSmp(sampleName, std::ios::binary, flushMode);
 			if(sfSmp)
 			{
-				mpt::ofstream &fSmp = sfSmp;
+				mpt::IO::ofstream &fSmp = sfSmp;
 				fSmp.exceptions(fSmp.exceptions() | std::ios::badbit | std::ios::failbit);
 
 				if(isAdlib)
@@ -1211,7 +1218,7 @@ bool CSoundFile::SaveSFZInstrument(INSTRUMENTINDEX nInstr, std::ostream &f, cons
 		{
 			f << "\nregion_label=" << mpt::ToCharset(mpt::Charset::UTF8, GetCharsetInternal(), m_szNames[ins->Keyboard[i]]);
 		}
-		f << "\nsample=" << sampleName.GetFullFileName().ToUTF8();
+		f << "\nsample=" << sampleName.GetFilename().ToUTF8();
 		f << "\nlokey=" << i;
 		f << "\nhikey=" << endOfRegion;
 		if(sample.rootNote != NOTE_NONE)

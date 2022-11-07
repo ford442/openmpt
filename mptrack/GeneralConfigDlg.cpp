@@ -41,6 +41,7 @@ static constexpr struct GeneralOptionsDescriptions
 {
 	{PATTERN_PLAYNEWNOTE,	"Play new notes while recording",	"When this option is enabled, notes entered in the pattern editor will always be played (If not checked, notes won't be played in record mode)."},
 	{PATTERN_PLAYEDITROW,	"Play whole row while recording",	"When this option is enabled, all notes on the current row are played when entering notes in the pattern editor."},
+	{PATTERN_PLAYNAVIGATEROW, "Play whole row when navigating",	"When this option is enabled, all notes on the current row are played when navigating vertically in the pattern editor."},
 	{PATTERN_PLAYTRANSPOSE,	"Play notes when transposing",		"When transposing a single note, the new note is previewed."},
 	{PATTERN_CENTERROW,		"Always center active row",			"Turn on this option to have the active row always centered in the pattern editor."},
 	{PATTERN_SMOOTHSCROLL,	"Smooth pattern scrolling",			"Scroll patterns tick by tick rather than row by row at the expense of an increased CPU load."},
@@ -121,9 +122,9 @@ BOOL COptionsGeneral::OnInitDialog()
 		::SendMessage(m_defaultTemplate.m_hWnd, CB_ADDSTRING, 0, (LPARAM)fileW.c_str());
 	}
 	file = TrackerSettings::Instance().defaultTemplateFile;
-	if(file.GetPath() == basePath)
+	if(file.GetDirectoryWithDrive() == basePath)
 	{
-		file = file.GetFullFileName();
+		file = file.GetFilename();
 	}
 	m_defaultTemplate.SetWindowText(file.AsNative().c_str());
 
@@ -214,9 +215,9 @@ void COptionsGeneral::OnBrowseTemplate()
 	if(dlg.Show(this))
 	{
 		defaultFile = dlg.GetFirstFile();
-		if(defaultFile.GetPath() == basePath)
+		if(defaultFile.GetDirectoryWithDrive() == basePath)
 		{
-			defaultFile = defaultFile.GetFullFileName();
+			defaultFile = defaultFile.GetFilename();
 		}
 		m_defaultTemplate.SetWindowText(defaultFile.AsNative().c_str());
 		OnTemplateChanged();

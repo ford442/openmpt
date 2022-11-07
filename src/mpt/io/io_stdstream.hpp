@@ -27,8 +27,6 @@ namespace IO {
 
 
 
-//static_assert(sizeof(std::streamoff) == 8); // Assert 64bit file support.
-
 struct FileOperationsStdIos {
 
 private:
@@ -63,30 +61,26 @@ public:
 	inline bool IsReadSeekable() {
 		f.clear();
 		std::streampos oldpos = f.tellg();
-		if (f.fail() || oldpos == std::streampos(-1))
-		{
+		if (f.fail() || oldpos == std::streampos(-1)) {
 			f.clear();
 			return false;
 		}
 		f.seekg(0, std::ios::beg);
-		if (f.fail())
-		{
+		if (f.fail()) {
 			f.clear();
 			f.seekg(oldpos);
 			f.clear();
 			return false;
 		}
 		f.seekg(0, std::ios::end);
-		if (f.fail())
-		{
+		if (f.fail()) {
 			f.clear();
 			f.seekg(oldpos);
 			f.clear();
 			return false;
 		}
 		std::streampos length = f.tellg();
-		if (f.fail() || length == std::streampos(-1))
-		{
+		if (f.fail() || length == std::streampos(-1)) {
 			f.clear();
 			f.seekg(oldpos);
 			f.clear();
@@ -112,8 +106,7 @@ public:
 	}
 
 	inline bool SeekAbsolute(IO::Offset pos) {
-		if (!mpt::in_range<std::streamoff>(pos))
-		{
+		if (!mpt::in_range<std::streamoff>(pos)) {
 			return false;
 		}
 		f.seekg(static_cast<std::streamoff>(pos), std::ios::beg);
@@ -121,8 +114,7 @@ public:
 	}
 
 	inline bool SeekRelative(IO::Offset off) {
-		if (!mpt::in_range<std::streamoff>(off))
-		{
+		if (!mpt::in_range<std::streamoff>(off)) {
 			return false;
 		}
 		f.seekg(static_cast<std::streamoff>(off), std::ios::cur);
@@ -156,30 +148,26 @@ public:
 	inline bool IsWriteSeekable() {
 		f.clear();
 		std::streampos oldpos = f.tellp();
-		if (f.fail() || oldpos == std::streampos(-1))
-		{
+		if (f.fail() || oldpos == std::streampos(-1)) {
 			f.clear();
 			return false;
 		}
 		f.seekp(0, std::ios::beg);
-		if (f.fail())
-		{
+		if (f.fail()) {
 			f.clear();
 			f.seekp(oldpos);
 			f.clear();
 			return false;
 		}
 		f.seekp(0, std::ios::end);
-		if (f.fail())
-		{
+		if (f.fail()) {
 			f.clear();
 			f.seekp(oldpos);
 			f.clear();
 			return false;
 		}
 		std::streampos length = f.tellp();
-		if (f.fail() || length == std::streampos(-1))
-		{
+		if (f.fail() || length == std::streampos(-1)) {
 			f.clear();
 			f.seekp(oldpos);
 			f.clear();
@@ -205,8 +193,7 @@ public:
 	}
 
 	inline bool SeekAbsolute(IO::Offset pos) {
-		if (!mpt::in_range<std::streamoff>(pos))
-		{
+		if (!mpt::in_range<std::streamoff>(pos)) {
 			return false;
 		}
 		f.seekp(static_cast<std::streamoff>(pos), std::ios::beg);
@@ -214,8 +201,7 @@ public:
 	}
 
 	inline bool SeekRelative(IO::Offset off) {
-		if (!mpt::in_range<std::streamoff>(off))
-		{
+		if (!mpt::in_range<std::streamoff>(off)) {
 			return false;
 		}
 		f.seekp(static_cast<std::streamoff>(off), std::ios::cur);
@@ -262,8 +248,7 @@ public:
 	}
 
 	inline bool SeekAbsolute(IO::Offset pos) {
-		if (!mpt::in_range<std::streamoff>(pos))
-		{
+		if (!mpt::in_range<std::streamoff>(pos)) {
 			return false;
 		}
 		FileOperationsStdIstream::SeekAbsolute(pos);
@@ -272,8 +257,7 @@ public:
 	}
 
 	inline bool SeekRelative(IO::Offset off) {
-		if (!mpt::in_range<std::streamoff>(off))
-		{
+		if (!mpt::in_range<std::streamoff>(off)) {
 			return false;
 		}
 		FileOperationsStdIstream::SeekRelative(off);

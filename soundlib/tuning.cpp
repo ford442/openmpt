@@ -24,6 +24,10 @@ OPENMPT_NAMESPACE_BEGIN
 
 namespace Tuning {
 
+static RATIOTYPE SanitizeGroupRatio(RATIOTYPE ratio)
+{
+	return std::clamp(std::abs(ratio), 1e-15f, 1e+07f);
+}
 
 namespace CTuningS11n
 {
@@ -257,7 +261,12 @@ RATIOTYPE CTuning::GetRatio(const NOTEINDEXTYPE note) const
 	{
 		return s_DefaultFallbackRatio;
 	}
-	return m_RatioTable[note - m_NoteMin];
+	const auto ratio = m_RatioTable[note - m_NoteMin];
+	if(ratio <= 1e-15f)
+	{
+		return s_DefaultFallbackRatio;
+	}
+	return ratio;
 }
 
 
@@ -480,8 +489,19 @@ SerializationResult CTuning::InitDeserialize(std::istream &iStrm, mpt::Charset d
 	UNOTEINDEXTYPE ratiotableSize = 0;
 	ssb.ReadItem(ratiotableSize, "RTI4");
 
+	m_GroupRatio = SanitizeGroupRatio(m_GroupRatio);
+	if(!std::isfinite(m_GroupRatio))
+	{
+		return SerializationResult::Failure;
+	}
+	for(auto ratio : m_RatioTable)
+	{
+		if(!std::isfinite(ratio))
+			return SerializationResult::Failure;
+	}
+
 	// If reader status is ok and m_NoteMin is somewhat reasonable, process data.
-	if(!((ssb.GetStatus() & srlztn::SNT_FAILURE) == 0 && m_NoteMin >= -300 && m_NoteMin <= 300))
+	if(ssb.HasFailed() || (m_NoteMin < -300) || (m_NoteMin > 300))
 	{
 		return SerializationResult::Failure;
 	}
@@ -683,6 +703,11 @@ SerializationResult CTuning::InitDeserializeOLD(std::istream &inStrm, mpt::Chars
 			return SerializationResult::Failure;
 		}
 	}
+	for(auto ratio : m_RatioTable)
+	{
+		if(!std::isfinite(ratio))
+			return SerializationResult::Failure;
+	}
 
 	//Fineratios
 	if(version <= 2)
@@ -697,6 +722,11 @@ SerializationResult CTuning::InitDeserializeOLD(std::istream &inStrm, mpt::Chars
 		{
 			return SerializationResult::Failure;
 		}
+	}
+	for(auto ratio : m_RatioTableFine)
+	{
+		if(!std::isfinite(ratio))
+			return SerializationResult::Failure;
 	}
 	m_FineStepCount = mpt::saturate_cast<USTEPINDEXTYPE>(m_RatioTableFine.size());
 
@@ -721,8 +751,8 @@ SerializationResult CTuning::InitDeserializeOLD(std::istream &inStrm, mpt::Chars
 	//m_GroupRatio
 	IEEE754binary32LE groupratio = IEEE754binary32LE(0.0f);
 	mpt::IO::Read(inStrm, groupratio);
-	m_GroupRatio = groupratio;
-	if(m_GroupRatio < 0)
+	m_GroupRatio = SanitizeGroupRatio(groupratio);
+	if(!std::isfinite(m_GroupRatio))
 	{
 		return SerializationResult::Failure;
 	}
@@ -818,7 +848,7 @@ Tuning::SerializationResult CTuning::Serialize(std::ostream& outStrm) const
 
 	ssb.FinishWrite();
 
-	return ((ssb.GetStatus() & srlztn::SNT_FAILURE) != 0) ? Tuning::SerializationResult::Failure : Tuning::SerializationResult::Success;
+	return ssb.HasFailed() ? Tuning::SerializationResult::Failure : Tuning::SerializationResult::Success;
 }
 
 
@@ -826,7 +856,7 @@ Tuning::SerializationResult CTuning::Serialize(std::ostream& outStrm) const
 
 bool CTuning::WriteSCL(std::ostream &f, const mpt::PathString &filename) const
 {
-	mpt::IO::WriteTextCRLF(f, MPT_AFORMAT("! {}")(mpt::ToCharset(mpt::Charset::ISO8859_1, (filename.GetFileName() + filename.GetFileExt()).ToUnicode())));
+	mpt::IO::WriteTextCRLF(f, MPT_AFORMAT("! {}")(mpt::ToCharset(mpt::Charset::ISO8859_1, (filename.GetFilenameBase() + filename.GetFilenameExtension()).ToUnicode())));
 	mpt::IO::WriteTextCRLF(f, "!");
 	std::string name = mpt::ToCharset(mpt::Charset::ISO8859_1, GetName());
 	for(auto & c : name) { if(static_cast<uint8>(c) < 32) c = ' '; } // remove control characters

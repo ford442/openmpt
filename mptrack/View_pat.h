@@ -209,6 +209,7 @@ protected:
 	CModDoc::NoteToChannelMap m_noteChannel;  // Note -> Preview channel assignment
 	std::array<ModCommand::NOTE, 10> m_octaveKeyMemory;
 	std::array<ModCommand::NOTE, MAX_BASECHANNELS> m_previousNote;
+	std::array<std::pair<PLUGINDEX, PlugParamIndex>, MAX_BASECHANNELS> m_previousPCevent;  // For multichannel recording
 	std::array<uint8, NOTE_MAX + NOTE_MIN> m_activeNoteChannel;
 	std::array<uint8, NOTE_MAX + NOTE_MIN> m_splitActiveNoteChannel;
 	static constexpr uint8 NOTE_CHANNEL_MAP_INVALID = 0xFF;
@@ -257,6 +258,7 @@ public:
 	}
 	// Get ModCommand at the pattern cursor position.
 	ModCommand &GetCursorCommand() { return GetModCommand(m_Cursor); };
+	const ModCommand& GetCursorCommand() const { return const_cast<CViewPattern *>(this)->GetModCommand(m_Cursor); };
 	void SanitizeCursor();
 
 	UINT GetColumnOffset(PatternCursor::Columns column) const;
@@ -347,6 +349,8 @@ public:
 	void EnterAftertouch(ModCommand::NOTE note, int atValue);
 
 	int GetDefaultVolume(const ModCommand &m, ModCommand::INSTR lastInstr = 0) const;
+	int GetBaseNote() const;
+	ModCommand::NOTE GetNoteWithBaseOctave(int note) const;
 
 	// Construct a chord from the chord presets. Returns number of notes in chord.
 	int ConstructChord(int note, ModCommand::NOTE (&outNotes)[MPTChord::notesPerChord], ModCommand::NOTE baseNote);
@@ -360,7 +364,7 @@ public:
 	void SetSelectionInstrument(const INSTRUMENTINDEX instr, bool setEmptyInstrument);
 
 	void FindInstrument();
-	void JumpToPrevOrNextEntry(bool nextEntry);
+	void JumpToPrevOrNextEntry(bool nextEntry, bool select);
 
 	void TogglePluginEditor(int chan);
 
@@ -555,6 +559,8 @@ private:
 
 	// Like IsEditingEnabled(), but shows some notification when editing is not enabled.
 	bool IsEditingEnabled_bmsg();
+
+	CHANNELINDEX GetRecordChannelForPCEvent(PLUGINDEX plugSlot, PlugParamIndex paramIndex) const;
 
 	// Play one pattern row and stop ("step mode")
 	void PatternStep(ROWINDEX row = ROWINDEX_INVALID);

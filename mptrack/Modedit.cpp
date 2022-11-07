@@ -21,6 +21,9 @@
 #include "../soundlib/OPL.h"
 #include "../common/misc_util.h"
 #include "../common/mptStringBuffer.h"
+#include "mpt/io_file/inputfile.hpp"
+#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "mpt/io_file/outputfile.hpp"
 #include "../common/mptFileIO.h"
 #include <sstream>
 // Plugin cloning
@@ -273,6 +276,7 @@ CHANNELINDEX CModDoc::ReArrangeChannels(const std::vector<CHANNELINDEX> &newOrde
 		} else
 		{
 			m_SndFile.InitChannel(chn);
+			SetDefaultChannelColors(chn);
 		}
 	}
 	// Reset MOD panning (won't affect other module formats)
@@ -485,7 +489,7 @@ INSTRUMENTINDEX CModDoc::ReArrangeInstruments(const std::vector<INSTRUMENTINDEX>
 		m_SndFile.DestroyInstrument(i, doNoDeleteAssociatedSamples);
 	}
 
-	PrepareUndoForAllPatterns(false, "Rearrange Instrumens");
+	PrepareUndoForAllPatterns(false, "Rearrange Instruments");
 	GetInstrumentUndo().RearrangeInstruments(newIndex);
 	m_SndFile.Patterns.ForEachModCommand([&newIndex] (ModCommand &m)
 	{
@@ -603,10 +607,34 @@ PLUGINDEX CModDoc::RemovePlugs(const std::vector<bool> &keepMask)
 		}
 
 		plug.Destroy();
-		plug = SNDMIXPLUGIN();
+		plug = {};
+
+		for(PLUGINDEX srcPlugSlot = 0; srcPlugSlot < nPlug; srcPlugSlot++)
+		{
+			SNDMIXPLUGIN &srcPlug = GetSoundFile().m_MixPlugins[srcPlugSlot];
+			if(srcPlug.GetOutputPlugin() == nPlug)
+			{
+				srcPlug.SetOutputToMaster();
+				UpdateAllViews(nullptr, PluginHint(static_cast<PLUGINDEX>(srcPlugSlot + 1)).Info());
+			}
+		}
+		UpdateAllViews(nullptr, PluginHint(static_cast<PLUGINDEX>(nPlug + 1)).Info().Names());
 	}
 
+	if(nRemoved && m_SndFile.GetModSpecifications().supportsPlugins)
+		SetModified();
+
 	return nRemoved;
+}
+
+
+bool CModDoc::RemovePlugin(PLUGINDEX plugin)
+{
+	if(plugin >= MAX_MIXPLUGINS)
+		return false;
+	std::vector<bool> keepMask(MAX_MIXPLUGINS, true);
+	keepMask[plugin] = false;
+	return RemovePlugs(keepMask) == 1;
 }
 
 
@@ -1001,8 +1029,8 @@ BOOL CModDoc::ShrinkPattern(PATTERNINDEX nPattern)
 /////////////////////////////////////////////////////////////////////////////////////////
 // Copy/Paste envelope
 
-static constexpr const CHAR *pszEnvHdr = "ModPlug Tracker Envelope\r\n";
-static constexpr const CHAR *pszEnvFmt = "%d,%d,%d,%d,%d,%d,%d,%d\r\n";
+static constexpr const char pszEnvHdr[] = "ModPlug Tracker Envelope\r\n";
+static constexpr const char pszEnvFmt[] = "%d,%d,%d,%d,%d,%d,%d,%d\r\n";
 
 static bool EnvelopeToString(CStringA &s, const InstrumentEnvelope &env)
 {
@@ -1029,7 +1057,7 @@ static bool EnvelopeToString(CStringA &s, const InstrumentEnvelope &env)
 static bool StringToEnvelope(const std::string_view &s, InstrumentEnvelope &env, const CModSpecifications &specs)
 {
 	uint32 susBegin = 0, susEnd = 0, loopBegin = 0, loopEnd = 0, bSus = 0, bLoop = 0, bCarry = 0, nPoints = 0, releaseNode = ENV_RELEASE_NODE_UNSET;
-	size_t length = s.size(), pos = strlen(pszEnvHdr);
+	size_t length = s.size(), pos = std::size(pszEnvHdr) - 1;
 	if(length <= pos || mpt::CompareNoCaseAscii(s.data(), pszEnvHdr, pos - 2))
 	{
 		return false;
@@ -1147,8 +1175,8 @@ bool CModDoc::SaveEnvelope(INSTRUMENTINDEX ins, EnvelopeType env, const mpt::Pat
 	bool ok = false;
 	try
 	{
-		mpt::SafeOutputFile sf(fileName, std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
-		mpt::ofstream &f = sf;
+		mpt::IO::SafeOutputFile sf(fileName, std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+		mpt::IO::ofstream &f = sf;
 		f.exceptions(f.exceptions() | std::ios::badbit | std::ios::failbit);
 		if(f)
 			ok = mpt::IO::WriteRaw(f, s.GetString(), s.GetLength());
@@ -1184,7 +1212,7 @@ bool CModDoc::PasteEnvelope(INSTRUMENTINDEX ins, EnvelopeType env)
 
 bool CModDoc::LoadEnvelope(INSTRUMENTINDEX nIns, EnvelopeType nEnv, const mpt::PathString &fileName)
 {
-	InputFile f(fileName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
+	mpt::IO::InputFile f(fileName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
 	if(nIns < 1 || nIns > m_SndFile.m_nInstruments || !m_SndFile.Instruments[nIns] || !f.IsValid())
 		return false;
 	BeginWaitCursor();
@@ -1339,6 +1367,34 @@ int CModDoc::GetInstrumentGroupSize(INSTRUMENTINDEX instr) const
 		return ins->pTuning->GetGroupSize();
 	}
 	return 12;
+}
+
+
+int CModDoc::GetBaseNote(INSTRUMENTINDEX instr) const
+{
+	// This may look a bit strange (using -12 and -4 instead of just -5 in the second part) but this is to keep custom tunings centered around middle-C on the keyboard.
+	return NOTE_MIDDLEC - 12 + (CMainFrame::GetMainFrame()->GetBaseOctave() - 4) * GetInstrumentGroupSize(instr);
+}
+
+
+ModCommand::NOTE CModDoc::GetNoteWithBaseOctave(int noteOffset, INSTRUMENTINDEX instr) const
+{
+	return static_cast<ModCommand::NOTE>(Clamp(GetBaseNote(instr) + noteOffset, NOTE_MIN, NOTE_MAX));
+}
+
+
+INSTRUMENTINDEX CModDoc::GetParentInstrumentWithSameName(SAMPLEINDEX smp) const
+{
+	auto ins = FindSampleParent(smp);
+	if(ins == INSTRUMENTINDEX_INVALID)
+		return INSTRUMENTINDEX_INVALID;
+	auto instr = m_SndFile.Instruments[ins];
+	if(instr == nullptr)
+		return INSTRUMENTINDEX_INVALID;
+	if((!instr->name.empty() && instr->name != m_SndFile.m_szNames[smp]) || instr->GetSamples().size() != 1)
+		return INSTRUMENTINDEX_INVALID;
+
+	return ins;
 }
 
 

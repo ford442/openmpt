@@ -2,15 +2,10 @@
  project "soundtouch"
   uuid "F5F8F6DE-84CF-4E9D-91EA-D9B5E2AA36CD"
   language "C++"
-  location ( "../../build/" .. mpt_projectpathname .. "/ext" )
-  mpt_projectname = "soundtouch"
-  dofile "../../build/premake/premake-defaults-DLL.lua"
-  dofile "../../build/premake/premake-defaults.lua"
+  location ( "%{wks.location}" .. "/ext" )
+  mpt_kind "shared"
   targetname "openmpt-soundtouch"
   includedirs { "../../include/soundtouch/include" }
-	filter {}
-	filter { "action:vs*" }
-		characterset "Unicode"
 	filter {}
   files {
    "../../include/soundtouch/include/BPMDetect.h",
@@ -57,3 +52,20 @@
 		buildoptions { "/wd6262" } -- analyze
 	filter {}
   defines { "DLL_EXPORTS" }
+
+function mpt_use_soundtouch ()
+	filter {}
+	filter { "action:vs*" }
+		includedirs {
+			"../../include",
+		}
+	filter { "not action:vs*" }
+		externalincludedirs {
+			"../../include",
+		}
+	filter {}
+	links {
+		"soundtouch",
+	}
+	filter {}
+end

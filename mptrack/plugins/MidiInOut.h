@@ -138,8 +138,8 @@ protected:
 #endif
 
 public:
-	static IMixPlugin* Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct);
-	MidiInOut(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct);
+	static IMixPlugin* Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
+	MidiInOut(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 	~MidiInOut();
 
 	// Translate a VST parameter to an RtMidi device ID
@@ -156,7 +156,6 @@ public:
 
 	/////////////////////////////////////////////////
 	// Destroy the plugin
-	void Release() final { delete this; }
 	int32 GetUID() const final { return 'MMID'; }
 	int32 GetVersion() const final { return 2; }
 	void Idle() final { }

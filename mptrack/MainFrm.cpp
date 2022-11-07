@@ -40,6 +40,9 @@
 #include "PatternClipboard.h"
 #include "PatternFont.h"
 #include "../common/mptFileIO.h"
+#include "mpt/fs/fs.hpp"
+#include "mpt/io_file/inputfile.hpp"
+#include "mpt/io_file/inputfile_filecursor.hpp"
 #include "../common/FileReader.h"
 #include "../common/Profiler.h"
 #include "../soundlib/plugins/PlugInterface.h"
@@ -433,14 +436,14 @@ void CMainFrame::OnDropFiles(HDROP hDropInfo)
 			const mpt::PathString file = mpt::PathString::FromNative(fileName.data());
 #ifdef MPT_BUILD_DEBUG
 			// Debug Hack: Quickly scan a folder containing module files (without running out of window handles ;)
-			if(m_InputHandler->CtrlPressed() && m_InputHandler->AltPressed() && m_InputHandler->ShiftPressed() && file.IsDirectory())
+			if(m_InputHandler->CtrlPressed() && m_InputHandler->AltPressed() && m_InputHandler->ShiftPressed() && mpt::native_fs{}.is_directory(file))
 			{
 				FolderScanner scanner(file, FolderScanner::kOnlyFiles | FolderScanner::kFindInSubDirectories);
 				mpt::PathString scanName;
 				size_t failed = 0, total = 0;
 				while(scanner.Next(scanName))
 				{
-					InputFile inputFile(scanName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
+					mpt::IO::InputFile inputFile(scanName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
 					if(!inputFile.IsValid())
 						continue;
 					auto sndFile = std::make_unique<CSoundFile>();
@@ -774,7 +777,7 @@ void CMainFrame::SoundCallbackLockedCallback(SoundDevice::CallbackBuffer<Dithers
 	MPT_ASSERT(framesToRender > 0);
 	CSoundFile::samplecount_t renderedFrames = m_pSndFile->Read(framesToRender, target, source, std::ref(m_VUMeterOutput), std::ref(m_VUMeterInput));
 	MPT_ASSERT(renderedFrames <= framesToRender);
-	CSoundFile::samplecount_t remainingFrames = framesToRender - renderedFrames;
+	[[maybe_unused]] CSoundFile::samplecount_t remainingFrames = framesToRender - renderedFrames;
 	MPT_ASSERT(remainingFrames >= 0); // remaining buffer is filled with silence automatically
 }
 
@@ -843,11 +846,6 @@ bool CMainFrame::audioOpenDevice()
 		return false;
 	}
 	SampleFormat actualSampleFormat = gpSoundDevice->GetActualSampleFormat();
-	if(!actualSampleFormat.IsValid())
-	{
-		Reporting::Error(MPT_UFORMAT("Unable to open sound device '{}': Unknown sample format.")(gpSoundDevice->GetDeviceInfo().GetDisplayName()));
-		return false;
-	}
 	deviceSettings.sampleFormat = actualSampleFormat;
 	Dithers().SetMode(deviceSettings.DitherType, deviceSettings.Channels);
 	TrackerSettings::Instance().MixerSamplerate = gpSoundDevice->GetSettings().Samplerate;
@@ -958,7 +956,7 @@ const float VUMeter::dynamicRange = 48.0f; // corresponds to the current impleme
 void VUMeter::SetDecaySpeedDecibelPerSecond(float decibelPerSecond)
 {
 	float linearDecayRate = decibelPerSecond / dynamicRange;
-	decayParam = mpt::saturate_round<int32>(linearDecayRate * MixSampleIntTraits::mix_clip_max);
+	decayParam = mpt::saturate_round<int32>(linearDecayRate * static_cast<float>(MixSampleIntTraits::mix_clip_max));
 }
 
 
@@ -1564,7 +1562,7 @@ bool CMainFrame::PlaySoundFile(const mpt::PathString &filename, ModCommand::NOTE
 
 		if(!ok && !filename.empty())
 		{
-			InputFile f(filename, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
+			mpt::IO::InputFile f(filename, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
 			if(f.IsValid())
 			{
 				FileReader file = GetFileReader(f);
@@ -1906,6 +1904,12 @@ void CMainFrame::UpdateTree(CModDoc *pModDoc, UpdateHint hint, CObject *pHint)
 }
 
 
+void CMainFrame::RefreshDlsBanks()
+{
+	m_wndTree.RefreshDlsBanks();
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame message handlers
 
@@ -2227,7 +2231,7 @@ void CMainFrame::OpenMenuItemFile(const UINT nId, const bool isTemplateFile)
 	if (nIndex < vecFilePaths.size())
 	{
 		const mpt::PathString& sPath = vecFilePaths[nIndex];
-		const bool bExists = sPath.IsFile();
+		const bool bExists = mpt::native_fs{}.is_file(sPath);
 		CDocument *pDoc = nullptr;
 		if(bExists)
 		{
@@ -2294,11 +2298,20 @@ LRESULT CMainFrame::OnUpdatePosition(WPARAM, LPARAM lParam)
 			PostMessage(WM_COMMAND, ID_PLAYER_STOP);
 		}
 		//Log("OnUpdatePosition: row=%d time=%lu\n", pnotify->nRow, pnotify->TimestampSamples);
-		if (GetModPlaying())
+		if(CModDoc *modDoc = GetModPlaying(); modDoc != nullptr)
 		{
-			m_wndTree.UpdatePlayPos(GetModPlaying(), pnotify);
+			m_wndTree.UpdatePlayPos(modDoc, pnotify);
 			if (GetFollowSong())
 				::SendMessage(GetFollowSong(), WM_MOD_UPDATEPOSITION, 0, lParam);
+			if(m_pSndFile->m_pluginDryWetRatioChanged.any())
+			{
+				for(PLUGINDEX i = 0; i < MAX_MIXPLUGINS; i++)
+				{
+					if(m_pSndFile->m_pluginDryWetRatioChanged[i])
+						modDoc->PostMessageToAllViews(WM_MOD_PLUGINDRYWETRATIOCHANGED, i);
+				}
+				m_pSndFile->m_pluginDryWetRatioChanged.reset();
+			}
 		}
 		m_nMixChn = pnotify->mixedChannels;
 
@@ -2468,6 +2481,7 @@ LRESULT CMainFrame::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		case kcPlaySongFromCursor:
 		case kcPlaySongFromStart:
 		case kcPlayPauseSong:
+		case kcPlayStopSong:
 		case kcPlaySongFromPattern:
 		case kcStopSong:
 		case kcToggleLoopSong:
@@ -2485,7 +2499,7 @@ LRESULT CMainFrame::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 				CModDoc *modDoc = GetActiveDoc();
 				if (modDoc)
 					return GetActiveDoc()->OnCustomKeyMsg(wParam, lParam);
-				else if(wParam == kcPlayPauseSong || wParam == kcStopSong)
+				else if(wParam == kcPlayPauseSong || wParam == kcPlayStopSong|| wParam == kcStopSong)
 					StopPreview();
 				break;
 			}
@@ -2774,8 +2788,10 @@ LRESULT CMainFrame::OnUpdateCheckSuccess(WPARAM wparam, LPARAM lparam)
 	const bool isAutoUpdate = CUpdateCheck::IsAutoUpdateFromMessage(wparam, lparam);
 	const UpdateCheckResult &result = CUpdateCheck::MessageAsResult(wparam, lparam);
 	CUpdateCheck::AcknowledgeSuccess(result);
-	if(result.CheckTime != time_t{})
-		TrackerSettings::Instance().UpdateLastUpdateCheck = mpt::Date::Unix(result.CheckTime);
+	if(result.CheckTime != mpt::Date::Unix{})
+	{
+		TrackerSettings::Instance().UpdateLastUpdateCheck = result.CheckTime;
+	}
 	if(!isAutoUpdate)
 	{
 		if(m_UpdateOptionsDialog)
@@ -2900,13 +2916,13 @@ HMENU CMainFrame::CreateFileMenu(const size_t maxCount, std::vector<mpt::PathStr
 		for(size_t i = 0; i < 2; i++) // 0: app items, 1: user items
 		{
 			// To avoid duplicates, check whether app path and config path are the same.
-			if (i == 1 && mpt::PathString::CompareNoCase(theApp.GetInstallPath(), theApp.GetConfigPath()) == 0)
+			if (i == 1 && mpt::PathCompareNoCase(theApp.GetInstallPath(), theApp.GetConfigPath()) == 0)
 				break;
 
 			mpt::PathString basePath;
 			basePath = (i == 0) ? theApp.GetInstallPath() : theApp.GetConfigPath();
 			basePath += folderName;
-			if(!basePath.IsDirectory())
+			if(!mpt::native_fs{}.is_directory(basePath))
 				continue;
 
 			FolderScanner scanner(basePath, FolderScanner::kOnlyFiles);
@@ -2914,7 +2930,7 @@ HMENU CMainFrame::CreateFileMenu(const size_t maxCount, std::vector<mpt::PathStr
 			while(filesAdded < maxCount && scanner.Next(fileName))
 			{
 				paths.push_back(fileName);
-				CString file = fileName.GetFullFileName().ToCString();
+				CString file = fileName.GetFilename().ToCString();
 				file.Replace(_T("&"), _T("&&"));
 				AppendMenu(hMenu, MF_STRING, idRangeBegin + filesAdded, file);
 				filesAdded++;
@@ -3027,7 +3043,7 @@ void CMainFrame::UpdateMRUList()
 
 			const mpt::PathString &pathMPT = TrackerSettings::Instance().mruFiles[i];
 			mpt::winstring path = pathMPT.AsNative();
-			if(!mpt::PathString::CompareNoCase(workDir, pathMPT.GetPath()))
+			if(!mpt::PathCompareNoCase(workDir, pathMPT.GetDirectoryWithDrive()))
 			{
 				// Only show filename
 				path = path.substr(workDir.AsNative().length());
@@ -3168,7 +3184,7 @@ ULONG TfLanguageProfileNotifySink::Release()
 //Misc helper functions
 /////////////////////////////////////////////
 
-void AddPluginNamesToCombobox(CComboBox &CBox, const SNDMIXPLUGIN *plugarray, const bool libraryName, const PLUGINDEX updatePlug)
+void AddPluginNamesToCombobox(CComboBox &CBox, const std::array<SNDMIXPLUGIN, MAX_MIXPLUGINS> &plugins, const bool libraryName, const PLUGINDEX updatePlug)
 {
 #ifndef NO_PLUGINS
 	int insertAt = CBox.GetCount();
@@ -3191,7 +3207,7 @@ void AddPluginNamesToCombobox(CComboBox &CBox, const SNDMIXPLUGIN *plugarray, co
 	{
 		if(updatePlug != PLUGINDEX_INVALID && plug != updatePlug)
 			continue;
-		const SNDMIXPLUGIN &plugin = plugarray[plug];
+		const SNDMIXPLUGIN &plugin = plugins[plug];
 		str.clear();
 		str += MPT_TFORMAT("FX{}: ")(plug + 1);
 		const auto plugName = plugin.GetName(), libName = plugin.GetLibraryName();

@@ -10,15 +10,17 @@
 
 
 #include "stdafx.h"
+#include "View_tre.h"
 #include "Mainfrm.h"
 #include "InputHandler.h"
 #include "ImageLists.h"
-#include "View_tre.h"
-#include "Mptrack.h"
 #include "Moddoc.h"
 #include "Dlsbank.h"
 #include "dlg_misc.h"
+#include "mpt/io_file/inputfile.hpp"
+#include "mpt/io_file/inputfile_filecursor.hpp"
 #include "../common/mptFileIO.h"
+#include "mpt/fs/fs.hpp"
 #include "../common/FileReader.h"
 #include "FileDialog.h"
 #include "Globals.h"
@@ -36,6 +38,7 @@ OPENMPT_NAMESPACE_BEGIN
 
 
 CSoundFile *CModTree::m_SongFile = nullptr;
+CModTree::LibrarySortOrder CModTree::m_librarySort = LibrarySortOrder::Name;
 
 /////////////////////////////////////////////////////////////////////////////
 // CModTreeDropTarget
@@ -91,48 +94,56 @@ BEGIN_MESSAGE_MAP(CModTree, CTreeCtrl)
 	ON_WM_LBUTTONUP()
 	ON_WM_RBUTTONUP()
 	ON_WM_XBUTTONUP()
-	ON_WM_KEYDOWN()
 	ON_WM_DROPFILES()
-	ON_NOTIFY_REFLECT(NM_DBLCLK,		&CModTree::OnItemDblClk)
-	ON_NOTIFY_REFLECT(NM_RETURN,		&CModTree::OnItemReturn)
-	ON_NOTIFY_REFLECT(NM_RCLICK,		&CModTree::OnItemRightClick)
-	ON_NOTIFY_REFLECT(NM_CLICK,			&CModTree::OnItemLeftClick)
-	ON_NOTIFY_REFLECT(TVN_ITEMEXPANDED,	&CModTree::OnItemExpanded)
-	ON_NOTIFY_REFLECT(TVN_BEGINDRAG,	&CModTree::OnBeginLDrag)
-	ON_NOTIFY_REFLECT(TVN_BEGINRDRAG,	&CModTree::OnBeginRDrag)
-	ON_NOTIFY_REFLECT(TVN_BEGINLABELEDIT,&CModTree::OnBeginLabelEdit)
-	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT,	&CModTree::OnEndLabelEdit)
-	ON_COMMAND(ID_MODTREE_REFRESH,		&CModTree::OnRefreshTree)
-	ON_COMMAND(ID_MODTREE_EXECUTE,		&CModTree::OnExecuteItem)
-	ON_COMMAND(ID_MODTREE_REMOVE,		&CModTree::OnDeleteTreeItem)
-	ON_COMMAND(ID_MODTREE_PLAY,			&CModTree::OnPlayTreeItem)
-	ON_COMMAND(ID_MODTREE_REFRESHINSTRLIB, &CModTree::OnRefreshInstrLib)
-	ON_COMMAND(ID_MODTREE_OPENITEM,		&CModTree::OnOpenTreeItem)
-	ON_COMMAND(ID_MODTREE_MUTE,			&CModTree::OnMuteTreeItem)
-	ON_COMMAND(ID_MODTREE_SOLO,			&CModTree::OnSoloTreeItem)
-	ON_COMMAND(ID_MODTREE_UNMUTEALL,	&CModTree::OnUnmuteAllTreeItem)
-	ON_COMMAND(ID_MODTREE_DUPLICATE,	&CModTree::OnDuplicateTreeItem)
-	ON_COMMAND(ID_MODTREE_INSERT,		&CModTree::OnInsertTreeItem)
-	ON_COMMAND(ID_MODTREE_SWITCHTO,		&CModTree::OnSwitchToTreeItem)
-	ON_COMMAND(ID_MODTREE_CLOSE,		&CModTree::OnCloseItem)
-	ON_COMMAND(ID_MODTREE_SETPATH,		&CModTree::OnSetItemPath)
-	ON_COMMAND(ID_MODTREE_SAVEITEM,		&CModTree::OnSaveItem)
-	ON_COMMAND(ID_MODTREE_SAVEALL,		&CModTree::OnSaveAll)
-	ON_COMMAND(ID_MODTREE_RELOADITEM,	&CModTree::OnReloadItem)
-	ON_COMMAND(ID_MODTREE_RELOADALL,	&CModTree::OnReloadAll)
-	ON_COMMAND(ID_MODTREE_FINDMISSING,	&CModTree::OnFindMissing)
-	ON_COMMAND(ID_MODTREE_RENAME,		&CModTree::OnRenameItem)
-	ON_COMMAND(ID_ADD_SOUNDBANK,		&CModTree::OnAddDlsBank)
-	ON_COMMAND(ID_IMPORT_MIDILIB,		&CModTree::OnImportMidiLib)
-	ON_COMMAND(ID_EXPORT_MIDILIB,		&CModTree::OnExportMidiLib)
-	ON_COMMAND(ID_SOUNDBANK_PROPERTIES,	&CModTree::OnSoundBankProperties)
-	ON_COMMAND(ID_MODTREE_SHOWDIRS,		&CModTree::OnShowDirectories)
-	ON_COMMAND(ID_MODTREE_SHOWALLFILES,	&CModTree::OnShowAllFiles)
-	ON_COMMAND(ID_MODTREE_SOUNDFILESONLY,&CModTree::OnShowSoundFiles)
-	ON_COMMAND(ID_MODTREE_GOTO_INSDIR,	&CModTree::OnGotoInstrumentDir)
-	ON_COMMAND(ID_MODTREE_GOTO_SMPDIR,	&CModTree::OnGotoSampleDir)
-	ON_MESSAGE(WM_MOD_KEYCOMMAND,		&CModTree::OnCustomKeyMsg)	//rewbs.customKeys
-	ON_MESSAGE(WM_MOD_MIDIMSG,			&CModTree::OnMidiMsg)
+
+	ON_NOTIFY_REFLECT(NM_DBLCLK,          &CModTree::OnItemDblClk)
+	ON_NOTIFY_REFLECT(NM_RETURN,          &CModTree::OnItemReturn)
+	ON_NOTIFY_REFLECT(NM_RCLICK,          &CModTree::OnItemRightClick)
+	ON_NOTIFY_REFLECT(NM_CLICK,           &CModTree::OnItemLeftClick)
+	ON_NOTIFY_REFLECT(TVN_ITEMEXPANDED,   &CModTree::OnItemExpanded)
+	ON_NOTIFY_REFLECT(TVN_BEGINDRAG,      &CModTree::OnBeginLDrag)
+	ON_NOTIFY_REFLECT(TVN_BEGINRDRAG,     &CModTree::OnBeginRDrag)
+	ON_NOTIFY_REFLECT(TVN_BEGINLABELEDIT, &CModTree::OnBeginLabelEdit)
+	ON_NOTIFY_REFLECT(TVN_ENDLABELEDIT,   &CModTree::OnEndLabelEdit)
+	ON_NOTIFY_REFLECT(TVN_GETDISPINFO,    &CModTree::OnGetDispInfo)
+
+	ON_COMMAND(ID_MODTREE_REFRESH,           &CModTree::OnRefreshTree)
+	ON_COMMAND(ID_MODTREE_EXECUTE,           &CModTree::OnExecuteItem)
+	ON_COMMAND(ID_MODTREE_REMOVE,            &CModTree::OnDeleteTreeItem)
+	ON_COMMAND(ID_MODTREE_PLAY,              &CModTree::OnPlayTreeItem)
+	ON_COMMAND(ID_MODTREE_REFRESHINSTRLIB,   &CModTree::OnRefreshInstrLib)
+	ON_COMMAND(ID_MODTREE_OPENITEM,          &CModTree::OnOpenTreeItem)
+	ON_COMMAND(ID_MODTREE_MUTE,              &CModTree::OnMuteTreeItem)
+	ON_COMMAND(ID_MODTREE_MUTE_ONLY_EFFECTS, &CModTree::OnMuteOnlyEffects)
+	ON_COMMAND(ID_MODTREE_SOLO,              &CModTree::OnSoloTreeItem)
+	ON_COMMAND(ID_MODTREE_UNMUTEALL,         &CModTree::OnUnmuteAllTreeItem)
+	ON_COMMAND(ID_MODTREE_DUPLICATE,         &CModTree::OnDuplicateTreeItem)
+	ON_COMMAND(ID_MODTREE_INSERT,            &CModTree::OnInsertTreeItem)
+	ON_COMMAND(ID_MODTREE_SWITCHTO,          &CModTree::OnSwitchToTreeItem)
+	ON_COMMAND(ID_MODTREE_CLOSE,             &CModTree::OnCloseItem)
+	ON_COMMAND(ID_MODTREE_SETPATH,           &CModTree::OnSetItemPath)
+	ON_COMMAND(ID_MODTREE_SAVEITEM,          &CModTree::OnSaveItem)
+	ON_COMMAND(ID_MODTREE_SAVEALL,           &CModTree::OnSaveAll)
+	ON_COMMAND(ID_MODTREE_RELOADITEM,        &CModTree::OnReloadItem)
+	ON_COMMAND(ID_MODTREE_RELOADALL,         &CModTree::OnReloadAll)
+	ON_COMMAND(ID_MODTREE_FINDMISSING,       &CModTree::OnFindMissing)
+	ON_COMMAND(ID_MODTREE_RENAME,            &CModTree::OnRenameItem)
+	ON_COMMAND(ID_ADD_SOUNDBANK,             &CModTree::OnAddDlsBank)
+	ON_COMMAND(ID_IMPORT_MIDILIB,            &CModTree::OnImportMidiLib)
+	ON_COMMAND(ID_EXPORT_MIDILIB,            &CModTree::OnExportMidiLib)
+	ON_COMMAND(ID_SOUNDBANK_PROPERTIES,      &CModTree::OnSoundBankProperties)
+	ON_COMMAND(ID_MODTREE_SHOWDIRS,          &CModTree::OnShowDirectories)
+	ON_COMMAND(ID_MODTREE_SHOWALLFILES,      &CModTree::OnShowAllFiles)
+	ON_COMMAND(ID_MODTREE_SOUNDFILESONLY,    &CModTree::OnShowSoundFiles)
+	ON_COMMAND(ID_MODTREE_GOTO_INSDIR,       &CModTree::OnGotoInstrumentDir)
+	ON_COMMAND(ID_MODTREE_GOTO_SMPDIR,       &CModTree::OnGotoSampleDir)
+	ON_COMMAND(ID_OPEN_LIBRARY_FILTER,       &CModTree::OnOpenInstrumentLibraryFilter)
+	ON_COMMAND(ID_MODTREE_SORT_BY_NAME,      &CModTree::OnSortByName)
+	ON_COMMAND(ID_MODTREE_SORT_BY_DATE,      &CModTree::OnSortByDate)
+	ON_COMMAND(ID_MODTREE_SORT_BY_SIZE,      &CModTree::OnSortBySize)
+	
+	ON_MESSAGE(WM_MOD_KEYCOMMAND, &CModTree::OnCustomKeyMsg)
+	ON_MESSAGE(WM_MOD_MIDIMSG,    &CModTree::OnMidiMsg)
 	//}}AFX_MSG_MAP
 	ON_WM_KILLFOCUS()
 	ON_WM_SETFOCUS()
@@ -188,8 +199,8 @@ void CModTree::Init()
 
 	if(IsSampleBrowser())
 	{
-		dwRemove |= (TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS);
-		dwAdd &= ~(TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | TVS_SHOWSELALWAYS);
+		dwRemove |= (TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS);
+		dwAdd &= ~(TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS);
 	}
 	if(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_SINGLEEXPAND)
 	{
@@ -217,7 +228,7 @@ void CModTree::Init()
 			if(!m_InstrLibPath.empty())
 				break;
 		}
-		m_InstrLibPath.EnsureTrailingSlash();
+		m_InstrLibPath = m_InstrLibPath.WithTrailingSlash();
 		m_pDataTree->InsLibSetFullPath(m_InstrLibPath, mpt::PathString());
 	}
 
@@ -232,7 +243,6 @@ void CModTree::Init()
 		}
 	}
 	m_hInsLib = InsertItem(_T("Instrument Library"), IMAGE_FOLDER, IMAGE_FOLDER, TVI_ROOT, TVI_LAST);
-	SetItemData(m_hInsLib, reinterpret_cast<DWORD_PTR>(m_hInsLib));
 	RefreshMidiLibrary();
 	RefreshDlsBanks();
 	RefreshInstrumentLibrary();
@@ -247,10 +257,9 @@ BOOL CModTree::PreTranslateMessage(MSG *pMsg)
 
 	if(m_doLabelEdit)
 	{
-		if(pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
+		if(pMsg->message == WM_KEYDOWN && (pMsg->wParam == VK_RETURN || pMsg->wParam == VK_ESCAPE))
 		{
-			// End editing by making edit box lose focus.
-			SetFocus();
+			EndEditLabelNow((pMsg->wParam == VK_ESCAPE) ? TRUE : FALSE);
 			return TRUE;
 		}
 		return CTreeCtrl::PreTranslateMessage(pMsg);
@@ -260,67 +269,9 @@ BOOL CModTree::PreTranslateMessage(MSG *pMsg)
 	{
 		switch(pMsg->wParam)
 		{
-		case VK_SPACE:
-			if(!(pMsg->lParam & 0x40000000))
-				OnPlayTreeItem();
-			return TRUE;
-
-		case VK_RETURN:
-			if(!(pMsg->lParam & 0x40000000))
-			{
-				HTREEITEM hItem = GetSelectedItem();
-				if(hItem)
-				{
-					if(CMainFrame::GetInputHandler()->CtrlPressed())
-					{
-						const ModItem modItem = GetModItem(hItem);
-						static constexpr ModItemType instrumentTypes[] = {MODITEM_INSLIB_SAMPLE, MODITEM_INSLIB_INSTRUMENT, MODITEM_MIDIINSTRUMENT, MODITEM_MIDIPERCUSSION, MODITEM_DLSBANK_INSTRUMENT};
-						if(mpt::contains(instrumentTypes, modItem.type))
-						{
-							// Ctrl+Enter: Load sample into currently selected sample or instrument slot
-							// Additionally pressing Shift creates a new sample or instrument slot. Shift key is handled in the Drag&drop handler
-							CModScrollView *view = static_cast<CModScrollView *>(CMainFrame::GetMainFrame()->GetActiveView());
-							if(view)
-							{
-								const char *className = view->GetRuntimeClass()->m_lpszClassName;
-								const bool isSampleView = !strcmp("CViewSample", className);
-								const bool isInstrumentView = !strcmp("CViewInstrument", className);
-								mpt::PathString fullPath = InsLibGetFullPath(hItem);
-								DRAGONDROP dropInfo;
-								m_hItemDrag = hItem;
-								m_itemDrag = modItem;
-								if((isSampleView || isInstrumentView) && GetDropInfo(dropInfo, fullPath))
-								{
-									view->SendMessage(WM_MOD_DRAGONDROPPING, TRUE, reinterpret_cast<LPARAM>(&dropInfo));
-									// In case a message box like "create instrument for sample?" showed up
-									SetFocus();
-								}
-							}
-						} else if(!IsSampleBrowser())
-						{
-							// Ctrl+Enter: Edit item
-							EditLabel(hItem);
-						}
-					} else
-					{
-						if(!ExecuteItem(hItem))
-						{
-							if(ItemHasChildren(hItem))
-							{
-								Expand(hItem, TVE_TOGGLE);
-							}
-						}
-					}
-				}
-			}
-			return TRUE;
-
 		case VK_TAB:
 			// Tab: Switch between folder and file view.
-			if(this == CMainFrame::GetMainFrame()->GetUpperTreeview())
-				CMainFrame::GetMainFrame()->GetLowerTreeview()->SetFocus();
-			else
-				CMainFrame::GetMainFrame()->GetUpperTreeview()->SetFocus();
+			GetOtherView()->SetFocus();
 			return TRUE;
 
 		case VK_BACK:
@@ -332,10 +283,6 @@ BOOL CModTree::PreTranslateMessage(MSG *pMsg)
 			}
 			break;
 
-		case VK_INSERT:
-			InsertOrDupItem(!CMainFrame::GetInputHandler()->ShiftPressed());
-			return TRUE;
-
 		case VK_APPS:
 			// Handle Application (menu) key
 			if(HTREEITEM item = GetSelectedItem())
@@ -343,9 +290,13 @@ BOOL CModTree::PreTranslateMessage(MSG *pMsg)
 				CRect rect;
 				GetItemRect(item, &rect, FALSE);
 				ClientToScreen(rect);
-				OnItemRightClick(item, rect.TopLeft());
+				OnItemRightClick(item, rect.TopLeft() + CPoint{rect.Height() / 2, rect.Height() / 2});
 			}
 			return TRUE;
+
+		case VK_ESCAPE:
+			GetParent()->PostMessage(WM_COMMAND, ID_CLOSE_LIBRARY_FILTER);
+			break;
 		}
 	} else if(pMsg->message == WM_CHAR)
 	{
@@ -360,24 +311,16 @@ BOOL CModTree::PreTranslateMessage(MSG *pMsg)
 		case MODITEM_INSLIB_INSTRUMENT:
 		case MODITEM_DLSBANK_INSTRUMENT:
 			// Avoid cycling through tree-view elements on key hold
-			return true;
+			return TRUE;
 		}
 	}
 
-	//We handle keypresses before Windows has a chance to handle them (for alt etc..)
+	// We handle keypresses before Windows has a chance to handle them (for alt etc..)
 	if ((pMsg->message == WM_SYSKEYUP)   || (pMsg->message == WM_KEYUP) ||
 		(pMsg->message == WM_SYSKEYDOWN) || (pMsg->message == WM_KEYDOWN))
 	{
 		CInputHandler *ih = CMainFrame::GetInputHandler();
-
-		//Translate message manually
-		UINT nChar = (UINT)pMsg->wParam;
-		UINT nRepCnt = LOWORD(pMsg->lParam);
-		UINT nFlags = HIWORD(pMsg->lParam);
-		KeyEventType kT = ih->GetKeyEventType(nFlags);
-		InputTargetContext ctx = (InputTargetContext)(kCtxViewTree);
-
-		if(ih->KeyEvent(ctx, nChar, nRepCnt, nFlags, kT) != kcNull)
+		if(ih->KeyEvent(kCtxViewTree, ih->Translate(*pMsg)) != kcNull)
 			return true;  // Mapped to a command, no need to pass message on.
 	}
 	return CTreeCtrl::PreTranslateMessage(pMsg);
@@ -387,17 +330,17 @@ BOOL CModTree::PreTranslateMessage(MSG *pMsg)
 mpt::PathString CModTree::InsLibGetFullPath(HTREEITEM hItem) const
 {
 	mpt::PathString fullPath = m_InstrLibPath;
-	fullPath.EnsureTrailingSlash();
+	fullPath = fullPath.WithTrailingSlash();
 	return fullPath + mpt::PathString::FromCString(GetItemText(hItem));
 }
 
 
 bool CModTree::InsLibSetFullPath(const mpt::PathString &libPath, const mpt::PathString &songName)
 {
-	if(!songName.empty() && mpt::PathString::CompareNoCase(m_SongFileName, songName))
+	if(!songName.empty() && mpt::PathCompareNoCase(m_SongFileName, songName))
 	{
 		// Load module for previewing its instruments
-		InputFile f(libPath + songName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
+		mpt::IO::InputFile f(libPath + songName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
 		if(f.IsValid())
 		{
 			FileReader file = GetFileReader(f);
@@ -470,12 +413,20 @@ bool CModTree::SetSoundFile(FileReader &file)
 	m_SongFile->Patterns.DestroyPatterns();
 	m_SongFile->m_songMessage.clear();
 	const mpt::PathString fileName = file.GetOptionalFileName().value_or(P_(""));
-	m_InstrLibPath = fileName.GetPath();
-	m_SongFileName = fileName.GetFullFileName();
+	m_InstrLibPath = fileName.GetDirectoryWithDrive();
+	m_SongFileName = fileName.GetFilename();
 	RefreshInstrumentLibrary();
 	return true;
 }
 
+
+CModTree* CModTree::GetOtherView()
+{
+	if(this == CMainFrame::GetMainFrame()->GetUpperTreeview())
+		return CMainFrame::GetMainFrame()->GetLowerTreeview();
+	else
+		return CMainFrame::GetMainFrame()->GetUpperTreeview();
+}
 
 void CModTree::OnOptionsChanged()
 {
@@ -557,7 +508,7 @@ CDLSBank *CModTree::GetDLSBankFromItem(HTREEITEM hItem) const
 {
 	const auto bank = GetDLSBankIndexFromItem(hItem);
 	if(bank < CTrackApp::gpDLSBanks.size())
-		return CTrackApp::gpDLSBanks[bank];
+		return CTrackApp::gpDLSBanks[bank].get();
 	else
 		return nullptr;
 }
@@ -584,7 +535,7 @@ void CModTree::RefreshMidiLibrary()
 		const LPARAM param = (MODITEM_MIDIINSTRUMENT << MIDILIB_SHIFT) | iMidi;
 		if(!midiLib[iMidi].empty())
 		{
-			s += _T(": ") + midiLib[iMidi].GetFullFileName().ToCString();
+			s += _T(": ") + midiLib[iMidi].GetFilename().ToCString();
 			dwImage = IMAGE_INSTRUMENTS;
 		}
 		if(!m_tiMidi[iMidi])
@@ -620,7 +571,7 @@ void CModTree::RefreshMidiLibrary()
 		const LPARAM param = (MODITEM_MIDIPERCUSSION << MIDILIB_SHIFT) | iPerc;
 		if(!midiLib[iPerc | 0x80].empty())
 		{
-			s += _T(": ") + midiLib[iPerc | 0x80].GetFullFileName().ToCString();
+			s += _T(": ") + midiLib[iPerc | 0x80].GetFilename().ToCString();
 			dwImage = IMAGE_SAMPLES;
 		}
 		if(!m_tiPerc[iPerc])
@@ -667,21 +618,21 @@ void CModTree::RefreshDlsBanks()
 			if(!m_tiDLS[iDls])
 			{
 				TVSORTCB tvs;
-				CDLSBank *pDlsBank = CTrackApp::gpDLSBanks[iDls];
+				CDLSBank dlsBank = *CTrackApp::gpDLSBanks[iDls];
 				// Add DLS file folder
 				m_tiDLS[iDls] = InsertItem(TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_PARAM,
-					pDlsBank->GetFileName().GetFullFileName().AsNative().c_str(), IMAGE_FOLDER, IMAGE_FOLDER, 0, 0, iDls, TVI_ROOT, hDlsRoot);
+					dlsBank.GetFileName().GetFilename().AsNative().c_str(), IMAGE_FOLDER, IMAGE_FOLDER, 0, 0, iDls, TVI_ROOT, hDlsRoot);
 				// Memorize Banks
 				std::map<uint16, HTREEITEM> banks;
 				// Add Drum Kits folder
 				HTREEITEM hDrums = InsertItem(TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE | TVIF_PARAM,
 						_T("Drum Kits"), IMAGE_FOLDER, IMAGE_FOLDER, 0, 0, DLS_DRUM_FOLDER_LPARAM, m_tiDLS[iDls], TVI_LAST);
 				// Add Instruments
-				UINT nInstr = pDlsBank->GetNumInstruments();
+				UINT nInstr = dlsBank.GetNumInstruments();
 				MPT_ASSERT(nInstr <= 0x10000);
 				for(UINT iIns = 0; iIns < nInstr; iIns++)
 				{
-					const DLSINSTRUMENT *pDlsIns = pDlsBank->GetInstrument(iIns);
+					const DLSINSTRUMENT *pDlsIns = dlsBank.GetInstrument(iIns);
 					if(pDlsIns)
 					{
 						TCHAR szName[256];
@@ -701,7 +652,7 @@ void CModTree::RefreshDlsBanks()
 								UINT keymin = pDlsIns->Regions[iRgn].uKeyMin;
 								UINT keymax = pDlsIns->Regions[iRgn].uKeyMax;
 
-								const char *regionName = pDlsBank->GetRegionName(iIns, iRgn);
+								const char *regionName = dlsBank.GetRegionName(iIns, iRgn);
 								if(regionName == nullptr || !regionName[0])
 								{
 									if(keymin >= 24 && keymin <= 84)
@@ -731,7 +682,7 @@ void CModTree::RefreshDlsBanks()
 							}
 							tvs.hParent = hKit;
 							tvs.lpfnCompare = ModTreeDrumCompareProc;
-							tvs.lParam = reinterpret_cast<LPARAM>(CTrackApp::gpDLSBanks[iDls]);
+							tvs.lParam = reinterpret_cast<LPARAM>(CTrackApp::gpDLSBanks[iDls].get());
 							SortChildrenCB(&tvs);
 						} else
 						// Melodic
@@ -797,7 +748,6 @@ void CModTree::RefreshInstrumentLibrary()
 		selectedName = m_InstrLibHighlightPath.ToCString();
 	}
 	m_InstrLibHighlightPath = {};
-	EmptyInstrumentLibrary();
 	FillInstrumentLibrary(selectedName);
 	auto selectedItem = GetSelectedItem();
 	if(selectedItem)
@@ -828,9 +778,9 @@ void CModTree::UpdateView(ModTreeDocInfo &info, UpdateHint hint)
 	if(generalHint.GetType()[HINT_MODTYPE | HINT_MODGENERAL] || (!info.hSong))
 	{
 		// Module folder + sub folders
-		CString name = modDoc.GetPathNameMpt().GetFullFileName().ToCString();
+		CString name = modDoc.GetPathNameMpt().GetFilename().ToCString();
 		if(name.IsEmpty())
-			name = mpt::PathString::FromCString(modDoc.GetTitle()).SanitizeComponent().ToCString();
+			name = SanitizePathComponent(modDoc.GetTitle());
 
 		if(!info.hSong)
 		{
@@ -1119,7 +1069,8 @@ void CModTree::UpdateView(ModTreeDocInfo &info, UpdateHint hint)
 
 		for(size_t pat = sndFile.Patterns.Size(); pat < info.tiPatterns.size(); pat++)
 		{
-			DeleteItem(info.tiPatterns[pat]);
+			if(info.tiPatterns[pat])
+				DeleteItem(info.tiPatterns[pat]);
 		}
 		info.tiPatterns.resize(sndFile.Patterns.Size(), nullptr);
 
@@ -1374,6 +1325,8 @@ CModTree::ModItem CModTree::GetModItem(HTREEITEM hItem)
 				return ModItem(MODITEM_HDR_SAMPLES);
 			if(hItem == info->hInstruments)
 				return ModItem(MODITEM_HDR_INSTRUMENTS);
+			if(hItem == info->hEffects)
+				return ModItem(MODITEM_HDR_EFFECTS);
 			if(hItem == info->hComments)
 				return ModItem(MODITEM_COMMENTS);
 			// Order List or Sequence item?
@@ -1501,7 +1454,8 @@ bool CModTree::ExecuteItem(HTREEITEM hItem)
 			return true;
 
 		case MODITEM_DLSBANK_INSTRUMENT:
-			PlayItem(hItem, NOTE_MIDDLEC);
+			if(GetItemData(GetParentItem(hItem)) != DLS_DRUM_FOLDER_LPARAM)
+				PlayItem(hItem, NOTE_MIDDLEC);
 			return true;
 
 		case MODITEM_HDR_INSTRUMENTLIB:
@@ -1512,8 +1466,9 @@ bool CModTree::ExecuteItem(HTREEITEM hItem)
 				{
 					SetFullInstrumentLibraryPath(dlg.GetDirectory());
 				}
+				return true;
 			}
-			return true;
+			break;
 		}
 	}
 	return false;
@@ -1631,7 +1586,7 @@ BOOL CModTree::PlayItem(HTREEITEM hItem, ModCommand::NOTE note, int volume)
 				{
 					CMainFrame *pMainFrm = CMainFrame::GetMainFrame();
 					CDLSBank *dlsBank = nullptr;
-					if(!mpt::PathString::CompareNoCase(m_cachedBankName, midiLib[modItemID]))
+					if(!mpt::PathCompareNoCase(m_cachedBankName, midiLib[modItemID]))
 					{
 						dlsBank = m_cachedBank.get();
 					}
@@ -1717,7 +1672,7 @@ static mpt::ustring TreeDeletionString(const mpt::uchar *type, uint32 id, const 
 }
 
 
-void CModTree::DeleteTreeItem(HTREEITEM hItem)
+void CModTree::DeleteTreeItem(HTREEITEM hItem, const bool permanently)
 {
 	const ModItem modItem = GetModItem(hItem);
 	uint32 modItemID = modItem.val1;
@@ -1808,6 +1763,13 @@ void CModTree::DeleteTreeItem(HTREEITEM hItem)
 		}
 		break;
 
+	case MODITEM_EFFECT:
+		if(modDoc && Reporting::Confirm(TreeDeletionString(UL_("plugin FX"), modItemID + 1, sndFile->m_MixPlugins[modItemID].GetName()), false, true) == cnfYes)
+		{
+			modDoc->RemovePlugin(static_cast<PLUGINDEX>(modItemID));
+		}
+		break;
+
 	case MODITEM_MIDIINSTRUMENT:
 		SetMidiInstrument(modItemID, P_(""));
 		RefreshMidiLibrary();
@@ -1833,7 +1795,7 @@ void CModTree::DeleteTreeItem(HTREEITEM hItem)
 			fos.hwnd = m_hWnd;
 			fos.wFunc = FO_DELETE;
 			fos.pFrom = fullPath.c_str();
-			fos.fFlags = CMainFrame::GetInputHandler()->ShiftPressed() ? 0 : FOF_ALLOWUNDO;
+			fos.fFlags = permanently ? 0 : FOF_ALLOWUNDO;
 			if(!SHFileOperation(&fos) && !fos.fAnyOperationsAborted)
 			{
 				HTREEITEM newSel = GetNextSiblingItem(hItem);
@@ -1910,37 +1872,28 @@ BOOL CModTree::OpenMidiInstrument(DWORD dwItem)
 }
 
 
-// Empty Instrument Library
-void CModTree::EmptyInstrumentLibrary()
+// Refresh Instrument Library
+void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 {
-	HTREEITEM h;
-	if(!m_hInsLib)
+	if(!m_hInsLib && !IsSampleBrowser())
 		return;
+
+	SetRedraw(FALSE);
+
 	if(!IsSampleBrowser())
 	{
 		DeleteChildren(m_hInsLib);
 	} else
 	{
-		while((h = GetNextItem(m_hInsLib, TVGN_NEXT)) != NULL)
-		{
-			DeleteItem(h);
-		}
+		DeleteItem(TVI_ROOT);
+		m_hInsLib = nullptr;
 	}
-}
 
+	m_fileBrowserEntries.clear();
 
-// Refresh Instrument Library
-void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
-{
-	if(!m_hInsLib)
-		return;
-
-	SetRedraw(FALSE);
 	if(!m_SongFileName.empty() && IsSampleBrowser() && m_SongFile)
 	{
 		// Fill browser with samples / instruments of module file
-		SetItemText(m_hInsLib, m_SongFileName.AsNative().c_str());
-		SetItemImage(m_hInsLib, IMAGE_FOLDERSONG, IMAGE_FOLDERSONG);
 		for(INSTRUMENTINDEX ins = 1; ins <= m_SongFile->GetNumInstruments(); ins++)
 		{
 			ModInstrument *pIns = m_SongFile->Instruments[ins];
@@ -1948,7 +1901,7 @@ void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 			{
 				TCHAR s[MAX_INSTRUMENTNAME + 10];
 				_sntprintf(s, std::size(s), _T("%3d: %s"), ins, mpt::ToWin(m_SongFile->GetCharsetInternal(), pIns->name).c_str());
-				InsertInsLibItem(s, IMAGE_INSTRUMENTS, selectedItem);
+				m_fileBrowserEntries.push_back({s, 0, 0, IMAGE_INSTRUMENTS, false});
 			}
 		}
 		for(SAMPLEINDEX smp = 1; smp <= m_SongFile->GetNumSamples(); smp++)
@@ -1958,7 +1911,7 @@ void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 			{
 				TCHAR s[MAX_SAMPLENAME + 10];
 				_sntprintf(s, std::size(s), _T("%3d: %s"), smp, mpt::ToWin(m_SongFile->GetCharsetInternal(), m_SongFile->m_szNames[smp]).c_str());
-				InsertInsLibItem(s, sample.uFlags[CHN_ADLIB] ? IMAGE_OPLINSTR : IMAGE_SAMPLES, selectedItem);
+				m_fileBrowserEntries.push_back({s, sample.GetSampleSizeInBytes(), 0, static_cast<uint32>(sample.uFlags[CHN_ADLIB] ? IMAGE_OPLINSTR : IMAGE_SAMPLES), false});
 			}
 		}
 	} else if(!m_InstrLibPath.empty())
@@ -1966,10 +1919,6 @@ void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 		if(!IsSampleBrowser())
 		{
 			SetItemText(m_hInsLib, _T("Instrument Library (") + m_InstrLibPath.ToCString() + _T(")"));
-		} else
-		{
-			SetItemText(m_hInsLib, m_InstrLibPath.ToCString());
-			SetItemImage(m_hInsLib, IMAGE_FOLDER, IMAGE_FOLDER);
 		}
 
 		// Enumerating Drives...
@@ -2004,7 +1953,7 @@ void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 					SHFILEINFO fileInfo;
 					SHGetFileInfo(s, 0, &fileInfo, sizeof(fileInfo), SHGFI_ICON | SHGFI_SMALLICON | SHGFI_USEFILEATTRIBUTES);  // SHGFI_USEFILEATTRIBUTES speeds up retrieval for offline network shares
 					const int imageIndex = fileInfo.hIcon ? images.Add(fileInfo.hIcon) : IMAGE_FOLDER;
-					InsertInsLibItem(s, imageIndex < 0 ? IMAGE_FOLDER : imageIndex, selectedItem);
+					m_fileBrowserEntries.push_back({s, 0, 0, static_cast<uint32>(imageIndex < 0 ? IMAGE_FOLDER : imageIndex), false});
 					DestroyIcon(fileInfo.hIcon);
 				}
 			}
@@ -2015,17 +1964,22 @@ void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 		const bool showDirs = !IsSampleBrowser() || TrackerSettings::Instance().showDirsInSampleBrowser;
 		const bool showInstrs = IsSampleBrowser();
 
-		constexpr int FILTER_REJECT_FILE = -1;
+		enum
+		{
+			FILTER_FIRST_VALID = 0,
+			FILTER_REJECT_FILE = -1,
+			FILTER_UNKNOWN_FILE = -2,
+		};
 
-		const auto FilterFile = [this, showInstrs, showDirs, FILTER_REJECT_FILE](const mpt::PathString &fileName) -> int
+		const auto FilterFile = [this, showInstrs, showDirs](const mpt::PathString &fileName) -> int
 		{
 
 			static constexpr auto instrExts = {"xi", "iti", "sfz", "sf2", "sf3", "sf4", "sbk", "dls", "mss", "pat"};
-			static constexpr auto sampleExts = {"wav", "flac", "ogg", "opus", "mp1", "mp2", "mp3", "smp", "raw", "s3i", "its", "aif", "aiff", "au", "snd", "svx", "voc", "8sv", "8svx", "16sv", "16svx", "w64", "caf", "sb0", "sb2", "sbi"};
+			static constexpr auto sampleExts = {"wav", "flac", "ogg", "opus", "mp1", "mp2", "mp3", "smp", "raw", "s3i", "its", "aif", "aiff", "au", "snd", "svx", "voc", "8sv", "8svx", "16sv", "16svx", "w64", "caf", "sb0", "sb2", "sbi", "brr"};
 			static constexpr auto allExtsBlacklist = {"txt", "diz", "nfo", "doc", "ini", "pdf", "zip", "rar", "lha", "exe", "dll", "lnk", "url"};
 
 			// Get lower-case file extension without dot.
-			mpt::PathString extPS = fileName.GetFileExt();
+			mpt::PathString extPS = fileName.GetFilenameExtension();
 			std::string ext = extPS.ToUTF8();
 			if(!ext.empty())
 			{
@@ -2034,6 +1988,7 @@ void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 				extPS = mpt::PathString::FromUTF8(ext);
 			}
 
+			bool knownExtension = true;
 			if(mpt::contains(instrExts, ext))
 			{
 				if(showInstrs)
@@ -2050,19 +2005,23 @@ void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 			{
 				if(showInstrs)
 					return IMAGE_SAMPLES;
-			} else if(showDirs)
+			} else
 			{
-				// Amiga-style prefix (i.e. mod.songname)
-				std::string prefixExt = fileName.ToUTF8();
-				const auto dotPos = prefixExt.find('.');
-				if(dotPos != std::string::npos && mpt::contains(m_modExtensions, prefixExt.erase(dotPos)))
-					return IMAGE_FOLDERSONG;
+				if(showDirs)
+				{
+					// Amiga-style prefix (i.e. mod.songname)
+					std::string prefixExt = fileName.ToUTF8();
+					const auto dotPos = prefixExt.find('.');
+					if(dotPos != std::string::npos && mpt::contains(m_modExtensions, prefixExt.erase(dotPos)))
+						return IMAGE_FOLDERSONG;
+				}
+				knownExtension = false;
 			}
-				
+
 			if(m_showAllFiles && !mpt::contains(allExtsBlacklist, ext))
 				return IMAGE_SAMPLES;
 				
-			return FILTER_REJECT_FILE;
+			return knownExtension ? FILTER_REJECT_FILE : FILTER_UNKNOWN_FILE;
 		};
 
 		HKEY hkey = nullptr;
@@ -2107,37 +2066,35 @@ void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 				} else if(wfd.nFileSizeHigh > 0 || wfd.nFileSizeLow >= 9)
 				{
 					type = FilterFile(mpt::PathString::FromNative(wfd.cFileName));
-					if(type == FILTER_REJECT_FILE)
+					if(type == FILTER_UNKNOWN_FILE)
 					{
 						// Try resolving file as link if it wasn't a module or instrument
 						const auto nativePath = (m_InstrLibPath.AsNative() + wfd.cFileName);
 						if(const auto resolvedName = linkResolver.Resolve(nativePath.c_str()); !resolvedName.empty())
 						{
-							if(resolvedName.IsDirectory() && showDirs)
+							if(mpt::native_fs{}.is_directory(resolvedName) && showDirs)
 								type = IMAGE_FOLDER;
-							else if(resolvedName.IsFile())
+							else if(mpt::native_fs{}.is_file(resolvedName))
 								type = FilterFile(resolvedName);
 						}
 					}
 				}
-				if(type != FILTER_REJECT_FILE)
+				if(type >= FILTER_FIRST_VALID)
 				{
-					auto item = InsertInsLibItem(wfd.cFileName, type, selectedItem);
-					// Apparently TVIS_CUT cannot be set during insertion
-					if(wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-						SetItemState(item, TVIS_CUT, TVIS_CUT);
+					m_fileBrowserEntries.push_back({wfd.cFileName,
+						wfd.nFileSizeLow | (static_cast<uint64>(wfd.nFileSizeHigh) << 32),
+						wfd.ftLastWriteTime.dwLowDateTime | (static_cast<uint64>(wfd.ftLastWriteTime.dwHighDateTime) << 32),
+						static_cast<uint32>(type),
+						(wfd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0});
 				}
 			} while(FindNextFile(hFind, &wfd));
 			FindClose(hFind);
 		}
 	}
 
-	// Sort items
-	TVSORTCB tvs;
-	tvs.hParent = (!IsSampleBrowser()) ? m_hInsLib : TVI_ROOT;
-	tvs.lpfnCompare = ModTreeInsLibCompareNamesProc;
-	tvs.lParam = (LPARAM)this;
-	SortChildrenCB(&tvs);
+	SortInstrumentLibrary();
+	FilterInstrumentLibrary({}, selectedItem);
+
 	SetRedraw(TRUE);
 
 	{
@@ -2147,6 +2104,172 @@ void CModTree::FillInstrumentLibrary(const TCHAR *selectedItem)
 			m_WatchDir = m_InstrLibPath;
 			SetEvent(m_hSwitchWatchDir);
 		}
+	}
+}
+
+
+void CModTree::SortInstrumentLibrary()
+{
+	std::sort(m_fileBrowserEntries.begin(), m_fileBrowserEntries.end(), [this](const FileBrowserEntry &left, const FileBrowserEntry &right)
+	{
+		const int sortL = ImageToSortOrder(left.image), sortR = ImageToSortOrder(right.image);
+		if (sortL != sortR)
+			return sortL < sortR;
+
+		if (m_librarySort == LibrarySortOrder::Date && left.modtime != right.modtime)
+			return left.modtime > right.modtime;
+		else if (m_librarySort == LibrarySortOrder::Size && left.size != right.size)
+			return left.size > right.size;
+
+		return ::CompareString(LOCALE_USER_DEFAULT, m_stringCompareFlags, left.name.c_str(), -1, right.name.c_str(), -1) == CSTR_LESS_THAN;
+	});
+}
+
+
+void CModTree::FilterInstrumentLibrary(mpt::winstring filter, const TCHAR *selectedItem)
+{
+	SetRedraw(FALSE);
+
+	if(!filter.empty())
+		filter = _T("*") + filter + _T("*");
+
+	HTREEITEM item = GetNextItem(m_hInsLib, IsSampleBrowser() ? TVGN_NEXT : TVGN_CHILD);
+	while(item != nullptr)
+	{
+		HTREEITEM nextItem = GetNextSiblingItem(item);
+		if(nextItem == nullptr)
+			break;
+		item = nextItem;
+	}
+
+	// TODO: Maybe first delete front-to-back, then insert back-to-front?
+
+	// Insert items in reverse, as insertion via TVI_FIRST is faster than TVI_LAST as per https://devblogs.microsoft.com/oldnewthing/20111125-00/?p=9033
+	DWORD_PTR entryID = m_fileBrowserEntries.size();
+	HTREEITEM selectedTreeItem = nullptr;
+	for(auto entry = m_fileBrowserEntries.crbegin(); entry != m_fileBrowserEntries.crend(); entry++, entryID--)
+	{
+		const bool add = filter.empty() || PathMatchSpec(entry->name.c_str(), filter.c_str()) != FALSE;
+
+		if(add)
+		{
+			while(item && GetItemData(item) > entryID)
+			{
+				item = GetPrevSiblingItem(item);
+			}
+
+			if(!item || GetItemData(item) != entryID)
+			{
+				int state = entry->hidden ? TVIS_CUT : 0;
+				item = InsertItem(TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_TEXT | TVIF_STATE | TVIF_PARAM, LPSTR_TEXTCALLBACK, entry->image, entry->image, state, state, entryID, IsSampleBrowser() ? TVI_ROOT : m_hInsLib, item ? item : TVI_FIRST);
+			}
+
+			if(selectedItem != nullptr && !_tcscmp(entry->name.c_str(), selectedItem))
+			{
+				selectedTreeItem = item;
+			}
+
+			item = GetPrevSiblingItem(item);
+		} else
+		{
+			while(item && GetItemData(item) >= entryID)
+			{
+				HTREEITEM prevItem = GetPrevSiblingItem(item);
+				DeleteItem(item);
+				if(item == m_hInsLib)
+					m_hInsLib = nullptr;
+				item = prevItem;
+			}
+		}
+	}
+
+	if(IsSampleBrowser())
+	{
+		if(m_hInsLib)
+			DeleteItem(m_hInsLib);
+		if(!m_SongFileName.empty() && m_SongFile)
+			m_hInsLib = InsertItem(m_SongFileName.ToCString(), IMAGE_FOLDERSONG, IMAGE_FOLDERSONG, TVI_ROOT, TVI_FIRST);
+		else
+			m_hInsLib = InsertItem(m_InstrLibPath.ToCString(), IMAGE_FOLDER, IMAGE_FOLDER, TVI_ROOT, TVI_FIRST);
+	}
+
+	if(!filter.empty() && !selectedTreeItem)
+	{
+		if(IsSampleBrowser())
+		{
+			selectedTreeItem = GetFirstVisibleItem();
+			if(selectedTreeItem == m_hInsLib)
+				selectedTreeItem = GetNextItem(m_hInsLib, TVGN_NEXT);
+		} else
+		{
+			selectedTreeItem = GetChildItem(m_hInsLib);
+		}
+	}
+
+	SetRedraw(TRUE);
+
+	if(selectedTreeItem)
+	{
+		SelectItem(selectedTreeItem);
+		EnsureVisible(selectedTreeItem);
+	}
+}
+
+
+void CModTree::SetInstrumentLibraryFilter(const mpt::winstring &filter)
+{
+	if(m_filterString == filter)
+		return;
+
+	m_filterString = filter;
+	FilterInstrumentLibrary(m_filterString, GetItemText(GetSelectedItem()));
+}
+
+
+void CModTree::SetInstrumentLibraryFilterSortOrder(LibrarySortOrder sortType)
+{
+	if(m_librarySort == sortType)
+		return;
+
+	m_librarySort = sortType;
+	SortInstrumentLibrary();
+	FilterInstrumentLibrary(m_filterString, GetItemText(GetSelectedItem()));
+	GetOtherView()->SortInstrumentLibrary();
+	GetOtherView()->FilterInstrumentLibrary(GetOtherView()->m_filterString, GetItemText(GetSelectedItem()));
+}
+
+
+void CModTree::OnGetDispInfo(LPNMHDR pnmhdr, LRESULT *)
+{
+	NMTVDISPINFO *nmtv = reinterpret_cast<NMTVDISPINFO *>(pnmhdr);
+	size_t index = nmtv->item.lParam;
+	if(index > 0 && index <= m_fileBrowserEntries.size())
+		nmtv->item.pszText = const_cast<TCHAR *>(m_fileBrowserEntries[index - 1].name.c_str());
+	else
+		nmtv->item.pszText = const_cast<TCHAR*>(_T("???"));
+}
+
+
+int CModTree::ImageToSortOrder(int image) const
+{
+	// Item image indicates sort order
+	switch(image)
+	{
+		case IMAGE_FOLDERPARENT:
+			return 1;
+		case IMAGE_FOLDER:
+			return 2;
+		case IMAGE_FOLDERSONG:
+			return 3;
+		case IMAGE_SAMPLES:
+		case IMAGE_OPLINSTR:
+			// Only group instruments and samples separately if we're browsing inside a module file
+			if(!m_SongFileName.empty())
+				return 5;
+			[[fallthrough]];
+		case IMAGE_INSTRUMENTS:
+		default:
+			return 4;
 	}
 }
 
@@ -2223,87 +2346,6 @@ void CModTree::MonitorInstrumentLibrary()
 }
 
 
-// Insert sample browser item.
-HTREEITEM CModTree::InsertInsLibItem(const TCHAR *name, int image, const TCHAR *selectIfMatch)
-{
-	HTREEITEM item = InsertItem(TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_TEXT,
-		name,
-		image, image,
-		0, 0,
-		0,
-		(!IsSampleBrowser()) ? m_hInsLib : TVI_ROOT,
-		TVI_LAST);
-	SetItemData(item, reinterpret_cast<DWORD_PTR>(item));  // Used by ModTreeInsLibCompareNamesProc
-	if(selectIfMatch != nullptr && !_tcscmp(name, selectIfMatch))
-	{
-		SelectItem(item);
-		EnsureVisible(item);
-	}
-	return item;
-}
-
-
-int CModTree::ModTreeInsLibCompareNamesGetItem(HTREEITEM item, CString &resultStr)
-{
-	TVITEM tvi;
-	tvi.mask = TVIF_TEXT | TVIF_IMAGE;
-	tvi.hItem = item;
-	int len = std::max(64, resultStr.GetAllocLength());
-	while(true)
-	{
-		tvi.pszText = resultStr.GetBuffer(len);
-		tvi.cchTextMax = len + 1;
-		if(!GetItem(&tvi))
-			return int16_max;
-		if(int resultLen = static_cast<int>(_tcsnlen(tvi.pszText, len)); resultLen < len)
-		{
-			resultStr.ReleaseBuffer(resultLen);
-
-			// Item image indicates sort order
-			switch(tvi.iImage)
-			{
-			case IMAGE_FOLDERPARENT:
-				return 1;
-			case IMAGE_FOLDER:
-				return 2;
-			case IMAGE_FOLDERSONG:
-				return 3;
-			case IMAGE_SAMPLES:
-			case IMAGE_OPLINSTR:
-				// Only group instruments and samples separately if we're browsing inside a module file
-				if(!m_SongFileName.empty())
-					return 5;
-				[[fallthrough]];
-			case IMAGE_INSTRUMENTS:
-			default:
-				return 4;
-			}
-		}
-		len *= 2;
-	}
-}
-
-
-int CALLBACK CModTree::ModTreeInsLibCompareNamesProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-	auto that = reinterpret_cast<CModTree *>(lParamSort);
-	const auto itemL = reinterpret_cast<HTREEITEM>(lParam1), itemR = reinterpret_cast<HTREEITEM>(lParam2);
-	if(itemL == that->m_hInsLib)
-		return -1;
-	else if(itemR == that->m_hInsLib)
-		return 1;
-
-	const int sortOrderL = that->ModTreeInsLibCompareNamesGetItem(itemL, that->m_compareStrL);
-	const int sortOrderR = that->ModTreeInsLibCompareNamesGetItem(itemR, that->m_compareStrR);
-	if(sortOrderL != sortOrderR)
-		return sortOrderL - sortOrderR;
-
-	return ::CompareString(LOCALE_USER_DEFAULT, that->m_stringCompareFlags,
-		that->m_compareStrL.GetBuffer(), -1,
-		that->m_compareStrR.GetBuffer(), -1) - 2;
-}
-
-
 int CALLBACK CModTree::ModTreeInsLibCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM)
 {
 	lParam1 &= 0x7FFFFFFF;
@@ -2338,17 +2380,17 @@ int CALLBACK CModTree::ModTreeDrumCompareProc(LPARAM lParam1, LPARAM lParam2, LP
 
 void CModTree::SetFullInstrumentLibraryPath(mpt::PathString path)
 {
-	if(path.IsDirectory())
+	if(mpt::native_fs{}.is_directory(path))
 	{
-		path.EnsureTrailingSlash();
+		path = path.WithTrailingSlash();
 		InstrumentLibraryChDir(path, false);
-	} else if(path.IsFile())
+	} else if(mpt::native_fs{}.is_file(path))
 	{
 		// Browse module contents
 		CModTree *dirBrowser = CMainFrame::GetMainFrame()->GetUpperTreeview();
-		dirBrowser->m_InstrLibPath = path.GetPath();
+		dirBrowser->m_InstrLibPath = path.GetDirectoryWithDrive();
 		dirBrowser->RefreshInstrumentLibrary();
-		dirBrowser->InstrumentLibraryChDir(path.GetFullFileName(), true);
+		dirBrowser->InstrumentLibraryChDir(path.GetFilename(), true);
 	}
 }
 
@@ -2357,11 +2399,16 @@ void CModTree::InstrumentLibraryChDir(mpt::PathString dir, bool isSong)
 {
 	if(dir.empty())
 		return;
+
 	if(IsSampleBrowser())
 	{
 		CMainFrame::GetMainFrame()->GetUpperTreeview()->InstrumentLibraryChDir(dir, isSong);
 		return;
 	}
+
+	GetParent()->PostMessage(WM_COMMAND, ID_CLOSE_LIBRARY_FILTER);
+	m_filterString.clear();
+	m_pDataTree->m_filterString.clear();
 
 	BeginWaitCursor();
 
@@ -2388,7 +2435,7 @@ void CModTree::InstrumentLibraryChDir(mpt::PathString dir, bool isSong)
 			} else
 			{
 				// Go one dir up.
-				mpt::winstring prevDir = m_InstrLibPath.GetPath().AsNative();
+				mpt::winstring prevDir = m_InstrLibPath.GetDirectoryWithDrive().AsNative();
 				mpt::winstring::size_type pos = prevDir.find_last_of(_T("\\/"), prevDir.length() - 2);
 				if(pos != mpt::winstring::npos)
 				{
@@ -2406,24 +2453,24 @@ void CModTree::InstrumentLibraryChDir(mpt::PathString dir, bool isSong)
 				if(!dir.HasTrailingSlash())
 				{
 					dir = m_InstrLibPath + dir;
-					dir.EnsureTrailingSlash();
+					dir = dir.WithTrailingSlash();
 				}
 				m_InstrLibHighlightPath = P_("..");  // Highlight first entry
 
 				FolderScanner scan(dir, FolderScanner::kFilesAndDirectories);
 				mpt::PathString name;
-				if(scan.Next(name) && !scan.Next(name) && name.IsDirectory())
+				if(scan.Next(name) && !scan.Next(name) && mpt::native_fs{}.is_directory(name))
 				{
 					// There is only one directory and nothing else in the path,
 					// so skip this directory and automatically descend further down into the tree.
 					dir = name;
-					dir.EnsureTrailingSlash();
+					dir = dir.WithTrailingSlash();
 					continue;
 				}
 			} while(false);
 		}
 
-		if(dir.IsDirectory())
+		if(mpt::native_fs{}.is_directory(dir))
 		{
 			m_SongFileName = P_("");
 			delete m_SongFile;
@@ -2961,7 +3008,6 @@ void CModTree::OnItemRightClick(LPNMHDR, LRESULT *pResult)
 
 void CModTree::OnItemRightClick(HTREEITEM hItem, CPoint pt)
 {
-	HMENU hMenu;
 	if(m_dwStatus & TREESTATUS_LDRAG)
 	{
 		if(ItemHasChildren(hItem))
@@ -2981,258 +3027,293 @@ void CModTree::OnItemRightClick(HTREEITEM hItem, CPoint pt)
 			m_hDropWnd = NULL;
 			OnEndDrag(TREESTATUS_DRAGGING);
 		}
-		hMenu = ::CreatePopupMenu();
-		if(hMenu)
+		HMENU hMenu = ::CreatePopupMenu(), hSubMenu = nullptr;
+		if(!hMenu)
+			return;
+
+		const CModDoc *modDoc = GetDocumentFromItem(hItem);
+		const CSoundFile *sndFile = modDoc != nullptr ? &modDoc->GetSoundFile() : nullptr;
+		const CInputHandler *ih = CMainFrame::GetInputHandler();
+
+		UINT defaultID = 0;
+		bool addSeparator = false;
+
+		const ModItem modItem = GetModItem(hItem);
+		const uint32 modItemID = modItem.val1;
+
+		SelectItem(hItem);
+		switch(modItem.type)
 		{
-			const CModDoc *modDoc = GetDocumentFromItem(hItem);
-			const CSoundFile *sndFile = modDoc != nullptr ? &modDoc->GetSoundFile() : nullptr;
+		case MODITEM_HDR_SONG:
+			defaultID = ID_MODTREE_EXECUTE;
+			AppendMenu(hMenu, MF_STRING, defaultID, ih->GetKeyTextFromCommand(kcTreeViewOpen, _T("&View")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_CLOSE, _T("&Close"));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, ih->GetKeyTextFromCommand(kcTreeViewRename, _T("Re&name")));
+			break;
 
-			UINT nDefault = 0;
-			BOOL bSep = FALSE;
+		case MODITEM_COMMENTS:
+			defaultID = ID_MODTREE_EXECUTE;
+			AppendMenu(hMenu, MF_STRING, defaultID, ih->GetKeyTextFromCommand(kcTreeViewOpen, _T("&View Comments")));
+			break;
 
-			const ModItem modItem = GetModItem(hItem);
-			const uint32 modItemID = modItem.val1;
+		case MODITEM_ORDER:
+		case MODITEM_PATTERN:
+			defaultID = ID_MODTREE_EXECUTE;
+			AppendMenu(hMenu, MF_STRING, defaultID, ih->GetKeyTextFromCommand(kcTreeViewOpen, _T("&Edit Pattern")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE,
+							ih->GetKeyTextFromCommand(kcTreeViewDelete, (modItem.type == MODITEM_ORDER) ? _T("&Delete from list") : _T("&Delete Pattern")));
+			if(modItem.type == MODITEM_PATTERN && sndFile && sndFile->GetModSpecifications().hasPatternNames)
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, ih->GetKeyTextFromCommand(kcTreeViewRename, _T("Re&name Pattern")));
+			else if(modItem.type == MODITEM_ORDER)
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, ih->GetKeyTextFromCommand(kcTreeViewRename, _T("&Set Pattern")));
+			break;
 
-			SelectItem(hItem);
-			switch(modItem.type)
+		case MODITEM_SEQUENCE:
+			if(sndFile)
 			{
-			case MODITEM_HDR_SONG:
-				nDefault = ID_MODTREE_EXECUTE;
-				AppendMenu(hMenu, MF_STRING, nDefault, _T("&View"));
-				AppendMenu(hMenu, MF_STRING, ID_MODTREE_CLOSE, _T("&Close"));
-				AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, _T("Re&name"));
-				break;
-
-			case MODITEM_COMMENTS:
-				nDefault = ID_MODTREE_EXECUTE;
-				AppendMenu(hMenu, MF_STRING, nDefault, _T("&View Comments"));
-				break;
-
-			case MODITEM_ORDER:
-			case MODITEM_PATTERN:
-				nDefault = ID_MODTREE_EXECUTE;
-				AppendMenu(hMenu, MF_STRING, nDefault, _T("&Edit Pattern"));
-				AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE,
-								(modItem.type == MODITEM_ORDER) ? _T("&Delete from list") : _T("&Delete Pattern"));
-				if(modItem.type == MODITEM_PATTERN && sndFile && sndFile->GetModSpecifications().hasPatternNames)
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, _T("Re&name Pattern"));
-				else if(modItem.type == MODITEM_ORDER)
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, _T("&Set Pattern"));
-				break;
-
-			case MODITEM_SEQUENCE:
-				if(sndFile)
+				bool isCurSeq = false;
+				if(sndFile->GetModSpecifications().sequencesMax > 1)
 				{
-					bool isCurSeq = false;
-					if(sndFile->GetModSpecifications().sequencesMax > 1)
+					if(sndFile->Order((SEQUENCEINDEX)modItemID).GetLength() == 0)
 					{
-						if(sndFile->Order((SEQUENCEINDEX)modItemID).GetLength() == 0)
-						{
-							nDefault = ID_MODTREE_SWITCHTO;
-						}
-						isCurSeq = (sndFile->Order.GetCurrentSequenceIndex() == (SEQUENCEINDEX)modItemID);
+						defaultID = ID_MODTREE_SWITCHTO;
 					}
-
-					if(!isCurSeq)
-					{
-						AppendMenu(hMenu, MF_STRING, ID_MODTREE_SWITCHTO, _T("&Switch to Seqeuence"));
-					}
-					AppendMenu(hMenu, MF_STRING | (sndFile->Order.GetNumSequences() < MAX_SEQUENCES ? 0 : MF_GRAYED), ID_MODTREE_INSERT, _T("&Insert Sequence"));
-					AppendMenu(hMenu, MF_STRING | (sndFile->Order.GetNumSequences() < MAX_SEQUENCES ? 0 : MF_GRAYED), ID_MODTREE_DUPLICATE , _T("D&uplicate Sequence"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, _T("&Delete Sequence"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, _T("Re&name Sequence"));
+					isCurSeq = (sndFile->Order.GetCurrentSequenceIndex() == (SEQUENCEINDEX)modItemID);
 				}
-				break;
 
-
-			case MODITEM_HDR_ORDERS:
-				if(sndFile && sndFile->GetModSpecifications().sequencesMax > 1)
+				if(!isCurSeq)
 				{
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_INSERT, _T("&Insert Sequence"));
-					if(sndFile->Order.GetNumSequences() == 1)
-					{
-						// This is a sequence
-						AppendMenu(hMenu, MF_STRING, ID_MODTREE_DUPLICATE, _T("D&uplicate Sequence"));
-						AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, _T("Re&name Sequence"));
-					}
+					AppendMenu(hMenu, MF_STRING, ID_MODTREE_SWITCHTO, _T("&Switch to Seqeuence"));
 				}
-				break;
+				AppendMenu(hMenu, MF_STRING | (sndFile->Order.GetNumSequences() < MAX_SEQUENCES ? 0 : MF_GRAYED), ID_MODTREE_INSERT, ih->GetKeyTextFromCommand(kcTreeViewInsert, _T("&Insert Sequence")));
+				AppendMenu(hMenu, MF_STRING | (sndFile->Order.GetNumSequences() < MAX_SEQUENCES ? 0 : MF_GRAYED), ID_MODTREE_DUPLICATE , ih->GetKeyTextFromCommand(kcTreeViewDuplicate,  _T("D&uplicate Sequence")));
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, ih->GetKeyTextFromCommand(kcTreeViewDelete, _T("&Delete Sequence")));
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, ih->GetKeyTextFromCommand(kcTreeViewRename, _T("Re&name Sequence")));
+			}
+			break;
 
-			case MODITEM_SAMPLE:
+
+		case MODITEM_HDR_ORDERS:
+			if(sndFile && sndFile->GetModSpecifications().sequencesMax > 1)
+			{
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_INSERT, ih->GetKeyTextFromCommand(kcTreeViewInsert, _T("&Insert Sequence")));
+				if(sndFile->Order.GetNumSequences() == 1)
 				{
-					nDefault = ID_MODTREE_EXECUTE;
-					AppendMenu(hMenu, MF_STRING, nDefault, _T("&View Sample"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, _T("&Play Sample"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_INSERT, _T("&Insert Sample"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_DUPLICATE, _T("D&uplicate Sample"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, _T("&Delete Sample"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, _T("Re&name Sample"));
-					if ((modDoc) && (!modDoc->GetNumInstruments()))
-					{
-						AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
-						AppendMenu(hMenu, (modDoc->IsSampleMuted((SAMPLEINDEX)modItemID) ? MF_CHECKED : 0) | MF_STRING, ID_MODTREE_MUTE, _T("&Mute Sample"));
-						AppendMenu(hMenu, MF_STRING, ID_MODTREE_SOLO, _T("S&olo Sample"));
-						AppendMenu(hMenu, MF_STRING, ID_MODTREE_UNMUTEALL, _T("&Unmute all"));
-					}
-					if(sndFile != nullptr)
-					{
-						SAMPLEINDEX smpID = static_cast<SAMPLEINDEX>(modItem.val1);
-						const ModSample &sample = sndFile->GetSample(smpID);
-						const bool hasPath = sndFile->SampleHasPath(smpID);
-						const bool menuForThisSample = (sample.HasSampleData() && sndFile->GetType() == MOD_TYPE_MPT) || hasPath;
-
-						bool anyPath = false, anyModified = false, anyMissing = false;
-						for(SAMPLEINDEX smp = 1; smp <= sndFile->GetNumSamples(); smp++)
-						{
-							if(sndFile->SampleHasPath(smp) && smp != smpID)
-							{
-								anyPath = true;
-								if(sndFile->GetSample(smp).HasSampleData() && sndFile->GetSample(smp).uFlags[SMP_MODIFIED])
-								{
-									anyModified = true;
-								}
-							}
-							if(sndFile->IsExternalSampleMissing(smp))
-							{
-								anyMissing = true;
-							}
-							if(anyPath && anyModified && anyMissing) break;
-						}
-
-						if(menuForThisSample || anyPath || anyModified)
-						{
-							AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
-							if(menuForThisSample) AppendMenu(hMenu, MF_STRING | ((sndFile->GetType() == MOD_TYPE_MPT || hasPath) ? 0 : MF_GRAYED), ID_MODTREE_SETPATH, _T("Set P&ath"));
-							if(menuForThisSample) AppendMenu(hMenu, MF_STRING | ((hasPath && sample.HasSampleData() && sample.uFlags[SMP_MODIFIED]) ? 0 : MF_GRAYED), ID_MODTREE_SAVEITEM, _T("&Save"));
-							if(anyModified) AppendMenu(hMenu, MF_STRING, ID_MODTREE_SAVEALL, _T("&Save All"));
-							if(menuForThisSample) AppendMenu(hMenu, MF_STRING | (hasPath ? 0 : MF_GRAYED), ID_MODTREE_RELOADITEM, _T("&Reload"));
-							if(anyPath) AppendMenu(hMenu, MF_STRING, ID_MODTREE_RELOADALL, _T("&Reload All"));
-							if(anyMissing) AppendMenu(hMenu, MF_STRING, ID_MODTREE_FINDMISSING, _T("&Find Missing Samples"));
-						}
-					}
+					// This is a sequence
+					AppendMenu(hMenu, MF_STRING, ID_MODTREE_DUPLICATE, ih->GetKeyTextFromCommand(kcTreeViewDuplicate, _T("D&uplicate Sequence")));
+					AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, ih->GetKeyTextFromCommand(kcTreeViewRename, _T("Re&name Sequence")));
 				}
-				break;
+			}
+			break;
 
-			case MODITEM_INSTRUMENT:
-				{
-					nDefault = ID_MODTREE_EXECUTE;
-					AppendMenu(hMenu, MF_STRING, nDefault, _T("&View Instrument"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, _T("&Play Instrument"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_INSERT, _T("&Insert Instrument"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_DUPLICATE, _T("D&uplicate Instrument"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, _T("&Delete Instrument"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, _T("Re&name Instrument"));
-					if (modDoc)
-					{
-						AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
-						AppendMenu(hMenu, (modDoc->IsInstrumentMuted((INSTRUMENTINDEX)modItemID) ? MF_CHECKED : 0) | MF_STRING, ID_MODTREE_MUTE, _T("&Mute Instrument"));
-						AppendMenu(hMenu, MF_STRING, ID_MODTREE_SOLO, _T("S&olo Instrument"));
-						AppendMenu(hMenu, MF_STRING, ID_MODTREE_UNMUTEALL, _T("&Unmute all"));
-					}
-				}
-				break;
-
-			case MODITEM_EFFECT:
-				{
-					nDefault = ID_MODTREE_EXECUTE;
-					AppendMenu(hMenu, MF_STRING, nDefault, _T("&Edit"));
-
-					if(modDoc != nullptr)
-					{
-						AppendMenu(hMenu, (modDoc->GetSoundFile().m_MixPlugins[modItemID].IsBypassed() ? MF_CHECKED : 0) | MF_STRING, ID_MODTREE_MUTE, _T("&Bypass"));
-					}
-				}
-				break;
-
-			case MODITEM_MIDIINSTRUMENT:
-			case MODITEM_MIDIPERCUSSION:
-				nDefault = ID_MODTREE_EXECUTE;
-				AppendMenu(hMenu, MF_STRING, nDefault, _T("&Map Instrument"));
-				AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, _T("&Play Instrument"));
-				AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, _T("&Unmap Instrument"));
+		case MODITEM_SAMPLE:
+			defaultID = ID_MODTREE_EXECUTE;
+			AppendMenu(hMenu, MF_STRING, defaultID, ih->GetKeyTextFromCommand(kcTreeViewOpen, _T("&View Sample")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, ih->GetKeyTextFromCommand(kcTreeViewPlay, _T("&Play Sample")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_INSERT, ih->GetKeyTextFromCommand(kcTreeViewInsert, _T("&Insert Sample")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_DUPLICATE, ih->GetKeyTextFromCommand(kcTreeViewDuplicate, _T("D&uplicate Sample")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, ih->GetKeyTextFromCommand(kcTreeViewDelete, _T("&Delete Sample")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, ih->GetKeyTextFromCommand(kcTreeViewRename, _T("Re&name Sample")));
+			if(modDoc && !modDoc->GetNumInstruments())
+			{
 				AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
-				[[fallthrough]];
-			case MODITEM_HDR_MIDILIB:
-			case MODITEM_HDR_MIDIGROUP:
-				AppendMenu(hMenu, MF_STRING, ID_IMPORT_MIDILIB, _T("&Import MIDI Library"));
-				AppendMenu(hMenu, MF_STRING, ID_EXPORT_MIDILIB, _T("E&xport MIDI Library"));
-				bSep = TRUE;
-				break;
+				AppendMenu(hMenu, (modDoc->IsSampleMuted((SAMPLEINDEX)modItemID) ? MF_CHECKED : 0) | MF_STRING, ID_MODTREE_MUTE, _T("&Mute Sample"));
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_SOLO, _T("S&olo Sample"));
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_UNMUTEALL, _T("&Unmute all"));
+			}
+			if(sndFile != nullptr)
+			{
+				SAMPLEINDEX smpID = static_cast<SAMPLEINDEX>(modItem.val1);
+				const ModSample &sample = sndFile->GetSample(smpID);
+				const bool hasPath = sndFile->SampleHasPath(smpID);
+				const bool menuForThisSample = (sample.HasSampleData() && sndFile->GetType() == MOD_TYPE_MPT) || hasPath;
 
-			case MODITEM_HDR_INSTRUMENTLIB:
-				if(!IsSampleBrowser())
-					break;
-				if(!m_SongFileName.empty())
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_CLOSE, _T("&Close Song"));
-				[[fallthrough]];
-			case MODITEM_INSLIB_FOLDER:
-				nDefault = ID_MODTREE_EXECUTE;
-				AppendMenu(hMenu, MF_STRING, nDefault, _T("&Browse..."));
-				AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, _T("Set &Path"));
-				AppendMenu(hMenu, MF_STRING, ID_MODTREE_OPENITEM, _T("&Open in Explorer"));
+				bool anyPath = false, anyModified = false, anyMissing = false;
+				for(SAMPLEINDEX smp = 1; smp <= sndFile->GetNumSamples(); smp++)
 				{
-					auto insDir = TrackerSettings::Instance().PathInstruments.GetDefaultDir();
-					auto smpDir = TrackerSettings::Instance().PathSamples.GetDefaultDir();
-					if(!insDir.empty() && insDir != m_InstrLibPath)
-						AppendMenu(hMenu, MF_STRING, ID_MODTREE_GOTO_INSDIR, _T("Go to &Instrument directory"));
-					if(!smpDir.empty() && smpDir != insDir && smpDir != m_InstrLibPath)
-						AppendMenu(hMenu, MF_STRING, ID_MODTREE_GOTO_SMPDIR, _T("Go to Sa&mple directory"));
+					if(sndFile->SampleHasPath(smp) && smp != smpID)
+					{
+						anyPath = true;
+						if(sndFile->GetSample(smp).HasSampleData() && sndFile->GetSample(smp).uFlags[SMP_MODIFIED])
+						{
+							anyModified = true;
+						}
+					}
+					if(sndFile->IsExternalSampleMissing(smp))
+					{
+						anyMissing = true;
+					}
+					if(anyPath && anyModified && anyMissing) break;
 				}
-				break;
 
-			case MODITEM_INSLIB_SONG:
-				nDefault = ID_MODTREE_EXECUTE;
-				AppendMenu(hMenu, MF_STRING, nDefault, _T("&Browse Song..."));
-				AppendMenu(hMenu, MF_STRING, ID_MODTREE_OPENITEM, _T("&Edit Song"));
+				if(menuForThisSample || anyPath || anyModified)
+				{
+					AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
+					if(menuForThisSample) AppendMenu(hMenu, MF_STRING | ((sndFile->GetType() == MOD_TYPE_MPT || hasPath) ? 0 : MF_GRAYED), ID_MODTREE_SETPATH, _T("Set P&ath"));
+					if(menuForThisSample) AppendMenu(hMenu, MF_STRING | ((hasPath && sample.HasSampleData() && sample.uFlags[SMP_MODIFIED]) ? 0 : MF_GRAYED), ID_MODTREE_SAVEITEM, _T("&Save"));
+					if(anyModified) AppendMenu(hMenu, MF_STRING, ID_MODTREE_SAVEALL, _T("&Save All"));
+					if(menuForThisSample) AppendMenu(hMenu, MF_STRING | (hasPath ? 0 : MF_GRAYED), ID_MODTREE_RELOADITEM, _T("&Reload"));
+					if(anyPath) AppendMenu(hMenu, MF_STRING, ID_MODTREE_RELOADALL, _T("&Reload All"));
+					if(anyMissing) AppendMenu(hMenu, MF_STRING, ID_MODTREE_FINDMISSING, _T("&Find Missing Samples"));
+				}
+			}
+			break;
+
+		case MODITEM_INSTRUMENT:
+			defaultID = ID_MODTREE_EXECUTE;
+			AppendMenu(hMenu, MF_STRING, defaultID, ih->GetKeyTextFromCommand(kcTreeViewOpen, _T("&View Instrument")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, ih->GetKeyTextFromCommand(kcTreeViewPlay, _T("&Play Instrument")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_INSERT, ih->GetKeyTextFromCommand(kcTreeViewInsert, _T("&Insert Instrument")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_DUPLICATE, ih->GetKeyTextFromCommand(kcTreeViewDuplicate, _T("D&uplicate Instrument")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, ih->GetKeyTextFromCommand(kcTreeViewDelete, _T("&Delete Instrument")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, ih->GetKeyTextFromCommand(kcTreeViewRename, _T("Re&name Instrument")));
+			if(modDoc)
+			{
 				AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
-				AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, _T("&Delete"));
-				break;
+				AppendMenu(hMenu, (modDoc->IsInstrumentMuted((INSTRUMENTINDEX)modItemID) ? MF_CHECKED : 0) | MF_STRING, ID_MODTREE_MUTE, _T("&Mute Instrument"));
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_SOLO, _T("S&olo Instrument"));
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_UNMUTEALL, _T("&Unmute all"));
+			}
+			break;
 
-			case MODITEM_INSLIB_SAMPLE:
-			case MODITEM_INSLIB_INSTRUMENT:
-				nDefault = ID_MODTREE_PLAY;
-				if(!m_SongFileName.empty())
-				{
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, _T("&Play"));
-				} else
-				{
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, _T("&Play File"));
-					AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, _T("&Delete"));
-				}
-				break;
+		case MODITEM_HDR_EFFECTS:
+			if(sndFile && sndFile->m_loadedPlugins)
+			{
+				AppendMenu(hMenu, MF_STRING | (AllPluginsBypassed(*sndFile, false) ? MF_CHECKED : 0), ID_MODTREE_MUTE, _T("B&ypass All Plugins"));
+				if(HasEffectPlugins(*sndFile))
+					AppendMenu(hMenu, MF_STRING | (AllPluginsBypassed(*sndFile, true) ? MF_CHECKED : 0), ID_MODTREE_MUTE_ONLY_EFFECTS, _T("Bypass All &Effects"));
+			}
+			break;
 
-			case MODITEM_DLSBANK_FOLDER:
-				nDefault = ID_SOUNDBANK_PROPERTIES;
-				AppendMenu(hMenu, MF_STRING, nDefault, _T("&Properties"));
-				AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, _T("Re&move this bank"));
-				[[fallthrough]];
-			case MODITEM_NULL:
-				AppendMenu(hMenu, MF_STRING, ID_ADD_SOUNDBANK, _T("Add Sound &Bank..."));
-				bSep = TRUE;
-				break;
+		case MODITEM_EFFECT:
+			defaultID = ID_MODTREE_EXECUTE;
+			AppendMenu(hMenu, MF_STRING, defaultID, ih->GetKeyTextFromCommand(kcTreeViewOpen, _T("&Edit")));
 
-			case MODITEM_DLSBANK_INSTRUMENT:
-				nDefault = ID_MODTREE_PLAY;
-				AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, _T("&Play Instrument"));
+			if(modDoc != nullptr)
+			{
+				AppendMenu(hMenu, (modDoc->GetSoundFile().m_MixPlugins[modItemID].IsBypassed() ? MF_CHECKED : 0) | MF_STRING, ID_MODTREE_MUTE, _T("&Bypass"));
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, ih->GetKeyTextFromCommand(kcTreeViewDelete, _T("&Delete Plugin")));
+			}
+			break;
+
+		case MODITEM_MIDIINSTRUMENT:
+		case MODITEM_MIDIPERCUSSION:
+			defaultID = ID_MODTREE_EXECUTE;
+			AppendMenu(hMenu, MF_STRING, defaultID, ih->GetKeyTextFromCommand(kcTreeViewOpen, _T("&Map Instrument")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, ih->GetKeyTextFromCommand(kcTreeViewPlay, _T("&Play Instrument")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, _T("&Unmap Instrument"));
+			AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
+			[[fallthrough]];
+		case MODITEM_HDR_MIDILIB:
+		case MODITEM_HDR_MIDIGROUP:
+			AppendMenu(hMenu, MF_STRING, ID_IMPORT_MIDILIB, _T("&Import MIDI Library"));
+			AppendMenu(hMenu, MF_STRING, ID_EXPORT_MIDILIB, _T("E&xport MIDI Library"));
+			addSeparator = true;
+			break;
+
+		case MODITEM_HDR_INSTRUMENTLIB:
+			if(!IsSampleBrowser())
+			{
+				hSubMenu = AddLibraryFindAndSortMenus(hMenu);
 				break;
 			}
-			if (nDefault) SetMenuDefaultItem(hMenu, nDefault, FALSE);
-			if ((modItem.type == MODITEM_INSLIB_FOLDER)
-			 || (modItem.type == MODITEM_INSLIB_SONG)
-			 || (modItem.type == MODITEM_HDR_INSTRUMENTLIB))
+			if(!m_SongFileName.empty())
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_CLOSE, _T("&Close Song"));
+			[[fallthrough]];
+		case MODITEM_INSLIB_FOLDER:
+			defaultID = ID_MODTREE_EXECUTE;
+			AppendMenu(hMenu, MF_STRING, defaultID, ih->GetKeyTextFromCommand(kcTreeViewOpen, _T("&Browse...")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_RENAME, ih->GetKeyTextFromCommand(kcTreeViewRename, _T("Set &Path")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_OPENITEM, _T("&Open in Explorer"));
+			hSubMenu = AddLibraryFindAndSortMenus(hMenu);
+
 			{
-				if ((bSep) || (nDefault)) AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
-				AppendMenu(hMenu, TrackerSettings::Instance().showDirsInSampleBrowser ? (MF_STRING|MF_CHECKED) : MF_STRING, ID_MODTREE_SHOWDIRS, _T("Show &Directories in Sample Browser"));
-				AppendMenu(hMenu, (m_showAllFiles) ? (MF_STRING|MF_CHECKED) : MF_STRING, ID_MODTREE_SHOWALLFILES, _T("Show &All Files"));
-				AppendMenu(hMenu, (m_showAllFiles) ? MF_STRING : (MF_STRING|MF_CHECKED), ID_MODTREE_SOUNDFILESONLY, _T("Show &Sound Files"));
-				bSep = TRUE;
+				auto insDir = TrackerSettings::Instance().PathInstruments.GetDefaultDir();
+				auto smpDir = TrackerSettings::Instance().PathSamples.GetDefaultDir();
+				if(!insDir.empty() && insDir != m_InstrLibPath)
+					AppendMenu(hMenu, MF_STRING, ID_MODTREE_GOTO_INSDIR, _T("Go to &Instrument directory"));
+				if(!smpDir.empty() && smpDir != insDir && smpDir != m_InstrLibPath)
+					AppendMenu(hMenu, MF_STRING, ID_MODTREE_GOTO_SMPDIR, _T("Go to Sa&mple directory"));
 			}
-			if ((bSep) || (nDefault)) AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
-			AppendMenu(hMenu, MF_STRING, ID_MODTREE_REFRESH, _T("&Refresh"));
-			TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x + 4, pt.y, 0, m_hWnd, NULL);
-			DestroyMenu(hMenu);
+			break;
+
+		case MODITEM_INSLIB_SONG:
+			defaultID = ID_MODTREE_EXECUTE;
+			AppendMenu(hMenu, MF_STRING, defaultID, ih->GetKeyTextFromCommand(kcTreeViewOpen, _T("&Browse Song...")));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_OPENITEM, _T("&Edit Song"));
+			hSubMenu = AddLibraryFindAndSortMenus(hMenu);
+			AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, ih->GetKeyTextFromCommand(kcTreeViewDelete, _T("&Delete")));
+			break;
+
+		case MODITEM_INSLIB_SAMPLE:
+		case MODITEM_INSLIB_INSTRUMENT:
+			defaultID = ID_MODTREE_PLAY;
+			if(!m_SongFileName.empty())
+			{
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, ih->GetKeyTextFromCommand(kcTreeViewPlay, _T("&Play")));
+			} else
+			{
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, ih->GetKeyTextFromCommand(kcTreeViewPlay, _T("&Play File")));
+				AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, ih->GetKeyTextFromCommand(kcTreeViewDelete, _T("&Delete")));
+			}
+			hSubMenu = AddLibraryFindAndSortMenus(hMenu);
+			break;
+
+		case MODITEM_DLSBANK_FOLDER:
+			defaultID = ID_SOUNDBANK_PROPERTIES;
+			AppendMenu(hMenu, MF_STRING, defaultID, _T("&Properties"));
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_REMOVE, _T("Re&move this bank"));
+			[[fallthrough]];
+		case MODITEM_NULL:
+			AppendMenu(hMenu, MF_STRING, ID_ADD_SOUNDBANK, _T("Add Sound &Bank..."));
+			addSeparator = true;
+			break;
+
+		case MODITEM_DLSBANK_INSTRUMENT:
+			defaultID = ID_MODTREE_PLAY;
+			AppendMenu(hMenu, MF_STRING, ID_MODTREE_PLAY, ih->GetKeyTextFromCommand(kcTreeViewPlay, _T("&Play Instrument")));
+			break;
 		}
+
+		if(defaultID)
+			SetMenuDefaultItem(hMenu, defaultID, FALSE);
+		
+		if((modItem.type == MODITEM_INSLIB_FOLDER)
+			|| (modItem.type == MODITEM_INSLIB_SONG)
+			|| (modItem.type == MODITEM_HDR_INSTRUMENTLIB))
+		{
+			if(addSeparator || defaultID)
+				AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
+			AppendMenu(hMenu, TrackerSettings::Instance().showDirsInSampleBrowser ? (MF_STRING|MF_CHECKED) : MF_STRING, ID_MODTREE_SHOWDIRS, _T("Show &Directories in Sample Browser"));
+			AppendMenu(hMenu, (m_showAllFiles) ? (MF_STRING|MF_CHECKED) : MF_STRING, ID_MODTREE_SHOWALLFILES, _T("Show &All Files"));
+			AppendMenu(hMenu, (m_showAllFiles) ? MF_STRING : (MF_STRING|MF_CHECKED), ID_MODTREE_SOUNDFILESONLY, _T("Show &Sound Files"));
+			addSeparator = true;
+		}
+
+		if(addSeparator || defaultID)
+			AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
+		AppendMenu(hMenu, MF_STRING, ID_MODTREE_REFRESH, _T("&Refresh"));
+
+		TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x + 4, pt.y, 0, m_hWnd, NULL);
+		DestroyMenu(hMenu);
+		if(hSubMenu)
+			DestroyMenu(hSubMenu);
 	}
+}
+
+
+HMENU CModTree::AddLibraryFindAndSortMenus(HMENU hMenu) const
+{
+	const CInputHandler *ih = CMainFrame::GetInputHandler();
+	AppendMenu(hMenu, MF_STRING, ID_OPEN_LIBRARY_FILTER, ih->GetKeyTextFromCommand(kcTreeViewFind, _T("&Find...")));
+
+	HMENU hSubMenu = ::CreatePopupMenu();
+	AppendMenu(hSubMenu, MF_STRING | (m_librarySort == LibrarySortOrder::Name ? MF_CHECKED : 0), ID_MODTREE_SORT_BY_NAME, ih->GetKeyTextFromCommand(kcTreeViewSortByName, _T("&Name")));
+	AppendMenu(hSubMenu, MF_STRING | (m_librarySort == LibrarySortOrder::Date ? MF_CHECKED : 0), ID_MODTREE_SORT_BY_DATE, ih->GetKeyTextFromCommand(kcTreeViewSortByDate, _T("&Date")));
+	AppendMenu(hSubMenu, MF_STRING | (m_librarySort == LibrarySortOrder::Size ? MF_CHECKED : 0), ID_MODTREE_SORT_BY_SIZE, ih->GetKeyTextFromCommand(kcTreeViewSortBySize, _T("&Size")));
+	AppendMenu(hMenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hSubMenu), _T("Sort B&y"));
+	return hSubMenu;
 }
 
 
@@ -3345,11 +3426,11 @@ void CModTree::OnXButtonUp(UINT nFlags, UINT nButton, CPoint point)
 	{
 		if(nButton == XBUTTON1)
 		{
-			InstrumentLibraryChDir(P_(".."), false);
+			InstrumentLibraryChDir(P_(".."), !m_SongFileName.empty());
 		} else if(nButton == XBUTTON2)
 		{
 			const auto &previousPath = CMainFrame::GetMainFrame()->GetUpperTreeview()->m_previousPath;
-			InstrumentLibraryChDir(previousPath, (m_InstrLibPath + previousPath).IsFile());
+			InstrumentLibraryChDir(previousPath, mpt::native_fs{}.is_file(m_InstrLibPath + previousPath));
 		}
 	}
 	CTreeCtrl::OnXButtonUp(nFlags, nButton, point);
@@ -3452,18 +3533,6 @@ void CModTree::OnMouseMove(UINT nFlags, CPoint point)
 }
 
 
-void CModTree::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
-{
-	switch(nChar)
-	{
-	case VK_DELETE:
-		DeleteTreeItem(GetSelectedItem());
-		break;
-	}
-	CTreeCtrl::OnKeyDown(nChar, nRepCnt, nFlags);
-}
-
-
 void CModTree::OnRefreshTree()
 {
 	BeginWaitCursor();
@@ -3486,7 +3555,7 @@ void CModTree::OnExecuteItem()
 
 void CModTree::OnDeleteTreeItem()
 {
-	DeleteTreeItem(GetSelectedItem());
+	DeleteTreeItem(GetSelectedItem(), CMainFrame::GetInputHandler()->ShiftPressed());
 }
 
 
@@ -3521,14 +3590,38 @@ void CModTree::OnMuteTreeItem()
 		{
 			modDoc.MuteInstrument((INSTRUMENTINDEX)modItemID, !modDoc.IsInstrumentMuted((INSTRUMENTINDEX)modItemID));
 			UpdateView(*info, InstrumentHint((INSTRUMENTINDEX)modItemID).Info().Names());
-		} else if((modItem.type == MODITEM_EFFECT))
+		} else if(modItem.type == MODITEM_EFFECT)
 		{
 			IMixPlugin *pPlugin = modDoc.GetSoundFile().m_MixPlugins[modItemID].pMixPlugin;
 			if(pPlugin == nullptr)
 				return;
 			pPlugin->ToggleBypass();
-			modDoc.SetModified();
+			if(modDoc.GetSoundFile().GetModSpecifications().supportsPlugins)
+				modDoc.SetModified();
 			//UpdateView(*info, PluginHint(static_cast<PLUGINDEX>(modItemID + 1)));
+		} else if(modItem.type == MODITEM_HDR_EFFECTS)
+		{
+			auto &sndFile = modDoc.GetSoundFile();
+			BypassAllPlugins(sndFile, !AllPluginsBypassed(sndFile, false), false);
+		}
+	}
+}
+
+
+void CModTree::OnMuteOnlyEffects()
+{
+	HTREEITEM hItem = GetSelectedItem();
+
+	const ModItem modItem = GetModItem(hItem);
+
+	ModTreeDocInfo *info = GetDocumentInfoFromItem(hItem);
+	if(info)
+	{
+		CModDoc &modDoc = info->modDoc;
+		if(modItem.type == MODITEM_HDR_EFFECTS)
+		{
+			auto &sndFile = modDoc.GetSoundFile();
+			BypassAllPlugins(sndFile, !AllPluginsBypassed(sndFile, true), true);
 		}
 	}
 }
@@ -3589,6 +3682,55 @@ void CModTree::OnUnmuteAllTreeItem()
 			UpdateView(*info, InstrumentHint().Info().Names());
 		}
 	}
+}
+
+
+bool CModTree::HasEffectPlugins(const CSoundFile &sndFile)
+{
+	for(const auto &plugin : sndFile.m_MixPlugins)
+	{
+		if(!plugin.pMixPlugin)
+			continue;
+		if(!plugin.pMixPlugin->IsInstrument())
+			return true;
+	}
+	return false;
+
+}
+
+
+bool CModTree::AllPluginsBypassed(const CSoundFile &sndFile, bool onlyEffects)
+{
+	for(const auto &plugin : sndFile.m_MixPlugins)
+	{
+		if(!plugin.pMixPlugin)
+			continue;
+		if(onlyEffects && plugin.pMixPlugin->IsInstrument())
+			continue;
+		if(!plugin.IsBypassed())
+			return false;
+	}
+	return true;
+}
+
+
+void CModTree::BypassAllPlugins(CSoundFile &sndFile, bool bypass, bool onlyEffects)
+{
+	bool modified = false;
+	for(auto &plugin : sndFile.m_MixPlugins)
+	{
+		if(!plugin.pMixPlugin)
+			continue;
+		if(onlyEffects && plugin.pMixPlugin->IsInstrument())
+			continue;
+		if(plugin.IsBypassed() != bypass)
+		{
+			plugin.pMixPlugin->Bypass(bypass);
+			modified = true;
+		}
+	}
+	if(modified && sndFile.GetModSpecifications().supportsPlugins && sndFile.GetpModDoc())
+		sndFile.GetpModDoc()->SetModified();
 }
 
 
@@ -3688,7 +3830,7 @@ void CModTree::OnSetItemPath()
 		SAMPLEINDEX smpID = static_cast<SAMPLEINDEX>(modItem.val1);
 		const mpt::PathString path = pModDoc->GetSoundFile().GetSamplePath(smpID);
 		FileDialog dlg = OpenFileDialog()
-			.ExtensionFilter("All Samples|*.wav;*.flac|All files(*.*)|*.*||");	// Only show samples that we actually can save as well.
+			.ExtensionFilter(U_("All Samples|*.wav;*.flac|All files(*.*)|*.*||"));	// Only show samples that we actually can save as well.
 		if(path.empty())
 			dlg.WorkingDirectory(TrackerSettings::Instance().PathSamples.GetWorkingDir());
 		else
@@ -3836,10 +3978,9 @@ void CModTree::OnImportMidiLib()
 void CModTree::OnExportMidiLib()
 {
 	FileDialog dlg = SaveFileDialog()
-		.DefaultExtension("ini")
-		.DefaultFilename("mptrack.ini")
-		.ExtensionFilter("Text and INI files (*.txt,*.ini)|*.txt;*.ini|"
-			"All Files (*.*)|*.*||");
+		.DefaultExtension(U_("ini"))
+		.DefaultFilename(P_("mptrack.ini"))
+		.ExtensionFilter(U_("Text and INI files (*.txt,*.ini)|*.txt;*.ini|All Files (*.*)|*.*||"));
 	if(!dlg.Show()) return;
 
 	CTrackApp::ExportMidiConfig(dlg.GetFirstFile());
@@ -3940,6 +4081,12 @@ void CModTree::OnRefreshInstrLib()
 }
 
 
+void CModTree::OnOpenInstrumentLibraryFilter()
+{
+	static_cast<CModTreeBar*>(GetParent())->StartTreeFilter(*this);
+}
+
+
 void CModTree::OnShowDirectories()
 {
 	TrackerSettings::Instance().showDirsInSampleBrowser = !TrackerSettings::Instance().showDirsInSampleBrowser;
@@ -3996,15 +4143,103 @@ LRESULT CModTree::OnCustomKeyMsg(WPARAM wParam, LPARAM /*lParam*/)
 	CMainFrame *pMainFrm = CMainFrame::GetMainFrame();
 
 	ModCommand::NOTE note = NOTE_NONE;
-	const bool start = wParam >= kcTreeViewStartNotes && wParam <= kcTreeViewEndNotes,
-		stop = (wParam >= kcTreeViewStartNoteStops && wParam <= kcTreeViewEndNoteStops) && !IsSampleBrowser();
-	if(start || stop)
+	const bool start = wParam >= kcTreeViewStartNotes && wParam <= kcTreeViewEndNotes;
+	const bool stop = wParam >= kcTreeViewStartNoteStops && wParam <= kcTreeViewEndNoteStops && !IsSampleBrowser();
+
+	switch(wParam)
 	{
-		note = static_cast<ModCommand::NOTE>(wParam - (start ? kcTreeViewStartNotes : kcTreeViewStartNoteStops) + 1 + pMainFrm->GetBaseOctave() * 12);
-	} else if(wParam == kcTreeViewStopPreview)
-	{
+	case kcTreeViewStopPreview:
 		note = NOTE_NOTECUT;
+		break;
+
+	case kcTreeViewOpen:
+		if(HTREEITEM hItem = GetSelectedItem(); hItem)
+		{
+			if(!ExecuteItem(hItem))
+			{
+				if(ItemHasChildren(hItem))
+				{
+					Expand(hItem, TVE_TOGGLE);
+				}
+			}
+		}
+		return wParam;
+
+	case kcTreeViewPlay:
+		OnPlayTreeItem();
+		return wParam;
+
+	case kcTreeViewInsert:
+	case kcTreeViewDuplicate:
+		InsertOrDupItem(wParam == kcTreeViewInsert);
+		return wParam;
+
+	case kcTreeViewDelete:
+	case kcTreeViewDeletePermanently:
+		DeleteTreeItem(GetSelectedItem(), wParam == kcTreeViewDeletePermanently);
+		return wParam;
+
+	case kcTreeViewFind:
+		OnOpenInstrumentLibraryFilter();
+		return wParam;
+
+	case kcTreeViewRename:
+	case kcTreeViewSendToEditorInsertNew:
+		if(HTREEITEM hItem = GetSelectedItem(); hItem)
+		{
+			const ModItem modItem = GetModItem(hItem);
+			static constexpr ModItemType instrumentTypes[] = {MODITEM_INSLIB_SAMPLE, MODITEM_INSLIB_INSTRUMENT, MODITEM_MIDIINSTRUMENT, MODITEM_MIDIPERCUSSION, MODITEM_DLSBANK_INSTRUMENT};
+			if(mpt::contains(instrumentTypes, modItem.type))
+			{
+				// Load sample into currently selected (or new) sample or instrument slot
+				CModScrollView *view = static_cast<CModScrollView *>(CMainFrame::GetMainFrame()->GetActiveView());
+				if(view)
+				{
+					const char *className = view->GetRuntimeClass()->m_lpszClassName;
+					const bool isSampleView = !strcmp("CViewSample", className);
+					const bool isInstrumentView = !strcmp("CViewInstrument", className);
+					mpt::PathString fullPath = InsLibGetFullPath(hItem);
+					DRAGONDROP dropInfo;
+					m_hItemDrag = hItem;
+					m_itemDrag = modItem;
+					if((isSampleView || isInstrumentView) && GetDropInfo(dropInfo, fullPath))
+					{
+						dropInfo.insertType = (wParam == kcTreeViewSendToEditorInsertNew) ? DRAGONDROP::InsertType::InsertNew : DRAGONDROP::InsertType::Replace;
+						view->SendMessage(WM_MOD_DRAGONDROPPING, TRUE, reinterpret_cast<LPARAM>(&dropInfo));
+						// In case a message box like "create instrument for sample?" showed up
+						SetFocus();
+					}
+				}
+			} else if(!IsSampleBrowser() && wParam != kcTreeViewSendToEditorInsertNew)
+			{
+				EditLabel(hItem);
+			}
+		}
+		return wParam;
+
+	case kcTreeViewSortByName:
+		OnSortByName();
+		return wParam;
+	case kcTreeViewSortByDate:
+		OnSortByDate();
+		return wParam;
+	case kcTreeViewSortBySize:
+		OnSortBySize();
+		return wParam;
+
+	default:
+		if(start || stop)
+		{
+			const ModItem modItem = GetModItem(GetSelectedItem());
+			CModDoc *modDoc = m_docInfo.count(m_selectedDoc) ? m_selectedDoc : nullptr;
+			const int noteOffset = static_cast<int>(wParam - (start ? kcTreeViewStartNotes : kcTreeViewStartNoteStops));
+			note = static_cast<ModCommand::NOTE>(Clamp(NOTE_MIN + pMainFrm->GetBaseOctave() * 12 + noteOffset, NOTE_MIN, NOTE_MAX));
+			if(modDoc && modItem.type == MODITEM_INSTRUMENT)
+				note = modDoc->GetNoteWithBaseOctave(noteOffset, static_cast<INSTRUMENTINDEX>(modItem.val1));
+		}
+		break;
 	}
+
 	if(note != NOTE_NONE)
 	{
 		if(stop)
@@ -4235,7 +4470,7 @@ void CModTree::OnBeginLabelEdit(NMHDR *nmhdr, LRESULT *result)
 		}
 	} else if(modItem.type == MODITEM_HDR_INSTRUMENTLIB)
 	{
-		text = m_InstrLibPath.ToUnicode();
+		text = (m_InstrLibPath + m_SongFileName).ToUnicode();
 		m_doLabelEdit = true;
 	}
 
@@ -4349,7 +4584,9 @@ void CModTree::OnEndLabelEdit(NMHDR *nmhdr, LRESULT *result)
 		}
 	} else if(modItem.type == MODITEM_HDR_INSTRUMENTLIB)
 	{
-		SetFullInstrumentLibraryPath(mpt::PathString::FromNative(info->item.pszText));
+		const auto newPath = mpt::PathString::FromNative(info->item.pszText);
+		if(mpt::PathCompareNoCase(newPath, m_InstrLibPath + m_SongFileName))
+			SetFullInstrumentLibraryPath(newPath);
 	}
 }
 

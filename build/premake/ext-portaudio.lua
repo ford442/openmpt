@@ -2,17 +2,12 @@
  project "portaudio"
   uuid "189B867F-FF4B-45A1-B741-A97492EE69AF"
   language "C"
-  location ( "../../build/" .. mpt_projectpathname .. "/ext" )
-  mpt_projectname = "portaudio"
-  dofile "../../build/premake/premake-defaults-LIBorDLL.lua"
-  dofile "../../build/premake/premake-defaults.lua"
+  location ( "%{wks.location}" .. "/ext" )
+  mpt_kind "default"
   targetname "openmpt-portaudio"
   includedirs { "../../include/portaudio/include", "../../include/portaudio/src/common", "../../include/portaudio/src/os/win" }
 	filter {}
-	filter { "action:vs*" }
-		characterset "Unicode"
-	filter {}
-		if _OPTIONS["winxp"] then
+		if _OPTIONS["windows-version"] == "winxp" then
 			defines {
 				"PA_USE_ASIO=0",
 				"PA_USE_DS=1",
@@ -20,7 +15,7 @@
 				"PA_USE_WASAPI=1",
 				"PA_USE_WDMKS=0",
 			}
-		elseif _OPTIONS["uwp"] then
+		elseif _OPTIONS["windows-family"] == "uwp" then
 			defines {
 				"PA_USE_ASIO=0",
 				"PA_USE_DS=0",
@@ -76,7 +71,7 @@
    "../../include/portaudio/src/os/win/pa_x86_plain_converters.h",
   }
 	filter {}
-		if _OPTIONS["winxp"] then
+		if _OPTIONS["windows-version"] == "winxp" then
 			files {
 				"../../include/portaudio/src/hostapi/wmme/pa_win_wmme.c",
 				"../../include/portaudio/src/hostapi/dsound/pa_win_ds.c",
@@ -84,7 +79,7 @@
 				"../../include/portaudio/src/hostapi/dsound/pa_win_ds_dynlink.h",
 				"../../include/portaudio/src/hostapi/wasapi/pa_win_wasapi.c",
 			}
-		elseif _OPTIONS["uwp"] then
+		elseif _OPTIONS["windows-family"] == "uwp" then
 			files {
 				"../../include/portaudio/src/hostapi/wasapi/pa_win_wasapi.c",
 			}
@@ -126,9 +121,26 @@
   filter { "configurations:DebugMDd" }
    defines { "PA_ENABLE_DEBUG_OUTPUT" }
   filter { "kind:SharedLib" }
-	if _OPTIONS["winxp"] then
+	if _OPTIONS["windows-version"] == "winxp" then
 		files { "../../build/premake/def/ext-portaudio-retro.def" }
 	else
 		files { "../../include/portaudio/build/msvc/portaudio.def" }
 	end
   filter {}
+
+function mpt_use_portaudio ()
+	filter {}
+	filter { "action:vs*" }
+		includedirs {
+			"../../include/portaudio/include",
+		}
+	filter { "not action:vs*" }
+		externalincludedirs {
+			"../../include/portaudio/include",
+		}
+	filter {}
+	links {
+		"portaudio",
+	}
+	filter {}
+end

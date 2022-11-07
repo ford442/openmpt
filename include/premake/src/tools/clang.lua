@@ -49,6 +49,7 @@
 			Fast = "-ffast-math",
 		},
 		strictaliasing = gcc.shared.strictaliasing,
+		openmp = gcc.shared.openmp,
 		optimize = {
 			Off = "-O0",
 			On = "-O2",
@@ -114,6 +115,9 @@
 --
 
 	clang.cxxflags = table.merge(gcc.cxxflags, {
+		sanitize = {
+			Fuzzer = "-fsanitize=fuzzer",
+		},
 	})
 
 	function clang.getcxxflags(cfg)
@@ -186,10 +190,10 @@
 --    An array of symbols with the appropriate flag decorations.
 --
 
-	function clang.getincludedirs(cfg, dirs, sysdirs, frameworkdirs)
+	function clang.getincludedirs(cfg, dirs, extdirs, frameworkdirs)
 
 		-- Just pass through to GCC for now
-		local flags = gcc.getincludedirs(cfg, dirs, sysdirs, frameworkdirs)
+		local flags = gcc.getincludedirs(cfg, dirs, extdirs, frameworkdirs)
 		return flags
 
 	end

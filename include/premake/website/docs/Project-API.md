@@ -76,7 +76,10 @@
 | [entrypoint](entrypoint.md)                               | Specify the program entry point function |
 | [exceptionhandling](exceptionhandling.md)                 | Enable or disable exception handling |
 | [external](external.md)                                   |  |
+| [externalanglebrackets](externalanglebrackets.md)         |  |
+| [externalincludedirs](externalincludedirs.md)             |  |
 | [externalrule](externalrule.md)                           |  |
+| [externalwarnings](externalwarnings.md)                   |  |
 | [fatalwarnings](fatalwarnings.md)                         |  |
 | [fileextension](fileextension.md)                         |  |
 | [filename](filename.md)                                   |  |
@@ -147,6 +150,7 @@
 | [rule](rule.md)                                           |  |
 | [rules](rules.md)                                         |  |
 | [runtime](runtime.md)                                     |  |
+| [sanitize](sanitize.md)                                   | Enable `fsanitize` compiler options |
 | [sharedlibtype](sharedlibtype.md)                         |  |
 | [startproject](startproject.md)                           |  |
 | [strictaliasing](strictaliasing.md)                       |  |

@@ -25,6 +25,7 @@ OPENMPT_NAMESPACE_BEGIN
 struct VSTPluginLib;
 struct SNDMIXPLUGIN;
 struct ModInstrument;
+struct ModChannel;
 class CSoundFile;
 class CModDoc;
 class CAbstractVstEditor;
@@ -56,6 +57,7 @@ struct SNDMIXPLUGINSTATE
 class IMixPlugin
 {
 	friend class CAbstractVstEditor;
+	friend struct VSTPluginLib;
 
 protected:
 	IMixPlugin *m_pNext = nullptr, *m_pPrev = nullptr;
@@ -84,15 +86,21 @@ public:
 	bool m_passKeypressesToPlug = false;
 	bool m_recordMIDIOut = false;
 
+	// Combine with note value sent to IMixPlugin::MidiCommand
+	enum MidiNoteFlag : uint16
+	{
+		MIDI_NOTE_MASK     = 0x0FF,
+		MIDI_NOTE_OFF      = 0x100,  // Send note-off for a specific note
+		MIDI_NOTE_ARPEGGIO = 0x200,  // Note is part of an arpeggio, don't store it as the last triggered note
+	};
+
+
 protected:
 	virtual ~IMixPlugin();
 
-	// Insert plugin into list of loaded plugins.
-	void InsertIntoFactoryList();
-
 public:
 	// Non-virtual part of the interface
-	IMixPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct);
+	IMixPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 	inline CSoundFile &GetSoundFile() { return m_SndFile; }
 	inline const CSoundFile &GetSoundFile() const { return m_SndFile; }
 
@@ -108,14 +116,14 @@ public:
 	// Returns the next instance of the same plugin
 	inline IMixPlugin *GetNextInstance() const { return m_pNext; }
 
-	void SetDryRatio(uint32 param);
+	void SetDryRatio(float dryRatio);
 	bool IsBypassed() const;
 	void RecalculateGain();
 	// Query output latency from host (in seconds)
 	double GetOutputLatency() const;
 
 	// Destroy the plugin
-	virtual void Release() = 0;
+	virtual void Release() { delete this; }
 	virtual int32 GetUID() const = 0;
 	virtual int32 GetVersion() const = 0;
 	virtual void Idle() = 0;
@@ -145,6 +153,7 @@ public:
 	virtual void MidiCC(MIDIEvents::MidiCC /*nController*/, uint8 /*nParam*/, CHANNELINDEX /*trackChannel*/) { }
 	virtual void MidiPitchBendRaw(int32 /*pitchbend*/, CHANNELINDEX /*trackChannel*/) {}
 	virtual void MidiPitchBend(int32 /*increment*/, int8 /*pwd*/, CHANNELINDEX /*trackChannel*/) { }
+	virtual void MidiTonePortamento(int32 /*increment*/, uint8 /*newNote*/, int8 /*pwd*/, CHANNELINDEX /*trackChannel*/) { }
 	virtual void MidiVibrato(int32 /*depth*/, int8 /*pwd*/, CHANNELINDEX /*trackerChn*/) { }
 	virtual void MidiCommand(const ModInstrument &/*instr*/, uint16 /*note*/, uint16 /*vol*/, CHANNELINDEX /*trackChannel*/) { }
 	virtual void HardAllNotesOff() { }
@@ -257,6 +266,7 @@ protected:
 		int32 midiPitchBendPos = 0;  // Current Pitch Wheel position, in 16.11 fixed point format. Lowest bit is used for indicating that vibrato was applied. Vibrato offset itself is not stored in this value.
 		uint16 currentProgram = uint16_max;
 		uint16 currentBank = uint16_max;
+		uint8 lastNote = 0 /* NOTE_NONE */;
 		uint8  noteOnMap[128][MAX_CHANNELS];
 
 		void ResetProgram() { currentProgram = uint16_max; currentBank = uint16_max; }
@@ -265,19 +275,22 @@ protected:
 	std::array<PlugInstrChannel, 16> m_MidiCh;  // MIDI channel state
 
 public:
-	IMidiPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct);
+	IMidiPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 
 	void MidiCC(MIDIEvents::MidiCC nController, uint8 nParam, CHANNELINDEX trackChannel) override;
 	void MidiPitchBendRaw(int32 pitchbend, CHANNELINDEX trackerChn) override;
 	void MidiPitchBend(int32 increment, int8 pwd, CHANNELINDEX trackerChn) override;
+	void MidiTonePortamento(int32 increment, uint8 newNote, int8 pwd, CHANNELINDEX trackerChn) override;
 	void MidiVibrato(int32 depth, int8 pwd, CHANNELINDEX trackerChn) override;
 	void MidiCommand(const ModInstrument &instr, uint16 note, uint16 vol, CHANNELINDEX trackChannel) override;
 	bool IsNotePlaying(uint8 note, CHANNELINDEX trackerChn) override;
 
 	// Get the MIDI channel currently associated with a given tracker channel
-	virtual uint8 GetMidiChannel(CHANNELINDEX trackChannel) const;
+	virtual uint8 GetMidiChannel(const ModChannel &chn, CHANNELINDEX trackChannel) const;
 
 protected:
+	uint8 GetMidiChannel(CHANNELINDEX trackChannel) const;
+
 	// Plugin wants to send MIDI to OpenMPT
 	virtual void ReceiveMidi(uint32 midiCode);
 	virtual void ReceiveSysex(mpt::const_byte_span sysex);

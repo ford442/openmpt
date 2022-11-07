@@ -69,9 +69,9 @@ struct MixLoopState
 			lookaheadStart = chn.nLoopStart;
 		else
 			lookaheadStart = std::max(chn.nLoopStart, chn.nLoopEnd - InterpolationLookaheadBufferSize);
-		// We only need to apply the loop wrap-around logic if the sample is actually looping and if interpolation is applied.
-		// If there is no interpolation happening, there is no lookahead happening the sample read-out is exact.
-		if(chn.dwFlags[CHN_LOOP] && chn.resamplingMode != SRCMODE_NEAREST)
+		// We only need to apply the loop wrap-around logic if the sample is actually looping.
+		// As we round rather than truncate with No Interpolation, we also need the wrap-around logic for samples that are not interpolated.
+		if(chn.dwFlags[CHN_LOOP])
 		{
 			const bool inSustainLoop = chn.InSustainLoop() && chn.nLoopStart == chn.pModSample->nSustainStart && chn.nLoopEnd == chn.pModSample->nSustainEnd;
 
@@ -190,12 +190,21 @@ struct MixLoopState
 		// Part 2: Compute how many samples we can render until we reach the end of sample / loop boundary / etc.
 
 		SamplePosition nPos = chn.position;
-		// too big increment, and/or too small loop length
-		if (nPos.GetInt() < nLoopStart)
+		const SmpLength nPosInt = nPos.GetUInt();
+		if(nPos.GetInt() < nLoopStart)
 		{
-			if (nPos.IsNegative() || nInc.IsNegative()) return 0;
+			// too big increment, and/or too small loop length
+			if(nPos.IsNegative() || nInc.IsNegative())
+				return 0;
+		} else
+		{
+			// Not testing for equality since we might be going backwards from the very end of the sample
+			if(nPosInt > chn.nLength)
+				return 0;
+			// If going forwards and we're preceisely at the end, there's no point in going further
+			if(nPosInt == chn.nLength && nInc.IsPositive())
+				return 0;
 		}
-		if (nPos.IsNegative() || nPos.GetUInt() >= chn.nLength) return 0;
 		uint32 nSmpCount = nSamples;
 		SamplePosition nInv = nInc;
 		if (nInc.IsNegative())
@@ -206,7 +215,6 @@ struct MixLoopState
 		SamplePosition incSamples = nInc * (nSamples - 1);
 		int32 nPosDest = (nPos + incSamples).GetInt();
 
-		const SmpLength nPosInt = nPos.GetUInt();
 		const bool isAtLoopStart = (nPosInt >= chn.nLoopStart && nPosInt < chn.nLoopStart + InterpolationLookaheadBufferSize);
 		if(!isAtLoopStart)
 		{
@@ -217,7 +225,7 @@ struct MixLoopState
 		bool checkDest = true;
 		if(lookaheadPointer != nullptr)
 		{
-			if(nPos.GetUInt() >= lookaheadStart)
+			if(nPosInt >= lookaheadStart)
 			{
 #if 0
 				const uint32 oldCount = nSmpCount;
@@ -345,7 +353,7 @@ void CSoundFile::CreateStereoMix(int count)
 
 		//Look for plugins associated with this implicit tracker channel.
 #ifndef NO_PLUGINS
-		PLUGINDEX nMixPlugin = GetBestPlugin(m_PlayState.ChnMix[nChn], PrioritiseInstrument, RespectMutes);
+		PLUGINDEX nMixPlugin = GetBestPlugin(m_PlayState, m_PlayState.ChnMix[nChn], PrioritiseInstrument, RespectMutes);
 
 		if ((nMixPlugin > 0) && (nMixPlugin <= MAX_MIXPLUGINS) && m_MixPlugins[nMixPlugin - 1].pMixPlugin != nullptr)
 		{
@@ -417,11 +425,16 @@ void CSoundFile::CreateStereoMix(int count)
 			else if(m_SamplePlayLengths != nullptr)
 			{
 				// Detecting the longest play time for each sample for optimization
+				SmpLength pos = chn.position.GetUInt();
 				chn.position += chn.increment * nSmpCount;
+				if(!chn.increment.IsNegative())
+				{
+					pos = chn.position.GetUInt();
+				}
 				size_t smp = std::distance(static_cast<const ModSample*>(static_cast<std::decay<decltype(Samples)>::type>(Samples)), chn.pModSample);
 				if(smp < m_SamplePlayLengths->size())
 				{
-					(*m_SamplePlayLengths)[smp] = std::max((*m_SamplePlayLengths)[smp], chn.position.GetUInt());
+					(*m_SamplePlayLengths)[smp] = std::max((*m_SamplePlayLengths)[smp], pos);
 				}
 			}
 #endif
@@ -474,6 +487,17 @@ void CSoundFile::CreateStereoMix(int count)
 			{
 				// ProTracker compatibility: Instrument changes without a note do not happen instantly, but rather when the sample loop has finished playing.
 				// Test case: PTInstrSwap.mod, PTSwapNoLoop.mod
+#ifdef MODPLUG_TRACKER
+				if(m_SamplePlayLengths != nullptr)
+				{
+					// Even if the sample was playing at zero volume, we need to retain its full length for correct sample swap timing
+					size_t smp = std::distance(static_cast<const ModSample *>(static_cast<std::decay<decltype(Samples)>::type>(Samples)), chn.pModSample);
+					if(smp < m_SamplePlayLengths->size())
+					{
+						(*m_SamplePlayLengths)[smp] = std::max((*m_SamplePlayLengths)[smp], std::min(chn.nLength, chn.position.GetUInt()));
+					}
+				}
+#endif
 				const ModSample &smp = Samples[chn.nNewIns];
 				chn.pModSample = &smp;
 				chn.pCurrentSample = smp.samplev();

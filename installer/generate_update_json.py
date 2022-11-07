@@ -16,12 +16,12 @@ IS_RELEASE = True if OPENMPT_VERSION_MINORMINOR == "00" else False
 
 if IS_RELEASE:
 	download_base_url = "https://download.openmpt.org/archive/openmpt/"
-	announcement_url = "https://openmpt.org/openmpt-" + OPENMPT_VERSION_MAJORMAJOR + "-" + OPENMPT_VERSION_MAJOR + "-" + OPENMPT_VERSION_MINOR + "-released"
+	announcement_url = "https://openmpt.org/openmpt-" + OPENMPT_VERSION_MAJORMAJOR + "-" + OPENMPT_VERSION_MAJOR + "-" + OPENMPT_VERSION_MINOR + "-" + OPENMPT_VERSION_MINORMINOR + "-released"
 	changelog_url = "https://openmpt.org/release_notes/History.txt"
 else:
 	download_base_url = "https://builds.openmpt.org/builds/auto/openmpt/pkg.win/"
-	announcement_url = "https://builds.openmpt.org/"
-	changelog_url = "https://source.openmpt.org/browse/openmpt/trunk/OpenMPT/?op=log&isdir=1&"
+	announcement_url = "https://builds.openmpt.org/builds/auto/openmpt/pkg.win/"
+	changelog_url = "https://source.openmpt.org/browse/openmpt/?op=revision&rev=" + SVNVERSION
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.chdir("..")
@@ -186,7 +186,7 @@ update = {
 				"can_autoupdate": True,
 				"autoupdate_minversion": "1.30.00.08",
 				"os": "windows",
-				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":0, "wine_major":1, "wine_minor":8, "wine_update":0 },
+				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19042, "wine_major":1, "wine_minor":8, "wine_update":0 },
 				"required_architectures": {},
 				"supported_architectures": { "x86":True },
 				"required_processor_features": { "x86":{"sse2":True} }
@@ -210,7 +210,7 @@ update = {
 				"can_autoupdate": True,
 				"autoupdate_minversion": "1.30.00.08",
 				"os": "windows",
-				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":0, "wine_major":1, "wine_minor":8, "wine_update":0 },
+				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19042, "wine_major":1, "wine_minor":8, "wine_update":0 },
 				"required_architectures": {},
 				"supported_architectures": { "amd64":True },
 				"required_processor_features": { "amd64":{"sse2":True} }
@@ -234,7 +234,7 @@ update = {
 				"can_autoupdate": True,
 				"autoupdate_minversion": "1.30.00.08",
 				"os": "windows",
-				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":0, "wine_major":1, "wine_minor":8, "wine_update":0 },
+				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19042, "wine_major":1, "wine_minor":8, "wine_update":0 },
 				"required_architectures": {},
 				"supported_architectures": { "arm":True },
 				"required_processor_features": { "arm":{} }
@@ -246,7 +246,7 @@ update = {
 				"can_autoupdate": True,
 				"autoupdate_minversion": "1.30.00.08",
 				"os": "windows",
-				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":0, "wine_major":1, "wine_minor":8, "wine_update":0 },
+				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19042, "wine_major":1, "wine_minor":8, "wine_update":0 },
 				"required_architectures": {},
 				"supported_architectures": { "arm64":True },
 				"required_processor_features": { "arm64":{} }
@@ -260,7 +260,7 @@ with open("installer/" + "OpenMPT-" + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT
 	f.close()
 
 def sign_file(filename):
-	p = Popen(["bin/release/vs2019-win7-static/amd64/updatesigntool.exe", "sign", "jws", "auto", filename, filename + ".jws.json"])
+	p = Popen(["bin/release/vs2022-win7-static/amd64/updatesigntool.exe", "sign", "jws", "auto", filename, filename + ".jws.json"])
 	p.communicate()
 
 sign_file("installer/" + "OpenMPT-" + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT_VERSION_MAJOR + "." + OPENMPT_VERSION_MINOR + "." + OPENMPT_VERSION_MINORMINOR + "-Setup.update.json")
@@ -271,5 +271,5 @@ sign_file("installer/" + "OpenMPT-" + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT
 sign_file("installer/" + "OpenMPT-" + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT_VERSION_MAJOR + "." + OPENMPT_VERSION_MINOR + "." + OPENMPT_VERSION_MINORMINOR + "-portable-arm.update.json")
 sign_file("installer/" + "OpenMPT-" + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT_VERSION_MAJOR + "." + OPENMPT_VERSION_MINOR + "." + OPENMPT_VERSION_MINORMINOR + "-portable-arm64.update.json")
 
-pdumpkey = Popen(["bin/release/vs2019-win7-static/amd64/updatesigntool.exe", "dumpkey", "auto", "installer/" + "OpenMPT-" + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT_VERSION_MAJOR + "." + OPENMPT_VERSION_MINOR + "." + OPENMPT_VERSION_MINORMINOR + "-update-publickey.jwk.json"])
+pdumpkey = Popen(["bin/release/vs2022-win7-static/amd64/updatesigntool.exe", "dumpkey", "auto", "installer/" + "OpenMPT-" + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT_VERSION_MAJOR + "." + OPENMPT_VERSION_MINOR + "." + OPENMPT_VERSION_MINORMINOR + "-update-publickey.jwk.json"])
 pdumpkey.communicate()

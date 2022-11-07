@@ -692,11 +692,22 @@ bool CSoundFile::ProcessRow()
 				// Test case: NoteDelay-NextRow.mod
 				pChn->nPeriod = GetPeriodFromNote(pChn->rowCommand.note, pChn->nFineTune, 0);
 			}
+			if(m_playBehaviour[kST3TonePortaWithAdlibNote]
+				&& !m->IsNote()
+				&& pChn->dwFlags[CHN_ADLIB]
+				&& pChn->nPortamentoDest
+				&& pChn->rowCommand.IsNote()
+				&& pChn->rowCommand.IsPortamento())
+			{
+				// ST3: Adlib Note + Tone Portamento does not execute the slide, but changes to the target note instantly on the next row (unless there is another note with tone portamento)
+				// Test case: TonePortamentoWithAdlibNote.s3m
+				pChn->nPeriod = pChn->nPortamentoDest;
+			}
 			if(m_playBehaviour[kMODTempoOnSecondTick] && !m_playBehaviour[kMODVBlankTiming] && m_PlayState.m_nMusicSpeed == 1 && pChn->rowCommand.command == CMD_TEMPO)
 			{
 				// ProTracker sets the tempo after the first tick. This block handles the case of one tick per row.
 				// Test case: TempoChange.mod
-				m_PlayState.m_nMusicTempo = TEMPO(pChn->rowCommand.param, 0);
+				m_PlayState.m_nMusicTempo = TEMPO(std::max(ModCommand::PARAM(1), pChn->rowCommand.param), 0);
 			}
 
 			pChn->rowCommand = *m;
@@ -1047,7 +1058,7 @@ void CSoundFile::ProcessTremor(CHANNELINDEX nChn, int &vol)
 		{
 			const bool isPlaying = pPlugin->IsNotePlaying(chn.nLastNote, nChn);
 			if(vol == 0 && isPlaying)
-				pPlugin->MidiCommand(*pIns, chn.nLastNote + NOTE_MAX_SPECIAL, 0, nChn);
+				pPlugin->MidiCommand(*pIns, chn.nLastNote | IMixPlugin::MIDI_NOTE_OFF, 0, nChn);
 			else if(vol != 0 && !isPlaying)
 				pPlugin->MidiCommand(*pIns, chn.nLastNote, static_cast<uint16>(chn.nVolume), nChn);
 		}
@@ -1172,7 +1183,7 @@ int CSoundFile::ProcessPitchFilterEnvelope(ModChannel &chn, int32 &period) const
 #else
 		// TODO: AMS2 envelopes behave differently when linear slides are off - emulate with 15 * (-128...127) >> 6
 		// Copy over vibrato behaviour for that?
-		const int32 range = GetType() == MOD_TYPE_AMS ? uint8_max : ENVELOPE_MAX;
+		const int32 range = GetType() == MOD_TYPE_AMS ? uint8_max : uint8(ENVELOPE_MAX);
 		int32 amp;
 		switch(GetType())
 		{
@@ -1444,17 +1455,17 @@ void CSoundFile::ProcessArpeggio(CHANNELINDEX nChn, int32 &period, Tuning::NOTEI
 		IMixPlugin *pPlugin =  m_MixPlugins[pIns->nMixPlug - 1].pMixPlugin;
 		if(pPlugin)
 		{
-			uint8 step = 0;
 			const bool arpOnRow = (chn.rowCommand.command == CMD_ARPEGGIO);
-			const ModCommand::NOTE lastNote = ModCommand::IsNote(chn.nLastNote) ? static_cast<ModCommand::NOTE>(pIns->NoteMap[chn.nLastNote - NOTE_MIN]) : static_cast<ModCommand::NOTE>(NOTE_NONE);
+			const ModCommand::NOTE lastNote = chn.lastMidiNoteWithoutArp;
+			ModCommand::NOTE arpNote = chn.lastMidiNoteWithoutArp;
 			if(arpOnRow)
 			{
-				switch(m_PlayState.m_nTickCount % 3)
+				const uint32 tick = m_PlayState.m_nTickCount % (m_PlayState.m_nMusicSpeed + m_PlayState.m_nFrameDelay);
+				switch(tick % 3)
 				{
-				case 1: step = chn.nArpeggio >> 4; break;
-				case 2: step = chn.nArpeggio & 0x0F; break;
+				case 1: arpNote += chn.nArpeggio >> 4; break;
+				case 2: arpNote += chn.nArpeggio & 0x0F; break;
 				}
-				chn.nArpeggioBaseNote = lastNote;
 			}
 
 			// Trigger new note:
@@ -1464,19 +1475,23 @@ void CSoundFile::ProcessArpeggio(CHANNELINDEX nChn, int32 &period, Tuning::NOTEI
 			// - If there's no arpeggio
 			//   - but an arpeggio note is still active and
 			//   - there's no note stop or new note that would stop it anyway
-			if((arpOnRow && chn.nArpeggioLastNote != chn.nArpeggioBaseNote + step && (!m_SongFlags[SONG_FIRSTTICK] || !chn.rowCommand.IsNote()))
-				|| (!arpOnRow && chn.rowCommand.note == NOTE_NONE && chn.nArpeggioLastNote != NOTE_NONE))
-				SendMIDINote(nChn, chn.nArpeggioBaseNote + step, static_cast<uint16>(chn.nVolume));
+			if((arpOnRow && chn.nArpeggioLastNote != arpNote && (!chn.isFirstTick || !chn.rowCommand.IsNote() || chn.rowCommand.IsPortamento()))
+				|| (!arpOnRow && (chn.rowCommand.note == NOTE_NONE || chn.rowCommand.IsPortamento()) && chn.nArpeggioLastNote != NOTE_NONE))
+				SendMIDINote(nChn, arpNote | IMixPlugin::MIDI_NOTE_ARPEGGIO, static_cast<uint16>(chn.nVolume));
 			// Stop note:
 			// - If some arpeggio note is still registered or
 			// - When starting an arpeggio on a row with no other note on it, stop some possibly still playing note.
 			if(chn.nArpeggioLastNote != NOTE_NONE)
-				SendMIDINote(nChn, chn.nArpeggioLastNote + NOTE_MAX_SPECIAL, 0);
-			else if(arpOnRow && m_SongFlags[SONG_FIRSTTICK] && !chn.rowCommand.IsNote() && ModCommand::IsNote(lastNote))
-				SendMIDINote(nChn, lastNote + NOTE_MAX_SPECIAL, 0);
+			{
+				if(!arpOnRow || chn.nArpeggioLastNote != arpNote)
+					SendMIDINote(nChn, chn.nArpeggioLastNote | IMixPlugin::MIDI_NOTE_OFF, 0);
+			} else if(arpOnRow && chn.isFirstTick && !chn.rowCommand.IsNote() && ModCommand::IsNote(lastNote))
+			{
+				SendMIDINote(nChn, lastNote | IMixPlugin::MIDI_NOTE_OFF, 0);
+			}
 
 			if(chn.rowCommand.command == CMD_ARPEGGIO)
-				chn.nArpeggioLastNote = chn.nArpeggioBaseNote + step;
+				chn.nArpeggioLastNote = arpNote;
 			else
 				chn.nArpeggioLastNote = NOTE_NONE;
 		}
@@ -1507,7 +1522,8 @@ void CSoundFile::ProcessArpeggio(CHANNELINDEX nChn, int32 &period, Tuning::NOTEI
 			{
 				//IT playback compatibility 01 & 02
 
-				// Pattern delay restarts tick counting. Not quite correct yet!
+				// Pattern delay restarts tick counting.
+				// Test case: JxxTicks.it
 				const uint32 tick = m_PlayState.m_nTickCount % (m_PlayState.m_nMusicSpeed + m_PlayState.m_nFrameDelay);
 				if(chn.nArpeggio != 0)
 				{
@@ -1704,7 +1720,7 @@ void CSoundFile::ProcessVibrato(CHANNELINDEX nChn, int32 &period, Tuning::RATIOT
 
 			// Process MIDI vibrato for plugins:
 #ifndef NO_PLUGINS
-			IMixPlugin *plugin = GetChannelInstrumentPlugin(nChn);
+			IMixPlugin *plugin = GetChannelInstrumentPlugin(m_PlayState.Chn[nChn]);
 			if(plugin != nullptr)
 			{
 				// If the Pitch Wheel Depth is configured correctly (so it's the same as the plugin's PWD),
@@ -1727,7 +1743,7 @@ void CSoundFile::ProcessVibrato(CHANNELINDEX nChn, int32 &period, Tuning::RATIOT
 	{
 		// Stop MIDI vibrato for plugins:
 #ifndef NO_PLUGINS
-		IMixPlugin *plugin = GetChannelInstrumentPlugin(nChn);
+		IMixPlugin *plugin = GetChannelInstrumentPlugin(m_PlayState.Chn[nChn]);
 		if(plugin != nullptr)
 		{
 			plugin->MidiVibrato(0, 0, nChn);
@@ -2527,15 +2543,15 @@ void CSoundFile::ProcessMacroOnChannel(CHANNELINDEX nChn)
 	if(nChn < GetNumChannels())
 	{
 		// TODO evaluate per-plugin macros here
-		//ProcessMIDIMacro(nChn, false, m_MidiCfg.szMidiGlb[MIDIOUT_PAN]);
-		//ProcessMIDIMacro(nChn, false, m_MidiCfg.szMidiGlb[MIDIOUT_VOLUME]);
+		//ProcessMIDIMacro(m_PlayState, nChn, false, m_MidiCfg.Global[MIDIOUT_PAN]);
+		//ProcessMIDIMacro(m_PlayState, nChn, false, m_MidiCfg.Global[MIDIOUT_VOLUME]);
 
 		if((chn.rowCommand.command == CMD_MIDI && m_SongFlags[SONG_FIRSTTICK]) || chn.rowCommand.command == CMD_SMOOTHMIDI)
 		{
 			if(chn.rowCommand.param < 0x80)
-				ProcessMIDIMacro(nChn, (chn.rowCommand.command == CMD_SMOOTHMIDI), m_MidiCfg.szMidiSFXExt[chn.nActiveMacro], chn.rowCommand.param);
+				ProcessMIDIMacro(m_PlayState, nChn, (chn.rowCommand.command == CMD_SMOOTHMIDI), m_MidiCfg.SFx[chn.nActiveMacro], chn.rowCommand.param);
 			else
-				ProcessMIDIMacro(nChn, (chn.rowCommand.command == CMD_SMOOTHMIDI), m_MidiCfg.szMidiZXXExt[(chn.rowCommand.param & 0x7F)], 0);
+				ProcessMIDIMacro(m_PlayState, nChn, (chn.rowCommand.command == CMD_SMOOTHMIDI), m_MidiCfg.Zxx[chn.rowCommand.param & 0x7F], chn.rowCommand.param);
 		}
 	}
 }
@@ -2561,7 +2577,7 @@ void CSoundFile::ProcessMidiOut(CHANNELINDEX nChn)
 	}
 
 	// Check instrument plugins
-	const PLUGINDEX nPlugin = GetBestPlugin(nChn, PrioritiseInstrument, RespectMutes);
+	const PLUGINDEX nPlugin = GetBestPlugin(m_PlayState, nChn, PrioritiseInstrument, RespectMutes);
 	IMixPlugin *pPlugin = nullptr;
 	if(nPlugin > 0 && nPlugin <= MAX_MIXPLUGINS)
 	{
@@ -2622,8 +2638,9 @@ void CSoundFile::ProcessMidiOut(CHANNELINDEX nChn)
 		if(ModCommand::IsNote(note))
 			realNote = pIns->NoteMap[note - NOTE_MIN];
 		// Experimental VST panning
-		//ProcessMIDIMacro(nChn, false, m_MidiCfg.szMidiGlb[MIDIOUT_PAN], 0, nPlugin);
-		SendMIDINote(nChn, realNote, static_cast<uint16>(velocity));
+		//ProcessMIDIMacro(nChn, false, m_MidiCfg.Global[MIDIOUT_PAN], 0, nPlugin);
+		if(m_playBehaviour[kPluginIgnoreTonePortamento] || !chn.rowCommand.IsPortamento())
+			SendMIDINote(nChn, realNote, static_cast<uint16>(velocity));
 	}
 
 	const bool processVolumeAlsoOnNote = (pIns->pluginVelocityHandling == PLUGIN_VELOCITYHANDLING_VOLUME);
@@ -2634,8 +2651,8 @@ void CSoundFile::ProcessMidiOut(CHANNELINDEX nChn)
 		switch(pIns->pluginVolumeHandling)
 		{
 			case PLUGIN_VOLUMEHANDLING_DRYWET:
-				if(hasVolCommand) pPlugin->SetDryRatio(2 * vol);
-				else pPlugin->SetDryRatio(2 * defaultVolume);
+				if(hasVolCommand) pPlugin->SetDryRatio(1.0f - (2 * vol) / 127.0f);
+				else pPlugin->SetDryRatio(1.0f - (2 * defaultVolume) / 127.0f);
 				break;
 			case PLUGIN_VOLUMEHANDLING_MIDI:
 				if(hasVolCommand) pPlugin->MidiCC(MIDIEvents::MIDICC_Volume_Coarse, std::min(uint8(127), static_cast<uint8>(2 * vol)), nChn);

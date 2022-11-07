@@ -12,9 +12,9 @@
 
 #include "openmpt/all/BuildSettings.hpp"
 
-#include "mpt/library/library.hpp"
 #include "mpt/osinfo/class.hpp"
 #include "mpt/osinfo/windows_version.hpp"
+#include "mpt/osinfo/windows_wine_version.hpp"
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -27,46 +27,15 @@ namespace OS
 namespace Windows
 {
 
-
-class Version
-	: public mpt::osinfo::windows::Version
+namespace Version
 {
 
-public:
+	mpt::ustring GetName(mpt::osinfo::windows::Version version);
 
-	static mpt::ustring VersionToString(mpt::OS::Windows::Version::System version);
+	mpt::osinfo::windows::Version GetMinimumKernelLevel() noexcept;
+	mpt::osinfo::windows::Version GetMinimumAPILevel() noexcept;
 
-private:
-
-	Version() noexcept;
-
-public:
-
-	static Version NoWindows() noexcept;
-
-public:
-
-	Version(mpt::osinfo::windows::Version v) noexcept;
-
-public:
-
-	Version(mpt::OS::Windows::Version::System system, mpt::OS::Windows::Version::ServicePack servicePack, mpt::OS::Windows::Version::Build build, mpt::OS::Windows::Version::TypeId type) noexcept;
-
-public:
-
-	static mpt::OS::Windows::Version Current() noexcept;
-
-public:
-
-	mpt::ustring GetName() const;
-	mpt::ustring GetNameShort() const;
-
-public:
-
-	static mpt::OS::Windows::Version::System GetMinimumKernelLevel() noexcept;
-	static mpt::OS::Windows::Version::System GetMinimumAPILevel() noexcept;
-
-}; // class Version
+} // namespace Version
 
 #if MPT_OS_WINDOWS
 

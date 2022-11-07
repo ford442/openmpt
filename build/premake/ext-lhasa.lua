@@ -2,14 +2,9 @@
  project "lhasa"
   uuid "6B11F6A8-B131-4D2B-80EF-5731A9016436"
   language "C"
-  location ( "../../build/" .. mpt_projectpathname .. "/ext" )
-  mpt_projectname = "lhasa"
-  dofile "../../build/premake/premake-defaults-LIBorDLL.lua"
-  dofile "../../build/premake/premake-defaults.lua"
+  location ( "%{wks.location}" .. "/ext" )
+  mpt_kind "default"
   targetname "openmpt-lhasa"
-	filter { "action:vs*" }
-		characterset "Unicode"
-	filter {}
   files {
    "../../include/lhasa/lib/crc16.c",
    "../../include/lhasa/lib/ext_header.c",
@@ -55,3 +50,20 @@
   filter { "kind:SharedLib" }
    files { "../../build/premake/def/ext-lhasa.def" }
   filter {}
+
+function mpt_use_lhasa ()
+	filter {}
+	filter { "action:vs*" }
+		includedirs {
+			"../../include/lhasa/lib/public",
+		}
+	filter { "not action:vs*" }
+		externalincludedirs {
+			"../../include/lhasa/lib/public",
+		}
+	filter {}
+	links {
+		"lhasa",
+	}
+	filter {}
+end

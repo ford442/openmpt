@@ -303,6 +303,7 @@ struct MO3Sample
 	void ConvertToMPT(ModSample &mptSmp, MODTYPE type, bool frequencyIsHertz) const
 	{
 		mptSmp.Initialize();
+		mptSmp.SetDefaultCuePoints();
 		if(type & (MOD_TYPE_IT | MOD_TYPE_S3M))
 		{
 			if(frequencyIsHertz)
@@ -907,20 +908,21 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 		for(uint32 i = 0; i < 16; i++)
 		{
 			if(fileHeader.sfxMacros[i])
-				mpt::String::WriteAutoBuf(m_MidiCfg.szMidiSFXExt[i]) = MPT_AFORMAT("F0F0{}z")(mpt::afmt::HEX0<2>(fileHeader.sfxMacros[i] - 1));
+				m_MidiCfg.SFx[i] = MPT_AFORMAT("F0F0{}z")(mpt::afmt::HEX0<2>(fileHeader.sfxMacros[i] - 1));
 			else
-				mpt::String::WriteAutoBuf(m_MidiCfg.szMidiSFXExt[i]) = "";
+				m_MidiCfg.SFx[i] = "";
 		}
 		for(uint32 i = 0; i < 128; i++)
 		{
 			if(fileHeader.fixedMacros[i][1])
-				mpt::String::WriteAutoBuf(m_MidiCfg.szMidiZXXExt[i]) = MPT_AFORMAT("F0F0{}{}")(mpt::afmt::HEX0<2>(fileHeader.fixedMacros[i][1] - 1), mpt::afmt::HEX0<2>(fileHeader.fixedMacros[i][0].get()));
+				m_MidiCfg.Zxx[i] = MPT_AFORMAT("F0F0{}{}")(mpt::afmt::HEX0<2>(fileHeader.fixedMacros[i][1] - 1), mpt::afmt::HEX0<2>(fileHeader.fixedMacros[i][0].get()));
 			else
-				mpt::String::WriteAutoBuf(m_MidiCfg.szMidiZXXExt[i]) = "";
+				m_MidiCfg.Zxx[i] = "";
 		}
 	}
 
-	ReadOrderFromFile<uint8>(Order(), musicChunk, fileHeader.numOrders, 0xFF, 0xFE);
+	const bool hasOrderSeparators = !(m_nType & (MOD_TYPE_MOD | MOD_TYPE_XM));
+	ReadOrderFromFile<uint8>(Order(), musicChunk, fileHeader.numOrders, hasOrderSeparators ? 0xFF : uint16_max, hasOrderSeparators ? 0xFE : uint16_max);
 
 	// Track assignments for all patterns
 	FileReader trackChunk = musicChunk.ReadChunk(fileHeader.numPatterns * fileHeader.numChannels * sizeof(uint16));
@@ -998,22 +1000,22 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 	L= 06 00 22 x
 	*/
 
-	static constexpr ModCommand::COMMAND effTrans[] =
+	static constexpr EffectCommand effTrans[] =
 	{
 		CMD_NONE,               CMD_NONE,               CMD_NONE,               CMD_ARPEGGIO,
 		CMD_PORTAMENTOUP,       CMD_PORTAMENTODOWN,     CMD_TONEPORTAMENTO,     CMD_VIBRATO,
 		CMD_TONEPORTAVOL,       CMD_VIBRATOVOL,         CMD_TREMOLO,            CMD_PANNING8,
 		CMD_OFFSET,             CMD_VOLUMESLIDE,        CMD_POSITIONJUMP,       CMD_VOLUME,
 		CMD_PATTERNBREAK,       CMD_MODCMDEX,           CMD_TEMPO,              CMD_TREMOR,
-		VOLCMD_VOLSLIDEUP,      VOLCMD_FINEVOLUP,       CMD_GLOBALVOLUME,       CMD_GLOBALVOLSLIDE,
-		CMD_KEYOFF,             CMD_SETENVPOSITION,     CMD_PANNINGSLIDE,       VOLCMD_PANSLIDELEFT,
-		CMD_RETRIG,             CMD_XFINEPORTAUPDOWN,   CMD_XFINEPORTAUPDOWN,   VOLCMD_VIBRATOSPEED,
-		VOLCMD_VIBRATODEPTH,    CMD_SPEED,              CMD_VOLUMESLIDE,        CMD_PORTAMENTODOWN,
+		CMD_NONE,/*VolSlideUp*/ CMD_NONE,/*VolSlideDn*/ CMD_GLOBALVOLUME,       CMD_GLOBALVOLSLIDE,
+		CMD_KEYOFF,             CMD_SETENVPOSITION,     CMD_PANNINGSLIDE,       CMD_NONE,/*PanSlide*/
+		CMD_RETRIG,             CMD_XFINEPORTAUPDOWN,   CMD_XFINEPORTAUPDOWN,   CMD_NONE,/*VibSpeed*/
+		CMD_NONE,/*VibDepth*/   CMD_SPEED,              CMD_VOLUMESLIDE,        CMD_PORTAMENTODOWN,
 		CMD_PORTAMENTOUP,       CMD_TREMOR,             CMD_RETRIG,             CMD_FINEVIBRATO,
 		CMD_CHANNELVOLUME,      CMD_CHANNELVOLSLIDE,    CMD_PANNINGSLIDE,       CMD_S3MCMDEX,
 		CMD_TEMPO,              CMD_GLOBALVOLSLIDE,     CMD_PANBRELLO,          CMD_MIDI,
-		VOLCMD_FINEVOLUP,       VOLCMD_PORTADOWN,       VOLCMD_PORTAUP,         CMD_NONE,
-		VOLCMD_OFFSET,          CMD_XPARAM,             CMD_SMOOTHMIDI,         CMD_DELAYCUT,
+		CMD_NONE,/*FineVolSld*/ CMD_NONE,/*PortaDown*/  CMD_NONE, /*PortaUp*/   CMD_NONE,
+		CMD_NONE,/*ITVolCol*/   CMD_XPARAM,             CMD_SMOOTHMIDI,         CMD_DELAYCUT,
 		CMD_FINETUNE,           CMD_FINETUNE_SMOOTH,
 	};
 
@@ -1048,11 +1050,10 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 					break;
 
 				const uint8 numCommands = (b & 0x0F), rep = (b >> 4);
-				ModCommand m = ModCommand::Empty();
+				ModCommand m;
 				for(uint8 c = 0; c < numCommands; c++)
 				{
-					uint8 cmd[2];
-					track.ReadArray(cmd);
+					const auto cmd = track.ReadArray<uint8, 2>();
 
 					// Import pattern commands
 					switch(cmd[0])
@@ -1079,8 +1080,7 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 						// Tone portamento
 						if(m.volcmd == VOLCMD_NONE && m_nType == MOD_TYPE_XM && !(cmd[1] & 0x0F))
 						{
-							m.volcmd = VOLCMD_TONEPORTAMENTO;
-							m.vol = cmd[1] >> 4;
+							m.SetVolumeCommand(VOLCMD_TONEPORTAMENTO, cmd[1] >> 4);
 							break;
 						} else if(m.volcmd == VOLCMD_NONE && m_nType == MOD_TYPE_IT)
 						{
@@ -1088,27 +1088,23 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 							{
 								if(ImpulseTrackerPortaVolCmd[i] == cmd[1])
 								{
-									m.volcmd = VOLCMD_TONEPORTAMENTO;
-									m.vol = i;
+									m.SetVolumeCommand(VOLCMD_TONEPORTAMENTO, i);
 									break;
 								}
 							}
 							if(m.volcmd != VOLCMD_NONE)
 								break;
 						}
-						m.command = CMD_TONEPORTAMENTO;
-						m.param = cmd[1];
+						m.SetEffectCommand(CMD_TONEPORTAMENTO, cmd[1]);
 						break;
 					case 0x07:
 						// Vibrato
 						if(m.volcmd == VOLCMD_NONE && cmd[1] < 10 && m_nType == MOD_TYPE_IT)
 						{
-							m.volcmd = VOLCMD_VIBRATODEPTH;
-							m.vol = cmd[1];
+							m.SetVolumeCommand(VOLCMD_VIBRATODEPTH, cmd[1]);
 						} else
 						{
-							m.command = CMD_VIBRATO;
-							m.param = cmd[1];
+							m.SetEffectCommand(CMD_VIBRATO, cmd[1]);
 						}
 						break;
 					case 0x0B:
@@ -1117,88 +1113,65 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 						{
 							if(m_nType == MOD_TYPE_IT && cmd[1] == 0xFF)
 							{
-								m.volcmd = VOLCMD_PANNING;
-								m.vol = 64;
+								m.SetVolumeCommand(VOLCMD_PANNING, 64);
 								break;
 							}
 							if((m_nType == MOD_TYPE_IT && !(cmd[1] & 0x03))
 							   || (m_nType == MOD_TYPE_XM && !(cmd[1] & 0x0F)))
 							{
-								m.volcmd = VOLCMD_PANNING;
-								m.vol = cmd[1] / 4;
+								m.SetVolumeCommand(VOLCMD_PANNING, cmd[1] / 4);
 								break;
 							}
 						}
-						m.command = CMD_PANNING8;
-						m.param = cmd[1];
+						m.SetEffectCommand(CMD_PANNING8, cmd[1]);
 						break;
 					case 0x0F:
 						// Volume
 						if(m_nType != MOD_TYPE_MOD && m.volcmd == VOLCMD_NONE && cmd[1] <= 64)
-						{
-							m.volcmd = VOLCMD_VOLUME;
-							m.vol = cmd[1];
-						} else
-						{
-							m.command = CMD_VOLUME;
-							m.param = cmd[1];
-						}
+							m.SetVolumeCommand(VOLCMD_VOLUME, cmd[1]);
+						else
+							m.SetEffectCommand(CMD_VOLUME, cmd[1]);
 						break;
 					case 0x10:
 						// Pattern break
-						m.command = CMD_PATTERNBREAK;
-						m.param = cmd[1];
+						m.SetEffectCommand(CMD_PATTERNBREAK, cmd[1]);
 						if(m_nType != MOD_TYPE_IT)
 							m.param = ((m.param >> 4) * 10) + (m.param & 0x0F);
 						break;
 					case 0x12:
 						// Combined Tempo / Speed command
-						m.param = cmd[1];
-						if(m.param < 0x20)
-							m.command = CMD_SPEED;
-						else
-							m.command = CMD_TEMPO;
+						m.SetEffectCommand((cmd[1] < 0x20) ? CMD_SPEED : CMD_TEMPO, cmd[1]);
 						break;
 					case 0x14:
 					case 0x15:
 						// XM volume column volume slides
 						if(cmd[1] & 0xF0)
 						{
-							m.volcmd = static_cast<ModCommand::VOLCMD>((cmd[0] == 0x14) ? VOLCMD_VOLSLIDEUP : VOLCMD_FINEVOLUP);
-							m.vol = cmd[1] >> 4;
+							m.SetVolumeCommand((cmd[0] == 0x14) ? VOLCMD_VOLSLIDEUP : VOLCMD_FINEVOLUP, cmd[1] >> 4);
 						} else
 						{
-							m.volcmd = static_cast<ModCommand::VOLCMD>((cmd[0] == 0x14) ? VOLCMD_VOLSLIDEDOWN : VOLCMD_FINEVOLDOWN);
-							m.vol = cmd[1] & 0x0F;
+							m.SetVolumeCommand((cmd[0] == 0x14) ? VOLCMD_VOLSLIDEDOWN : VOLCMD_FINEVOLDOWN, cmd[1] & 0x0F);
 						}
 						break;
 					case 0x1B:
 						// XM volume column panning slides
 						if(cmd[1] & 0xF0)
-						{
-							m.volcmd = VOLCMD_PANSLIDERIGHT;
-							m.vol = cmd[1] >> 4;
-						} else
-						{
-							m.volcmd = VOLCMD_PANSLIDELEFT;
-							m.vol = cmd[1] & 0x0F;
-						}
+							m.SetVolumeCommand(VOLCMD_PANSLIDERIGHT, cmd[1] >> 4);
+						else
+							m.SetVolumeCommand(VOLCMD_PANSLIDELEFT, cmd[1] & 0x0F);
 						break;
 					case 0x1D:
 						// XM extra fine porta up
-						m.command = CMD_XFINEPORTAUPDOWN;
-						m.param = 0x10 | cmd[1];
+						m.SetEffectCommand(CMD_XFINEPORTAUPDOWN, 0x10 | cmd[1]);
 						break;
 					case 0x1E:
 						// XM extra fine porta down
-						m.command = CMD_XFINEPORTAUPDOWN;
-						m.param = 0x20 | cmd[1];
+						m.SetEffectCommand(CMD_XFINEPORTAUPDOWN, 0x20 | cmd[1]);
 						break;
 					case 0x1F:
 					case 0x20:
 						// XM volume column vibrato
-						m.volcmd = effTrans[cmd[0]];
-						m.vol = cmd[1];
+						m.SetVolumeCommand((cmd[0] == 0x1F) ? VOLCMD_VIBRATOSPEED: VOLCMD_VIBRATODEPTH, cmd[1]);
 						break;
 					case 0x22:
 						// IT / S3M volume slide
@@ -1225,23 +1198,16 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 					case 0x31:
 					case 0x32:
 						// IT volume column portamento
-						m.volcmd = effTrans[cmd[0]];
-						m.vol = cmd[1];
+						m.SetVolumeCommand((cmd[0] == 0x31) ? VOLCMD_PORTADOWN: VOLCMD_PORTAUP, cmd[1]);
 						break;
 					case 0x34:
 						// Any unrecognized IT volume command
 						if(cmd[1] >= 223 && cmd[1] <= 232)
-						{
-							m.volcmd = VOLCMD_OFFSET;
-							m.vol = cmd[1] - 223;
-						}
+							m.SetVolumeCommand(VOLCMD_OFFSET, cmd[1] - 223);
 						break;
 					default:
 						if(cmd[0] < std::size(effTrans))
-						{
-							m.command = effTrans[cmd[0]];
-							m.param = cmd[1];
-						}
+							m.SetEffectCommand(effTrans[cmd[0]], cmd[1]);
 						break;
 					}
 				}
@@ -1315,15 +1281,15 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 		musicChunk.ReadNullString(name);
 		m_szNames[smp] = name;
 		if(version >= 5)
-		{
 			musicChunk.ReadNullString(name);
-			sample.filename = name;
-		}
+		else
+			name.clear();
 
 		MO3Sample smpHeader;
 		if(!musicChunk.ReadStruct(smpHeader))
 			break;
 		smpHeader.ConvertToMPT(sample, m_nType, frequencyIsHertz);
+		sample.filename = name;
 
 		int16 sharedOggHeader = 0;
 		if(version >= 5 && (smpHeader.flags & MO3Sample::smpCompressionMask) == MO3Sample::smpSharedOgg)
@@ -1966,7 +1932,7 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 	if(m_dwLastSavedWithVersion)
 		m_modFormat.charset = mpt::Charset::Windows1252;
 	else if(GetType() == MOD_TYPE_MOD)
-		m_modFormat.charset = mpt::Charset::ISO8859_1;
+		m_modFormat.charset = mpt::Charset::Amiga_no_C1;
 	else
 		m_modFormat.charset = mpt::Charset::CP437;
 

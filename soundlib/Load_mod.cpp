@@ -21,14 +21,18 @@
 #endif
 #ifdef MPT_EXTERNAL_SAMPLES
 // For loading external data in Startrekker files
+#include "mpt/fs/fs.hpp"
+#include "mpt/io_file/inputfile.hpp"
+#include "mpt/io_file/inputfile_filecursor.hpp"
 #include "../common/mptPathString.h"
 #endif  // MPT_EXTERNAL_SAMPLES
 
 OPENMPT_NAMESPACE_BEGIN
 
-void CSoundFile::ConvertModCommand(ModCommand &m)
+void CSoundFile::ConvertModCommand(ModCommand &m, const uint8 command, const uint8 param)
 {
-	switch(m.command)
+	m.param = param;
+	switch(command)
 	{
 	case 0x00:	if(m.param) m.command = CMD_ARPEGGIO; break;
 	case 0x01:	m.command = CMD_PORTAMENTOUP; break;
@@ -57,7 +61,7 @@ void CSoundFile::ConvertModCommand(ModCommand &m)
 		break;
 
 	// Extension for XM extended effects
-	case 'G' - 55:	m.command = CMD_GLOBALVOLUME; break;		//16
+	case 'G' - 55:	m.command = CMD_GLOBALVOLUME; break;  //16
 	case 'H' - 55:	m.command = CMD_GLOBALVOLSLIDE; break;
 	case 'K' - 55:	m.command = CMD_KEYOFF; break;
 	case 'L' - 55:	m.command = CMD_SETENVPOSITION; break;
@@ -66,20 +70,22 @@ void CSoundFile::ConvertModCommand(ModCommand &m)
 	case 'T' - 55:	m.command = CMD_TREMOR; break;
 	case 'W' - 55:	m.command = CMD_DUMMY; break;
 	case 'X' - 55:	m.command = CMD_XFINEPORTAUPDOWN;	break;
-	case 'Y' - 55:	m.command = CMD_PANBRELLO; break;			//34
-	case 'Z' - 55:	m.command = CMD_MIDI;	break;				//35
-	case '\\' - 56:	m.command = CMD_SMOOTHMIDI;	break;		//rewbs.smoothVST: 36 - note: this is actually displayed as "-" in FT2, but seems to be doing nothing.
-	//case ':' - 21:	m.command = CMD_DELAYCUT;	break;		//37
-	case '#' + 3:	m.command = CMD_XPARAM;	break;			//rewbs.XMfixes - Xm.param is 38
+	case 'Y' - 55:	m.command = CMD_PANBRELLO; break;   // 34
+	case 'Z' - 55:	m.command = CMD_MIDI; break;        // 35
+	case '\\' - 56:	m.command = CMD_SMOOTHMIDI; break;  // 36 - note: this is actually displayed as "-" in FT2, but seems to be doing nothing.
+	case 37:		m.command = CMD_SMOOTHMIDI; break;  // BeRoTracker uses this for smooth MIDI macros for some reason; in old OpenMPT versions this was reserved for the unimplemented "velocity" command
+	case '#' + 3:	m.command = CMD_XPARAM; break;      // 38
 	default:		m.command = CMD_NONE;
 	}
 }
 
 #ifndef MODPLUG_NO_FILESAVE
 
-void CSoundFile::ModSaveCommand(uint8 &command, uint8 &param, bool toXM, bool compatibilityExport) const
+void CSoundFile::ModSaveCommand(const ModCommand &source, uint8 &command, uint8 &param, const bool toXM, const bool compatibilityExport) const
 {
-	switch(command)
+	command = 0;
+	param = source.param;
+	switch(source.command)
 	{
 	case CMD_NONE:		command = param = 0; break;
 	case CMD_ARPEGGIO:	command = 0; break;
@@ -171,26 +177,14 @@ void CSoundFile::ModSaveCommand(uint8 &command, uint8 &param, bool toXM, bool co
 			command = '#' + 3;
 		break;
 	case CMD_S3MCMDEX:
-		switch(param & 0xF0)
 		{
-		case 0x10:	command = 0x0E; param = (param & 0x0F) | 0x30; break;
-		case 0x20:	command = 0x0E; param = (param & 0x0F) | 0x50; break;
-		case 0x30:	command = 0x0E; param = (param & 0x0F) | 0x40; break;
-		case 0x40:	command = 0x0E; param = (param & 0x0F) | 0x70; break;
-		case 0x90:
-			if(compatibilityExport)
-				command = param = 0;
-			else
-				command = 'X' - 55;
-			break;
-		case 0xB0:	command = 0x0E; param = (param & 0x0F) | 0x60; break;
-		case 0xA0:
-		case 0x50:
-		case 0x70:
-		case 0x60:	command = param = 0; break;
-		default:	command = 0x0E; break;
+			ModCommand mConv;
+			mConv.command = CMD_S3MCMDEX;
+			mConv.param = param;
+			mConv.ExtendedS3MtoMODEffect();
+			ModSaveCommand(mConv, command, param, toXM, compatibilityExport);
 		}
-		break;
+		return;
 	default:
 		command = param = 0;
 	}
@@ -209,7 +203,7 @@ void CSoundFile::ModSaveCommand(uint8 &command, uint8 &param, bool toXM, bool co
 struct MODFileHeader
 {
 	uint8be numOrders;
-	uint8be restartPos;
+	uint8be restartPos;  // Tempo (early SoundTracker) or restart position (only PC trackers?)
 	uint8be orderList[128];
 };
 
@@ -585,6 +579,7 @@ static PATTERNINDEX GetNumPatterns(FileReader &file, ModSequence &Order, ORDERIN
 
 	const size_t patternStartOffset = file.GetPosition();
 	const size_t sizeWithoutPatterns = totalSampleLen + patternStartOffset;
+	const size_t sizeWithOfficialPatterns = sizeWithoutPatterns + officialPatterns * numChannels * 256;
 
 	if(wowSampleLen && (wowSampleLen + patternStartOffset) + numPatterns * 8 * 256 == (file.GetLength() & ~1))
 	{
@@ -595,8 +590,9 @@ static PATTERNINDEX GetNumPatterns(FileReader &file, ModSequence &Order, ORDERIN
 		if(ValidateMODPatternData(file, 16, true))
 			numChannels = 8;
 		file.Seek(patternStartOffset);
-	} else if(numPatterns != officialPatterns && validateHiddenPatterns)
+	} else if(numPatterns != officialPatterns && (validateHiddenPatterns || sizeWithOfficialPatterns == file.GetLength()))
 	{
+		// 15-sample SoundTracker specifics:
 		// Fix SoundTracker modules where "hidden" patterns should be ignored.
 		// razor-1911.mod (MD5 b75f0f471b0ae400185585ca05bf7fe8, SHA1 4de31af234229faec00f1e85e1e8f78f405d454b)
 		// and captain_fizz.mod (MD5 55bd89fe5a8e345df65438dbfc2df94e, SHA1 9e0e8b7dc67939885435ea8d3ff4be7704207a43)
@@ -609,28 +605,21 @@ static PATTERNINDEX GetNumPatterns(FileReader &file, ModSequence &Order, ORDERIN
 		// only play correctly if we ignore the hidden patterns.
 		// Hence, we have a peek at the first hidden pattern and check if it contains a lot of illegal data.
 		// If that is the case, we assume it's part of the sample data and only consider the "official" patterns.
-		file.Seek(patternStartOffset + officialPatterns * 1024);
+
+		// 31-sample NoiseTracker / ProTracker specifics:
+		// Interestingly, (broken) variants of the ProTracker modules
+		// "killing butterfly" (MD5 bd676358b1dbb40d40f25435e845cf6b, SHA1 9df4ae21214ff753802756b616a0cafaeced8021),
+		// "quartex" by Reflex (MD5 35526bef0fb21cb96394838d94c14bab, SHA1 116756c68c7b6598dcfbad75a043477fcc54c96c),
+		// seem to have the "correct" file size when only taking the "official" patterns into account, but they only play
+		// correctly when also loading the inofficial patterns.
+		// On the other hand, "Shofixti Ditty.mod" from Star Control 2 (MD5 62b7b0819123400e4d5a7813eef7fc7d, SHA1 8330cd595c61f51c37a3b6f2a8559cf3fcaaa6e8)
+		// doesn't sound correct when taking the second "inofficial" pattern into account.
+		file.Seek(patternStartOffset + officialPatterns * numChannels * 256);
 		if(!ValidateMODPatternData(file, 64, true))
 			numPatterns = officialPatterns;
 		file.Seek(patternStartOffset);
 	}
 
-#ifdef MPT_BUILD_DEBUG
-	// Check if the "hidden" patterns in the order list are actually real, i.e. if they are saved in the file.
-	// OpenMPT did this check in the past, but no other tracker appears to do this.
-	// Interestingly, (broken) variants of the ProTracker modules
-	// "killing butterfly" (MD5 bd676358b1dbb40d40f25435e845cf6b, SHA1 9df4ae21214ff753802756b616a0cafaeced8021),
-	// "quartex" by Reflex (MD5 35526bef0fb21cb96394838d94c14bab, SHA1 116756c68c7b6598dcfbad75a043477fcc54c96c),
-	// seem to have the "correct" file size when only taking the "official" patterns into account, but they only play
-	// correctly when also loading the inofficial patterns.
-	// See also the above check for ambiguities with SoundTracker modules.
-	// Keep this assertion in the code to find potential other broken MODs.
-	if(numPatterns != officialPatterns && sizeWithoutPatterns + officialPatterns * numChannels * 256 == file.GetLength())
-	{
-		MPT_ASSERT(false);
-		//numPatterns = officialPatterns;
-	} else
-#endif
 	if(numPatternsIllegal > numPatterns && sizeWithoutPatterns + numPatternsIllegal * numChannels * 256 == file.GetLength())
 	{
 		// Even those illegal pattern indexes (> 128) appear to be valid... What a weird file!
@@ -647,13 +636,13 @@ static PATTERNINDEX GetNumPatterns(FileReader &file, ModSequence &Order, ORDERIN
 }
 
 
-void CSoundFile::ReadMODPatternEntry(FileReader &file, ModCommand &m)
+std::pair<uint8, uint8> CSoundFile::ReadMODPatternEntry(FileReader &file, ModCommand &m)
 {
-	ReadMODPatternEntry(file.ReadArray<uint8, 4>(), m);
+	return ReadMODPatternEntry(file.ReadArray<uint8, 4>(), m);
 }
 
 
-void CSoundFile::ReadMODPatternEntry(const std::array<uint8, 4> data, ModCommand &m)
+std::pair<uint8, uint8> CSoundFile::ReadMODPatternEntry(const std::array<uint8, 4> data, ModCommand &m)
 {
 	// Read Period
 	uint16 period = (((static_cast<uint16>(data[0]) & 0x0F) << 8) | data[1]);
@@ -684,8 +673,9 @@ void CSoundFile::ReadMODPatternEntry(const std::array<uint8, 4> data, ModCommand
 	// Read Instrument
 	m.instr = (data[2] >> 4) | (data[0] & 0x10);
 	// Read Effect
-	m.command = data[2] & 0x0F;
-	m.param = data[3];
+	m.command = CMD_NONE;
+	uint8 command = data[2] & 0x0F, param = data[3];
+	return {command, param};
 }
 
 
@@ -779,7 +769,7 @@ static bool CheckMODMagic(const char magic[4], MODMagicResult &result)
 
 CSoundFile::ProbeResult CSoundFile::ProbeFileHeaderMOD(MemoryFileReader file, const uint64 *pfilesize)
 {
-	if(!file.CanRead(1080 + 4))
+	if(!file.LengthIsAtLeast(1080 + 4))
 	{
 		return ProbeWantMoreData;
 	}
@@ -992,28 +982,28 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 			for(uint32 i = 0; i < 256; i++)
 			{
 				ModCommand m;
-				ReadMODPatternEntry(file, m);
+				const auto [command, param]= ReadMODPatternEntry(file, m);
 				if(!m.IsAmigaNote())
 				{
 					isNoiseTracker = onlyAmigaNotes = false;
 				}
-				if((m.command > 0x06 && m.command < 0x0A)
-					|| (m.command == 0x0E && m.param > 0x01)
-					|| (m.command == 0x0F && m.param > 0x1F)
-					|| (m.command == 0x0D && ++patternBreaks > 1))
+				if((command > 0x06 && command < 0x0A)
+					|| (command == 0x0E && param > 0x01)
+					|| (command == 0x0F && param > 0x1F)
+					|| (command == 0x0D && ++patternBreaks > 1))
 				{
 					isNoiseTracker = false;
 				}
-				if(m.command == 0x08)
+				if(command == 0x08)
 				{
-					maxPanning = std::max(maxPanning, m.param);
-					if(m.param < 0x80)
+					maxPanning = std::max(maxPanning, param);
+					if(param < 0x80)
 						leftPanning = true;
-					else if(m.param > 0x8F && m.param != 0xA4)
+					else if(param > 0x8F && param != 0xA4)
 						extendedPanning = true;
-				} else if(m.command == 0x0E && (m.param & 0xF0) == 0x80)
+				} else if(command == 0x0E && (param & 0xF0) == 0x80)
 				{
-					maxPanning = std::max(maxPanning, static_cast<uint8>((m.param & 0x0F) << 4));
+					maxPanning = std::max(maxPanning, static_cast<uint8>((param & 0x0F) << 4));
 				}
 			}
 		}
@@ -1070,21 +1060,20 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 			for(CHANNELINDEX chn = 0; chn < readChannels; chn++)
 			{
 				ModCommand &m = rowBase[chn];
-				ReadMODPatternEntry(file, m);
+				auto [command, param] = ReadMODPatternEntry(file, m);
 
-				if(m.command || m.param)
+				if(command || param)
 				{
-					if(isStartrekker && m.command == 0x0E)
+					if(isStartrekker && command == 0x0E)
 					{
 						// No support for Startrekker assembly macros
-						m.command = CMD_NONE;
-						m.param = 0;
-					} else if(isStartrekker && m.command == 0x0F && m.param > 0x1F)
+						command = param = 0;
+					} else if(isStartrekker && command == 0x0F && param > 0x1F)
 					{
 						// Startrekker caps speed at 31 ticks per row
-						m.param = 0x1F;
+						param = 0x1F;
 					}
-					ConvertModCommand(m);
+					ConvertModCommand(m, command, param);
 				}
 
 				// Perform some checks for our heuristics...
@@ -1226,7 +1215,7 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 	if((loadFlags & loadSampleData) && isStartrekker)
 	{
 #ifdef MPT_EXTERNAL_SAMPLES
-		std::optional<InputFile> amFile;
+		std::optional<mpt::IO::InputFile> amFile;
 		FileReader amData;
 		if(file.GetOptionalFileName())
 		{
@@ -1237,7 +1226,7 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 			{
 				mpt::PathString infoName = filename + ext;
 				char stMagic[16];
-				if(infoName.IsFile())
+				if(mpt::native_fs{}.is_file(infoName))
 				{
 					amFile.emplace(infoName, SettingCacheCompleteFileBeforeLoading());
 					if(amFile->IsValid() && (amData = GetFileReader(*amFile)).IsValid() && amData.ReadArray(stMagic))
@@ -1290,7 +1279,7 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 	}
 #endif  // MPT_EXTERNAL_SAMPLES || MPT_BUILD_FUZZER
 
-	// Fix VBlank MODs. Arbitrary threshold: 9 minutes (enough for Guitar Slinger...).
+	// Fix VBlank MODs. Arbitrary threshold: 8 minutes (enough for "frame of mind" by Dascon...).
 	// Basically, this just converts all tempo commands into speed commands
 	// for MODs which are supposed to have VBlank timing (instead of CIA timing).
 	// There is no perfect way to do this, since both MOD types look the same,
@@ -1303,12 +1292,12 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 	if(isMdKd && hasTempoCommands && !definitelyCIA)
 	{
 		const double songTime = GetLength(eNoAdjust).front().duration;
-		if(songTime >= 540.0)
+		if(songTime >= 480.0)
 		{
 			m_playBehaviour.set(kMODVBlankTiming);
 			if(GetLength(eNoAdjust, GetLengthTarget(songTime)).front().targetReached)
 			{
-				// This just makes things worse, song is at least as long as in CIA mode (e.g. in "Stary Hallway" by Neurodancer)
+				// This just makes things worse, song is at least as long as in CIA mode
 				// Obviously we should keep using CIA timing then...
 				m_playBehaviour.reset(kMODVBlankTiming);
 			} else
@@ -1323,7 +1312,7 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 	m_modFormat.type = U_("mod");
 	if(modMagicResult.madeWithTracker)
 		m_modFormat.madeWithTracker = modMagicResult.madeWithTracker;
-	m_modFormat.charset = mpt::Charset::ISO8859_1;
+	m_modFormat.charset = mpt::Charset::Amiga_no_C1;
 
 	return true;
 }
@@ -1705,13 +1694,13 @@ bool CSoundFile::ReadM15(FileReader &file, ModLoadingFlags loadFlags)
 			for(CHANNELINDEX chn = 0; chn < 4; chn++)
 			{
 				ModCommand &m = rowBase[chn];
-				ReadMODPatternEntry(patternData[row][chn], m);
+				auto [command, param] = ReadMODPatternEntry(patternData[row][chn], m);
 
-				if(!m.param || m.command == 0x0E)
+				if(!param || command == 0x0E)
 				{
 					autoSlide[chn] = 0;
 				}
-				if(m.command || m.param)
+				if(command || param)
 				{
 					if(autoSlide[chn] != 0)
 					{
@@ -1725,39 +1714,40 @@ bool CSoundFile::ReadM15(FileReader &file, ModLoadingFlags loadFlags)
 							m.vol = autoSlide[chn] & 0x0F;
 						}
 					}
-					if(m.command == 0x0D)
+					if(command == 0x0D)
 					{
 						if(minVersion != ST2_00)
 						{
 							// Dxy is volume slide in some Soundtracker versions, D00 is a pattern break in the latest versions.
-							m.command = 0x0A;
+							command = 0x0A;
 						} else
 						{
-							m.param = 0;
+							param = 0;
 						}
-					} else if(m.command == 0x0C)
+					} else if(command == 0x0C)
 					{
 						// Volume is sent as-is to the chip, which ignores the highest bit.
-						m.param &= 0x7F;
-					} else if(m.command == 0x0E && (m.param > 0x01 || minVersion < ST_IX))
+						param &= 0x7F;
+					} else if(command == 0x0E && (param > 0x01 || minVersion < ST_IX))
 					{
 						// Import auto-slides as normal slides and fake them using volume column slides.
-						m.command = 0x0A;
-						autoSlide[chn] = m.param;
-					} else if(m.command == 0x0F)
+						command = 0x0A;
+						autoSlide[chn] = param;
+					} else if(command == 0x0F)
 					{
 						// Only the low nibble is evaluated in Soundtracker.
-						m.param &= 0x0F;
+						param &= 0x0F;
 					}
 
 					if(minVersion <= UST1_80)
 					{
 						// UST effects
-						switch(m.command)
+						m.param = param;
+						switch(command)
 						{
 						case 0:
 							// jackdance.mod by Karsten Obarski has 0xy arpeggios...
-							if(m.param < 0x03)
+							if(param < 0x03)
 							{
 								m.command = CMD_NONE;
 							} else
@@ -1785,7 +1775,7 @@ bool CSoundFile::ReadM15(FileReader &file, ModLoadingFlags loadFlags)
 						}
 					} else
 					{
-						ConvertModCommand(m);
+						ConvertModCommand(m, command, param);
 					}
 				} else
 				{
@@ -1824,7 +1814,7 @@ bool CSoundFile::ReadM15(FileReader &file, ModLoadingFlags loadFlags)
 	m_modFormat.formatName = U_("Soundtracker");
 	m_modFormat.type = U_("stk");
 	m_modFormat.madeWithTracker = madeWithTracker;
-	m_modFormat.charset = mpt::Charset::ISO8859_1;
+	m_modFormat.charset = mpt::Charset::Amiga_no_C1;
 
 	// Reading samples
 	if(loadFlags & loadSampleData)
@@ -1913,13 +1903,13 @@ bool CSoundFile::ReadICE(FileReader &file, ModLoadingFlags loadFlags)
 		m_modFormat.formatName = U_("MnemoTroN SoundTracker");
 		m_modFormat.type = U_("st26");
 		m_modFormat.madeWithTracker = U_("SoundTracker 2.6");
-		m_modFormat.charset = mpt::Charset::ISO8859_1;
+		m_modFormat.charset = mpt::Charset::Amiga_no_C1;
 	} else if(IsMagic(magic, "IT10"))
 	{
 		m_modFormat.formatName = U_("Ice Tracker");
 		m_modFormat.type = U_("ice");
 		m_modFormat.madeWithTracker = U_("Ice Tracker 1.0 / 1.1");
-		m_modFormat.charset = mpt::Charset::ISO8859_1;
+		m_modFormat.charset = mpt::Charset::Amiga_no_C1;
 	} else
 	{
 		return false;
@@ -1993,13 +1983,13 @@ bool CSoundFile::ReadICE(FileReader &file, ModLoadingFlags loadFlags)
 
 			for(ROWINDEX row = 0; row < 64; row++, m += 4)
 			{
-				ReadMODPatternEntry(file, *m);
+				const auto [command, param] = ReadMODPatternEntry(file, *m);
 
-				if((m->command || m->param)
-				   && !(m->command == 0x0E && m->param >= 0x10)     // Exx only sets filter
-				   && !(m->command >= 0x05 && m->command <= 0x09))  // These don't exist in ST2.6
+				if((command || param)
+				   && !(command == 0x0E && param >= 0x10)     // Exx only sets filter
+				   && !(command >= 0x05 && command <= 0x09))  // These don't exist in ST2.6
 				{
-					ConvertModCommand(*m);
+					ConvertModCommand(*m, command, param);
 				} else
 				{
 					m->command = CMD_NONE;
@@ -2153,7 +2143,7 @@ bool CSoundFile::ReadPT36(FileReader &file, ModLoadingFlags loadFlags)
 			chunk.Skip(4);
 			if(chunk.ReadMagic("PT") && iffHead.chunksize > 6)
 			{
-				chunk.ReadString<mpt::String::maybeNullTerminated>(version, mpt::Charset::ISO8859_1, iffHead.chunksize - 6);
+				chunk.ReadString<mpt::String::maybeNullTerminated>(version, mpt::Charset::Amiga_no_C1, iffHead.chunksize - 6);
 			}
 			break;
 
@@ -2192,13 +2182,18 @@ bool CSoundFile::ReadPT36(FileReader &file, ModLoadingFlags loadFlags)
 		if(mpt::is_in_range(info.dateMonth, 1, 12) && mpt::is_in_range(info.dateDay, 1, 31) && mpt::is_in_range(info.dateHour, 0, 23)
 		   && mpt::is_in_range(info.dateMinute, 0, 59) && mpt::is_in_range(info.dateSecond, 0, 59))
 		{
+#ifdef MODPLUG_TRACKER
+			m_modFormat.timezone = mpt::Date::LogicalTimezone::Local;
+#else
+			m_modFormat.timezone = mpt::Date::LogicalTimezone::Unspecified;
+#endif
 			FileHistory mptHistory;
-			mptHistory.loadDate.tm_year = info.dateYear;
-			mptHistory.loadDate.tm_mon = info.dateMonth - 1;
-			mptHistory.loadDate.tm_mday = info.dateDay;
-			mptHistory.loadDate.tm_hour = info.dateHour;
-			mptHistory.loadDate.tm_min = info.dateMinute;
-			mptHistory.loadDate.tm_sec = info.dateSecond;
+			mptHistory.loadDate.year = info.dateYear + 1900;
+			mptHistory.loadDate.month = info.dateMonth;
+			mptHistory.loadDate.day = info.dateDay;
+			mptHistory.loadDate.hours = info.dateHour;
+			mptHistory.loadDate.minutes = info.dateMinute;
+			mptHistory.loadDate.seconds = info.dateSecond;
 			m_FileHistory.push_back(mptHistory);
 		}
 	}
@@ -2209,7 +2204,7 @@ bool CSoundFile::ReadPT36(FileReader &file, ModLoadingFlags loadFlags)
 			std::string author;
 			commentChunk.ReadString<mpt::String::maybeNullTerminated>(author, 32);
 			if(author != "UNNAMED AUTHOR")
-				m_songArtist = mpt::ToUnicode(mpt::Charset::ISO8859_1, author);
+				m_songArtist = mpt::ToUnicode(mpt::Charset::Amiga_no_C1, author);
 			if(!commentChunk.NoBytesLeft())
 			{
 				m_songMessage.ReadFixedLineLength(commentChunk, commentChunk.BytesLeft(), 40, 0);
@@ -2354,8 +2349,8 @@ bool CSoundFile::SaveMod(std::ostream &f) const
 			for(CHANNELINDEX chn = 0; chn < writeChannels; chn++, eventByte += 4)
 			{
 				const ModCommand &m = rowBase[chn];
-				uint8 command = m.command, param = m.param;
-				ModSaveCommand(command, param, false, true);
+				uint8 command = 0, param = 0;
+				ModSaveCommand(m, command, param, false, true);
 
 				if(m.volcmd == VOLCMD_VOLUME && !command && !param)
 				{

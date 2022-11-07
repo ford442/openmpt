@@ -19,7 +19,10 @@
 #include "ExceptionHandler.h"
 #include "../misc/WriteMemoryDump.h"
 #include "../common/version.h"
+#include "mpt/io_file/outputfile.hpp"
 #include "../common/mptFileIO.h"
+#include "mpt/fs/common_directories.hpp"
+#include "mpt/fs/fs.hpp"
 #include "../soundlib/mod_specifications.h"
 
 #include <atomic>
@@ -125,8 +128,8 @@ struct CrashOutputDirectory
 	{
 		const mpt::PathString timestampDir = mpt::PathString::FromCString((CTime::GetCurrentTime()).Format(_T("%Y-%m-%d %H.%M.%S\\")));
 		// Create a crash directory
-		path = mpt::GetTempDirectory() + P_("OpenMPT Crash Files\\");
-		if(!path.IsDirectory())
+		path = mpt::common_directories::get_temp_directory() + P_("OpenMPT Crash Files\\");
+		if(!mpt::native_fs{}.is_directory(path))
 		{
 			CreateDirectory(path.AsNative().c_str(), nullptr);
 		}
@@ -137,7 +140,7 @@ struct CrashOutputDirectory
 		SetFilesystemCompression(path);
 		// Compression will be inherited by children directories and files automatically.
 		path += timestampDir;
-		if(!path.IsDirectory())
+		if(!mpt::native_fs{}.is_directory(path))
 		{
 			if(!CreateDirectory(path.AsNative().c_str(), nullptr))
 			{
@@ -249,9 +252,9 @@ int DebugReporter::RescueFiles()
 			filename += crashDirectory.path;
 			filename += mpt::PathString::FromUnicode(mpt::ufmt::val(++numFiles));
 			filename += P_("_");
-			filename += mpt::PathString::FromCString(modDoc->GetTitle()).SanitizeComponent();
+			filename += mpt::PathString::FromCString(modDoc->GetTitle()).AsSanitizedComponent();
 			filename += P_(".");
-			filename += mpt::PathString::FromUTF8(modDoc->GetSoundFile().GetModSpecifications().fileExtension);
+			filename += mpt::PathString::FromUnicode(modDoc->GetSoundFile().GetModSpecifications().GetFileExtension());
 
 			try
 			{
@@ -315,16 +318,16 @@ void DebugReporter::ReportError(mpt::ustring errorMessage)
 	errorMessage += UL_("\n");
 
 	{
-		mpt::SafeOutputFile sf(crashDirectory.path + P_("error.txt"), std::ios::binary, mpt::FlushMode::Full);
-		mpt::ofstream& f = sf;
+		mpt::IO::SafeOutputFile sf(crashDirectory.path + P_("error.txt"), std::ios::binary, mpt::IO::FlushMode::Full);
+		mpt::IO::ofstream& f = sf;
 		f.imbue(std::locale::classic());
 		f << mpt::replace(mpt::ToCharset(mpt::Charset::UTF8, errorMessage), std::string("\n"), std::string("\r\n"));
 	}
 
 	if(auto ih = CMainFrame::GetInputHandler(); ih != nullptr)
 	{
-		mpt::SafeOutputFile sf(crashDirectory.path + P_("last-commands.txt"), std::ios::binary, mpt::FlushMode::Full);
-		mpt::ofstream &f = sf;
+		mpt::IO::SafeOutputFile sf(crashDirectory.path + P_("last-commands.txt"), std::ios::binary, mpt::IO::FlushMode::Full);
+		mpt::IO::ofstream& f = sf;
 		f.imbue(std::locale::classic());
 
 		const auto commandSet = ih->m_activeCommandSet.get();
@@ -342,8 +345,8 @@ void DebugReporter::ReportError(mpt::ustring errorMessage)
 	}
 
 	{
-		mpt::SafeOutputFile sf(crashDirectory.path + P_("threads.txt"), std::ios::binary, mpt::FlushMode::Full);
-		mpt::ofstream& f = sf;
+		mpt::IO::SafeOutputFile sf(crashDirectory.path + P_("threads.txt"), std::ios::binary, mpt::IO::FlushMode::Full);
+		mpt::IO::ofstream& f = sf;
 		f.imbue(std::locale::classic());
 		f << MPT_AFORMAT("current : {}")(mpt::afmt::hex0<8>(GetCurrentThreadId())) << "\r\n";
 		f << MPT_AFORMAT("GUI     : {}")(mpt::afmt::hex0<8>(mpt::log::Trace::GetThreadId(mpt::log::Trace::ThreadKindGUI))) << "\r\n";
@@ -359,8 +362,8 @@ void DebugReporter::ReportError(mpt::ustring errorMessage)
 	};
 
 	{
-		mpt::SafeOutputFile sf(crashDirectory.path + P_("active-settings.txt"), std::ios::binary, mpt::FlushMode::Full);
-		mpt::ofstream& f = sf;
+		mpt::IO::SafeOutputFile sf(crashDirectory.path + P_("active-settings.txt"), std::ios::binary, mpt::IO::FlushMode::Full);
+		mpt::IO::ofstream& f = sf;
 		f.imbue(std::locale::classic());
 		if(theApp.GetpSettings())
 		{
@@ -424,15 +427,15 @@ void DebugReporter::ReportError(mpt::ustring errorMessage)
 	*/
 
 	{
-		mpt::SafeOutputFile sf(crashDirectory.path + P_("about-openmpt.txt"), std::ios::binary, mpt::FlushMode::Full);
-		mpt::ofstream& f = sf;
+		mpt::IO::SafeOutputFile sf(crashDirectory.path + P_("about-openmpt.txt"), std::ios::binary, mpt::IO::FlushMode::Full);
+		mpt::IO::ofstream& f = sf;
 		f.imbue(std::locale::classic());
 		f << mpt::ToCharset(mpt::Charset::UTF8, CAboutDlg::GetTabText(0));
 	}
 
 	{
-		mpt::SafeOutputFile sf(crashDirectory.path + P_("about-components.txt"), std::ios::binary, mpt::FlushMode::Full);
-		mpt::ofstream& f = sf;
+		mpt::IO::SafeOutputFile sf(crashDirectory.path + P_("about-components.txt"), std::ios::binary, mpt::IO::FlushMode::Full);
+		mpt::IO::ofstream& f = sf;
 		f.imbue(std::locale::classic());
 		f << mpt::ToCharset(mpt::Charset::UTF8, CAboutDlg::GetTabText(1));
 	}

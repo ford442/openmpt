@@ -16,6 +16,7 @@
 #include "Mpdlgs.h"
 #include "mod2wave.h"
 #include "WAVTools.h"
+#include "../common/mptFileTemporary.h"
 #include "../common/mptString.h"
 #include "../common/version.h"
 #include "../soundlib/MixerLoops.h"
@@ -23,6 +24,7 @@
 #include "../common/Dither.h"
 #include "../soundlib/AudioReadTarget.h"
 #include "../soundlib/plugins/PlugInterface.h"
+#include "mpt/io_file/fstream.hpp"
 #include "../common/mptFileIO.h"
 #include "mpt/audio/span.hpp"
 #include <variant>
@@ -486,7 +488,7 @@ void CWaveConvert::FillDither()
 	EncoderSettingsConf &encSettings = m_Settings.GetEncoderSettings();
 	m_CbnDither.CComboBox::ResetContent();
 	int format = m_CbnSampleFormat.GetItemData(m_CbnSampleFormat.GetCurSel()) & 0xffffff;
-	if((encTraits->modes & Encoder::ModeLossless) && Encoder::Format::FromInt(format).GetSampleFormat() != SampleFormat::Invalid && !Encoder::Format::FromInt(format).GetSampleFormat().IsFloat())
+	if((encTraits->modes & Encoder::ModeLossless) && !Encoder::Format::FromInt(format).GetSampleFormat().IsFloat())
 	{
 		m_CbnDither.EnableWindow(TRUE);
 		for(std::size_t dither = 0; dither < DithersOpenMPT::GetNumDithers(); ++dither)
@@ -912,8 +914,8 @@ void CDoWaveConvert::Run()
 	std::vector<float> normalizeBufferData;
 	float *normalizeBuffer = nullptr;
 	float normalizePeak = 0.0f;
-	const mpt::PathString normalizeFileName = mpt::CreateTempFileName(P_("OpenMPT"));
-	std::optional<mpt::fstream> normalizeFile;
+	const mpt::PathString normalizeFileName = mpt::TemporaryPathname{}.GetPathname();
+	std::optional<mpt::IO::fstream> normalizeFile;
 	if(m_Settings.normalize)
 	{
 		normalizeBufferData.resize(MIXBUFFERSIZE * 4);

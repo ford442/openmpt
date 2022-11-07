@@ -11,8 +11,13 @@
 #include "stdafx.h"
 #include "mptWine.h"
 
+#include "mpt/fs/fs.hpp"
+#include "mpt/io_file/fileref.hpp"
+#include "mpt/path/native_path.hpp"
+
 #include "mptOS.h"
 #include "../common/mptFileIO.h"
+#include "../common/mptFileTemporary.h"
 
 #include <deque>
 #include <map>
@@ -48,7 +53,7 @@ Context::Context(mpt::OS::Wine::VersionContext versionContext)
 	{
 		throw mpt::Wine::Exception("Unknown Wine version detected.");
 	}
-	m_Kernel32 = std::make_shared<std::optional<mpt::library>>(mpt::library::load({ mpt::library::path_search::system, mpt::library::path_prefix::none, MPT_PATH("kernel32.dll"), mpt::library::path_suffix::none }));
+	m_Kernel32 = std::make_shared<std::optional<mpt::library>>(mpt::library::load({ mpt::library::path_search::system, mpt::library::path_prefix::none, MPT_NATIVE_PATH("kernel32.dll"), mpt::library::path_suffix::none }));
 	if(!m_Kernel32->has_value())
 	{
 		throw mpt::Wine::Exception("Could not load Wine kernel32.dll.");
@@ -242,7 +247,7 @@ ExecResult Context::ExecutePosixShellScript(std::string script, FlagSet<ExecFlag
 
 	progress(userdata);
 
-	mpt::TempDirGuard dirWindowsTemp(mpt::CreateTempFileName());
+	mpt::TempDirGuard dirWindowsTemp{};
 	if(dirWindowsTemp.GetDirname().empty())
 	{
 		throw mpt::Wine::Exception("Creating temporary directoy failed.");
@@ -362,7 +367,7 @@ ExecResult Context::ExecutePosixShellScript(std::string script, FlagSet<ExecFlag
 					continue;
 				}
 				combinedPath += mpt::PathString::FromUnicode(path[singlepath]);
-				if(!combinedPath.IsDirectory())
+				if(!mpt::native_fs{}.is_directory(combinedPath))
 				{
 					if(::CreateDirectory(combinedPath.AsNative().c_str(), nullptr) == 0)
 					{
@@ -374,7 +379,7 @@ ExecResult Context::ExecutePosixShellScript(std::string script, FlagSet<ExecFlag
 		}
 		try
 		{
-			mpt::LazyFileRef out(dirWindows + P_("filetree") + P_("\\") + mpt::PathString::FromUTF8(mpt::replace(file.first, std::string("/"), std::string("\\"))));
+			mpt::IO::FileRef out(dirWindows + P_("filetree") + P_("\\") + mpt::PathString::FromUTF8(mpt::replace(file.first, std::string("/"), std::string("\\"))));
 			out = file.second;
 		} catch(std::exception &)
 		{
@@ -573,7 +578,7 @@ ExecResult Context::ExecutePosixShellScript(std::string script, FlagSet<ExecFlag
 		return result;
 	}
 
-	while(!(dirWindows + P_("done")).IsFile())
+	while(!mpt::native_fs{}.is_file(dirWindows + P_("done")))
 	{ // wait
 		if(progressCancel(userdata) != ExecuteProgressContinueWaiting)
 		{
@@ -642,12 +647,12 @@ ExecResult Context::ExecutePosixShellScript(std::string script, FlagSet<ExecFlag
 
 	std::deque<mpt::PathString> paths;
 	paths.push_back(dirWindows + P_("filetree"));
-	mpt::PathString basePath = (dirWindows + P_("filetree")).EnsureTrailingSlash();
+	mpt::PathString basePath = (dirWindows + P_("filetree")).WithTrailingSlash();
 	while(!paths.empty())
 	{
 		mpt::PathString path = paths.front();
 		paths.pop_front();
-		path.EnsureTrailingSlash();
+		path = path.WithTrailingSlash();
 		HANDLE hFind = NULL;
 		WIN32_FIND_DATA wfd = {};
 		hFind = FindFirstFile((path + P_("*.*")).AsNative().c_str(), &wfd);
@@ -660,14 +665,14 @@ ExecResult Context::ExecutePosixShellScript(std::string script, FlagSet<ExecFlag
 				{
 					filename = path + filename;
 					filetree[filename.ToUTF8()] = std::vector<char>();
-					if(filename.IsDirectory())
+					if(mpt::native_fs{}.is_directory(filename))
 					{
 						paths.push_back(filename);
-					} else if(filename.IsFile())
+					} else if(mpt::native_fs{}.is_file(filename))
 					{
 						try
 						{
-							mpt::LazyFileRef f(filename);
+							mpt::IO::FileRef f(filename);
 							std::vector<char> buf = f;
 							mpt::PathString treeFilename = mpt::PathString::FromNative(filename.AsNative().substr(basePath.AsNative().length()));
 							result.filetree[treeFilename.ToUTF8()] = buf;
@@ -682,7 +687,7 @@ ExecResult Context::ExecutePosixShellScript(std::string script, FlagSet<ExecFlag
 		}
 	}
 
-	mpt::DeleteWholeDirectoryTree(dirWindows);
+	mpt::native_fs{}.delete_tree(dirWindows);
 
 	return result;
 

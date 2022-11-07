@@ -13,6 +13,7 @@
 #include "mpt/base/saturate_round.hpp"
 #include "mpt/osinfo/class.hpp"
 #include "mpt/osinfo/windows_version.hpp"
+#include "mpt/osinfo/windows_wine_version.hpp"
 #include "mpt/string/types.hpp"
 #include "openmpt/base/FlagSet.hpp"
 #include "openmpt/base/Types.hpp"
@@ -376,14 +377,20 @@ struct AppInfo
 		Name = name;
 		return *this;
 	}
-	mpt::ustring GetName() const { return Name; }
+	mpt::ustring GetName() const
+	{
+		return Name;
+	}
 #if MPT_OS_WINDOWS
 	AppInfo &SetHWND(HWND hwnd)
 	{
 		UIHandle = reinterpret_cast<uintptr_t>(hwnd);
 		return *this;
 	}
-	HWND GetHWND() const { return reinterpret_cast<HWND>(UIHandle); }
+	HWND GetHWND() const
+	{
+		return reinterpret_cast<HWND>(UIHandle);
+	}
 #endif  // MPT_OS_WINDOWS
 };
 

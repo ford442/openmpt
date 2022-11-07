@@ -61,6 +61,9 @@
     <Filter Include="src\mpt">
       <UniqueIdentifier>{0D1E30A9-79FD-AE44-8215-3A1BEE7315A6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\mpt\arch">
+      <UniqueIdentifier>{BA90CF03-A6F3-5EA8-4F79-975E3BBB2A2B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\mpt\audio">
       <UniqueIdentifier>{EE51C37D-5A12-3FB4-234D-88318FCC8390}</UniqueIdentifier>
     </Filter>
@@ -112,11 +115,17 @@
     <Filter Include="src\mpt\format\tests">
       <UniqueIdentifier>{672FE5C8-53BE-6E92-FCDC-828DE84A7F38}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\mpt\fs">
+      <UniqueIdentifier>{7554AB6B-610C-EDB8-CA13-C614B6EA87A9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\mpt\io">
       <UniqueIdentifier>{D454AB6B-C00C-EDB8-2914-C61415EB87A9}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\mpt\io\tests">
       <UniqueIdentifier>{B68E2391-A287-42E3-CBB9-2768B71122EF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mpt\io_file">
+      <UniqueIdentifier>{D34C5655-3FD8-C319-48E9-460EB4F31F1A}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\mpt\io_read">
       <UniqueIdentifier>{EFCE5C55-5B5A-CA19-646B-4D0ED075261A}</UniqueIdentifier>
@@ -252,7 +261,16 @@
     <ClInclude Include="..\..\common\mptBaseUtils.h">
       <Filter>common</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\common\mptCPU.h">
+      <Filter>common</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\common\mptFileIO.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\mptFileTemporary.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\mptFileType.h">
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\mptPathString.h">
@@ -321,9 +339,6 @@
     <ClInclude Include="..\..\misc\WriteMemoryDump.h">
       <Filter>misc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\misc\mptCPU.h">
-      <Filter>misc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\misc\mptColor.h">
       <Filter>misc</Filter>
     </ClInclude>
@@ -355,9 +370,6 @@
       <Filter>mptrack</Filter>
     </ClInclude>
     <ClInclude Include="..\..\mptrack\Autotune.h">
-      <Filter>mptrack</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\mptrack\BuildVariants.h">
       <Filter>mptrack</Filter>
     </ClInclude>
     <ClInclude Include="..\..\mptrack\CDecimalSupport.h">
@@ -909,6 +921,15 @@
     <ClInclude Include="..\..\soundlib\tuningcollection.h">
       <Filter>soundlib</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\arch\arch.hpp">
+      <Filter>src\mpt\arch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\arch\feature_flags.hpp">
+      <Filter>src\mpt\arch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\arch\x86_amd64.hpp">
+      <Filter>src\mpt\arch</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\audio\sample.hpp">
       <Filter>src\mpt\audio</Filter>
     </ClInclude>
@@ -943,6 +964,9 @@
       <Filter>src\mpt\base</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\base\detect.hpp">
+      <Filter>src\mpt\base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\base\detect_arch.hpp">
       <Filter>src\mpt\base</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\base\detect_compiler.hpp">
@@ -1047,6 +1071,9 @@
     <ClInclude Include="..\..\src\mpt\binary\tests\tests_binary.hpp">
       <Filter>src\mpt\binary\tests</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\check\compiler.hpp">
+      <Filter>src\mpt\check</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\check\libc.hpp">
       <Filter>src\mpt\check</Filter>
     </ClInclude>
@@ -1098,8 +1125,14 @@
     <ClInclude Include="..\..\src\mpt\endian\tests\tests_endian_floatingpoint.hpp">
       <Filter>src\mpt\endian\tests</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\endian\tests\tests_endian_int24.hpp">
+      <Filter>src\mpt\endian\tests</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\endian\tests\tests_endian_integer.hpp">
       <Filter>src\mpt\endian\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\endian\type_traits.hpp">
+      <Filter>src\mpt\endian</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\environment\environment.hpp">
       <Filter>src\mpt\environment</Filter>
@@ -1149,6 +1182,12 @@
     <ClInclude Include="..\..\src\mpt\format\tests\tests_format_simple.hpp">
       <Filter>src\mpt\format\tests</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\fs\common_directories.hpp">
+      <Filter>src\mpt\fs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\fs\fs.hpp">
+      <Filter>src\mpt\fs</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\io\base.hpp">
       <Filter>src\mpt\io</Filter>
     </ClInclude>
@@ -1166,6 +1205,30 @@
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\io\tests\tests_io.hpp">
       <Filter>src\mpt\io\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\fileadapter.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\fileref.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\fstream.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\inputfile.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\inputfile_filecursor.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\outputfile.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\unique_basename.hpp">
+      <Filter>src\mpt\io_file</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\io_file\unique_tempfilename.hpp">
+      <Filter>src\mpt\io_file</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\io_read\callbackstream.hpp">
       <Filter>src\mpt\io_read</Filter>
@@ -1233,7 +1296,16 @@
     <ClInclude Include="..\..\src\mpt\osinfo\class.hpp">
       <Filter>src\mpt\osinfo</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\osinfo\dos_memory.hpp">
+      <Filter>src\mpt\osinfo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\osinfo\dos_version.hpp">
+      <Filter>src\mpt\osinfo</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\osinfo\windows_version.hpp">
+      <Filter>src\mpt\osinfo</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\osinfo\windows_wine_version.hpp">
       <Filter>src\mpt\osinfo</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\out_of_memory\out_of_memory.hpp">
@@ -1247,6 +1319,18 @@
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\parse\tests\tests_parse.hpp">
       <Filter>src\mpt\parse\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\path\basic_path.hpp">
+      <Filter>src\mpt\path</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\path\native_path.hpp">
+      <Filter>src\mpt\path</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\path\os_path.hpp">
+      <Filter>src\mpt\path</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\path\os_path_long.hpp">
+      <Filter>src\mpt\path</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\path\path.hpp">
       <Filter>src\mpt\path</Filter>
@@ -1484,6 +1568,12 @@
     <ClCompile Include="..\..\common\mptFileIO.cpp">
       <Filter>common</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\common\mptFileTemporary.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\mptFileType.cpp">
+      <Filter>common</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\common\mptPathString.cpp">
       <Filter>common</Filter>
     </ClCompile>
@@ -1510,9 +1600,6 @@
     </ClCompile>
     <ClCompile Include="..\..\common\version.cpp">
       <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\misc\mptCPU.cpp">
-      <Filter>misc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\misc\mptColor.cpp">
       <Filter>misc</Filter>
@@ -1542,9 +1629,6 @@
       <Filter>mptrack</Filter>
     </ClCompile>
     <ClCompile Include="..\..\mptrack\Autotune.cpp">
-      <Filter>mptrack</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\mptrack\BuildVariants.cpp">
       <Filter>mptrack</Filter>
     </ClCompile>
     <ClCompile Include="..\..\mptrack\CDecimalSupport.cpp">
@@ -1943,6 +2027,9 @@
     <ClCompile Include="..\..\soundlib\Load_gdm.cpp">
       <Filter>soundlib</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\soundlib\Load_gt2.cpp">
+      <Filter>soundlib</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\soundlib\Load_imf.cpp">
       <Filter>soundlib</Filter>
     </ClCompile>
@@ -2237,6 +2324,9 @@
     <ClCompile Include="..\..\test\TestToolsLib.cpp">
       <Filter>test</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\test\libopenmpt_test.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\test\mpt_tests_base.cpp">
       <Filter>test</Filter>
     </ClCompile>
@@ -2317,10 +2407,7 @@
     <None Include="..\..\mptrack\res\NODROP.CUR">
       <Filter>mptrack\res</Filter>
     </None>
-    <None Include="..\..\mptrack\res\OpenMPT-win10.manifest">
-      <Filter>mptrack\res</Filter>
-    </None>
-    <None Include="..\..\mptrack\res\defaultKeybindings.mkb">
+    <None Include="..\..\mptrack\res\OpenMPT.manifest">
       <Filter>mptrack\res</Filter>
     </None>
     <None Include="..\..\mptrack\res\moddoc.ico">
@@ -2328,6 +2415,9 @@
     </None>
     <None Include="..\..\mptrack\res\nodrag.cur">
       <Filter>mptrack\res</Filter>
+    </None>
+    <None Include="..\vs\win10.manifest">
+      <Filter>build\vs</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

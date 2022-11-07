@@ -27,12 +27,20 @@
 		cfg = test.getconfig(prj, "Debug")
 	end
 
+	function suite.OnProjectCfg_KindNone()
+		kind "None"
+		prepare()
+		codelite.project.compiler(cfg)
+		test.capture [[
+      <Compiler Required="no"/>
+		]]
+	end
 
 	function suite.OnProjectCfg_Compiler()
 		prepare()
 		codelite.project.compiler(cfg)
 		test.capture [[
-      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlagsPolicy="1" PCHFlags="">
       </Compiler>
 		]]
 	end
@@ -51,7 +59,7 @@
 		prepare()
 		codelite.project.compiler(cfg)
 		test.capture [[
-      <Compiler Options="-O0;-fPIC;-g;-std=c++11;-fno-exceptions;-fno-stack-protector;-fno-rtti;-include forced_include1.h;-include forced_include2.h;-opt1;-opt2" C_Options="-O0;-fPIC;-g;-include forced_include1.h;-include forced_include2.h;-opt1;-opt2" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+      <Compiler Options="-O0;-fPIC;-g;-std=c++11;-fno-exceptions;-fno-stack-protector;-fno-rtti;-include forced_include1.h;-include forced_include2.h;-opt1;-opt2" C_Options="-O0;-fPIC;-g;-include forced_include1.h;-include forced_include2.h;-opt1;-opt2" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlagsPolicy="1" PCHFlags="">
       </Compiler>
 		]]
 	end
@@ -61,7 +69,7 @@
 		prepare()
 		codelite.project.compiler(cfg)
 		test.capture [[
-      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlagsPolicy="1" PCHFlags="">
         <IncludePath Value="dir"/>
         <IncludePath Value="dir2"/>
       </Compiler>
@@ -69,11 +77,11 @@
 	end
 
 	function suite.OnProjectCfg_SysIncludes()
-		sysincludedirs { "sysdir", "sysdir2/"}
+		externalincludedirs { "sysdir", "sysdir2/"}
 		prepare()
 		codelite.project.compiler(cfg)
 		test.capture [[
-      <Compiler Options="-isystem sysdir;-isystem sysdir2" C_Options="-isystem sysdir;-isystem sysdir2" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+      <Compiler Options="-isystem sysdir;-isystem sysdir2" C_Options="-isystem sysdir;-isystem sysdir2" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlagsPolicy="1" PCHFlags="">
       </Compiler>
 		]]
 	end
@@ -84,7 +92,7 @@
 		prepare()
 		codelite.project.compiler(cfg)
 		test.capture [[
-      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlagsPolicy="1" PCHFlags="">
         <Preprocessor Value="TEST"/>
         <Preprocessor Value="DEF"/>
         <Preprocessor Value="VAL=1"/>
@@ -98,8 +106,17 @@
 		prepare()
 		codelite.project.compiler(cfg)
 		test.capture [[
-      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="pch.h" PCHInCommandLine="yes" UseDifferentPCHFlags="no" PCHFlags="">
+      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="pch.h" PCHInCommandLine="yes" PCHFlagsPolicy="1" PCHFlags="">
       </Compiler>
+		]]
+	end
+
+	function suite.OnProjectCfg_LinkerKindNone()
+		kind "None"
+		prepare()
+		codelite.project.linker(cfg)
+		test.capture [[
+      <Linker Required="no"/>
 		]]
 	end
 
@@ -171,7 +188,7 @@
 
 	function suite.OnProjectCfg_ResSysInclude()
 		files { "x.rc" }
-		sysincludedirs { "sysdir/" }
+		externalincludedirs { "sysdir/" }
 		prepare()
 		codelite.project.resourceCompiler(cfg)
 		test.capture [[
@@ -187,7 +204,7 @@
 		codelite.project.preBuild(cfg)
 		test.capture [[
       <PreBuild>
-        <Command Enabled="yes">@echo test</Command>
+        <Command Enabled="yes">@echo "test"</Command>
       </PreBuild>
 		]]
 	end
@@ -198,7 +215,7 @@
 		codelite.project.postBuild(cfg)
 		test.capture [[
       <PostBuild>
-        <Command Enabled="yes">@echo test</Command>
+        <Command Enabled="yes">@echo "test"</Command>
       </PostBuild>
 		]]
 	end
@@ -360,7 +377,7 @@ cmd2</StartupCommands>
 		prepare()
 		codelite.project.compiler(cfg)
 		test.capture [[
-      <Compiler Options="-funsigned-char" C_Options="-funsigned-char" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+      <Compiler Options="-funsigned-char" C_Options="-funsigned-char" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlagsPolicy="1" PCHFlags="">
       </Compiler>
 		]]
 	end
@@ -371,7 +388,7 @@ cmd2</StartupCommands>
 		prepare()
 		codelite.project.compiler(cfg)
 		test.capture [[
-      <Compiler Options="-fno-unsigned-char" C_Options="-fno-unsigned-char" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" UseDifferentPCHFlags="no" PCHFlags="">
+      <Compiler Options="-fno-unsigned-char" C_Options="-fno-unsigned-char" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlagsPolicy="1" PCHFlags="">
       </Compiler>
 		]]
 	end

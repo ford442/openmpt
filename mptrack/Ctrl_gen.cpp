@@ -161,10 +161,11 @@ TEMPO CCtrlGeneral::SliderToTempo(int value) const
 		return m_tempoMax - TEMPO(value, 0);
 	} else
 	{
-		auto tempo = TempoSliderRange() - TEMPO(value, 0) + m_tempoMin;
-		if(tempo >= TEMPO_SPLIT_THRESHOLD)
-			tempo = TEMPO((tempo - TEMPO_SPLIT_THRESHOLD).GetInt() * TEMPO_SPLIT_PRECISION, 0) + TEMPO_SPLIT_THRESHOLD;
-		return tempo;
+		const auto tempoSliderSplit = TempoToSlider(TEMPO_SPLIT_THRESHOLD);
+		if(value <= tempoSliderSplit)
+			return m_tempoMax - TEMPO(value * TEMPO_SPLIT_PRECISION, 0);
+		else
+			return m_tempoMin + TempoSliderRange() - TEMPO(value, 0);
 	}
 }
 
@@ -176,10 +177,10 @@ int CCtrlGeneral::TempoToSlider(TEMPO tempo) const
 		return (m_tempoMax - tempo).GetInt();
 	} else
 	{
-		if(tempo >= TEMPO_SPLIT_THRESHOLD)
-			tempo = TEMPO((tempo - TEMPO_SPLIT_THRESHOLD).GetInt() / TEMPO_SPLIT_PRECISION + TEMPO_SPLIT_THRESHOLD.GetInt(), 0);
-		const auto range = TempoSliderRange();
-		return (range - std::min(tempo, range)).GetInt();
+		if(tempo < TEMPO_SPLIT_THRESHOLD)
+			return (TempoSliderRange() - (std::max(m_tempoMin, tempo) - m_tempoMin)).GetInt();
+		else
+			return (m_tempoMax - std::min(m_tempoMax, tempo)).GetInt() / TEMPO_SPLIT_PRECISION;
 	}
 }
 
@@ -679,6 +680,11 @@ BOOL CCtrlGeneral::GetToolTipText(UINT uId, LPTSTR pszText)
 	if ((pszText) && (uId))
 	{
 		const bool displayDBValues = m_sndFile.GetPlayConfig().getDisplayDBValues();
+		const CWnd *wnd = GetDlgItem(uId);
+		const bool isEnabled = wnd ? (wnd->IsWindowEnabled() != FALSE) : true;  // nullptr check is for a Wine bug workaround (https://bugs.openmpt.org/view.php?id=1553)
+		mpt::tstring notAvailable;
+		if(!isEnabled)
+			notAvailable = MPT_TFORMAT("Feature is not available in the {} format.")(mpt::ToWin(m_sndFile.GetModSpecifications().GetFileExtensionUpper()));
 
 		switch(uId)
 		{
@@ -691,16 +697,36 @@ BOOL CCtrlGeneral::GetToolTipText(UINT uId, LPTSTR pszText)
 			}
 			return TRUE;
 		case IDC_BUTTON1:
-			_tcscpy(pszText, _T("Click button multiple times to tap in the desired tempo."));
+			if(isEnabled)
+				_tcscpy(pszText, _T("Click button multiple times to tap in the desired tempo."));
+			else
+				_tcscpy(pszText, notAvailable.c_str());
 			return TRUE;
 		case IDC_SLIDER_SAMPLEPREAMP:
 			_tcscpy(pszText, displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_nSamplePreAmp, m_sndFile.GetPlayConfig().getNormalSamplePreAmp()).GetString() : moreRecentMixModeNote);
 			return TRUE;
 		case IDC_SLIDER_VSTIVOL:
-			_tcscpy(pszText, displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_nVSTiVolume, m_sndFile.GetPlayConfig().getNormalVSTiVol()).GetString() : moreRecentMixModeNote);
+			if(isEnabled)
+				_tcscpy(pszText, displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_nVSTiVolume, m_sndFile.GetPlayConfig().getNormalVSTiVol()).GetString() : moreRecentMixModeNote);
+			else
+				_tcscpy(pszText, notAvailable.c_str());
 			return TRUE;
 		case IDC_SLIDER_GLOBALVOL:
-			_tcscpy(pszText, displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_PlayState.m_nGlobalVolume, m_sndFile.GetPlayConfig().getNormalGlobalVol()).GetString() : moreRecentMixModeNote);
+			if(isEnabled)
+				_tcscpy(pszText, displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_PlayState.m_nGlobalVolume, m_sndFile.GetPlayConfig().getNormalGlobalVol()).GetString() : moreRecentMixModeNote);
+			else
+				_tcscpy(pszText, notAvailable.c_str());
+			return TRUE;
+		case IDC_SLIDER_SONGTEMPO:
+		case IDC_EDIT_ARTIST:
+		case IDC_EDIT_TEMPO:
+		case IDC_EDIT_SPEED:
+		case IDC_EDIT_RESTARTPOS:
+		case IDC_EDIT_GLOBALVOL:
+		case IDC_EDIT_VSTIVOL:
+			if(isEnabled)
+				break;
+			_tcscpy(pszText, notAvailable.c_str());
 			return TRUE;
 		}
 	}

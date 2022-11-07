@@ -270,13 +270,11 @@ static void ReadOKTPattern(FileReader &chunk, PATTERNINDEX pat, CSoundFile &sndF
 				{
 					ModCommand &other = rowCmd[chn + pairedChn[chn]];
 					// Try to preserve effect if there already was one
-					if(other.ConvertVolEffect(other.command, other.param, true))
+					if(auto volCmd = other.ConvertToVolCommand(other.command, other.param, true); volCmd.first != VOLCMD_NONE)
 					{
-						other.volcmd = other.command;
-						other.vol = other.param;
+						other.SetVolumeCommand(volCmd);
 					}
-					other.command = m.command;
-					other.param = m.param;
+					other.SetEffectCommand(m);
 				}
 				break;
 
@@ -342,7 +340,7 @@ bool CSoundFile::ReadOKT(FileReader &file, ModLoadingFlags loadFlags)
 
 	m_modFormat.formatName = U_("Oktalyzer");
 	m_modFormat.type = U_("okt");
-	m_modFormat.charset = mpt::Charset::ISO8859_1;
+	m_modFormat.charset = mpt::Charset::Amiga_no_C1;
 
 	// Go through IFF chunks...
 	while(file.CanRead(sizeof(OktIffChunk)))

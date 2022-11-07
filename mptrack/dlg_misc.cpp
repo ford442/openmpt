@@ -559,6 +559,7 @@ void CLegacyPlaybackSettingsDlg::OnFilterStringChanged()
 	CString s;
 	GetDlgItemText(IDC_EDIT1, s);
 	const bool filterActive = !s.IsEmpty();
+	s.MakeLower();
 
 	m_CheckList.SetRedraw(FALSE);
 	m_CheckList.ResetContent();
@@ -694,11 +695,18 @@ void CLegacyPlaybackSettingsDlg::OnFilterStringChanged()
 		case kApplyOffsetWithoutNote: desc = _T("Offset commands work without a note next to them"); break;
 		case kITPitchPanSeparation: desc = _T("Pitch / Pan Separation can be overridden by panning commands"); break;
 		case kImprecisePingPongLoops: desc = _T("Use old imprecise ping-pong loop end calculation"); break;
+		case kPluginIgnoreTonePortamento:
+			if(m_modType == MOD_TYPE_XM)
+				desc = _T("Ignore tone portamento and fine pitch slides for instrument plugins");
+			else
+				desc = _T("Ignore tone portamento for instrument plugins");
+			break;
+		case kST3TonePortaWithAdlibNote: desc = _T("Adlib Notes with Tone Portamento are delayed until the next row"); break;
 
 		default: MPT_ASSERT_NOTREACHED();
 		}
 
-		if(filterActive && _tcsstr(desc, s) == nullptr)
+		if(filterActive && CString{desc}.MakeLower().Find(s) < 0)
 			continue;
 
 		if(m_playBehaviour[i] || allowedFlags[i])
@@ -1304,17 +1312,15 @@ BOOL CEditHistoryDlg::OnInitDialog()
 	for(const auto &entry : editHistory)
 	{
 		totalTime += entry.openTime;
-
 		// Date
-		CString sDate;
+		CString sDate = CString(_T("<unknown date>"));
 		if(entry.HasValidDate())
 		{
-			TCHAR szDate[32];
-			_tcsftime(szDate, std::size(szDate), _T("%d %b %Y, %H:%M:%S"), &entry.loadDate);
-			sDate = szDate;
-		} else
-		{
-			sDate = _T("<unknown date>");
+			const mpt::Date::Unix unixdate = ((m_modDoc.GetSoundFile().GetTimezoneInternal() == mpt::Date::LogicalTimezone::Local) || (m_modDoc.GetSoundFile().GetTimezoneInternal() == mpt::Date::LogicalTimezone::Unspecified))
+				? mpt::Date::UnixFromLocal(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::Local>(entry.loadDate))
+				: mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(entry.loadDate));
+				;
+			sDate = CTime(mpt::Date::UnixAsSeconds(unixdate)).Format(_T("%d %b %Y, %H:%M:%S"));
 		}
 		// Time + stuff
 		uint32 duration = mpt::saturate_round<uint32>(entry.openTime / HISTORY_TIMER_PRECISION);
@@ -1478,7 +1484,6 @@ static constexpr MsgBoxHidableMessage HidableMessages[] =
 {
 	{ _T("Note: First two bytes of oneshot samples are silenced for ProTracker compatibility."), 1, true },
 	{ _T("Hint: To create IT-files without MPT-specific extensions included, try compatibility export from File-menu."), 1 << 1, true },
-	{ _T("Press OK to apply signed/unsigned conversion\n (note: this often significantly increases volume level)"), 1 << 2, false },
 	{ _T("Hint: To create XM-files without MPT-specific extensions included, try compatibility export from File-menu."), 1 << 3, true },
 	{ _T("Warning: The exported file will not contain any of MPT's file format hacks."), 1 << 4, true },
 };

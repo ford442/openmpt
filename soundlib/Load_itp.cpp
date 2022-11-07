@@ -22,6 +22,8 @@
 #include "../mptrack/Moddoc.h"
 #endif // MODPLUG_TRACKER
 #ifdef MPT_EXTERNAL_SAMPLES
+#include "mpt/io_file/inputfile.hpp"
+#include "mpt/io_file/inputfile_filecursor.hpp"
 #include "../common/mptFileIO.h"
 #endif // MPT_EXTERNAL_SAMPLES
 
@@ -38,19 +40,39 @@ OPENMPT_NAMESPACE_BEGIN
 
 struct ITPModCommand
 {
-	uint8le note;
-	uint8le instr;
-	uint8le volcmd;
-	uint8le command;
-	uint8le vol;
-	uint8le param;
+	uint8 note;
+	uint8 instr;
+	uint8 volcmd;
+	uint8 command;
+	uint8 vol;
+	uint8 param;
+
 	operator ModCommand() const
 	{
+		static constexpr VolumeCommand ITPVolCmds[] =
+		{
+			VOLCMD_NONE,         VOLCMD_VOLUME,       VOLCMD_PANNING,       VOLCMD_VOLSLIDEUP,
+			VOLCMD_VOLSLIDEDOWN, VOLCMD_FINEVOLUP,    VOLCMD_FINEVOLDOWN,   VOLCMD_VIBRATOSPEED,
+			VOLCMD_VIBRATODEPTH, VOLCMD_PANSLIDELEFT, VOLCMD_PANSLIDERIGHT, VOLCMD_TONEPORTAMENTO,
+			VOLCMD_PORTAUP,      VOLCMD_PORTADOWN,    VOLCMD_PLAYCONTROL,   VOLCMD_OFFSET,
+		};
+		static constexpr EffectCommand ITPCommands[] =
+		{
+			CMD_NONE,             CMD_ARPEGGIO,      CMD_PORTAMENTOUP,    CMD_PORTAMENTODOWN,
+			CMD_TONEPORTAMENTO,   CMD_VIBRATO,       CMD_TONEPORTAVOL,    CMD_VIBRATOVOL,
+			CMD_TREMOLO,          CMD_PANNING8,      CMD_OFFSET,          CMD_VOLUMESLIDE,
+			CMD_POSITIONJUMP,     CMD_VOLUME,        CMD_PATTERNBREAK,    CMD_RETRIG,
+			CMD_SPEED,            CMD_TEMPO,         CMD_TREMOR,          CMD_MODCMDEX,
+			CMD_S3MCMDEX,         CMD_CHANNELVOLUME, CMD_CHANNELVOLSLIDE, CMD_GLOBALVOLUME,
+			CMD_GLOBALVOLSLIDE,   CMD_KEYOFF,        CMD_FINEVIBRATO,     CMD_PANBRELLO,
+			CMD_XFINEPORTAUPDOWN, CMD_PANNINGSLIDE,  CMD_SETENVPOSITION,  CMD_MIDI,
+			CMD_SMOOTHMIDI,       CMD_DELAYCUT,      CMD_XPARAM,
+		};
 		ModCommand result;
-		result.note = (ModCommand::IsNote(note) || ModCommand::IsSpecialNote(note)) ? static_cast<ModCommand::NOTE>(note.get()) : static_cast<ModCommand::NOTE>(NOTE_NONE);
+		result.note = (ModCommand::IsNote(note) || ModCommand::IsSpecialNote(note)) ? static_cast<ModCommand::NOTE>(note) : static_cast<ModCommand::NOTE>(NOTE_NONE);
 		result.instr = instr;
-		result.command = (command < MAX_EFFECTS) ? static_cast<EffectCommand>(command.get()) : CMD_NONE;
-		result.volcmd = (volcmd < MAX_VOLCMDS) ? static_cast<VolumeCommand>(volcmd.get()) : VOLCMD_NONE;
+		result.volcmd = (volcmd < std::size(ITPVolCmds)) ? ITPVolCmds[volcmd] : VOLCMD_NONE;
+		result.command = (command < std::size(ITPCommands)) ? ITPCommands[command] : CMD_NONE;
 		result.vol = vol;
 		result.param = param;
 		return result;
@@ -230,7 +252,7 @@ bool CSoundFile::ReadITP(FileReader &file, ModLoadingFlags loadFlags)
 #ifdef MODPLUG_TRACKER
 		if(version <= 0x102)
 		{
-			instrPaths[ins] = mpt::PathString::FromLocaleSilent(path);
+			instrPaths[ins] = mpt::PathString::FromLocale(path);
 		} else
 #endif // MODPLUG_TRACKER
 		{
@@ -239,10 +261,10 @@ bool CSoundFile::ReadITP(FileReader &file, ModLoadingFlags loadFlags)
 #ifdef MODPLUG_TRACKER
 		if(const auto fileName = file.GetOptionalFileName(); fileName.has_value())
 		{
-			instrPaths[ins] = instrPaths[ins].RelativePathToAbsolute(fileName->GetPath());
+			instrPaths[ins] = mpt::AbsolutePathToRelative(instrPaths[ins], fileName->GetDirectoryWithDrive());
 		} else if(GetpModDoc() != nullptr)
 		{
-			instrPaths[ins] = instrPaths[ins].RelativePathToAbsolute(GetpModDoc()->GetPathNameMpt().GetPath());
+			instrPaths[ins] = mpt::RelativePathToAbsolute(instrPaths[ins], GetpModDoc()->GetPathNameMpt().GetDirectoryWithDrive());
 		}
 #endif // MODPLUG_TRACKER
 	}
@@ -281,8 +303,8 @@ bool CSoundFile::ReadITP(FileReader &file, ModLoadingFlags loadFlags)
 		if(pat < numNamedPats)
 		{
 			char patName[32];
-			pattNames.ReadString<mpt::String::maybeNullTerminated>(patName, patNameLen);
-			Patterns[pat].SetName(patName);
+			if(pattNames.ReadString<mpt::String::maybeNullTerminated>(patName, patNameLen))
+				Patterns[pat].SetName(patName);
 		}
 
 		// Pattern data
@@ -341,7 +363,7 @@ bool CSoundFile::ReadITP(FileReader &file, ModLoadingFlags loadFlags)
 			continue;
 
 #ifdef MPT_EXTERNAL_SAMPLES
-		InputFile f(instrPaths[ins], SettingCacheCompleteFileBeforeLoading());
+		mpt::IO::InputFile f(instrPaths[ins], SettingCacheCompleteFileBeforeLoading());
 		FileReader instrFile = GetFileReader(f);
 		if(!ReadInstrumentFromFile(ins + 1, instrFile, true))
 		{
@@ -377,6 +399,11 @@ bool CSoundFile::ReadITP(FileReader &file, ModLoadingFlags loadFlags)
 
 			code = file.ReadUint32LE();
 		}
+	}
+
+	for(SAMPLEINDEX smp = 1; smp <= GetNumSamples(); smp++)
+	{
+		Samples[smp].SetDefaultCuePoints();
 	}
 
 	// Song extensions

@@ -1159,8 +1159,16 @@ LIBOPENMPT_API int32_t openmpt_module_get_current_speed( openmpt_module * mod );
  *
  * \param mod The module handle to work on.
  * \return The current tempo in tracker units. The exact meaning of this value depends on the tempo mode being used.
+ * \deprecated Please use openmpt_module_get_current_tempo2().
  */
-LIBOPENMPT_API int32_t openmpt_module_get_current_tempo( openmpt_module * mod );
+LIBOPENMPT_API LIBOPENMPT_DEPRECATED int32_t openmpt_module_get_current_tempo( openmpt_module * mod );
+/*! \brief Get the current tempo
+ *
+ * \param mod The module handle to work on.
+ * \return The current tempo in tracker units. The exact meaning of this value depends on the tempo mode being used.
+ * \since 0.7.0
+ */
+LIBOPENMPT_API double openmpt_module_get_current_tempo2( openmpt_module * mod );
 /*! \brief Get the current order
  *
  * \param mod The module handle to work on.
@@ -1409,7 +1417,7 @@ LIBOPENMPT_API const char * openmpt_module_highlight_pattern_row_channel( openmp
  *          - load.skip_patterns (boolean): Set to "1" to avoid loading patterns into memory
  *          - load.skip_plugins (boolean): Set to "1" to avoid loading plugins
  *          - load.skip_subsongs_init (boolean): Set to "1" to avoid pre-initializing sub-songs. Skipping results in faster module loading but slower seeking.
- *          - seek.sync_samples (boolean): Set to "1" to sync sample playback when using openmpt_module_set_position_seconds or openmpt_module_set_position_order_row.
+ *          - seek.sync_samples (boolean): Set to "0" to not sync sample playback when using openmpt_module_set_position_seconds or openmpt_module_set_position_order_row.
  *          - subsong (integer): The current subsong. Setting it has identical semantics as openmpt_module_select_subsong(), getting it returns the currently selected subsong.
  *          - play.at_end (text): Chooses the behaviour when the end of song is reached:
  *                         - "fadeout": Fades the module out for a short while. Subsequent reads after the fadeout will return 0 rendered frames.

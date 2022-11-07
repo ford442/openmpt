@@ -16,6 +16,11 @@
 #include "openmpt/all/BuildSettings.hpp"
 
 
+#if defined(__MINGW32__) && !defined(__MINGW64__)
+#include <sys/types.h>
+#endif
+
+
 #if defined(MODPLUG_TRACKER)
 
 #if defined(MPT_WITH_MFC)
@@ -32,10 +37,10 @@
 #include <afxcview.h>
 // cppcheck-suppress missingInclude
 #include <afxdlgs.h>
-#ifdef MPT_MFC_FULL
+#ifndef _AFX_NO_MFC_CONTROLS_IN_DIALOGS
 // cppcheck-suppress missingInclude
 #include <afxlistctrl.h>
-#endif // MPT_MFC_FULL
+#endif // !_AFX_NO_MFC_CONTROLS_IN_DIALOGS
 // cppcheck-suppress missingInclude
 #include <afxole.h>
 
@@ -59,6 +64,7 @@
 
 
 #include "mpt/base/span.hpp"
+#include "mpt/check/compiler.hpp"
 #include "mpt/check/libc.hpp"
 #if defined(MPT_WITH_MFC)
 #include "mpt/check/mfc.hpp"

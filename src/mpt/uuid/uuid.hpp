@@ -113,6 +113,10 @@ private:
 	MPT_CONSTEXPRINLINE uint8 Nn() const noexcept {
 		return static_cast<uint8>((Data4 >> 56) & 0xffu);
 	}
+#if MPT_COMPILER_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // MPT_COMPILER_GCC
 	void MakeRFC4122(uint8 version) noexcept {
 		// variant
 		uint8 Nn = static_cast<uint8>((Data4 >> 56) & 0xffu);
@@ -128,6 +132,9 @@ private:
 		Mm |= (version << 4u);
 		Data3 |= static_cast<uint16>(Mm) << 8;
 	}
+#if MPT_COMPILER_GCC
+#pragma GCC diagnostic pop
+#endif // MPT_COMPILER_GCC
 #if MPT_OS_WINDOWS
 private:
 	static mpt::UUID UUIDFromWin32(::UUID uuid) {
@@ -160,7 +167,7 @@ public:
 private:
 	static MPT_CONSTEXPRINLINE uint8 NibbleFromChar(char x) {
 		return ('0' <= x && x <= '9') ? static_cast<uint8>(x - '0' + 0) : ('a' <= x && x <= 'z') ? static_cast<uint8>(x - 'a' + 10)
-			: ('A' <= x && x <= 'Z')                                                             ? static_cast<uint8>(x - 'A' + 10)
+																	: ('A' <= x && x <= 'Z')     ? static_cast<uint8>(x - 'A' + 10)
 																								 : mpt::constexpr_throw<uint8>(std::domain_error(""));
 	}
 	static MPT_CONSTEXPRINLINE uint8 ByteFromHex(char x, char y) {
@@ -351,29 +358,29 @@ public:
 	}
 	std::string ToAString() const {
 		return std::string()
-			+ mpt::format<std::string>::hex0<8>(GetData1())
-			+ std::string("-")
-			+ mpt::format<std::string>::hex0<4>(GetData2())
-			+ std::string("-")
-			+ mpt::format<std::string>::hex0<4>(GetData3())
-			+ std::string("-")
-			+ mpt::format<std::string>::hex0<4>(static_cast<uint16>(GetData4() >> 48))
-			+ std::string("-")
-			+ mpt::format<std::string>::hex0<4>(static_cast<uint16>(GetData4() >> 32))
-			+ mpt::format<std::string>::hex0<8>(static_cast<uint32>(GetData4() >> 0));
+			 + mpt::format<std::string>::hex0<8>(GetData1())
+			 + std::string("-")
+			 + mpt::format<std::string>::hex0<4>(GetData2())
+			 + std::string("-")
+			 + mpt::format<std::string>::hex0<4>(GetData3())
+			 + std::string("-")
+			 + mpt::format<std::string>::hex0<4>(static_cast<uint16>(GetData4() >> 48))
+			 + std::string("-")
+			 + mpt::format<std::string>::hex0<4>(static_cast<uint16>(GetData4() >> 32))
+			 + mpt::format<std::string>::hex0<8>(static_cast<uint32>(GetData4() >> 0));
 	}
 	mpt::ustring ToUString() const {
 		return mpt::ustring()
-			+ mpt::format<mpt::ustring>::hex0<8>(GetData1())
-			+ MPT_USTRING("-")
-			+ mpt::format<mpt::ustring>::hex0<4>(GetData2())
-			+ MPT_USTRING("-")
-			+ mpt::format<mpt::ustring>::hex0<4>(GetData3())
-			+ MPT_USTRING("-")
-			+ mpt::format<mpt::ustring>::hex0<4>(static_cast<uint16>(GetData4() >> 48))
-			+ MPT_USTRING("-")
-			+ mpt::format<mpt::ustring>::hex0<4>(static_cast<uint16>(GetData4() >> 32))
-			+ mpt::format<mpt::ustring>::hex0<8>(static_cast<uint32>(GetData4() >> 0));
+			 + mpt::format<mpt::ustring>::hex0<8>(GetData1())
+			 + MPT_USTRING("-")
+			 + mpt::format<mpt::ustring>::hex0<4>(GetData2())
+			 + MPT_USTRING("-")
+			 + mpt::format<mpt::ustring>::hex0<4>(GetData3())
+			 + MPT_USTRING("-")
+			 + mpt::format<mpt::ustring>::hex0<4>(static_cast<uint16>(GetData4() >> 48))
+			 + MPT_USTRING("-")
+			 + mpt::format<mpt::ustring>::hex0<4>(static_cast<uint16>(GetData4() >> 32))
+			 + mpt::format<mpt::ustring>::hex0<8>(static_cast<uint32>(GetData4() >> 0));
 	}
 };
 
@@ -388,7 +395,7 @@ MPT_CONSTEXPRINLINE bool operator!=(const mpt::UUID & a, const mpt::UUID & b) no
 
 namespace uuid_literals {
 
-MPT_CONSTEXPRINLINE mpt::UUID operator"" _uuid(const char * str, std::size_t len) {
+MPT_CONSTEVAL mpt::UUID operator"" _uuid(const char * str, std::size_t len) {
 	return mpt::UUID::ParseLiteral(str, len);
 }
 

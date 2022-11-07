@@ -112,7 +112,7 @@ static std::vector<std::byte> DecompressDSymLZW(FileReader &file, uint32 size)
 
 			dictionary[nextIndex].value = match[writeOffset];
 			dictionary[nextIndex].prev = prevCode;
-			
+
 			nextIndex++;
 			if(nextIndex != MaxNodes && nextIndex == (1u << codeSize))
 				codeSize++;
@@ -245,7 +245,7 @@ bool CSoundFile::ReadDSym(FileReader &file, ModLoadingFlags loadFlags)
 		ChnSettings[chn].nPan = (((chn & 3) == 1) || ((chn & 3) == 2)) ? 64 : 192;
 	}
 
-	uint8 sampleNameLength[64];
+	uint8 sampleNameLength[64] = {};
 	for(SAMPLEINDEX smp = 1; smp <= m_nSamples; smp++)
 	{
 		Samples[smp].Initialize(MOD_TYPE_MOD);
@@ -312,10 +312,9 @@ bool CSoundFile::ReadDSym(FileReader &file, ModLoadingFlags loadFlags)
 				if(command == 0 && param == 0)
 					continue;
 
-				m->command = command;
 				m->param = static_cast<uint8>(param);
 				m->vol = static_cast<ModCommand::VOL>(param >> 8);
-				
+
 				switch(command)
 				{
 					case 0x00:  // 00 xyz Normal play or Arpeggio + Volume Slide Up
@@ -324,8 +323,7 @@ bool CSoundFile::ReadDSym(FileReader &file, ModLoadingFlags loadFlags)
 					case 0x20:  // 20 xyz Normal play or Arpeggio + Volume Slide Down
 					case 0x21:  // 21 xyy Slide Up + Volume Slide Down
 					case 0x22:  // 22 xyy Slide Down + Volume Slide Down
-						m->command &= 0x0F;
-						ConvertModCommand(*m);
+						ConvertModCommand(*m, command & 0x0F, m->param);
 						if(m->vol)
 							m->volcmd = (command < 0x20) ? VOLCMD_VOLSLIDEUP : VOLCMD_VOLSLIDEDOWN;
 						break;
@@ -335,7 +333,7 @@ bool CSoundFile::ReadDSym(FileReader &file, ModLoadingFlags loadFlags)
 					case 0x06:  // 06 xyz Vibrato + Volume Slide
 					case 0x07:  // 07 xyz Tremolo
 					case 0x0C:  // 0C xyy Set Volume
-						ConvertModCommand(*m);
+						ConvertModCommand(*m, command, m->param);
 						break;
 					case 0x09:  // 09 xxx Set Sample Offset
 						m->command = CMD_OFFSET;
@@ -350,8 +348,7 @@ bool CSoundFile::ReadDSym(FileReader &file, ModLoadingFlags loadFlags)
 					case 0x2A:  // 2A xyz Volume Slide + Fine Slide Down
 						if(param < 0xFF)
 						{
-							m->command &= 0x0F;
-							ConvertModCommand(*m);
+							ConvertModCommand(*m, command & 0x0F, m->param);
 						} else
 						{
 							m->command = CMD_MODCMDEX;
@@ -414,6 +411,9 @@ bool CSoundFile::ReadDSym(FileReader &file, ModLoadingFlags loadFlags)
 						{
 							m->command = CMD_TEMPO;
 							m->param = mpt::saturate_cast<ModCommand::PARAM>(std::max(8, param + 4) / 8);
+#ifdef MODPLUG_TRACKER
+							m->param = std::max(m->param, ModCommand::PARAM(0x20));
+#endif
 						} else
 						{
 							m->command = CMD_NONE;
@@ -601,10 +601,11 @@ bool CSoundFile::ReadDSym(FileReader &file, ModLoadingFlags loadFlags)
 	m_modFormat.formatName = MPT_UFORMAT("Digital Symphony v{}")(fileHeader.version);
 	m_modFormat.type = U_("dsym");  // RISC OS doesn't use file extensions but this is a common abbreviation used for this tracker
 	m_modFormat.madeWithTracker = U_("Digital Symphony");
-	m_modFormat.charset = mpt::Charset::ISO8859_1;  // Close enough (RISC OS uses slightly customized variant)
+	m_modFormat.charset = mpt::Charset::RISC_OS;
 
 	return true;
 }
 
 
 OPENMPT_NAMESPACE_END
+

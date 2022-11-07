@@ -22,20 +22,19 @@ OPENMPT_NAMESPACE_BEGIN
 namespace DMO
 {
 
-IMixPlugin* Gargle::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct)
+IMixPlugin* Gargle::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
 	return new (std::nothrow) Gargle(factory, sndFile, mixStruct);
 }
 
 
-Gargle::Gargle(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct)
+Gargle::Gargle(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 	: IMixPlugin(factory, sndFile, mixStruct)
 {
 	m_param[kGargleRate] = 0.02f;
 	m_param[kGargleWaveShape] = 0.0f;
 
 	m_mixBuffer.Initialize(2, 2);
-	InsertIntoFactoryList();
 }
 
 
@@ -109,7 +108,7 @@ void Gargle::Process(float *pOutL, float *pOutR, uint32 numFrames)
 
 PlugParamValue Gargle::GetParameter(PlugParamIndex index)
 {
-	if(index < kEqNumParameters)
+	if(index < kGargleNumParameters)
 	{
 		return m_param[index];
 	}
@@ -119,7 +118,7 @@ PlugParamValue Gargle::GetParameter(PlugParamIndex index)
 
 void Gargle::SetParameter(PlugParamIndex index, PlugParamValue value)
 {
-	if(index < kEqNumParameters)
+	if(index < kGargleNumParameters)
 	{
 		value = mpt::safe_clamp(value, 0.0f, 1.0f);
 		if(index == kGargleWaveShape)
@@ -180,7 +179,7 @@ CString Gargle::GetParamDisplay(PlugParamIndex param)
 
 uint32 Gargle::RateInHertz() const
 {
-	return mpt::saturate_round<uint32>(m_param[kGargleRate] * 999.0f) + 1;
+	return static_cast<uint32>(mpt::round(std::clamp(m_param[kGargleRate], 0.0f, 1.0f) * 999.0f)) + 1;
 }
 
 

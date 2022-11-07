@@ -442,7 +442,7 @@ end
 
 
 	function make.cppDependencies(prj)
-		-- include the dependencies, built by GCC (with the -MMD flag)
+		-- include the dependencies, built by GCC (with the -MD flag)
 		_p('-include $(OBJECTS:%%.o=%%.d)')
 		_p('ifneq (,$(PCH))')
 			_p('  -include $(OBJDIR)/$(notdir $(PCH)).d')
@@ -521,7 +521,7 @@ end
 
 
 	function make.includes(cfg, toolset)
-		local includes = toolset.getincludedirs(cfg, cfg.includedirs, cfg.sysincludedirs, cfg.frameworkdirs)
+		local includes = toolset.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs, cfg.frameworkdirs)
 		_p('  INCLUDES +=%s', make.list(includes))
 	end
 

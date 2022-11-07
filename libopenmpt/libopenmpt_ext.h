@@ -162,8 +162,9 @@ typedef struct openmpt_module_ext_interface_interactive {
 	 * \return 1 on success, 0 on failure.
 	 * \remarks The tempo may be reset by pattern commands at any time. Use openmpt_module_ext_interface_interactive::set_tempo_factor to apply a tempo factor that is independent of pattern commands.
 	 * \sa openmpt_module_get_current_tempo
+	 * \deprecated Please use openmpt_module_ext_interface_interactive3::set_current_tempo2().
 	 */
-	int ( * set_current_tempo ) ( openmpt_module_ext * mod_ext, int32_t tempo );
+	LIBOPENMPT_DEPRECATED int ( * set_current_tempo ) ( openmpt_module_ext * mod_ext, int32_t tempo );
 
 	/*! Set the current module tempo factor without affecting playback pitch
 	 *
@@ -321,6 +322,7 @@ typedef struct openmpt_module_ext_interface_interactive2 {
 	 * \sa openmpt_module_ext_interface_interactive::play_note
 	 * \sa openmpt_module_ext_interface_interactive::stop_note
 	 * \sa openmpt_module_ext_interface_interactive2::note_fade
+	 * \since 0.6.0
 	 */
 	int ( *note_off ) ( openmpt_module_ext * mod_ext, int32_t channel );
 
@@ -333,6 +335,7 @@ typedef struct openmpt_module_ext_interface_interactive2 {
 	 * \sa openmpt_module_ext_interface_interactive::play_note
 	 * \sa openmpt_module_ext_interface_interactive::stop_note
 	 * \sa openmpt_module_ext_interface_interactive2::note_fade
+	 * \since 0.6.0
 	 */
 	int ( *note_fade ) ( openmpt_module_ext * mod_ext, int32_t channel );
 
@@ -344,6 +347,7 @@ typedef struct openmpt_module_ext_interface_interactive2 {
 	 * \return 1 on success, 0 on failure (channel out of range).
 	 * \remarks This command affects subsequent notes played on the same channel, and may itself be overridden by subsequent panning commands encountered in the module itself.
 	 * \sa openmpt_module_ext_interface_interactive2::get_channel_panning
+	 * \since 0.6.0
 	 */
 	int ( *set_channel_panning) ( openmpt_module_ext * mod_ext, int32_t channel, double panning );
 
@@ -353,6 +357,7 @@ typedef struct openmpt_module_ext_interface_interactive2 {
 	 * \param channel The channel whose panning should be retrieved. This is the value returned by a previous play_note call.
 	 * \return The current channel panning, in range [-1.0, 1.0], 0.0 is center.
 	 * \sa openmpt_module_ext_interface_interactive2::set_channel_panning
+	 * \since 0.6.0
 	 */
 	double (*get_channel_panning) ( openmpt_module_ext * mod_ext, int32_t channel );
 	
@@ -365,6 +370,7 @@ typedef struct openmpt_module_ext_interface_interactive2 {
 	 * \remarks The finetune range depends on the pitch wheel depth of the instrument playing on the current channel; for sample-based modules, the depth of this command is fixed to +/-1 semitone.
 	 * \remarks This command does not affect subsequent notes played on the same channel, but may itself be overridden by subsequent finetune commands encountered in the module itself.
 	 * \sa openmpt_module_ext_interface_interactive2::get_note_finetune
+	 * \since 0.6.0
 	 */
 	int ( *set_note_finetune) ( openmpt_module_ext * mod_ext, int32_t channel, double finetune );
 
@@ -376,10 +382,31 @@ typedef struct openmpt_module_ext_interface_interactive2 {
 	 * \remarks The finetune range depends on the pitch wheel depth of the instrument playing on the current channel; for sample-based modules, the depth of this command is fixed to +/-1 semitone.
 	 * \throws openmpt::exception Throws an exception derived from openmpt::exception if the channel is outside the specified range.
 	 * \sa openmpt_module_ext_interface_interactive2::set_note_finetune
+	 * \since 0.6.0
 	 */
 	double (*get_note_finetune) ( openmpt_module_ext * mod_ext, int32_t channel );
 
 } openmpt_module_ext_interface_interactive2;
+
+
+
+#ifndef LIBOPENMPT_EXT_C_INTERFACE_INTERACTIVE3
+#define LIBOPENMPT_EXT_C_INTERFACE_INTERACTIVE3 "interactive3"
+#endif
+
+typedef struct openmpt_module_ext_interface_interactive3 {
+
+	/*! Set the current module tempo
+	 *
+	 * \param mod_ext The module handle to work on.
+	 * \param tempo The new tempo in range [32, 512]. The exact meaning of the value depends on the tempo mode used by the module.
+	 * \return 1 on success, 0 on failure.
+	 * \remarks The tempo may be reset by pattern commands at any time. Use openmpt_module_ext_interface_interactive::set_tempo_factor to apply a tempo factor that is independent of pattern commands.
+	 * \sa openmpt_module_get_current_tempo2
+	 */
+	int ( * set_current_tempo2 ) ( openmpt_module_ext * mod_ext, double tempo );
+
+} openmpt_module_ext_interface_interactive3;
 
 
 

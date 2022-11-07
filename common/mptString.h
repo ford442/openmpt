@@ -59,12 +59,35 @@ enum class Charset {
 	ISO8859_1,
 	ISO8859_15,
 
-	CP850,
 	CP437,
+	CP737,
+	CP775,
+	CP850,
+	CP852,
+	CP855,
+	CP857,
+	CP860,
+	CP861,
+	CP862,
+	CP863,
+	CP864,
+	CP865,
+	CP866,
+	CP869,
+	CP874,
+
 	CP437AMS,
 	CP437AMS2,
 
 	Windows1252,
+
+	Amiga,
+	RISC_OS,
+	AtariST,
+
+	ISO8859_1_no_C1,
+	ISO8859_15_no_C1,
+	Amiga_no_C1,
 
 #if defined(MPT_ENABLE_CHARSET_LOCALE)
 	Locale, // CP_ACP on windows, current C locale otherwise

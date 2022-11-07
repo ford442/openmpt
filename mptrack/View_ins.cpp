@@ -2110,7 +2110,10 @@ BOOL CViewInstrument::OnDragonDrop(BOOL doDrop, const DRAGONDROP *dropInfo)
 		break;
 	}
 	
-	const bool insertNew = CMainFrame::GetInputHandler()->ShiftPressed() && sndFile.GetNumInstruments() > 0;
+	bool insertNew = CMainFrame::GetInputHandler()->ShiftPressed() && sndFile.GetNumInstruments() > 0;
+	if(dropInfo->insertType != DRAGONDROP::InsertType::Unspecified)
+		insertNew = dropInfo->insertType == DRAGONDROP::InsertType::InsertNew && sndFile.GetNumInstruments() > 0;
+
 	if(insertNew && !sndFile.CanAddMoreInstruments())
 		canDrop = false;
 
@@ -2184,7 +2187,6 @@ BOOL CViewInstrument::OnDragonDrop(BOOL doDrop, const DRAGONDROP *dropInfo)
 
 	case DRAGONDROP_DLS:
 		{
-			const CDLSBank *pDLSBank = CTrackApp::gpDLSBanks[dropInfo->dropItem];
 			UINT nIns = dropInfo->dropParam & 0xFFFF;
 			uint32 drumRgn = uint32_max;
 			// Drums: (0x80000000) | (Region << 16) | (Instrument)
@@ -2195,7 +2197,7 @@ BOOL CViewInstrument::OnDragonDrop(BOOL doDrop, const DRAGONDROP *dropInfo)
 			{
 				CriticalSection cs;
 				modDoc->GetInstrumentUndo().PrepareUndo(m_nInstrument, "Replace Instrument");
-				canDrop = modified = pDLSBank->ExtractInstrument(sndFile, m_nInstrument, nIns, drumRgn);
+				canDrop = modified = CTrackApp::gpDLSBanks[dropInfo->dropItem]->ExtractInstrument(sndFile, m_nInstrument, nIns, drumRgn);
 			}
 		}
 		break;
@@ -2247,19 +2249,12 @@ BOOL CViewInstrument::PreTranslateMessage(MSG *pMsg)
 			(pMsg->message == WM_SYSKEYDOWN) || (pMsg->message == WM_KEYDOWN))
 		{
 			CInputHandler *ih = CMainFrame::GetInputHandler();
-
-			//Translate message manually
-			UINT nChar = static_cast<UINT>(pMsg->wParam);
-			UINT nRepCnt = LOWORD(pMsg->lParam);
-			UINT nFlags = HIWORD(pMsg->lParam);
-			KeyEventType kT = ih->GetKeyEventType(nFlags);
-			InputTargetContext ctx = (InputTargetContext)(kCtxViewInstruments);
-
-			if(ih->KeyEvent(ctx, nChar, nRepCnt, nFlags, kT) != kcNull)
+			const auto event = ih->Translate(*pMsg);
+			if(ih->KeyEvent(kCtxViewInstruments, event) != kcNull)
 				return true;  // Mapped to a command, no need to pass message on.
 
 			// Handle Application (menu) key
-			if(pMsg->message == WM_KEYDOWN && nChar == VK_APPS)
+			if(pMsg->message == WM_KEYDOWN && event.key == VK_APPS)
 			{
 				CPoint pt(0, 0);
 				if(m_nDragItem > 0)
@@ -2282,8 +2277,6 @@ LRESULT CViewInstrument::OnCustomKeyMsg(WPARAM wParam, LPARAM)
 	if(!pModDoc)
 		return kcNull;
 	CSoundFile &sndFile = pModDoc->GetSoundFile();
-
-	CMainFrame *pMainFrm = CMainFrame::GetMainFrame();
 
 	switch(wParam)
 	{
@@ -2339,12 +2332,12 @@ LRESULT CViewInstrument::OnCustomKeyMsg(WPARAM wParam, LPARAM)
 	}
 	if(wParam >= kcInstrumentStartNotes && wParam <= kcInstrumentEndNotes)
 	{
-		PlayNote(static_cast<ModCommand::NOTE>(wParam - kcInstrumentStartNotes + 1 + pMainFrm->GetBaseOctave() * 12));
+		PlayNote(pModDoc->GetNoteWithBaseOctave(static_cast<int>(wParam - kcInstrumentStartNotes), m_nInstrument));
 		return wParam;
 	}
 	if(wParam >= kcInstrumentStartNoteStops && wParam <= kcInstrumentEndNoteStops)
 	{
-		ModCommand::NOTE note = static_cast<ModCommand::NOTE>(wParam - kcInstrumentStartNoteStops + 1 + pMainFrm->GetBaseOctave() * 12);
+		ModCommand::NOTE note = pModDoc->GetNoteWithBaseOctave(static_cast<int>(wParam - kcInstrumentStartNoteStops), m_nInstrument);
 		if(ModCommand::IsNote(note))
 		{
 			m_baPlayingNote[note] = false;
@@ -2751,8 +2744,8 @@ void CViewInstrument::OnEnvLoad()
 		return;
 
 	FileDialog dlg = OpenFileDialog()
-		.DefaultExtension("envelope")
-		.ExtensionFilter("Instrument Envelopes (*.envelope)|*.envelope||")
+		.DefaultExtension(U_("envelope"))
+		.ExtensionFilter(U_("Instrument Envelopes (*.envelope)|*.envelope||"))
 		.WorkingDirectory(TrackerSettings::Instance().PathInstruments.GetWorkingDir());
 	if(!dlg.Show(this)) return;
 	TrackerSettings::Instance().PathInstruments.SetWorkingDir(dlg.GetWorkingDirectory());
@@ -2778,8 +2771,8 @@ void CViewInstrument::OnEnvSave()
 	}
 
 	FileDialog dlg = SaveFileDialog()
-		.DefaultExtension("envelope")
-		.ExtensionFilter("Instrument Envelopes (*.envelope)|*.envelope||")
+		.DefaultExtension(U_("envelope"))
+		.ExtensionFilter(U_("Instrument Envelopes (*.envelope)|*.envelope||"))
 		.WorkingDirectory(TrackerSettings::Instance().PathInstruments.GetWorkingDir());
 	if(!dlg.Show(this)) return;
 	TrackerSettings::Instance().PathInstruments.SetWorkingDir(dlg.GetWorkingDirectory());

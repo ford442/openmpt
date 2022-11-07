@@ -36,7 +36,7 @@ protected:
 		kChorusNumParameters
 	};
 
-	float m_param[kChorusNumParameters];
+	std::array<float, kChorusNumParameters> m_param;
 
 	// Calculated parameters
 	float m_waveShapeMin, m_waveShapeMax, m_waveShapeVal;
@@ -54,10 +54,9 @@ protected:
 	int32 m_dryWritePos = 0;
 
 public:
-	static IMixPlugin* Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct);
-	Chorus(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct, bool stereoBuffers = false);
+	static IMixPlugin* Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
+	Chorus(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct, bool stereoBuffers = false);
 
-	void Release() override { delete this; }
 	int32 GetUID() const override { return 0xEFE6629C; }
 	int32 GetVersion() const override { return 0; }
 	void Idle() override { }

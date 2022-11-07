@@ -2,25 +2,24 @@
  project "libopenmpt-small"
   uuid "25560abd-41fc-444c-9e71-f8502bc7ee96"
   language "C++"
-  location ( "../../build/" .. mpt_projectpathname )
   vpaths { ["*"] = "../../" }
-  mpt_projectname = "libopenmpt-small"
-  dofile "../../build/premake/premake-defaults-LIBorDLL.lua"
-  dofile "../../build/premake/premake-defaults.lua"
-  local extincludedirs = {
-   "../../include",
-  }
-	filter { "action:vs*" }
-		includedirs ( extincludedirs )
-	filter { "not action:vs*" }
-		sysincludedirs ( extincludedirs )
-	filter {}
+  mpt_kind "default"
+	
+	mpt_use_minimp3()
+	mpt_use_miniz()
+	mpt_use_stbvorbis()
+	
+	defines {
+		"MPT_WITH_MINIMP3",
+		"MPT_WITH_MINIZ",
+		"MPT_WITH_STBVORBIS",
+	}
+	
   includedirs {
    "../..",
    "../../src",
    "../../common",
    "$(IntDir)/svn_version",
-   "../../build/svn_version",
   }
   files {
    "../../src/mpt/**.cpp",
@@ -48,6 +47,10 @@
    "../../libopenmpt/libopenmpt_stream_callbacks_buffer.h",
    "../../libopenmpt/libopenmpt_stream_callbacks_fd.h",
    "../../libopenmpt/libopenmpt_stream_callbacks_file.h",
+   "../../libopenmpt/libopenmpt_stream_callbacks_file_mingw.h",
+   "../../libopenmpt/libopenmpt_stream_callbacks_file_msvcrt.h",
+   "../../libopenmpt/libopenmpt_stream_callbacks_file_posix.h",
+   "../../libopenmpt/libopenmpt_stream_callbacks_file_posix_lfs64.h",
    "../../libopenmpt/libopenmpt_version.h",
    "../../libopenmpt/libopenmpt_c.cpp",
    "../../libopenmpt/libopenmpt_cxx.cpp",
@@ -57,8 +60,12 @@
 	excludes {
 		"../../src/mpt/crypto/**.cpp",
 		"../../src/mpt/crypto/**.hpp",
+		"../../src/mpt/fs/**.cpp",
+		"../../src/mpt/fs/**.hpp",
 		"../../src/mpt/json/**.cpp",
 		"../../src/mpt/json/**.hpp",
+		"../../src/mpt/library/**.cpp",
+		"../../src/mpt/library/**.hpp",
 		"../../src/mpt/test/**.cpp",
 		"../../src/mpt/test/**.hpp",
 		"../../src/mpt/uuid_namespace/**.cpp",
@@ -72,14 +79,12 @@
 		}
 	filter { "action:vs*", "kind:SharedLib or ConsoleApp or WindowedApp" }
 		resdefines {
-			"MPT_BUILD_VER_FILENAME=\"" .. mpt_projectname .. ".dll\"",
-			"MPT_BUILD_VER_FILEDESC=\"" .. mpt_projectname .. "\"",
+			"MPT_BUILD_VER_FILENAME=\"" .. "libopenmpt-small" .. ".dll\"",
+			"MPT_BUILD_VER_FILEDESC=\"" .. "libopenmpt-small" .. "\"",
 		}
 	filter { "action:vs*", "kind:SharedLib or ConsoleApp or WindowedApp" }
 		resincludedirs {
 			"$(IntDir)/svn_version",
-			"../../build/svn_version",
-			"$(ProjDir)/../../build/svn_version",
 		}
 		files {
 			"../../libopenmpt/libopenmpt_version.rc",
@@ -90,16 +95,35 @@
 		resdefines { "MPT_BUILD_VER_EXE" }
 	filter {}
 
-  characterset "Unicode"
+	if _OPTIONS["charset"] ~= "Unicode" then
+		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
+	end
+
   warnings "Extra"
-  defines { "LIBOPENMPT_BUILD", "LIBOPENMPT_BUILD_SMALL" }
+  defines { "LIBOPENMPT_BUILD" }
   filter { "kind:SharedLib" }
    defines { "LIBOPENMPT_BUILD_DLL" }
   filter { "kind:SharedLib" }
   filter {}
-  links {
-   "minimp3",
-   "miniz",
-   "stb_vorbis"
-  }
   prebuildcommands { "..\\..\\build\\svn_version\\update_svn_version_vs_premake.cmd $(IntDir)" }
+
+function mpt_use_libopenmpt_small ()
+	filter {}
+	filter { "action:vs*" }
+		includedirs {
+			"../..",
+		}
+	filter { "not action:vs*" }
+		externalincludedirs {
+			"../..",
+		}
+	filter {}
+	filter { "configurations:*Shared" }
+		defines { "LIBOPENMPT_USE_DLL" }
+	filter { "not configurations:*Shared" }
+	filter {}
+	links {
+		"libopenmpt-small",
+	}
+	filter {}
+end

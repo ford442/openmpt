@@ -71,9 +71,9 @@ copy /y ..\..\include\vorbis\COPYING                         .\Licenses\License.
 copy /y ..\..\include\zlib\README                            .\Licenses\License.zlib.txt || goto error
 rem copy /y ..\..\include\zlib\contrib\minizip\MiniZip64_info.txt .\Licenses\License.minizip.txt || goto error
 copy /y ..\..\LICENSE .\LICENSE.txt || goto error
-copy /y ..\..\libopenmpt\dox\changelog.md .\ || goto error
-copy /y ..\..\libopenmpt\doc\xmp-openmpt.txt .\XMPlay\ || goto error
-copy /y ..\..\libopenmpt\doc\in_openmpt.txt .\Winamp\ || goto error
+copy /y ..\..\doc\libopenmpt\changelog.md .\ || goto error
+copy /y ..\..\libopenmpt\xmp-openmpt\xmp-openmpt.txt .\XMPlay\ || goto error
+copy /y ..\..\libopenmpt\in_openmpt\in_openmpt.txt .\Winamp\ || goto error
 copy /y ..\..\bin\release\vs2017-winxp-static\x86\openmpt123.exe .\openmpt123\x86\ || goto error
 copy /y ..\..\bin\release\vs2017-winxp-static\x86\openmpt-mpg123.dll .\openmpt123\x86\ || goto error
 copy /y ..\..\bin\release\vs2017-winxp-static\amd64\openmpt123.exe .\openmpt123\amd64\ || goto error

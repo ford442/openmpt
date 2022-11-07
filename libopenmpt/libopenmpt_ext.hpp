@@ -26,32 +26,32 @@
 
 /*! \defgroup libopenmpt_ext_cpp libopenmpt_ext C++ */
 
+namespace openmpt {
+
 /*! \addtogroup libopenmpt_ext_cpp
   @{
 */
 
-namespace openmpt {
-
 class module_ext_impl;
 
-class LIBOPENMPT_CXX_API module_ext : public module {
+class LIBOPENMPT_CXX_API_CLASS module_ext : public module {
 	
 private:
 	module_ext_impl * ext_impl;
 private:
 	// non-copyable
-	module_ext( const module_ext & );
-	void operator = ( const module_ext & );
+	LIBOPENMPT_CXX_API_MEMBER module_ext( const module_ext & );
+	LIBOPENMPT_CXX_API_MEMBER void operator = ( const module_ext & );
 public:
-	module_ext( std::istream & stream, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
-	module_ext( const std::vector<std::byte> & data, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
-	module_ext( const std::vector<std::uint8_t> & data, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
-	module_ext( const std::vector<char> & data, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
-	module_ext( const std::byte * data, std::size_t size, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
-	module_ext( const std::uint8_t * data, std::size_t size, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
-	module_ext( const char * data, std::size_t size, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
-	module_ext( const void * data, std::size_t size, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
-	virtual ~module_ext();
+	LIBOPENMPT_CXX_API_MEMBER module_ext( std::istream & stream, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
+	LIBOPENMPT_CXX_API_MEMBER module_ext( const std::vector<std::byte> & data, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
+	LIBOPENMPT_CXX_API_MEMBER module_ext( const std::vector<std::uint8_t> & data, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
+	LIBOPENMPT_CXX_API_MEMBER module_ext( const std::vector<char> & data, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
+	LIBOPENMPT_CXX_API_MEMBER module_ext( const std::byte * data, std::size_t size, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
+	LIBOPENMPT_CXX_API_MEMBER module_ext( const std::uint8_t * data, std::size_t size, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
+	LIBOPENMPT_CXX_API_MEMBER module_ext( const char * data, std::size_t size, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
+	LIBOPENMPT_CXX_API_MEMBER module_ext( const void * data, std::size_t size, std::ostream & log = std::clog, const std::map< std::string, std::string > & ctls = detail::initial_ctls_map() );
+	LIBOPENMPT_CXX_API_MEMBER virtual ~module_ext();
 
 public:
 
@@ -73,11 +73,19 @@ public:
 	  \param interface_id The name of the extension interface to retrieve.
 	  \return The interface object. This may be a nullptr if the extension was not found.
 	*/
-	void * get_interface( const std::string & interface_id );
+	LIBOPENMPT_CXX_API_MEMBER void * get_interface( const std::string & interface_id );
 
 }; // class module_ext
 
+/*!
+  @}
+*/
+
 namespace ext {
+
+/*! \addtogroup libopenmpt_ext_cpp
+  @{
+*/
 
 #define LIBOPENMPT_DECLARE_EXT_CXX_INTERFACE(name) \
 	static const char name ## _id [] = # name ; \
@@ -162,8 +170,9 @@ class interactive {
 	  \throws openmpt::exception Throws an exception derived from openmpt::exception if the tempo is outside the specified range.
 	  \remarks The tempo may be reset by pattern commands at any time. Use openmpt::ext:interactive::set_tempo_factor to apply a tempo factor that is independent of pattern commands.
 	  \sa openmpt::module::get_current_tempo
+	  \deprecated Please use openmpt::ext::interactive3::set_current_tempo2().
 	*/
-	virtual void set_current_tempo( std::int32_t tempo ) = 0;
+	LIBOPENMPT_ATTR_DEPRECATED virtual void set_current_tempo( std::int32_t tempo ) = 0;
 
 	//! Set the current module tempo factor without affecting playback pitch
 	/*!
@@ -315,6 +324,7 @@ class interactive2 {
 	  \sa openmpt::ext::interactive::play_note
 	  \sa openmpt::ext::interactive::stop_note
 	  \sa openmpt::ext::interactive2::note_fade
+	  \since 0.6.0
 	*/
 	virtual void note_off(int32_t channel ) = 0;
 
@@ -326,6 +336,7 @@ class interactive2 {
 	  \sa openmpt::ext::interactive::play_note
 	  \sa openmpt::ext::interactive::stop_note
 	  \sa openmpt::ext::interactive2::note_off
+	  \since 0.6.0
 	*/
 	virtual void note_fade(int32_t channel) = 0;
 
@@ -336,6 +347,7 @@ class interactive2 {
 	  \throws openmpt::exception Throws an exception derived from openmpt::exception if the channel index is invalid.
 	  \remarks This command affects subsequent notes played on the same channel, and may itself be overridden by subsequent panning commands encountered in the module itself.
 	  \sa openmpt::ext::interactive2::get_channel_panning
+	  \since 0.6.0
 	*/
 	virtual void set_channel_panning(int32_t channel, double panning ) = 0;
 
@@ -345,6 +357,7 @@ class interactive2 {
 	  \return The current channel panning, in range [-1.0, 1.0], 0.0 is center.
 	  \throws openmpt::exception Throws an exception derived from openmpt::exception if the channel is outside the specified range.
 	  \sa openmpt::ext::interactive2::set_channel_panning
+	  \since 0.6.0
 	*/
 	virtual double get_channel_panning( int32_t channel ) = 0;
 	
@@ -356,6 +369,7 @@ class interactive2 {
 	  \remarks The finetune range depends on the pitch wheel depth of the instrument playing on the current channel; for sample-based modules, the depth of this command is fixed to +/-1 semitone.
 	  \remarks This command does not affect subsequent notes played on the same channel, but may itself be overridden by subsequent finetune commands encountered in the module itself.
 	  \sa openmpt::ext::interactive2::get_note_finetune
+	  \since 0.6.0
 	*/
 	virtual void set_note_finetune(int32_t channel, double finetune ) = 0;
 
@@ -366,10 +380,35 @@ class interactive2 {
 	  \throws openmpt::exception Throws an exception derived from openmpt::exception if the channel is outside the specified range.
 	  \remarks The finetune range depends on the pitch wheel depth of the instrument playing on the current channel; for sample-based modules, the depth of this command is fixed to +/-1 semitone.
 	  \sa openmpt::ext::interactive2::set_note_finetune
+	  \since 0.6.0
 	*/
 	virtual double get_note_finetune( int32_t channel ) = 0;
 
-}; // class interactive
+}; // class interactive2
+
+
+#ifndef LIBOPENMPT_EXT_INTERFACE_INTERACTIVE3
+#define LIBOPENMPT_EXT_INTERFACE_INTERACTIVE3
+#endif
+
+LIBOPENMPT_DECLARE_EXT_CXX_INTERFACE(interactive3)
+
+class interactive3 {
+
+	LIBOPENMPT_EXT_CXX_INTERFACE(interactive3)
+
+	//! Set the current module tempo
+	/*!
+	  \param tempo The new tempo in range [32, 512]. The exact meaning of the value depends on the tempo mode used by the module.
+	  \throws openmpt::exception Throws an exception derived from openmpt::exception if the tempo is outside the specified range.
+	  \remarks The tempo may be reset by pattern commands at any time. Use openmpt::ext:interactive::set_tempo_factor to apply a tempo factor that is independent of pattern commands.
+	  \sa openmpt::module::get_current_tempo2
+		\since 0.7.0
+	*/
+	virtual void set_current_tempo2( double tempo ) = 0;
+
+}; // class interactive3
+
 
 
 /* add stuff here */
@@ -379,12 +418,12 @@ class interactive2 {
 #undef LIBOPENMPT_DECLARE_EXT_CXX_INTERFACE
 #undef LIBOPENMPT_EXT_CXX_INTERFACE
 
-} // namespace ext
-
-} // namespace openmpt
-
 /*!
   @}
 */
+
+} // namespace ext
+
+} // namespace openmpt
 
 #endif // LIBOPENMPT_EXT_HPP

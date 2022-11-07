@@ -17,6 +17,8 @@
 #include "../common/mptFileIO.h"
 #include "Loaders.h"
 #ifdef MODPLUG_TRACKER
+#include "mpt/fs/fs.hpp"
+#include "mpt/io_file/outputfile.hpp"
 #include "../mptrack/TrackerSettings.h"
 #endif //MODPLUG_TRACKER
 
@@ -95,7 +97,7 @@ Tuning::SerializationResult CTuningCollection::Serialize(std::ostream& oStrm, co
 		ssb.WriteItem(*m_Tunings[i], "2", &WriteTuning);
 	ssb.FinishWrite();
 		
-	if(ssb.GetStatus() & srlztn::SNT_FAILURE)
+	if(ssb.HasFailed())
 		return Tuning::SerializationResult::Failure;
 	else
 		return Tuning::SerializationResult::Success;
@@ -123,15 +125,15 @@ Tuning::SerializationResult CTuningCollection::Deserialize(std::istream &iStrm, 
 		for(srlztn::SsbRead::ReadIterator iter = iterBeg; iter != iterEnd; iter++)
 		{
 			uint16 dummyEditMask = 0xffff;
-			if (ssb.CompareId(iter, "0") == srlztn::SsbRead::IdMatch)
+			if(ssb.MatchesId(iter, "0"))
 				ssb.ReadIterItem(iter, name, [charset](std::istream &iStrm, mpt::ustring &ustr, const std::size_t dummy){ return ReadStr(iStrm, ustr, dummy, charset); });
-			else if (ssb.CompareId(iter, "1") == srlztn::SsbRead::IdMatch)
+			else if(ssb.MatchesId(iter, "1"))
 				ssb.ReadIterItem(iter, dummyEditMask);
-			else if (ssb.CompareId(iter, "2") == srlztn::SsbRead::IdMatch)
+			else if(ssb.MatchesId(iter, "2"))
 				ssb.ReadIterItem(iter, *this, [charset](std::istream &iStrm, CTuningCollection &Tc, const std::size_t dummy){ return ReadTuning(iStrm, Tc, dummy, charset); });
 		}
 
-		if(ssb.GetStatus() & srlztn::SNT_FAILURE)
+		if(ssb.HasFailed())
 			return Tuning::SerializationResult::Failure;
 		else
 			return Tuning::SerializationResult::Success;
@@ -281,7 +283,7 @@ CTuning* CTuningCollection::AddTuning(std::istream &inStrm, mpt::Charset default
 bool UnpackTuningCollection(const CTuningCollection &tc, const mpt::PathString &prefix)
 {
 	bool error = false;
-	auto numberFmt = mpt::FormatSpec().Dec().FillNul().Width(1 + static_cast<int>(std::log10(tc.GetNumTunings())));
+	auto numberFmt = mpt::FormatSpec<mpt::ustring>().Dec().FillNul().Width(1 + static_cast<int>(std::log10(tc.GetNumTunings())));
 	for(std::size_t i = 0; i < tc.GetNumTunings(); ++i)
 	{
 		const CTuning & tuning = *(tc.GetTuning(i));
@@ -292,15 +294,14 @@ bool UnpackTuningCollection(const CTuningCollection &tc, const mpt::PathString &
 		{
 			tuningName = U_("untitled");
 		}
-		SanitizeFilename(tuningName);
-		fn += mpt::PathString::FromUnicode(MPT_UFORMAT("{} - {}")(mpt::ufmt::fmt(i + 1, numberFmt), tuningName));
+		fn += mpt::PathString::FromUnicode(MPT_UFORMAT("{} - {}")(mpt::ufmt::fmt(i + 1, numberFmt), tuningName)).AsSanitizedComponent();
 		fn += mpt::PathString::FromUTF8(CTuning::s_FileExtension);
-		if(fn.FileOrDirectoryExists())
+		if(mpt::native_fs{}.exists(fn))
 		{
 			error = true;
 		} else
 		{
-			mpt::SafeOutputFile sfout(fn, std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+			mpt::IO::SafeOutputFile sfout(fn, std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
 			if(tuning.Serialize(sfout) != Tuning::SerializationResult::Success)
 			{
 				error = true;

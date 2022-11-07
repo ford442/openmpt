@@ -25,7 +25,7 @@
 OPENMPT_NAMESPACE_BEGIN
 
 
-IMixPlugin* MidiInOut::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct)
+IMixPlugin* MidiInOut::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
 	try
 	{
@@ -37,7 +37,7 @@ IMixPlugin* MidiInOut::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIX
 }
 
 
-MidiInOut::MidiInOut(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *mixStruct)
+MidiInOut::MidiInOut(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 	: IMidiPlugin(factory, sndFile, mixStruct)
 	, m_inputDevice(m_midiIn)
 	, m_outputDevice(m_midiOut)
@@ -46,7 +46,6 @@ MidiInOut::MidiInOut(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN *m
 #endif // MODPLUG_TRACKER
 {
 	m_mixBuffer.Initialize(2, 2);
-	InsertIntoFactoryList();
 }
 
 
@@ -356,7 +355,7 @@ void MidiInOut::Resume()
 	m_clock.SetResolution(1);
 	OpenDevice(m_inputDevice.index, true);
 	OpenDevice(m_outputDevice.index, false);
-	if(m_midiOut.isPortOpen() && m_sendTimingInfo)
+	if(m_midiOut.isPortOpen() && m_sendTimingInfo && !m_SndFile.IsPaused())
 	{
 		MidiSend(0xFA);	// Start
 	}
@@ -367,16 +366,26 @@ void MidiInOut::Resume()
 void MidiInOut::Suspend()
 {
 	// Suspend MIDI I/O
-	if(m_midiOut.isPortOpen() && m_sendTimingInfo)
+	if(m_midiOut.isPortOpen())
 	{
 		try
 		{
-			unsigned char message[1] = { 0xFC };	// Stop
-			m_midiOut.sendMessage(message, 1);
+			// Need to flush remaining events from HardAllNotesOff
+			for(const auto &message : m_outQueue)
+			{
+				m_midiOut.sendMessage(message.m_message, message.m_size);
+			}
+			m_outQueue.clear();
+			if(m_sendTimingInfo)
+			{
+				unsigned char message[1] = { 0xFC };	// Stop
+				m_midiOut.sendMessage(message, 1);
+			}
 		} catch(const RtMidiError &)
 		{
 		}
 	}
+
 	//CloseDevice(inputDevice);
 	CloseDevice(m_outputDevice);
 	m_clock.SetResolution(0);
@@ -387,7 +396,7 @@ void MidiInOut::Suspend()
 // Playback discontinuity
 void MidiInOut::PositionChanged()
 {
-	if(m_sendTimingInfo)
+	if(m_sendTimingInfo && !m_SndFile.IsPaused())
 	{
 		MidiSend(0xFC);	// Stop
 		MidiSend(0xFA);	// Start

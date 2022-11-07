@@ -60,10 +60,6 @@ namespace SoundDevice
 bool FillWaveFormatExtensible(WAVEFORMATEXTENSIBLE &WaveFormat, const SoundDevice::Settings &m_Settings)
 {
 	WaveFormat = {};
-	if(!m_Settings.sampleFormat.IsValid())
-	{
-		return false;
-	}
 	WaveFormat.Format.wFormatTag = m_Settings.sampleFormat.IsFloat() ? WAVE_FORMAT_IEEE_FLOAT : WAVE_FORMAT_PCM;
 	WaveFormat.Format.nChannels = (WORD)m_Settings.Channels;
 	WaveFormat.Format.nSamplesPerSec = m_Settings.Samplerate;
@@ -87,8 +83,12 @@ bool FillWaveFormatExtensible(WAVEFORMATEXTENSIBLE &WaveFormat, const SoundDevic
 				return false;
 				break;
 		}
-		const GUID guid_MEDIASUBTYPE_PCM = {0x00000001, 0x0000, 0x0010, {0x80, 0x00, 0x0, 0xAA, 0x0, 0x38, 0x9B, 0x71}};
-		const GUID guid_MEDIASUBTYPE_IEEE_FLOAT = {0x00000003, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71}};
+		const GUID guid_MEDIASUBTYPE_PCM = {
+			0x00000001, 0x0000, 0x0010, {0x80, 0x00, 0x0, 0xAA, 0x0, 0x38, 0x9B, 0x71}
+        };
+		const GUID guid_MEDIASUBTYPE_IEEE_FLOAT = {
+			0x00000003, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71}
+        };
 		WaveFormat.SubFormat = m_Settings.sampleFormat.IsFloat() ? guid_MEDIASUBTYPE_IEEE_FLOAT : guid_MEDIASUBTYPE_PCM;
 	}
 	return true;
@@ -150,10 +150,13 @@ CAudioThread::~CAudioThread()
 CPriorityBooster::CPriorityBooster(SoundDevice::SysInfo sysInfo, bool boostPriority, const mpt::winstring &priorityClass, int priority)
 	: m_SysInfo(sysInfo)
 	, m_BoostPriority(boostPriority)
-	, m_Priority(priority)
+#if(_WIN32_WINNT >= 0x600)
 	, task_idx(0)
 	, hTask(NULL)
+#else  // < Vista
+	, m_Priority(priority)
 	, oldPriority(0)
+#endif
 {
 	MPT_SOUNDDEV_TRACE_SCOPE();
 #ifdef MPT_BUILD_DEBUG
@@ -401,7 +404,8 @@ void CAudioThread::Deactivate()
 
 
 CSoundDeviceWithThread::CSoundDeviceWithThread(ILogger &logger, SoundDevice::Info info, SoundDevice::SysInfo sysInfo)
-	: SoundDevice::Base(logger, info, sysInfo), m_AudioThread(*this)
+	: SoundDevice::Base(logger, info, sysInfo)
+	, m_AudioThread(*this)
 {
 	return;
 }

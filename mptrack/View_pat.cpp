@@ -195,8 +195,9 @@ void CViewPattern::OnInitialUpdate()
 	SetCurrentPattern(0);
 	m_fallbackInstrument = 0;
 	m_nLastPlayedRow = 0;
-	m_nLastPlayedOrder = 0;
+	m_nLastPlayedOrder = ORDERINDEX_INVALID;
 	m_prevChordNote = NOTE_NONE;
+	m_previousPCevent.fill({PLUGINDEX_INVALID, 0});
 }
 
 
@@ -651,17 +652,13 @@ BOOL CViewPattern::PreTranslateMessage(MSG *pMsg)
 		{
 			CInputHandler *ih = CMainFrame::GetInputHandler();
 
-			//Translate message manually
-			UINT nChar = static_cast<UINT>(pMsg->wParam);
-			UINT nRepCnt = LOWORD(pMsg->lParam);
-			UINT nFlags = HIWORD(pMsg->lParam);
-			KeyEventType kT = ih->GetKeyEventType(nFlags);
 			InputTargetContext ctx = (InputTargetContext)(kCtxViewPatterns + 1 + m_Cursor.GetColumnType());
 			// If editing is disabled, preview notes no matter which column we are in
 			if(!IsEditingEnabled() && TrackerSettings::Instance().patternNoEditPopup)
 				ctx = kCtxViewPatternsNote;
 
-			if(ih->KeyEvent(ctx, nChar, nRepCnt, nFlags, kT) != kcNull)
+			const auto event = ih->Translate(*pMsg);
+			if(ih->KeyEvent(ctx, event) != kcNull)
 			{
 				return true;  // Mapped to a command, no need to pass message on.
 			}
@@ -670,23 +667,23 @@ BOOL CViewPattern::PreTranslateMessage(MSG *pMsg)
 			{
 				if(ctx == kCtxViewPatternsFX)
 				{
-					if(ih->KeyEvent(kCtxViewPatternsFXparam, nChar, nRepCnt, nFlags, kT) != kcNull)
+					if(ih->KeyEvent(kCtxViewPatternsFXparam, event) != kcNull)
 						return true;  // Mapped to a command, no need to pass message on.
 				} else if(ctx == kCtxViewPatternsFXparam)
 				{
-					if(ih->KeyEvent(kCtxViewPatternsFX, nChar, nRepCnt, nFlags, kT) != kcNull)
+					if(ih->KeyEvent(kCtxViewPatternsFX, event) != kcNull)
 						return true;  // Mapped to a command, no need to pass message on.
 				} else if(ctx == kCtxViewPatternsIns)
 				{
 					// Do the same with instrument->note column
-					if(ih->KeyEvent(kCtxViewPatternsNote, nChar, nRepCnt, nFlags, kT) != kcNull)
+					if(ih->KeyEvent(kCtxViewPatternsNote, event) != kcNull)
 						return true;  // Mapped to a command, no need to pass message on.
 				}
 			}
 			//end HACK.
 
 			// Handle Application (menu) key
-			if(pMsg->message == WM_KEYDOWN && nChar == VK_APPS)
+			if(pMsg->message == WM_KEYDOWN && event.key == VK_APPS)
 			{
 				OnRButtonDown(0, GetPointFromPosition(m_Cursor));
 			}
@@ -2097,7 +2094,7 @@ void CViewPattern::OnSplitPattern()
 	if(newPat == PATTERNINDEX_INVALID)
 	{
 		cs.Leave();
-		Reporting::Error(MPT_AFORMAT("Pattern limit of the {} format ({} patterns) has been reached.")(mpt::ToUpperCaseAscii(specs.fileExtension), specs.patternsMax), "Split Pattern");
+		Reporting::Error(MPT_UFORMAT("Pattern limit of the {} format ({} patterns) has been reached.")(specs.GetFileExtensionUpper(), specs.patternsMax), U_("Split Pattern"));
 		return;
 	}
 	auto &sourcePattern = sndFile.Patterns[sourcePat];
@@ -2177,6 +2174,7 @@ void CViewPattern::OnEditGoto()
 			SetCurrentColumn(dlg.m_nChannel - 1);
 		if(dlg.m_nRow != GetCurrentRow())
 			SetCurrentRow(dlg.m_nRow);
+		CriticalSection cs;
 		pModDoc->SetElapsedTime(dlg.m_nOrder, dlg.m_nRow, false);
 	}
 	return;
@@ -2820,12 +2818,34 @@ bool CViewPattern::DataEntry(bool up, bool coarse)
 	// Notes per octave for non-TET12 tunings and coarse note steps
 	std::vector<int> lastGroupSize(pSndFile->GetNumChannels(), 12);
 
+	bool applyToSpecialNotes = true;
+	if(column == PatternCursor::noteColumn)
+	{
+		const CPattern &pattern = pSndFile->Patterns[m_nPattern];
+		const CHANNELINDEX startChn = m_Selection.GetStartChannel(), endChn = m_Selection.GetEndChannel();
+		const ROWINDEX endRow = m_Selection.GetEndRow();
+		for(ROWINDEX row = m_Selection.GetStartRow(); row <= endRow && applyToSpecialNotes; row++)
+		{
+			const ModCommand *m = pattern.GetpModCommand(row, startChn);
+			for(CHANNELINDEX chn = startChn; chn <= endChn; chn++, m++)
+			{
+				if(!m_Selection.ContainsHorizontal(PatternCursor(0, chn, PatternCursor::noteColumn)))
+					continue;
+				if(m->IsNote())
+				{
+					applyToSpecialNotes = false;
+					break;
+				}
+			}
+		}
+	}
+
 	ApplyToSelection([&] (ModCommand &m, ROWINDEX, CHANNELINDEX chn)
 	{
 		if(column == PatternCursor::noteColumn && m_Selection.ContainsHorizontal(PatternCursor(0, chn, PatternCursor::noteColumn)))
 		{
 			// Increase / decrease note
-			if(m.IsNote())
+			if(m.IsNote() && !applyToSpecialNotes)
 			{
 				if(m.instr > 0)
 				{
@@ -2834,7 +2854,7 @@ bool CViewPattern::DataEntry(bool up, bool coarse)
 				int note = m.note + offset * (coarse ? lastGroupSize[chn] : 1);
 				Limit(note, noteMin, noteMax);
 				m.note = (ModCommand::NOTE)note;
-			} else if(m.IsSpecialNote())
+			} else if(m.IsSpecialNote() && applyToSpecialNotes)
 			{
 				ModCommand::NOTE note = m.note;
 				do
@@ -2932,6 +2952,26 @@ int CViewPattern::GetDefaultVolume(const ModCommand &m, ModCommand::INSTR lastIn
 		return std::min(sndFile.Instruments[m.instr]->nGlobalVol, uint32(64));  // For instrument plugins
 	else
 		return 64;
+}
+
+
+int CViewPattern::GetBaseNote() const
+{
+	const CModDoc *modDoc = GetDocument();
+	INSTRUMENTINDEX instr = static_cast<INSTRUMENTINDEX>(GetCurrentInstrument());
+	if(!instr && !IsLiveRecord())
+		instr = GetCursorCommand().instr;
+	return modDoc->GetBaseNote(instr);
+}
+
+
+ModCommand::NOTE CViewPattern::GetNoteWithBaseOctave(int note) const
+{
+	const CModDoc *modDoc = GetDocument();
+	INSTRUMENTINDEX instr = static_cast<INSTRUMENTINDEX>(GetCurrentInstrument());
+	if(!instr && !IsLiveRecord())
+		instr = GetCursorCommand().instr;
+	return modDoc->GetNoteWithBaseOctave(note, instr);
 }
 
 
@@ -3455,7 +3495,7 @@ LRESULT CViewPattern::OnPlayerNotify(Notification *pnotify)
 			{
 				if(pat < pSndFile->Patterns.Size())
 				{
-					if(pat != m_nPattern || updateOrderList)
+					if(pat != m_nPattern || ord != m_nOrder || updateOrderList)
 					{
 						if(pat != m_nPattern)
 							SetCurrentPattern(pat, row);
@@ -3502,6 +3542,43 @@ LRESULT CViewPattern::OnPlayerNotify(Notification *pnotify)
 	return 0;
 }
 
+CHANNELINDEX CViewPattern::GetRecordChannelForPCEvent(PLUGINDEX plugSlot, PlugParamIndex paramIndex) const
+{
+	CModDoc *pModDoc = GetDocument();
+	if(pModDoc == nullptr)
+		return 0;
+
+	CSoundFile &sndFile = pModDoc->GetSoundFile();
+	const auto plugParam = std::make_pair(static_cast<PLUGINDEX>(plugSlot), static_cast<PlugParamIndex>(paramIndex));
+	const PatternEditPos editPos = GetEditPos(sndFile, IsLiveRecord());
+	const CHANNELINDEX editChn = editPos.channel;
+	const ROWINDEX row = editPos.row;
+	const PATTERNINDEX pattern = editPos.pattern;
+	const auto editGroup = pModDoc->GetChannelRecordGroup(editChn);
+	CHANNELINDEX candidateChn = CHANNELINDEX_INVALID;
+
+	for(CHANNELINDEX c = 0; c < sndFile.GetNumChannels(); c++)
+	{
+		if(pModDoc->GetChannelRecordGroup(c) != editGroup)
+			continue;
+
+		const ModCommand &m = *sndFile.Patterns[pattern].GetpModCommand(row, c);
+		if((m_previousPCevent[c] == plugParam && m.IsEmpty()) || (m.IsPcNote() && m.instr == plugSlot + 1 && m.GetValueVolCol() == paramIndex))
+		{
+			return c;
+			break;
+		}
+		if(m.IsEmpty() && (candidateChn == CHANNELINDEX_INVALID || c == editChn))
+		{
+			candidateChn = c;
+		}
+	}
+	if(candidateChn != CHANNELINDEX_INVALID)
+		return candidateChn;
+	else
+		return editChn;
+}
+
 // record plugin parameter changes into current pattern
 LRESULT CViewPattern::OnRecordPlugParamChange(WPARAM plugSlot, LPARAM paramIndex)
 {
@@ -3511,23 +3588,26 @@ LRESULT CViewPattern::OnRecordPlugParamChange(WPARAM plugSlot, LPARAM paramIndex
 	
 	CSoundFile &sndFile = pModDoc->GetSoundFile();
 
-	//Work out where to put the new data
-	const PatternEditPos editPos = GetEditPos(sndFile, IsLiveRecord());
-	const CHANNELINDEX chn = editPos.channel;
-	const ROWINDEX row = editPos.row;
-	const PATTERNINDEX pattern = editPos.pattern;
-
-	ModCommand &mSrc = *sndFile.Patterns[pattern].GetpModCommand(row, chn);
-	ModCommand m = mSrc;
-
-	// TODO: Is the right plugin active? Move to a chan with the right plug
-	// Probably won't do this - finish fluctuator implementation instead.
-
 	IMixPlugin *pPlug = sndFile.m_MixPlugins[plugSlot].pMixPlugin;
 	if(pPlug == nullptr)
 		return 0;
 
-	if(sndFile.GetModSpecifications().HasNote(NOTE_PCS))
+	// Work out where and how to put the new data
+	const bool usePCevent = sndFile.GetModSpecifications().HasNote(NOTE_PCS);
+	const PatternEditPos editPos = GetEditPos(sndFile, IsLiveRecord());
+	const ROWINDEX row = editPos.row;
+	const PATTERNINDEX pattern = editPos.pattern;
+	CHANNELINDEX chn = editPos.channel;
+	const auto plugParam = std::make_pair(static_cast<PLUGINDEX>(plugSlot), static_cast<PlugParamIndex>(paramIndex));
+	const bool doMultiChannelRecording = pModDoc->GetChannelRecordGroup(chn) != RecordGroup::NoGroup;
+
+	if(usePCevent && doMultiChannelRecording)
+		chn = GetRecordChannelForPCEvent(plugParam.first, plugParam.second);
+
+	ModCommand &mSrc = *sndFile.Patterns[pattern].GetpModCommand(row, chn);
+	ModCommand m = mSrc;
+
+	if(usePCevent)
 	{
 		// MPTM: Use PC Notes
 
@@ -3535,6 +3615,7 @@ LRESULT CViewPattern::OnRecordPlugParamChange(WPARAM plugSlot, LPARAM paramIndex
 		if(m.IsEmpty() || m.IsPcNote())
 		{
 			m.Set(NOTE_PCS, static_cast<ModCommand::INSTR>(plugSlot + 1), static_cast<uint16>(paramIndex), static_cast<uint16>(pPlug->GetParameter(static_cast<PlugParamIndex>(paramIndex)) * ModCommand::maxColumnValue));
+			m_previousPCevent[chn] = plugParam;
 		}
 	} else if(sndFile.GetModSpecifications().HasCommand(CMD_SMOOTHMIDI))
 	{
@@ -3729,9 +3810,13 @@ LRESULT CViewPattern::OnMidiMsg(WPARAM dwMidiDataParam, LPARAM)
 		const bool liveRecord = IsLiveRecord();
 
 		PatternEditPos editPos = GetEditPos(sndFile, liveRecord);
+		if(pModDoc->GetChannelRecordGroup(editPos.channel) != RecordGroup::NoGroup)
+			editPos.channel = GetRecordChannelForPCEvent(mappedIndex - 1, paramIndex);
+
 		ModCommand &m = GetModCommand(sndFile, editPos);
 		pModDoc->GetPatternUndo().PrepareUndo(editPos.pattern, editPos.channel, editPos.row, 1, 1, "MIDI Mapping Record");
 		m.Set(NOTE_PCS, mappedIndex, static_cast<uint16>(paramIndex), static_cast<uint16>((paramValue * ModCommand::maxColumnValue) / 16383));
+		m_previousPCevent[editPos.channel] = std::make_pair(static_cast<PLUGINDEX>(mappedIndex - 1), paramIndex);
 		if(!liveRecord)
 			InvalidateRow(editPos.row);
 		pModDoc->SetModified();
@@ -4092,7 +4177,7 @@ void CViewPattern::CursorJump(int distance, bool snap)
 	const bool upwards = distance < 0;
 	const int distanceAbs = std::abs(distance);
 
-	if(snap)
+	if(snap && distanceAbs)
 		// cppcheck false-positive
 		// cppcheck-suppress signConversion
 		row = (((row + (upwards ? -1 : 0)) / distanceAbs) + (upwards ? 0 : 1)) * distanceAbs;
@@ -4121,6 +4206,12 @@ void CViewPattern::CursorJump(int distance, bool snap)
 			sndFile.m_PlayState.m_nNextOrder++;
 		}
 		CMainFrame::GetMainFrame()->ResetNotificationBuffer();
+	} else
+	{
+		if(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_PLAYNAVIGATEROW)
+		{
+			PatternStep(row);
+		}
 	}
 }
 
@@ -4132,7 +4223,6 @@ LRESULT CViewPattern::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		return kcNull;
 
 	CSoundFile &sndFile = pModDoc->GetSoundFile();
-	CMainFrame *pMainFrm = CMainFrame::GetMainFrame();
 
 	switch(wParam)
 	{
@@ -4264,7 +4354,11 @@ LRESULT CViewPattern::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 
 		case kcPrevEntryInColumn:
 		case kcNextEntryInColumn:
-			JumpToPrevOrNextEntry(wParam == kcNextEntryInColumn);
+			JumpToPrevOrNextEntry(wParam == kcNextEntryInColumn, false);
+			return wParam;
+		case kcPrevEntryInColumnSelect:
+		case kcNextEntryInColumnSelect:
+			JumpToPrevOrNextEntry(wParam == kcNextEntryInColumnSelect, true);
 			return wParam;
 
 		case kcNextPattern:	{	PATTERNINDEX n = m_nPattern + 1;
@@ -4476,6 +4570,11 @@ LRESULT CViewPattern::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 				GetDocument()->UpdateAllViews(this, PatternHint(GetCurrentPattern()).Data(), this);
 			}
 			return wParam;
+		case kcTogglePatternPlayRow:
+			TrackerSettings::Instance().m_dwPatternSetup ^= PATTERN_PLAYNAVIGATEROW;
+			CMainFrame::GetMainFrame()->SetHelpText((TrackerSettings::Instance().m_dwPatternSetup & PATTERN_PLAYNAVIGATEROW)
+				? _T("Play whole row when navigatin was turned is now enabled.") : _T("Play whole row when navigatin was turned is now disabled."));
+			return wParam;
 	}
 
 	// Ignore note entry if it is on key hold and user is in key-jazz mode or edit step is 0 (so repeated entry would be useless)
@@ -4486,22 +4585,22 @@ LRESULT CViewPattern::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 	if(wParam >= kcVPStartNotes && wParam <= kcVPEndNotes)
 	{
 		if(enterNote)
-			TempEnterNote(static_cast<ModCommand::NOTE>(wParam - kcVPStartNotes + 1 + pMainFrm->GetBaseOctave() * 12));
+			TempEnterNote(GetNoteWithBaseOctave(static_cast<int>(wParam - kcVPStartNotes)));
 		return wParam;
 	} else if(wParam >= kcVPStartChords && wParam <= kcVPEndChords)
 	{
 		if(enterNote)
-			TempEnterChord(static_cast<ModCommand::NOTE>(wParam - kcVPStartChords + 1 + pMainFrm->GetBaseOctave() * 12));
+			TempEnterChord(GetNoteWithBaseOctave(static_cast<int>(wParam - kcVPStartChords)));
 		return wParam;
 	}
 
 	if(wParam >= kcVPStartNoteStops && wParam <= kcVPEndNoteStops)
 	{
-		TempStopNote(static_cast<ModCommand::NOTE>(wParam - kcVPStartNoteStops + 1 + pMainFrm->GetBaseOctave() * 12));
+		TempStopNote(GetNoteWithBaseOctave(static_cast<int>(wParam - kcVPStartNoteStops)));
 		return wParam;
 	} else if(wParam >= kcVPStartChordStops && wParam <= kcVPEndChordStops)
 	{
-		TempStopChord(static_cast<ModCommand::NOTE>(wParam - kcVPStartChordStops + 1 + pMainFrm->GetBaseOctave() * 12));
+		TempStopChord(GetNoteWithBaseOctave(static_cast<int>(wParam - kcVPStartChordStops)));
 		return wParam;
 	}
 
@@ -4832,7 +4931,7 @@ void CViewPattern::TempStopNote(ModCommand::NOTE note, const bool fromMidi, bool
 {
 	CModDoc *pModDoc = GetDocument();
 	CMainFrame *pMainFrm = CMainFrame::GetMainFrame();
-	if(pModDoc == nullptr || pMainFrm == nullptr)
+	if(pModDoc == nullptr || pMainFrm == nullptr || !ModCommand::IsNote(note))
 	{
 		return;
 	}
@@ -4842,11 +4941,7 @@ void CViewPattern::TempStopNote(ModCommand::NOTE note, const bool fromMidi, bool
 		return;
 	}
 	const CModSpecifications &specs = sndFile.GetModSpecifications();
-
-	if(!ModCommand::IsSpecialNote(note))
-	{
-		Limit(note, specs.noteMin, specs.noteMax);
-	}
+	Limit(note, specs.noteMin, specs.noteMax);
 
 	const bool liveRecord = IsLiveRecord();
 	const bool isSplit = IsNoteSplit(note);
@@ -5465,8 +5560,7 @@ void CViewPattern::PreviewNote(ROWINDEX row, CHANNELINDEX channel)
 int CViewPattern::ConstructChord(int note, ModCommand::NOTE (&outNotes)[MPTChord::notesPerChord], ModCommand::NOTE baseNote)
 {
 	const MPTChords &chords = TrackerSettings::GetChords();
-	UINT baseOctave = CMainFrame::GetMainFrame()->GetBaseOctave();
-	UINT chordNum = note - baseOctave * 12 - NOTE_MIN;
+	UINT chordNum = note - GetBaseNote();
 
 	if(chordNum >= chords.size())
 	{
@@ -5484,7 +5578,7 @@ int CViewPattern::ConstructChord(int note, ModCommand::NOTE (&outNotes)[MPTChord
 	} else
 	{
 		// Default mode: Use base key
-		key = static_cast<ModCommand::NOTE>(chord.key + baseOctave * 12 + NOTE_MIN);
+		key = GetNoteWithBaseOctave(chord.key);
 	}
 	if(!ModCommand::IsNote(key))
 	{
@@ -7026,7 +7120,7 @@ void CViewPattern::FindInstrument()
 
 
 // Find previous or next column entry (note, instrument, ...) on this channel
-void CViewPattern::JumpToPrevOrNextEntry(bool nextEntry)
+void CViewPattern::JumpToPrevOrNextEntry(bool nextEntry, bool select)
 {
 	const CSoundFile *sndFile = GetSoundFile();
 	if(sndFile == nullptr || GetCurrentOrder() >= Order().size())
@@ -7069,14 +7163,26 @@ void CViewPattern::JumpToPrevOrNextEntry(bool nextEntry)
 
 			if(found)
 			{
-				SetCurrentOrder(ord);
-				SetCurrentPattern(pat, row);
+				if(select)
+				{
+					CursorJump(static_cast<int>(row) - m_Cursor.GetRow(), false);
+				} else
+				{
+					SetCurrentOrder(ord);
+					SetCurrentPattern(pat, row);
+					if(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_PLAYNAVIGATEROW)
+					{
+						PatternStep(row);
+					}
+				}
 				return;
 			}
 			row += direction;
 		}
 
-		// Continue search in prev/next pattern
+		// Continue search in prev/next pattern (unless we also select - selections cannot span multiple patterns)
+		if(select)
+			return;
 		ORDERINDEX nextOrd = nextEntry ? order.GetNextOrderIgnoringSkips(ord) : order.GetPreviousOrderIgnoringSkips(ord);
 		pat = order[nextOrd];
 		if(nextOrd == ord || !sndFile->Patterns.IsValidPat(pat))

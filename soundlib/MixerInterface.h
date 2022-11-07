@@ -25,11 +25,11 @@ class CResampler;
 template<int channelsOut, int channelsIn, typename out, typename in>
 struct MixerTraits
 {
-	enum : int { numChannelsIn = channelsIn };	// Number of channels in sample
-	enum : int { numChannelsOut = channelsOut };	// Number of mixer output channels
-	typedef out output_t;							// Output buffer sample type
-	typedef in input_t;								// Input buffer sample type
-	typedef out outbuf_t[channelsOut];				// Output buffer sampling point type
+	static constexpr int numChannelsIn = channelsIn;    // Number of channels in sample
+	static constexpr int numChannelsOut = channelsOut;  // Number of mixer output channels
+	using output_t = out;                               // Output buffer sample type
+	using input_t = in;                                 // Input buffer sample type
+	using outbuf_t = out[channelsOut];                  // Output buffer sampling point type
 	// To perform sample conversion, add a function with the following signature to your derived classes:
 	// static MPT_CONSTEXPRINLINE output_t Convert(const input_t x)
 };
@@ -41,8 +41,20 @@ struct MixerTraits
 template<class Traits>
 struct NoInterpolation
 {
-	MPT_FORCEINLINE void Start(const ModChannel &, const CResampler &) { }
-	MPT_FORCEINLINE void End(const ModChannel &) { }
+	ModChannel &channel;
+
+	MPT_FORCEINLINE NoInterpolation(ModChannel &c, const CResampler &, unsigned int)
+		: channel{c}
+	{
+		// Adding 0.5 to the sample position before the interpolation loop starts
+		// effectively gives us nearest-neighbour with rounding instead of truncation.
+		// This gives us more consistent behaviour between forward and reverse playing of a sample.
+		c.position += SamplePosition::Ratio(1, 2);
+	}
+	MPT_FORCEINLINE ~NoInterpolation()
+	{
+		channel.position -= SamplePosition::Ratio(1, 2);
+	}
 
 	MPT_FORCEINLINE void operator() (typename Traits::outbuf_t &outSample, const typename Traits::input_t * const inBuffer, const int32)
 	{
@@ -72,18 +84,13 @@ static void SampleLoop(ModChannel &chn, const CResampler &resampler, typename Tr
 	ModChannel &c = chn;
 	const typename Traits::input_t * MPT_RESTRICT inSample = static_cast<const typename Traits::input_t *>(c.pCurrentSample);
 
-	InterpolationFunc interpolate;
-	FilterFunc filter;
-	MixFunc mix;
-
-	// Do initialisation if necessary
-	interpolate.Start(c, resampler);
-	filter.Start(c);
-	mix.Start(c);
+	InterpolationFunc interpolate{c, resampler, numSamples};
+	FilterFunc filter{c};
+	MixFunc mix{c};
 
 	unsigned int samples = numSamples;
-	SamplePosition smpPos = c.position;	// Fixed-point sample position
-	const SamplePosition increment = c.increment;	// Fixed-point sample increment
+	SamplePosition smpPos = c.position;            // Fixed-point sample position
+	const SamplePosition increment = c.increment;  // Fixed-point sample increment
 
 	while(samples--)
 	{
@@ -95,10 +102,6 @@ static void SampleLoop(ModChannel &chn, const CResampler &resampler, typename Tr
 
 		smpPos += increment;
 	}
-
-	mix.End(c);
-	filter.End(c);
-	interpolate.End(c);
 
 	c.position = smpPos;
 }

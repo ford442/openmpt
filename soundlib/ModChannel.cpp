@@ -20,6 +20,7 @@ void ModChannel::Reset(ResetFlags resetMask, const CSoundFile &sndFile, CHANNELI
 	if(resetMask & resetSetPosBasic)
 	{
 		nNote = nNewNote = NOTE_NONE;
+		nArpeggioLastNote = lastMidiNoteWithoutArp = NOTE_NONE;
 		nNewIns = nOldIns = 0;
 		pModSample = nullptr;
 		pModInstrument = nullptr;
@@ -124,9 +125,9 @@ void ModChannel::UpdateInstrumentVolume(const ModSample *smp, const ModInstrumen
 }
 
 
-ModCommand::NOTE ModChannel::GetPluginNote(bool realNoteMapping) const
+ModCommand::NOTE ModChannel::GetPluginNote(bool realNoteMapping, bool ignoreArpeggio) const
 {
-	if(nArpeggioLastNote != NOTE_NONE)
+	if(nArpeggioLastNote != NOTE_NONE && !ignoreArpeggio)
 	{
 		// If an arpeggio is playing, this definitely the last playing note, which may be different from the arpeggio base note stored in nNote.
 		return nArpeggioLastNote;
@@ -152,6 +153,28 @@ void ModChannel::SetInstrumentPan(int32 pan, const CSoundFile &sndFile)
 			nRestorePanOnNewNote |= 0x8000;
 	}
 	nPan = pan;
+}
+
+
+void ModChannel::RestorePanAndFilter()
+{
+	if(nRestorePanOnNewNote > 0)
+	{
+		nPan = (nRestorePanOnNewNote & 0x7FFF) - 1;
+		if(nRestorePanOnNewNote & 0x8000)
+			dwFlags.set(CHN_SURROUND);
+		nRestorePanOnNewNote = 0;
+	}
+	if(nRestoreResonanceOnNewNote > 0)
+	{
+		nResonance = nRestoreResonanceOnNewNote - 1;
+		nRestoreResonanceOnNewNote = 0;
+	}
+	if(nRestoreCutoffOnNewNote > 0)
+	{
+		nCutOff = nRestoreCutoffOnNewNote - 1;
+		nRestoreCutoffOnNewNote = 0;
+	}
 }
 
 

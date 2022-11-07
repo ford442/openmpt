@@ -116,7 +116,7 @@ CDocument *CModDocManager::OpenDocumentFile(LPCTSTR lpszFileName, BOOL bAddToMRU
 {
 	const mpt::PathString filename = (lpszFileName ? mpt::PathString::FromCString(lpszFileName) : mpt::PathString());
 
-	if(filename.IsDirectory())
+	if(mpt::native_fs{}.is_directory(filename))
 	{
 		FolderScanner scanner(filename, FolderScanner::kOnlyFiles | FolderScanner::kFindInSubDirectories);
 		mpt::PathString file;
@@ -128,7 +128,7 @@ CDocument *CModDocManager::OpenDocumentFile(LPCTSTR lpszFileName, BOOL bAddToMRU
 		return pDoc;
 	}
 
-	if(const auto fileExt = filename.GetFileExt(); !mpt::PathString::CompareNoCase(fileExt, P_(".dll")) || !mpt::PathString::CompareNoCase(fileExt, P_(".vst3")))
+	if(const auto fileExt = filename.GetFilenameExtension(); !mpt::PathCompareNoCase(fileExt, P_(".dll")) || !mpt::PathCompareNoCase(fileExt, P_(".vst3")))
 	{
 		if(auto plugManager = theApp.GetPluginManager(); plugManager != nullptr)
 		{
@@ -146,7 +146,7 @@ CDocument *CModDocManager::OpenDocumentFile(LPCTSTR lpszFileName, BOOL bAddToMRU
 	CDocument *pDoc = CDocManager::OpenDocumentFile(lpszFileName, bAddToMRU);
 	if(pDoc == nullptr && !filename.empty())
 	{
-		if(!filename.IsFile())
+		if(!mpt::native_fs{}.is_file(filename))
 		{
 			Reporting::Error(MPT_CFORMAT("Unable to open \"{}\": file does not exist.")(filename.ToCString()));
 			theApp.RemoveMruItem(filename);

@@ -16,6 +16,7 @@
 #include "TrackerSettings.h"
 #include "Reporting.h"
 #include "resource.h"
+#include "mpt/fs/fs.hpp"
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -56,7 +57,7 @@ BOOL MissingExternalSamplesDlg::OnInitDialog()
 	m_List.SetExtendedStyle(m_List.GetExtendedStyle() | LVS_EX_FULLROWSELECT);
 
 	GenerateList();
-	SetWindowText((_T("Missing External Samples - ") + m_modDoc.GetPathNameMpt().GetFullFileName().AsNative()).c_str());
+	SetWindowText((_T("Missing External Samples - ") + m_modDoc.GetPathNameMpt().GetFilename().AsNative()).c_str());
 
 	return TRUE;
 }
@@ -96,7 +97,7 @@ void MissingExternalSamplesDlg::OnSetPath(NMHDR *, LRESULT *)
 
 	const mpt::PathString path = m_modDoc.GetSoundFile().GetSamplePath(smp);
 	FileDialog dlg = OpenFileDialog()
-		.ExtensionFilter("All Samples|*.wav;*.flac|All files(*.*)|*.*||");  // Only show samples that we actually can save as well.
+		.ExtensionFilter(U_("All Samples|*.wav;*.flac|All files(*.*)|*.*||"));  // Only show samples that we actually can save as well.
 	if(TrackerSettings::Instance().previewInFileDialogs)
 		dlg.EnableAudioPreview();
 	if(path.empty())
@@ -144,7 +145,7 @@ void MissingExternalSamplesDlg::OnScanFolder()
 			{
 				if(m_sndFile.IsExternalSampleMissing(smp))
 				{
-					if(!mpt::PathString::CompareNoCase(m_sndFile.GetSamplePath(smp).GetFullFileName(), fileName.GetFullFileName()))
+					if(!mpt::PathCompareNoCase(m_sndFile.GetSamplePath(smp).GetFilename(), fileName.GetFilename()))
 					{
 						if(SetSample(smp, fileName))
 						{
@@ -250,7 +251,7 @@ BOOL ModifiedExternalSamplesDlg::OnInitDialog()
 	m_List.SetExtendedStyle(m_List.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES);
 
 	GenerateList();
-	SetWindowText((_T("Modified External Samples - ") + m_modDoc.GetPathNameMpt().GetFullFileName().AsNative()).c_str());
+	SetWindowText((_T("Modified External Samples - ") + m_modDoc.GetPathNameMpt().GetFilename().AsNative()).c_str());
 
 	return TRUE;
 }
@@ -269,7 +270,7 @@ void ModifiedExternalSamplesDlg::GenerateList()
 
 		if(m_sndFile.GetSample(smp).uFlags[SMP_MODIFIED])
 			status = _T("modified");
-		else if(!m_sndFile.GetSamplePath(smp).IsFile())
+		else if(!mpt::native_fs{}.is_file(m_sndFile.GetSamplePath(smp)))
 			status = _T("missing");
 		else
 			continue;

@@ -2,10 +2,8 @@
  project "flac"
   uuid "E599F5AA-F9A3-46CC-8DB0-C8DEFCEB90C5"
   language "C"
-  location ( "../../build/" .. mpt_projectpathname .. "/ext" )
-  mpt_projectname = "flac"
-  dofile "../../build/premake/premake-defaults-LIBorDLL.lua"
-  dofile "../../build/premake/premake-defaults.lua"
+  location ( "%{wks.location}" .. "/ext" )
+  mpt_kind "default"
   targetname "openmpt-flac"
   local extincludedirs = {
 		"../../include/ogg/include",
@@ -13,15 +11,12 @@
 	filter { "action:vs*" }
 		includedirs ( extincludedirs )
 	filter { "not action:vs*" }
-		sysincludedirs ( extincludedirs )
+		externalincludedirs ( extincludedirs )
 	filter {}
   includedirs {
 		"../../include/flac/include",
 		"../../include/flac/src/libFLAC/include",
 	}
-	filter {}
-	filter { "action:vs*" }
-		characterset "Unicode"
 	filter {}
   files {
    "../../include/flac/src/libFLAC/bitmath.c",
@@ -36,9 +31,10 @@
    "../../include/flac/src/libFLAC/format.c",
    "../../include/flac/src/libFLAC/lpc.c",
    "../../include/flac/src/libFLAC/lpc_intrin_avx2.c",
+   "../../include/flac/src/libFLAC/lpc_intrin_fma.c",
+   "../../include/flac/src/libFLAC/lpc_intrin_neon.c",
    "../../include/flac/src/libFLAC/lpc_intrin_sse2.c",
    "../../include/flac/src/libFLAC/lpc_intrin_sse41.c",
-   "../../include/flac/src/libFLAC/lpc_intrin_sse.c",
    "../../include/flac/src/libFLAC/md5.c",
    "../../include/flac/src/libFLAC/memory.c",
    "../../include/flac/src/libFLAC/metadata_iterators.c",
@@ -54,7 +50,6 @@
    "../../include/flac/src/libFLAC/stream_encoder_intrin_ssse3.c",
    "../../include/flac/src/libFLAC/stream_encoder_framing.c",
    "../../include/flac/src/libFLAC/window.c",
-   "../../include/flac/src/libFLAC/windows_unicode_filenames.c",
   }
   files {
    "../../include/flac/src/libFLAC/include/private/all.h",
@@ -108,21 +103,42 @@
   filter { "action:vs*" }
     files {
      "../../include/flac/include/share/win_utf8_io.h",
-     "../../include/flac/include/share/windows_unicode_filenames.h",
     }
   filter {}
   filter { "action:vs*" }
     buildoptions { "/wd4101", "/wd4244", "/wd4267", "/wd4334" }
   filter {}
   filter { "action:vs*" }
-    buildoptions { "/wd6001", "/wd6011", "/wd6031", "/wd6297", "/wd28182" } -- /analyze
+    buildoptions { "/wd6001", "/wd6011", "/wd6031", "/wd6297", "/wd6386", "/wd28182" } -- /analyze
   filter {}
   defines { "FLAC__HAS_OGG=1" }
   links { "ogg" }
-  defines { "PACKAGE_VERSION=\"1.3.3\"" }
+  defines { "PACKAGE_VERSION=\"1.4.2\"" }
   filter {}
   filter { "kind:StaticLib" }
    defines { "FLAC__NO_DLL" }
   filter { "kind:SharedLib" }
    defines { "FLAC_API_EXPORTS" }
   filter {}
+
+function mpt_use_flac ()
+	filter {}
+	filter { "action:vs*" }
+		includedirs {
+			"../../include/flac/include",
+		}
+	filter { "not action:vs*" }
+		externalincludedirs {
+			"../../include/flac/include",
+		}
+	filter {}
+	filter {}
+	filter { "configurations:*Shared" }
+	filter { "not configurations:*Shared" }
+		defines { "FLAC__NO_DLL" }
+	filter {}
+	links {
+		"flac",
+	}
+	filter {}
+end

@@ -6,9 +6,12 @@
 
 
 #include "mpt/base/bit.hpp"
+#include "mpt/base/integer.hpp"
 #include "mpt/base/macros.hpp"
 #include "mpt/base/memory.hpp"
 #include "mpt/base/namespace.hpp"
+#include "mpt/endian/integer.hpp"
+#include "mpt/endian/type_traits.hpp"
 
 #include <array>
 #include <limits>
@@ -29,24 +32,28 @@ struct uint24 {
 	template <typename T, typename std::enable_if<std::is_integral<T>::value, bool>::type = true>
 	explicit uint24(T other) noexcept {
 		using Tunsigned = typename std::make_unsigned<T>::type;
-		MPT_MAYBE_CONSTANT_IF(mpt::endian_is_big()) {
+		MPT_MAYBE_CONSTANT_IF (mpt::endian_is_big()) {
 			bytes[0] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 16) & 0xff));
 			bytes[1] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 8) & 0xff));
 			bytes[2] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 0) & 0xff));
-		}
-		else {
+		} else {
 			bytes[0] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 0) & 0xff));
 			bytes[1] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 8) & 0xff));
 			bytes[2] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 16) & 0xff));
 		}
 	}
-	operator int() const noexcept {
-		MPT_MAYBE_CONSTANT_IF(mpt::endian_is_big()) {
+	operator unsigned int() const noexcept {
+		MPT_MAYBE_CONSTANT_IF (mpt::endian_is_big()) {
 			return (mpt::byte_cast<uint8>(bytes[0]) * 65536) + (mpt::byte_cast<uint8>(bytes[1]) * 256) + mpt::byte_cast<uint8>(bytes[2]);
-		}
-		else {
+		} else {
 			return (mpt::byte_cast<uint8>(bytes[2]) * 65536) + (mpt::byte_cast<uint8>(bytes[1]) * 256) + mpt::byte_cast<uint8>(bytes[0]);
 		}
+	}
+	friend bool operator==(uint24 a, uint24 b) noexcept {
+		return static_cast<unsigned int>(a) == static_cast<unsigned int>(b);
+	}
+	friend bool operator!=(uint24 a, uint24 b) noexcept {
+		return static_cast<unsigned int>(a) != static_cast<unsigned int>(b);
 	}
 };
 
@@ -59,28 +66,69 @@ struct int24 {
 	template <typename T, typename std::enable_if<std::is_integral<T>::value, bool>::type = true>
 	explicit int24(T other) noexcept {
 		using Tunsigned = typename std::make_unsigned<T>::type;
-		MPT_MAYBE_CONSTANT_IF(mpt::endian_is_big()) {
+		MPT_MAYBE_CONSTANT_IF (mpt::endian_is_big()) {
 			bytes[0] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 16) & 0xff));
 			bytes[1] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 8) & 0xff));
 			bytes[2] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 0) & 0xff));
-		}
-		else {
+		} else {
 			bytes[0] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 0) & 0xff));
 			bytes[1] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 8) & 0xff));
 			bytes[2] = mpt::byte_cast<std::byte>(static_cast<uint8>((static_cast<Tunsigned>(other) >> 16) & 0xff));
 		}
 	}
 	operator int() const noexcept {
-		MPT_MAYBE_CONSTANT_IF(mpt::endian_is_big()) {
+		MPT_MAYBE_CONSTANT_IF (mpt::endian_is_big()) {
 			return (static_cast<int8>(mpt::byte_cast<uint8>(bytes[0])) * 65536) + (mpt::byte_cast<uint8>(bytes[1]) * 256) + mpt::byte_cast<uint8>(bytes[2]);
-		}
-		else {
+		} else {
 			return (static_cast<int8>(mpt::byte_cast<uint8>(bytes[2])) * 65536) + (mpt::byte_cast<uint8>(bytes[1]) * 256) + mpt::byte_cast<uint8>(bytes[0]);
 		}
+	}
+	friend bool operator==(int24 a, int24 b) noexcept {
+		return static_cast<int>(a) == static_cast<int>(b);
+	}
+	friend bool operator!=(int24 a, int24 b) noexcept {
+		return static_cast<int>(a) != static_cast<int>(b);
 	}
 };
 
 static_assert(sizeof(int24) == 3);
+
+
+
+template <>
+struct packed_int_type<int24> {
+	using type = int32;
+};
+template <>
+struct packed_int_type<uint24> {
+	using type = uint32;
+};
+
+using int24le = packed<int24, mpt::endian::little>;
+using uint24le = packed<uint24, mpt::endian::little>;
+
+using int24be = packed<int24, mpt::endian::big>;
+using uint24be = packed<uint24, mpt::endian::big>;
+
+constexpr bool declare_binary_safe(const int24le &) {
+	return true;
+}
+constexpr bool declare_binary_safe(const uint24le &) {
+	return true;
+}
+
+constexpr bool declare_binary_safe(const int24be &) {
+	return true;
+}
+constexpr bool declare_binary_safe(const uint24be &) {
+	return true;
+}
+
+static_assert(mpt::check_binary_size<int24le>(3));
+static_assert(mpt::check_binary_size<uint24le>(3));
+
+static_assert(mpt::check_binary_size<int24be>(3));
+static_assert(mpt::check_binary_size<uint24be>(3));
 
 
 

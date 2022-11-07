@@ -392,9 +392,10 @@ static TEMPO MMDTempoToBPM(uint32 tempo, bool is8Ch, bool bpmMode, uint8 rowsPer
 }
 
 
-static void ConvertMEDEffect(ModCommand &m, bool is8ch, bool bpmMode, uint8 rowsPerBeat, bool volHex)
+static void ConvertMEDEffect(ModCommand &m, const uint8 command, const bool is8ch, const bool bpmMode, const uint8 rowsPerBeat, const bool volHex)
 {
-	switch(m.command)
+	m.command = CMD_NONE;
+	switch(command)
 	{
 	case 0x04:  // Vibrato (twice as deep as in ProTracker)
 		m.command = CMD_VIBRATO;
@@ -439,7 +440,7 @@ static void ConvertMEDEffect(ModCommand &m, bool is8ch, bool bpmMode, uint8 rows
 			if(m.param < 0x20)
 				m.param = 0x20;
 #endif  // MODPLUG_TRACKER
-		} else switch(m.command)
+		} else switch(command)
 		{
 			case 0xF1:  // Play note twice
 				m.command = CMD_MODCMDEX;
@@ -548,8 +549,11 @@ static void ConvertMEDEffect(ModCommand &m, bool is8ch, bool bpmMode, uint8 rows
 	case 0x20:  // Reverse sample + skip samples
 		if(m.param == 0 && m.vol == 0)
 		{
-			m.command = CMD_S3MCMDEX;
-			m.param = 0x9F;
+			if(m.IsNote())
+			{
+				m.command = CMD_S3MCMDEX;
+				m.param = 0x9F;
+			}
 		} else
 		{
 			// Skip given number of samples
@@ -577,8 +581,8 @@ static void ConvertMEDEffect(ModCommand &m, bool is8ch, bool bpmMode, uint8 rows
 		}
 		break;
 	default:
-		if(m.command < 0x10)
-			CSoundFile::ConvertModCommand(m);
+		if(command < 0x10)
+			CSoundFile::ConvertModCommand(m, command, m.param);
 		else
 			m.command = CMD_NONE;
 		break;
@@ -761,7 +765,10 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 		if(instrOffsets[ins - 1] != 0 && file.Seek(instrOffsets[ins - 1]))
 		{
 			file.ReadStruct(instrHeader);
-			sampleChunk = file.ReadChunk(instrHeader.length);
+			uint32 chunkLength = instrHeader.length;
+			if(instrHeader.type > 0 && (instrHeader.type & MMDInstrHeader::STEREO))
+				chunkLength *= 2u;
+			sampleChunk = file.ReadChunk(chunkLength);
 		}
 		const bool isSynth = instrHeader.type < 0;
 		const size_t maskedType = static_cast<size_t>(instrHeader.type & MMDInstrHeader::TYPEMASK);
@@ -913,7 +920,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 			sampleIO |= SampleIO::_16bit;
 			length /= 2;
 		}
-		if (instrHeader.type & MMDInstrHeader::STEREO)
+		if(instrHeader.type & MMDInstrHeader::STEREO)
 		{
 			sampleIO |= SampleIO::stereoSplit;
 			length /= 2;
@@ -1041,7 +1048,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 
 	// Setup a program change macro for command 1C (even if MIDI plugin is disabled, as otherwise these commands may act as filter commands)
 	m_MidiCfg.ClearZxxMacros();
-	strcpy(m_MidiCfg.szMidiSFXExt[0], "Cc z");
+	m_MidiCfg.SFx[0] = "Cc z";
 
 	file.Rewind();
 	PATTERNINDEX basePattern = 0;
@@ -1142,7 +1149,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 					}
 				}
 				if(playSeq.name[0])
-					order.SetName(mpt::ToUnicode(mpt::Charset::ISO8859_1, mpt::String::ReadAutoBuf(playSeq.name)));
+					order.SetName(mpt::ToUnicode(mpt::Charset::Amiga_no_C1, mpt::String::ReadAutoBuf(playSeq.name)));
 
 				// Play commands (jump / stop)
 				if(playSeq.commandTableOffset > 0 && file.Seek(playSeq.commandTableOffset))
@@ -1190,7 +1197,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 		{
 			file.ReadString<mpt::String::maybeNullTerminated>(m_songName, expData.songNameLength);
 			if(numSongs > 1)
-				order.SetName(mpt::ToUnicode(mpt::Charset::ISO8859_1, m_songName));
+				order.SetName(mpt::ToUnicode(mpt::Charset::Amiga_no_C1, m_songName));
 		}
 		if(expData.annoLength > 1 && file.Seek(expData.annoText))
 		{
@@ -1201,7 +1208,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 		// Read MIDI messages
 		if(expData.midiDumpOffset && file.Seek(expData.midiDumpOffset) && file.CanRead(8))
 		{
-			uint16 numDumps = std::min(file.ReadUint16BE(), static_cast<uint16>(std::size(m_MidiCfg.szMidiZXXExt)));
+			uint16 numDumps = std::min(file.ReadUint16BE(), static_cast<uint16>(m_MidiCfg.Zxx.size()));
 			file.Skip(6);
 			if(file.CanRead(numDumps * 4))
 			{
@@ -1215,14 +1222,15 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 					file.ReadStruct(dumpHeader);
 					if(!file.Seek(dumpHeader.dataPointer) || !file.CanRead(dumpHeader.length))
 						continue;
-					auto &macro = m_MidiCfg.szMidiZXXExt[dump];
-					auto length = std::min(static_cast<size_t>(dumpHeader.length), std::size(macro) / 2u);
+					std::array<char, kMacroLength> macro{};
+					auto length = std::min(static_cast<size_t>(dumpHeader.length), macro.size() / 2u);
 					for(size_t i = 0; i < length; i++)
 					{
 						const uint8 byte = file.ReadUint8(), high = byte >> 4, low = byte & 0x0F;
 						macro[i * 2] = high + (high < 0x0A ? '0' : 'A' - 0x0A);
 						macro[i * 2 + 1] = low + (low < 0x0A ? '0' : 'A' - 0x0A);
 					}
+					m_MidiCfg.Zxx[dump] = std::string_view{macro.data(), length * 2};
 				}
 			}
 		}
@@ -1339,6 +1347,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 				for(CHANNELINDEX chn = 0; chn < numTracks; chn++, m++)
 				{
 					int note = NOTE_NONE;
+					uint8 cmd = 0;
 					if(version < 1)
 					{
 						const auto [noteInstr, instrCmd, param] = file.ReadArray<uint8, 3>();
@@ -1348,7 +1357,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 
 						m->instr = (instrCmd >> 4) | ((noteInstr & 0x80) >> 3) | ((noteInstr & 0x40) >> 1);
 
-						m->command = instrCmd & 0x0F;
+						cmd = instrCmd & 0x0F;
 						m->param = param;
 					} else
 					{
@@ -1361,7 +1370,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 							m->note = NOTE_NOTECUT;
 
 						m->instr = instr & 0x3F;
-						m->command = command;
+						cmd = command;
 						m->param = param1;
 					}
 					// Octave wrapping for 4-channel modules (TODO: this should not be set because of synth instruments)
@@ -1370,7 +1379,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 
 					if(note >= NOTE_MIN && note <= NOTE_MAX)
 						m->note = static_cast<ModCommand::NOTE>(note);
-					ConvertMEDEffect(*m, is8Ch, bpmMode, rowsPerBeat, volHex);
+					ConvertMEDEffect(*m, cmd, is8Ch, bpmMode, rowsPerBeat, volHex);
 				}
 			}
 		}
@@ -1428,7 +1437,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 	m_modFormat.formatName = MPT_UFORMAT("OctaMED (MMD{})")(version);
 	m_modFormat.type = MPT_USTRING("med");
 	m_modFormat.madeWithTracker = madeWithTracker;
-	m_modFormat.charset = mpt::Charset::ISO8859_1;
+	m_modFormat.charset = mpt::Charset::Amiga_no_C1;
 
 	return true;
 }

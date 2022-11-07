@@ -153,6 +153,7 @@ void CSelectPluginDlg::OnOK()
 			m_pPlugin->Info.dwPluginId1 = pFactory->pluginId1;
 			m_pPlugin->Info.dwPluginId2 = pFactory->pluginId2;
 			m_pPlugin->editorX = m_pPlugin->editorY = int32_min;
+			m_pPlugin->SetAutoSuspend(TrackerSettings::Instance().enableAutoSuspend);
 
 #ifdef MPT_WITH_VST
 			if(m_pPlugin->Info.dwPluginId1 == Vst::kEffectMagic)
@@ -199,23 +200,8 @@ void CSelectPluginDlg::OnOK()
 	} else if(m_pPlugin->IsValidPlugin())
 	{
 		// No effect
-		CriticalSection cs;
-		m_pPlugin->Destroy();
-		// Clear plugin info
-		MemsetZero(m_pPlugin->Info);
-		changed = true;
 		if(m_pModDoc)
-		{
-			for(PLUGINDEX plug = 0; plug < m_nPlugSlot; plug++)
-			{
-				auto &srcPlug = m_pModDoc->GetSoundFile().m_MixPlugins[plug];
-				if(srcPlug.GetOutputPlugin() == m_nPlugSlot)
-				{
-					srcPlug.SetOutputToMaster();
-					m_pModDoc->UpdateAllViews(nullptr, PluginHint(static_cast<PLUGINDEX>(plug + 1)).Info());
-				}
-			}
-		}
+			changed = m_pModDoc->RemovePlugin(m_nPlugSlot);
 	}
 
 	//remember window size:
@@ -680,8 +666,8 @@ void CSelectPluginDlg::OnAddPlugin()
 {
 	FileDialog dlg = OpenFileDialog()
 		.AllowMultiSelect()
-		.DefaultExtension("dll")
-		.ExtensionFilter("VST Plugins|*.dll;*.vst3||")
+		.DefaultExtension(U_("dll"))
+		.ExtensionFilter(U_("VST Plugins|*.dll;*.vst3||"))
 		.WorkingDirectory(TrackerSettings::Instance().PathPlugins.GetWorkingDir());
 	if(!dlg.Show(this)) return;
 
@@ -758,7 +744,7 @@ VSTPluginLib *CSelectPluginDlg::ScanPlugins(const mpt::PathString &path, CWnd *p
 	int files = 0;
 	while(scan.Next(fileName) && pluginScanDlg.IsWindowVisible())
 	{
-		if(!mpt::PathString::CompareNoCase(fileName.GetFileExt(), P_(".dll")))
+		if(!mpt::PathCompareNoCase(fileName.GetFilenameExtension(), P_(".dll")))
 		{
 			CWnd *text = pluginScanDlg.GetDlgItem(IDC_SCANTEXT);
 			CString scanStr = _T("Scanning Plugin...\n") + fileName.ToCString();

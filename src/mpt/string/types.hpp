@@ -27,20 +27,38 @@ inline namespace MPT_INLINE_NS {
 
 
 
-enum class common_encoding
-{
+enum class common_encoding {
 	utf8,
 	ascii, // strictly 7-bit ASCII
 	iso8859_1,
 	iso8859_15,
-	cp850,
 	cp437,
+	cp737,
+	cp775,
+	cp850,
+	cp852,
+	cp855,
+	cp857,
+	cp860,
+	cp861,
+	cp862,
+	cp863,
+	cp864,
+	cp865,
+	cp866,
+	cp869,
+	cp874,
 	windows1252,
+	amiga,
+	riscos,
+	atarist,
+	iso8859_1_no_c1,
+	iso8859_15_no_c1,
+	amiga_no_c1,
 };
 
 
-enum class logical_encoding
-{
+enum class logical_encoding {
 	locale,        // CP_ACP on windows, system configured C locale otherwise
 	active_locale, // active C/C++ global locale
 };
@@ -195,6 +213,8 @@ struct logical_encoding_char_traits : std::char_traits<char> {
 
 using lstring = std::basic_string<char, mpt::logical_encoding_char_traits<logical_encoding::locale>>;
 
+using utf8string = std::basic_string<char, mpt::common_encoding_char_traits<common_encoding::utf8>>;
+
 using source_string = std::basic_string<char, mpt::common_encoding_char_traits<source_encoding>>;
 using exception_string = std::basic_string<char, mpt::logical_encoding_char_traits<exception_encoding>>;
 
@@ -204,8 +224,10 @@ template <typename Tchar>
 struct windows_char_traits { };
 template <>
 struct windows_char_traits<CHAR> { using string_type = mpt::lstring; };
+#if !defined(MPT_COMPILER_QUIRK_NO_WCHAR)
 template <>
 struct windows_char_traits<WCHAR> { using string_type = std::wstring; };
+#endif // !MPT_COMPILER_QUIRK_NO_WCHAR
 
 using tstring = windows_char_traits<TCHAR>::string_type;
 
@@ -249,7 +271,7 @@ using u8char = char;
 
 
 
-#if !defined(MPT_USTRING_MODE_UTF8_FORCE) && (MPT_COMPILER_MSVC || (MPT_DETECTED_MFC && defined(UNICODE)))
+#if !defined(MPT_USTRING_MODE_UTF8_FORCE) && !defined(MPT_COMPILER_QUIRK_NO_WCHAR) && (MPT_COMPILER_MSVC || (MPT_DETECTED_MFC && defined(UNICODE)))
 // Use wide strings for MSVC because this is the native encoding on
 // microsoft platforms.
 #define MPT_USTRING_MODE_WIDE 1
@@ -280,10 +302,11 @@ using u8char = char;
 //  these are used on mpt::ustring objects. However, compiling in the
 //  respectively other mpt::ustring mode will catch most of these anyway.
 
-#if MPT_USTRING_MODE_WIDE
-#if MPT_USTRING_MODE_UTF8
+#if MPT_USTRING_MODE_WIDE && MPT_USTRING_MODE_UTF8
 #error "MPT_USTRING_MODE_WIDE and MPT_USTRING_MODE_UTF8 are mutually exclusive."
 #endif
+
+#if MPT_USTRING_MODE_WIDE
 
 using ustring = std::wstring;
 using uchar = wchar_t;
@@ -294,9 +317,6 @@ using uchar = wchar_t;
 #endif // MPT_USTRING_MODE_WIDE
 
 #if MPT_USTRING_MODE_UTF8
-#if MPT_USTRING_MODE_WIDE
-#error "MPT_USTRING_MODE_WIDE and MPT_USTRING_MODE_UTF8 are mutually exclusive."
-#endif
 
 using ustring = mpt::u8string;
 using uchar = mpt::u8char;

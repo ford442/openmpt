@@ -84,6 +84,7 @@ BEGIN_MESSAGE_MAP(CViewGlobals, CFormView)
 	ON_COMMAND(IDC_CHECK10,		&CViewGlobals::OnBypassChanged)
 	ON_COMMAND(IDC_CHECK11,		&CViewGlobals::OnDryMixChanged)
 	ON_COMMAND(IDC_BUTTON1,		&CViewGlobals::OnSelectPlugin)
+	ON_COMMAND(IDC_DELPLUGIN,	&CViewGlobals::OnRemovePlugin)
 	ON_COMMAND(IDC_BUTTON2,		&CViewGlobals::OnEditPlugin)
 	ON_COMMAND(IDC_BUTTON4,		&CViewGlobals::OnNextPlugin)
 	ON_COMMAND(IDC_BUTTON5,		&CViewGlobals::OnPrevPlugin)
@@ -108,7 +109,8 @@ BEGIN_MESSAGE_MAP(CViewGlobals, CFormView)
 	ON_CBN_SELCHANGE(IDC_COMBO8, &CViewGlobals::OnProgramChanged)
 	ON_CBN_SETFOCUS(IDC_COMBO8, &CViewGlobals::OnFillProgramCombo)
 
-	ON_COMMAND(IDC_CHECK12,		 &CViewGlobals::OnWetDryExpandChanged)
+	ON_COMMAND(IDC_CHECK12, &CViewGlobals::OnWetDryExpandChanged)
+	ON_COMMAND(IDC_CHECK13, &CViewGlobals::OnAutoSuspendChanged)
 	ON_CBN_SELCHANGE(IDC_COMBO9, &CViewGlobals::OnSpecialMixProcessingChanged)
 
 	ON_NOTIFY(TCN_SELCHANGE, IDC_TABCTRL1,	&CViewGlobals::OnTabSelchange)
@@ -116,6 +118,7 @@ BEGIN_MESSAGE_MAP(CViewGlobals, CFormView)
 	ON_MESSAGE(WM_MOD_VIEWMSG,	&CViewGlobals::OnModViewMsg)
 	ON_MESSAGE(WM_MOD_MIDIMSG,	&CViewGlobals::OnMidiMsg)
 	ON_MESSAGE(WM_MOD_PLUGPARAMAUTOMATE,	&CViewGlobals::OnParamAutomated)
+	ON_MESSAGE(WM_MOD_PLUGINDRYWETRATIOCHANGED, &CViewGlobals::OnDryWetRatioChangedFromPlayer)
 
 	ON_COMMAND(ID_EDIT_UNDO, &CViewGlobals::OnEditUndo)
 	ON_COMMAND(ID_EDIT_REDO, &CViewGlobals::OnEditRedo)
@@ -221,7 +224,7 @@ void CViewGlobals::OnInitialUpdate()
 	m_CbnSpecialMixProcessing.AddString(_T("Mix Subtract"));
 	m_CbnSpecialMixProcessing.AddString(_T("Middle Subtract"));
 	m_CbnSpecialMixProcessing.AddString(_T("LR Balance"));
-	m_SpinMixGain.SetRange(0,80);
+	m_SpinMixGain.SetRange(0, 80);
 	m_SpinMixGain.SetPos(10);
 	SetDlgItemText(IDC_EDIT16, _T("Gain: x1.0"));
 
@@ -443,6 +446,7 @@ void CViewGlobals::UpdateView(UpdateHint hint, CObject *pObject)
 		CheckDlgButton(IDC_CHECK9, plugin.IsMasterEffect() ? BST_CHECKED : BST_UNCHECKED);
 		CheckDlgButton(IDC_CHECK10, plugin.IsBypassed() ? BST_CHECKED : BST_UNCHECKED);
 		CheckDlgButton(IDC_CHECK11, plugin.IsWetMix() ? BST_CHECKED : BST_UNCHECKED);
+		CheckDlgButton(IDC_CHECK13, plugin.IsAutoSuspendable() ? BST_CHECKED : BST_UNCHECKED);
 		IMixPlugin *pPlugin = plugin.pMixPlugin;
 		m_BtnEdit.EnableWindow((pPlugin != nullptr && (pPlugin->HasEditor() || pPlugin->GetNumParameters())) ? TRUE : FALSE);
 		GetDlgItem(IDC_MOVEFXSLOT)->EnableWindow((pPlugin) ? TRUE : FALSE);
@@ -588,7 +592,7 @@ void CViewGlobals::UpdateView(UpdateHint hint, CObject *pObject)
 		if(outputSel >= 0)
 			m_CbnOutput.SetCurSel(outputSel);
 	}
-	if (plugHint.GetType()[HINT_PLUGINPARAM] && updatePlug)
+	if(plugHint.GetType()[HINT_PLUGINPARAM] && updatePlug)
 	{
 		OnParamChanged();
 	}
@@ -1112,9 +1116,26 @@ void CViewGlobals::OnSelectPlugin()
 }
 
 
+void CViewGlobals::OnRemovePlugin()
+{
+#ifndef NO_PLUGINS
+	CModDoc *pModDoc = GetDocument();
+
+	if(pModDoc && m_nCurrentPlugin < MAX_MIXPLUGINS && Reporting::Confirm(MPT_UFORMAT("Remove plugin FX{}: {}?")(m_nCurrentPlugin + 1, pModDoc->GetSoundFile().m_MixPlugins[m_nCurrentPlugin].GetName()), false, true) == cnfYes)
+	{
+		if(pModDoc->RemovePlugin(m_nCurrentPlugin))
+		{
+			OnPluginChanged();
+			OnParamChanged();
+		}
+	}
+#endif  // NO_PLUGINS
+}
+
+
 LRESULT CViewGlobals::OnParamAutomated(WPARAM plugin, LPARAM param)
 {
-	if(plugin == m_nCurrentPlugin && param == m_nCurrentParam)
+	if(plugin == m_nCurrentPlugin && static_cast<PlugParamIndex>(param) == m_nCurrentParam)
 	{
 		OnParamChanged();
 	}
@@ -1122,16 +1143,26 @@ LRESULT CViewGlobals::OnParamAutomated(WPARAM plugin, LPARAM param)
 }
 
 
+LRESULT CViewGlobals::OnDryWetRatioChangedFromPlayer(WPARAM plugin, LPARAM)
+{
+	if(plugin == m_nCurrentPlugin)
+	{
+		UpdateDryWetDisplay();
+	}
+	return 0;
+}
+
+
 void CViewGlobals::OnParamChanged()
 {
-	int cursel = static_cast<int>(m_CbnParam.GetItemData(m_CbnParam.GetCurSel()));
+	PlugParamIndex cursel = static_cast<PlugParamIndex>(m_CbnParam.GetItemData(m_CbnParam.GetCurSel()));
 
 	IMixPlugin *pPlugin = GetCurrentPlugin();
 
-	if(pPlugin != nullptr && cursel != CB_ERR)
+	if(pPlugin != nullptr && cursel != static_cast<PlugParamIndex>(CB_ERR))
 	{
 		const PlugParamIndex nParams = pPlugin->GetNumParameters();
-		if(cursel >= 0 && cursel < nParams) m_nCurrentParam = cursel;
+		if(cursel < nParams) m_nCurrentParam = cursel;
 		if(m_nCurrentParam < nParams)
 		{
 			const auto value = pPlugin->GetScaledUIParam(m_nCurrentParam);
@@ -1291,6 +1322,17 @@ void CViewGlobals::OnWetDryExpandChanged()
 
 	pModDoc->GetSoundFile().m_MixPlugins[m_nCurrentPlugin].SetExpandedMix(IsDlgButtonChecked(IDC_CHECK12) != BST_UNCHECKED);
 	UpdateDryWetDisplay();
+	SetPluginModified();
+}
+
+
+void CViewGlobals::OnAutoSuspendChanged()
+{
+	CModDoc *pModDoc = GetDocument();
+	if(m_nCurrentPlugin >= MAX_MIXPLUGINS || !pModDoc)
+		return;
+
+	pModDoc->GetSoundFile().m_MixPlugins[m_nCurrentPlugin].SetAutoSuspend(IsDlgButtonChecked(IDC_CHECK13) != BST_UNCHECKED);
 	SetPluginModified();
 }
 

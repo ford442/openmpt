@@ -91,7 +91,7 @@ BEGIN_MESSAGE_MAP(CAbstractVstEditor, CDialog)
 	ON_MESSAGE(WM_MOD_KEYCOMMAND,	&CAbstractVstEditor::OnCustomKeyMsg) //rewbs.customKeys
 	ON_COMMAND_RANGE(ID_PLUGSELECT, ID_PLUGSELECT + MAX_MIXPLUGINS, &CAbstractVstEditor::OnToggleEditor) //rewbs.patPlugName
 	ON_COMMAND_RANGE(ID_SELECTINST, ID_SELECTINST + MAX_INSTRUMENTS, &CAbstractVstEditor::OnSetInputInstrument) //rewbs.patPlugName
-	ON_COMMAND_RANGE(ID_LEARN_MACRO_FROM_PLUGGUI, ID_LEARN_MACRO_FROM_PLUGGUI + NUM_MACROS, &CAbstractVstEditor::PrepareToLearnMacro)
+	ON_COMMAND_RANGE(ID_LEARN_MACRO_FROM_PLUGGUI, ID_LEARN_MACRO_FROM_PLUGGUI + kSFxMacros, &CAbstractVstEditor::PrepareToLearnMacro)
 END_MESSAGE_MAP()
 
 
@@ -457,19 +457,15 @@ bool CAbstractVstEditor::HandleKeyMessage(MSG &msg)
 	if(ih->IsKeyPressHandledByTextBox(static_cast<DWORD>(msg.wParam), ::GetFocus()))
 		return false;
 
-	// Translate message manually
-	UINT nChar = (UINT)msg.wParam;
-	UINT nRepCnt = LOWORD(msg.lParam);
-	UINT nFlags = HIWORD(msg.lParam);
-	KeyEventType kT = ih->GetKeyEventType(nFlags);
+	const auto event = ih->Translate(msg);
 
 	// If we successfully mapped to a command and plug does not listen for keypresses, no need to pass message on.
-	if(ih->KeyEvent(kCtxVSTGUI, nChar, nRepCnt, nFlags, kT, this) != kcNull)
+	if(ih->KeyEvent(kCtxVSTGUI, event, this) != kcNull)
 		return true;
 
 	// Don't forward key repeats if plug does not listen for keypresses
 	// (avoids system beeps on note hold)
-	if(kT == kKeyEventRepeat)
+	if(event.keyEventType == kKeyEventRepeat)
 		return true;
 	
 	return false;
@@ -533,9 +529,8 @@ LRESULT CAbstractVstEditor::OnCustomKeyMsg(WPARAM wParam, LPARAM /*lParam*/)
 	{
 		if(ValidateCurrentInstrument())
 		{
-			CModDoc* pModDoc = m_VstPlugin.GetModDoc();
-			CMainFrame* pMainFrm = CMainFrame::GetMainFrame();
-			const ModCommand::NOTE note = static_cast<ModCommand::NOTE>(wParam - kcVSTGUIStartNotes + NOTE_MIN + pMainFrm->GetBaseOctave() * 12);
+			CModDoc *pModDoc = m_VstPlugin.GetModDoc();
+			const ModCommand::NOTE note = pModDoc->GetNoteWithBaseOctave(static_cast<int>(wParam - kcVSTGUIStartNotes), m_nInstrument);
 			if(ModCommand::IsNote(note))
 			{
 				pModDoc->PlayNote(PlayNoteParam(note).Instrument(m_nInstrument), &m_noteChannel);
@@ -547,9 +542,8 @@ LRESULT CAbstractVstEditor::OnCustomKeyMsg(WPARAM wParam, LPARAM /*lParam*/)
 	{
 		if(ValidateCurrentInstrument())
 		{
-			CModDoc* pModDoc = m_VstPlugin.GetModDoc();
-			CMainFrame *pMainFrm = CMainFrame::GetMainFrame();
-			const ModCommand::NOTE note = static_cast<ModCommand::NOTE>(wParam - kcVSTGUIStartNoteStops + NOTE_MIN + pMainFrm->GetBaseOctave() * 12);
+			CModDoc *pModDoc = m_VstPlugin.GetModDoc();
+			const ModCommand::NOTE note = pModDoc->GetNoteWithBaseOctave(static_cast<int>(wParam - kcVSTGUIStartNoteStops), m_nInstrument);
 			if(ModCommand::IsNote(note))
 			{
 				pModDoc->NoteOff(note, false, m_nInstrument, m_noteChannel[note - NOTE_MIN]);
@@ -829,7 +823,7 @@ void CAbstractVstEditor::UpdateMacroMenu()
 	}
 
 	CString label, macroName;
-	for(int nMacro = 0; nMacro < NUM_MACROS; nMacro++)
+	for(int nMacro = 0; nMacro < kSFxMacros; nMacro++)
 	{
 		int action = 0;
 		UINT greyed = MF_GRAYED;
@@ -965,7 +959,7 @@ void CAbstractVstEditor::PrepareToLearnMacro(UINT nID)
 
 void CAbstractVstEditor::SetLearnMacro(int inMacro)
 {
-	if (inMacro < NUM_MACROS)
+	if (inMacro < kSFxMacros)
 	{
 		m_nLearnMacro=inMacro;
 	}

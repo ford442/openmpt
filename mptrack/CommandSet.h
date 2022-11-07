@@ -73,7 +73,7 @@ enum CommandID
 	//Global
 	kcGlobalStart = kcFirst,
 	kcStartFile = kcGlobalStart,
-	kcFileNew = kcGlobalStart,
+	kcFileNew = kcStartFile,
 	kcFileOpen,
 	kcFileAppend,
 	kcFileClose,
@@ -95,6 +95,7 @@ enum CommandID
 
 	kcStartPlayCommands,
 	kcPlayPauseSong = kcStartPlayCommands,
+	kcPlayStopSong,
 	kcPauseSong,
 	kcStopSong,
 	kcPlaySongFromStart,
@@ -180,7 +181,9 @@ enum CommandID
 	kcPatternSnapUph1,
 	kcPatternSnapDownh2,
 	kcPatternSnapUph2,
-	kcEndJumpSnap = kcPatternSnapUph2,
+	kcPrevEntryInColumn,
+	kcNextEntryInColumn,
+	kcEndJumpSnap = kcNextEntryInColumn,
 	kcStartPlainNavigate,
 	kcNavigateDown = kcStartPlainNavigate,
 	kcNavigateUp,
@@ -211,6 +214,8 @@ enum CommandID
 	kcPatternSnapUph1Select,
 	kcPatternSnapDownh2Select,
 	kcPatternSnapUph2Select,
+	kcPrevEntryInColumnSelect,
+	kcNextEntryInColumnSelect,
 	kcNavigateDownSelect,
 	kcNavigateUpSelect,
 	kcNavigateDownBySpacingSelect,
@@ -269,8 +274,6 @@ enum CommandID
 	kcCursorCopy,
 	kcCursorPaste,
 	kcFindInstrument,
-	kcPrevEntryInColumn,
-	kcNextEntryInColumn,
 	kcPatternRecord,
 	kcPatternPlayRow,
 	kcSetSpacing,
@@ -303,6 +306,7 @@ enum CommandID
 	kcTimeAtRow,
 	kcLockPlaybackToRows,
 	kcQuantizeSettings,
+	kcTogglePatternPlayRow,
 	kcToggleOverflowPaste,
 	kcToggleNoteOffRecordPC,
 	kcToggleNoteOffRecordMIDI,
@@ -621,7 +625,7 @@ enum CommandID
 	kcSetFXParamE,
 	kcSetFXParamF,
 
-	//Effect commands. ORDER IS CRUCIAL.
+	//Effect commands. ORDER IS CRUCIAL and must match EffectCommand enum!
 	kcSetFXStart,
 	kcFixedFXStart = kcSetFXStart,
 	kcSetFXarp = kcSetFXStart,  //0,j
@@ -715,6 +719,7 @@ enum CommandID
 	kcInsNoteMapCopyCurrentNote,
 	kcInsNoteMapCopyCurrentSample,
 	kcInsNoteMapReset,
+	kcInsNoteMapTransposeSamples,
 	kcInsNoteMapRemove,
 	kcInsNoteMapTransposeUp,
 	kcInsNoteMapTransposeDown,
@@ -809,7 +814,21 @@ enum CommandID
 	kcCommentsStartNoteStops,
 	kcCommentsEndNoteStops = kcCommentsStartNoteStops + kcCommandSetNumNotes,
 
-	kcTreeViewStopPreview,
+	kcStartTreeViewCommands,
+	kcTreeViewStopPreview = kcStartTreeViewCommands,
+	kcTreeViewOpen,
+	kcTreeViewPlay,
+	kcTreeViewInsert,
+	kcTreeViewDuplicate,
+	kcTreeViewDelete,
+	kcTreeViewDeletePermanently,
+	kcTreeViewRename,
+	kcTreeViewSendToEditorInsertNew,
+	kcTreeViewFind,
+	kcTreeViewSortByName,
+	kcTreeViewSortByDate,
+	kcTreeViewSortBySize,
+	kcEndTreeViewCommands = kcTreeViewSortBySize,
 
 	kcStartVSTGUICommands,
 	kcVSTGUIPrevPreset = kcStartVSTGUICommands,
@@ -1048,10 +1067,7 @@ protected:
 	CommandID FindCmd(uint32 uid) const;
 	bool KeyCombinationConflict(KeyCombination kc1, KeyCombination kc2, bool checkEventConflict = true) const;
 
-	const CModSpecifications *m_oldSpecs = nullptr;
-	KeyCommand m_commands[kcNumCommands];
-	std::bitset<kCtxMaxInputContexts> m_isParentContext[kCtxMaxInputContexts];
-	std::bitset<kNumRules> m_enforceRule;
+	void ApplyDefaultKeybindings(const Version onlyCommandsAfterVersion = {});
 
 public:
 	CCommandSet();
@@ -1080,8 +1096,14 @@ public:
 	void GenKeyMap(KeyMap &km);            // Generate a keymap from this command set
 	bool SaveFile(const mpt::PathString &filename);
 	bool LoadFile(const mpt::PathString &filename);
-	bool LoadFile(std::istream &iStrm, const mpt::ustring &filenameDescription, const bool fillExistingSet = false);
-	bool LoadDefaultKeymap();
+	bool LoadFile(std::istream &iStrm, const mpt::ustring &filenameDescription);
+	void LoadDefaultKeymap();
+
+protected:
+	const CModSpecifications *m_oldSpecs = nullptr;
+	KeyCommand m_commands[kcNumCommands];
+	std::bitset<kCtxMaxInputContexts> m_isParentContext[kCtxMaxInputContexts];
+	std::bitset<kNumRules> m_enforceRule;
 };
 
 OPENMPT_NAMESPACE_END

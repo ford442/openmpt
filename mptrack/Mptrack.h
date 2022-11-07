@@ -22,6 +22,8 @@
 #include "../misc/mptMutex.h"
 #include "../common/mptRandom.h"
 
+#include <future>
+
 OPENMPT_NAMESPACE_BEGIN
 
 class CModDoc;
@@ -82,8 +84,16 @@ enum DragonDropType
 
 struct DRAGONDROP
 {
+	enum class InsertType
+	{
+		Unspecified,
+		Replace,
+		InsertNew
+	};
+
 	const CSoundFile *sndFile = nullptr;
 	DragonDropType dropType = DRAGONDROP_NOTHING;
+	InsertType insertType = InsertType::Unspecified;
 	uint32 dropItem = 0;
 	LPARAM dropParam = 0;
 
@@ -112,12 +122,15 @@ protected:
 	static MidiLibrary midiLibrary;
 
 public:
-	static std::vector<CDLSBank *> gpDLSBanks;
+	static std::vector<std::unique_ptr<CDLSBank>> gpDLSBanks;
 
 protected:
 	mpt::recursive_mutex_with_lock_count m_GlobalMutex;
 
 	DWORD m_GuiThreadId = 0;
+
+	std::future<std::vector<std::unique_ptr<CDLSBank>>> m_scannedDlsBanks;
+	std::atomic<bool> m_scannedDlsBanksAvailable = false;
 
 	std::unique_ptr<mpt::random_device> m_RD;
 	std::unique_ptr<mpt::thread_safe_prng<mpt::default_prng>> m_PRNG;
@@ -161,6 +174,7 @@ protected:
 
 public:
 	CTrackApp();
+	~CTrackApp();
 
 	CDataRecoveryHandler *GetDataRecoveryHandler() override;
 	void AddToRecentFileList(LPCTSTR lpszPathName) override;
@@ -183,7 +197,7 @@ public:
 	static void ExportMidiConfig(const mpt::PathString &filename);
 	static void ImportMidiConfig(SettingsContainer &file, const mpt::PathString &path, bool forgetSettings = false);
 	static void ExportMidiConfig(SettingsContainer &file);
-	static void LoadDefaultDLSBanks();
+	static std::future<std::vector<std::unique_ptr<CDLSBank>>> LoadDefaultDLSBanks();
 	static void SaveDefaultDLSBanks();
 	static void RemoveDLSBank(UINT nBank);
 	static bool AddDLSBank(const mpt::PathString &filename);
@@ -296,10 +310,10 @@ public:
 #endif // !MPT_BUILD_RETRO
 
 	// Relative / absolute paths conversion
-	mpt::PathString PathAbsoluteToInstallRelative(const mpt::PathString &path) { return path.AbsolutePathToRelative(GetInstallPath()); }
-	mpt::PathString PathInstallRelativeToAbsolute(const mpt::PathString &path) { return path.RelativePathToAbsolute(GetInstallPath()); }
-	mpt::PathString PathAbsoluteToInstallBinArchRelative(const mpt::PathString &path) { return path.AbsolutePathToRelative(GetInstallBinArchPath()); }
-	mpt::PathString PathInstallBinArchRelativeToAbsolute(const mpt::PathString &path) { return path.RelativePathToAbsolute(GetInstallBinArchPath()); }
+	mpt::PathString PathAbsoluteToInstallRelative(const mpt::PathString &path) { return mpt::AbsolutePathToRelative(path, GetInstallPath()); }
+	mpt::PathString PathInstallRelativeToAbsolute(const mpt::PathString &path) { return mpt::RelativePathToAbsolute(path, GetInstallPath()); }
+	mpt::PathString PathAbsoluteToInstallBinArchRelative(const mpt::PathString &path) { return mpt::AbsolutePathToRelative(path, GetInstallBinArchPath()); }
+	mpt::PathString PathInstallBinArchRelativeToAbsolute(const mpt::PathString &path) { return mpt::RelativePathToAbsolute(path, GetInstallBinArchPath()); }
 
 	static void OpenModulesDialog(std::vector<mpt::PathString> &files, const mpt::PathString &overridePath = mpt::PathString());
 
@@ -345,6 +359,8 @@ public:
 	DECLARE_MESSAGE_MAP()
 
 protected:
+	size_t AddScannedDLSBanks();
+
 	void InitializeDXPlugins();
 	void UninitializeDXPlugins();
 
@@ -420,7 +436,7 @@ void ErrorBox(UINT nStringID, CWnd *p = nullptr);
 // Helper function declarations.
 struct SNDMIXPLUGIN;
 class IMixPlugin;
-void AddPluginNamesToCombobox(CComboBox &CBox, const SNDMIXPLUGIN *plugarray, const bool libraryName = false, const PLUGINDEX updatePlug = PLUGINDEX_INVALID);
+void AddPluginNamesToCombobox(CComboBox &CBox, const std::array<SNDMIXPLUGIN, MAX_MIXPLUGINS> &plugins, const bool libraryName = false, const PLUGINDEX updatePlug = PLUGINDEX_INVALID);
 void AddPluginParameternamesToCombobox(CComboBox &CBox, SNDMIXPLUGIN &plugarray);
 void AddPluginParameternamesToCombobox(CComboBox &CBox, IMixPlugin &plug);
 

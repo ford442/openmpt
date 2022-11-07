@@ -37,8 +37,13 @@
 #include "../soundlib/modsmp_ctrl.h"
 #include "CleanupSong.h"
 #include "../common/mptStringBuffer.h"
+#include "../common/mptFileTemporary.h"
+#include "mpt/io_file/inputfile.hpp"
+#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "mpt/io_file/outputfile.hpp"
 #include "../common/mptFileIO.h"
 #include <sstream>
+#include "mpt/fs/fs.hpp"
 #include "../common/FileReader.h"
 #include "FileDialog.h"
 #include "ExternalSamples.h"
@@ -133,7 +138,7 @@ CModDoc::CModDoc()
 	, m_InstrumentUndo(*this)
 {
 	// Set the creation date of this file (or the load time if we're loading an existing file)
-	time(&m_creationTime);
+	m_creationTime = mpt::Date::UnixNow();
 
 	ReinitRecordState();
 
@@ -197,7 +202,7 @@ BOOL CModDoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 		MPT_LOG_GLOBAL(LogDebug, "Loader", U_("Open..."));
 
-		InputFile f(filename, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
+		mpt::IO::InputFile f(filename, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
 		if (f.IsValid())
 		{
 			FileReader file = GetFileReader(f);
@@ -316,8 +321,8 @@ bool CModDoc::OnSaveDocument(const mpt::PathString &filename, const bool setPath
 	m_SndFile.m_dwLastSavedWithVersion = Version::Current();
 	try
 	{
-		mpt::SafeOutputFile sf(filename, std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
-		mpt::ofstream &f = sf;
+		mpt::IO::SafeOutputFile sf(filename, std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+		mpt::IO::ofstream &f = sf;
 		if(f)
 		{
 			if(m_SndFile.m_SongFlags[SONG_IMPORTED] && !(GetModType() & (MOD_TYPE_MOD | MOD_TYPE_S3M)))
@@ -331,8 +336,8 @@ bool CModDoc::OnSaveDocument(const mpt::PathString &filename, const bool setPath
 					{
 						if(showWarning)
 						{
-							AddToLog(LogWarning, mpt::ToUnicode(mpt::Charset::ASCII, MPT_AFORMAT("Some imported Compatibility Settings that are not supported by the {} format have been disabled. Verify that the module still sounds as intended.")
-								(mpt::ToUpperCaseAscii(m_SndFile.GetModSpecifications().fileExtension))));
+							AddToLog(LogWarning, MPT_UFORMAT("Some imported Compatibility Settings that are not supported by the {} format have been disabled. Verify that the module still sounds as intended.")
+								(m_SndFile.GetModSpecifications().GetFileExtensionUpper()));
 							showWarning = false;
 						}
 						m_SndFile.m_playBehaviour.reset(i);
@@ -411,15 +416,15 @@ bool CModDoc::SaveSample(SAMPLEINDEX smp)
 		if(!filename.empty())
 		{
 			auto &sample = m_SndFile.GetSample(smp);
-			const auto ext = filename.GetFileExt().ToUnicode().substr(1);
+			const auto ext = filename.GetFilenameExtension().ToUnicode().substr(1);
 			const auto format = FromSettingValue<SampleEditorDefaultFormat>(ext);
 
 			try
 			{
-				mpt::SafeOutputFile sf(filename, std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+				mpt::IO::SafeOutputFile sf(filename, std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
 				if(sf)
 				{
-					mpt::ofstream &f = sf;
+					mpt::IO::ofstream &f = sf;
 					f.exceptions(f.exceptions() | std::ios::badbit | std::ios::failbit);
 
 					if(sample.uFlags[CHN_ADLIB] || format == dfS3I)
@@ -464,7 +469,7 @@ void CModDoc::DeleteContents()
 BOOL CModDoc::DoSave(const mpt::PathString &filename, bool setPath)
 {
 	const mpt::PathString docFileName = GetPathNameMpt();
-	const std::string defaultExtension = m_SndFile.GetModSpecifications().fileExtension;
+	const mpt::ustring defaultExtension = m_SndFile.GetModSpecifications().GetFileExtension();
 
 	switch(m_SndFile.GetBestSaveFormat())
 	{
@@ -486,18 +491,18 @@ BOOL CModDoc::DoSave(const mpt::PathString &filename, bool setPath)
 		return FALSE;
 	}
 
-	mpt::PathString ext = P_(".") + mpt::PathString::FromUTF8(defaultExtension);
+	mpt::PathString ext = P_(".") + mpt::PathString::FromUnicode(defaultExtension);
 
 	mpt::PathString saveFileName;
 
 	if(filename.empty() || m_ShowSavedialog)
 	{
 		mpt::PathString drive = docFileName.GetDrive();
-		mpt::PathString dir = docFileName.GetDir();
-		mpt::PathString fileName = docFileName.GetFileName();
+		mpt::PathString dir = docFileName.GetDirectory();
+		mpt::PathString fileName = docFileName.GetFilenameBase();
 		if(fileName.empty())
 		{
-			fileName = mpt::PathString::FromCString(GetTitle()).SanitizeComponent();
+			fileName = mpt::PathString::FromCString(GetTitle()).AsSanitizedComponent();
 		}
 		mpt::PathString defaultSaveName = drive + dir + fileName + ext;
 
@@ -518,12 +523,12 @@ BOOL CModDoc::DoSave(const mpt::PathString &filename, bool setPath)
 
 	// Do we need to create a backup file ?
 	if((TrackerSettings::Instance().CreateBackupFiles)
-		&& (IsModified()) && (!mpt::PathString::CompareNoCase(saveFileName, docFileName)))
+		&& (IsModified()) && (!mpt::PathCompareNoCase(saveFileName, docFileName)))
 	{
-		if(saveFileName.IsFile())
+		if(mpt::native_fs{}.is_file(saveFileName))
 		{
-			mpt::PathString backupFileName = saveFileName.ReplaceExt(P_(".bak"));
-			if(backupFileName.IsFile())
+			mpt::PathString backupFileName = saveFileName.ReplaceExtension(P_(".bak"));
+			if(mpt::native_fs{}.is_file(backupFileName))
 			{
 				DeleteFile(backupFileName.AsNative().c_str());
 			}
@@ -556,7 +561,7 @@ void CModDoc::OnAppendModule()
 		auto source = std::make_unique<CSoundFile>();
 		for(const auto &file : files)
 		{
-			InputFile f(file, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
+			mpt::IO::InputFile f(file, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
 			if(!f.IsValid())
 			{
 				AddToLog("Unable to open source file!");
@@ -672,8 +677,12 @@ void CModDoc::InitializeMod()
 }
 
 
-bool CModDoc::SetDefaultChannelColors()
+bool CModDoc::SetDefaultChannelColors(CHANNELINDEX minChannel, CHANNELINDEX maxChannel)
 {
+	LimitMax(minChannel, GetNumChannels());
+	LimitMax(maxChannel, GetNumChannels());
+	if(maxChannel < minChannel)
+		std::swap(minChannel, maxChannel);
 	bool modified = false;
 	if(TrackerSettings::Instance().defaultRainbowChannelColors != DefaultChannelColors::NoColors)
 	{
@@ -681,16 +690,16 @@ bool CModDoc::SetDefaultChannelColors()
 		CHANNELINDEX numGroups = 0;
 		if(rainbow)
 		{
-			for(CHANNELINDEX i = 1; i < GetNumChannels(); i++)
+			for(CHANNELINDEX i = minChannel + 1u; i < maxChannel; i++)
 			{
 				if(m_SndFile.ChnSettings[i].szName.empty() || m_SndFile.ChnSettings[i].szName != m_SndFile.ChnSettings[i - 1].szName)
 					numGroups++;
 			}
 		}
 		const double hueFactor = rainbow ? (1.5 * mpt::numbers::pi) / std::max(1, numGroups - 1) : 1000.0;  // Three quarters of the color wheel, red to purple
-		for(CHANNELINDEX i = 0, group = 0; i < GetNumChannels(); i++)
+		for(CHANNELINDEX i = minChannel, group = minChannel; i < maxChannel; i++)
 		{
-			if(i > 0 && (m_SndFile.ChnSettings[i].szName.empty() || m_SndFile.ChnSettings[i].szName != m_SndFile.ChnSettings[i - 1].szName))
+			if(i > minChannel && (m_SndFile.ChnSettings[i].szName.empty() || m_SndFile.ChnSettings[i].szName != m_SndFile.ChnSettings[i - 1].szName))
 				group++;
 			const double hue = group * hueFactor;  // 0...2pi
 			const double saturation = 0.3;         // 0...2/3
@@ -707,7 +716,7 @@ bool CModDoc::SetDefaultChannelColors()
 		}
 	} else
 	{
-		for(CHANNELINDEX i = 0; i < GetNumChannels(); i++)
+		for(CHANNELINDEX i = minChannel; i < maxChannel; i++)
 		{
 			if(m_SndFile.ChnSettings[i].color != ModChannelSettings::INVALID_COLOR)
 			{
@@ -1161,7 +1170,7 @@ bool CModDoc::NoteOff(UINT note, bool fade, INSTRUMENTINDEX ins, CHANNELINDEX cu
 				IMixPlugin *pPlugin =  m_SndFile.m_MixPlugins[plug - 1].pMixPlugin;
 				if(pPlugin)
 				{
-					pPlugin->MidiCommand(*pIns, pIns->NoteMap[note - NOTE_MIN] + NOTE_KEYOFF, 0, currentChn);
+					pPlugin->MidiCommand(*pIns, pIns->NoteMap[note - NOTE_MIN] | IMixPlugin::MIDI_NOTE_OFF, 0, currentChn);
 				}
 			}
 		}
@@ -1290,7 +1299,7 @@ bool CModDoc::UpdateChannelMuteStatus(CHANNELINDEX nChn)
 		m_SndFile.m_PlayState.Chn[nChn].dwFlags.set(muteType);
 		if(m_SndFile.m_opl) m_SndFile.m_opl->NoteCut(nChn);
 		// Kill VSTi notes on muted channel.
-		PLUGINDEX nPlug = m_SndFile.GetBestPlugin(nChn, PrioritiseInstrument, EvenIfMuted);
+		PLUGINDEX nPlug = m_SndFile.GetBestPlugin(m_SndFile.m_PlayState, nChn, PrioritiseInstrument, EvenIfMuted);
 		if ((nPlug) && (nPlug<=MAX_MIXPLUGINS))
 		{
 			IMixPlugin *pPlug = m_SndFile.m_MixPlugins[nPlug - 1].pMixPlugin;
@@ -1667,7 +1676,7 @@ void CModDoc::OnFileWaveConvert(ORDERINDEX nMinOrder, ORDERINDEX nMaxOrder, cons
 
 	FileDialog dlg = SaveFileDialog()
 		.DefaultExtension(extension)
-		.DefaultFilename(GetPathNameMpt().GetFileName() + P_(".") + extension)
+		.DefaultFilename(GetPathNameMpt().GetFilenameBase() + P_(".") + extension)
 		.ExtensionFilter(encFactory->GetTraits().fileDescription + U_(" (*.") + extension.ToUnicode() + U_(")|*.") + extension.ToUnicode() + U_("||"))
 		.WorkingDirectory(TrackerSettings::Instance().PathExport.GetWorkingDir());
 	if(!wsdlg.m_Settings.outputToSample && !dlg.Show()) return;
@@ -1676,7 +1685,7 @@ void CModDoc::OnFileWaveConvert(ORDERINDEX nMinOrder, ORDERINDEX nMaxOrder, cons
 	TrackerSettings::Instance().PathExport.SetDefaultDir(dlg.GetWorkingDirectory(), true);
 
 	mpt::PathString drive, dir, name, ext;
-	dlg.GetFirstFile().SplitPath(&drive, &dir, &name, &ext);
+	dlg.GetFirstFile().SplitPath(nullptr, &drive, &dir, &name, &ext);
 	const mpt::PathString fileName = drive + dir + name;
 	const mpt::PathString fileExt = ext;
 
@@ -1829,15 +1838,16 @@ void CModDoc::OnFileWaveConvert(ORDERINDEX nMinOrder, ORDERINDEX nMaxOrder, cons
 
 			if(!fileNameAdd.empty())
 			{
-				SanitizeFilename(fileNameAdd);
+				fileNameAdd = SanitizePathComponent(fileNameAdd);
 				thisName += mpt::PathString::FromUnicode(fileNameAdd);
 			}
 			thisName += fileExt;
 			if(wsdlg.m_Settings.outputToSample)
 			{
-				thisName = mpt::CreateTempFileName(P_("OpenMPT"));
+				thisName = mpt::TemporaryPathname{}.GetPathname();
 				// Ensure this temporary file is marked as temporary in the file system, to increase the chance it will never be written to disk
-				if(HANDLE hFile = ::CreateFile(thisName.AsNative().c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL); hFile != INVALID_HANDLE_VALUE)
+				HANDLE hFile = ::CreateFile(thisName.AsNative().c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
+				if(hFile != INVALID_HANDLE_VALUE)
 				{
 					::CloseHandle(hFile);
 				}
@@ -1847,8 +1857,8 @@ void CModDoc::OnFileWaveConvert(ORDERINDEX nMinOrder, ORDERINDEX nMaxOrder, cons
 			bool cancel = true;
 			try
 			{
-				mpt::SafeOutputFile safeFileStream(thisName, std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
-				mpt::ofstream &f = safeFileStream;
+				mpt::IO::SafeOutputFile safeFileStream(thisName, std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+				mpt::IO::ofstream &f = safeFileStream;
 				f.exceptions(f.exceptions() | std::ios::badbit | std::ios::failbit);
 
 				if(!f)
@@ -1871,7 +1881,7 @@ void CModDoc::OnFileWaveConvert(ORDERINDEX nMinOrder, ORDERINDEX nMaxOrder, cons
 			{
 				if(!cancel)
 				{
-					InputFile f(thisName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
+					mpt::IO::InputFile f(thisName, TrackerSettings::Instance().MiscCacheCompleteFileBeforeLoading);
 					if(f.IsValid())
 					{
 						FileReader file = GetFileReader(f);
@@ -1984,12 +1994,12 @@ void CModDoc::OnFileMidiConvert()
 
 	if ((!pMainFrm) || (!m_SndFile.GetType())) return;
 
-	mpt::PathString filename = GetPathNameMpt().ReplaceExt(P_(".mid"));
+	mpt::PathString filename = GetPathNameMpt().ReplaceExtension(P_(".mid"));
 
 	FileDialog dlg = SaveFileDialog()
-		.DefaultExtension("mid")
+		.DefaultExtension(U_("mid"))
 		.DefaultFilename(filename)
-		.ExtensionFilter("MIDI Files (*.mid)|*.mid||");
+		.ExtensionFilter(U_("MIDI Files (*.mid)|*.mid||"));
 	if(!dlg.Show()) return;
 
 	CModToMidi mididlg(m_SndFile, pMainFrm);
@@ -1998,8 +2008,8 @@ void CModDoc::OnFileMidiConvert()
 	{
 		try
 		{
-			mpt::SafeOutputFile sf(dlg.GetFirstFile(), std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
-			mpt::ofstream &f = sf;
+			mpt::IO::SafeOutputFile sf(dlg.GetFirstFile(), std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+			mpt::IO::ofstream &f = sf;
 			f.exceptions(f.exceptions() | std::ios::badbit | std::ios::failbit);
 
 			if(!f.good())
@@ -2044,7 +2054,7 @@ void CModDoc::OnFileCompatibilitySave()
 			return;
 	}
 
-	const std::string ext = m_SndFile.GetModSpecifications().fileExtension;
+	const mpt::ustring ext = m_SndFile.GetModSpecifications().GetFileExtension();
 
 	mpt::PathString filename;
 
@@ -2052,7 +2062,7 @@ void CModDoc::OnFileCompatibilitySave()
 		mpt::PathString drive;
 		mpt::PathString dir;
 		mpt::PathString fileName;
-		GetPathNameMpt().SplitPath(&drive, &dir, &fileName, nullptr);
+		GetPathNameMpt().SplitPath(nullptr, &drive, &dir, &fileName, nullptr);
 
 		filename = drive;
 		filename += dir;
@@ -2061,7 +2071,7 @@ void CModDoc::OnFileCompatibilitySave()
 			filename += P_(".compat.");
 		else
 			filename += P_(".");
-		filename += mpt::PathString::FromUTF8(ext);
+		filename += mpt::PathString::FromUnicode(ext);
 	}
 
 	FileDialog dlg = SaveFileDialog()
@@ -2077,8 +2087,8 @@ void CModDoc::OnFileCompatibilitySave()
 	BeginWaitCursor();
 	try
 	{
-		mpt::SafeOutputFile sf(filename, std::ios::binary, mpt::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
-		mpt::ofstream &f = sf;
+		mpt::IO::SafeOutputFile sf(filename, std::ios::binary, mpt::IO::FlushModeFromBool(TrackerSettings::Instance().MiscFlushFileBuffersOnSave));
+		mpt::IO::ofstream &f = sf;
 		if(f)
 		{
 			f.exceptions(f.exceptions() | std::ios::badbit | std::ios::failbit);
@@ -2116,7 +2126,7 @@ void CModDoc::OnPlayerPlay()
 			pChildFrm->SendViewMessage(VIEWMSG_PATTERNLOOP, 0);
 		}
 
-		bool isPlaying = (pMainFrm->GetModPlaying() == this);
+		const bool isPlaying = (pMainFrm->GetModPlaying() == this);
 		if(isPlaying && !m_SndFile.m_SongFlags[SONG_PAUSED | SONG_STEP/*|SONG_PATTERNLOOP*/])
 		{
 			OnPlayerPause();
@@ -2627,7 +2637,7 @@ void CModDoc::OnPatternPlayNoLoop()
 		}
 		m_SndFile.m_SongFlags.reset(SONG_PAUSED | SONG_STEP);
 		m_SndFile.SetCurrentOrder(nOrd);
-		if (m_SndFile.Order()[nOrd] == nPat)
+		if(nOrd < m_SndFile.Order().size() && m_SndFile.Order()[nOrd] == nPat)
 			m_SndFile.DontLoopPattern(nPat, nRow);
 		else
 			m_SndFile.LoopPattern(nPat);
@@ -2725,6 +2735,12 @@ LRESULT CModDoc::OnCustomKeyMsg(WPARAM wParam, LPARAM /*lParam*/)
 		case kcPlaySongFromCursor: OnPatternPlayNoLoop(); break;
 		case kcPlaySongFromStart: OnPlayerPlayFromStart(); break;
 		case kcPlayPauseSong: OnPlayerPlay(); break;
+		case kcPlayStopSong:
+			if(CMainFrame::GetMainFrame()->GetModPlaying() == this)
+				OnPlayerStop();
+			else
+				OnPlayerPlay();
+			break;
 		case kcPlaySongFromPattern: OnPatternRestart(false); break;
 		case kcStopSong: OnPlayerStop(); break;
 		case kcPanic: OnPanic(); break;
@@ -2820,20 +2836,20 @@ void CModDoc::ChangeFileExtension(MODTYPE nNewType)
 		mpt::PathString dir;
 		mpt::PathString fname;
 		mpt::PathString fext;
-		GetPathNameMpt().SplitPath(&drive, &dir, &fname, &fext);
+		GetPathNameMpt().SplitPath(nullptr, &drive, &dir, &fname, &fext);
 
 		mpt::PathString newPath = drive + dir;
 
 		// Catch case where we don't have a filename yet.
 		if(fname.empty())
 		{
-			newPath += mpt::PathString::FromCString(GetTitle()).SanitizeComponent();
+			newPath += mpt::PathString::FromCString(GetTitle()).AsSanitizedComponent();
 		} else
 		{
 			newPath += fname;
 		}
 
-		newPath += P_(".") + mpt::PathString::FromUTF8(CSoundFile::GetModSpecifications(nNewType).fileExtension);
+		newPath += P_(".") + mpt::PathString::FromUnicode(CSoundFile::GetModSpecifications(nNewType).GetFileExtension());
 
 		// Forcing save dialog to appear after extension change - otherwise unnotified file overwriting may occur.
 		m_ShowSavedialog = true;
@@ -2863,22 +2879,18 @@ void CModDoc::RecordParamChange(PLUGINDEX plugSlot, PlugParamIndex paramIndex)
 
 void CModDoc::LearnMacro(int macroToSet, PlugParamIndex paramToUse)
 {
-	if (macroToSet < 0 || macroToSet > NUM_MACROS)
+	if(macroToSet < 0 || macroToSet > kSFxMacros)
 	{
 		return;
 	}
 
 	// If macro already exists for this param, inform user and return
-	for (int checkMacro = 0; checkMacro < NUM_MACROS; checkMacro++)
+	if(auto macro = m_SndFile.m_MidiCfg.FindMacroForParam(paramToUse); macro >= 0)
 	{
-		if (m_SndFile.m_MidiCfg.GetParameteredMacroType(checkMacro) == kSFxPlugParam
-			&& m_SndFile.m_MidiCfg.MacroToPlugParam(checkMacro) == paramToUse)
-		{
-			CString message;
-			message.Format(_T("Parameter %i can already be controlled with macro %X."), static_cast<int>(paramToUse), checkMacro);
-			Reporting::Information(message, _T("Macro exists for this parameter"));
-			return;
-		}
+		CString message;
+		message.Format(_T("Parameter %i can already be controlled with macro %X."), static_cast<int>(paramToUse), macro);
+		Reporting::Information(message, _T("Macro exists for this parameter"));
+		return;
 	}
 
 	// Set new macro
@@ -3072,7 +3084,7 @@ void CModDoc::OnSaveTemplateModule()
 {
 	// Create template folder if doesn't exist already.
 	const mpt::PathString templateFolder = TrackerSettings::Instance().PathUserTemplates.GetDefaultDir();
-	if (!templateFolder.IsDirectory())
+	if (!mpt::native_fs{}.is_directory(templateFolder))
 	{
 		if (!CreateDirectory(templateFolder.AsNative().c_str(), nullptr))
 		{
@@ -3086,14 +3098,14 @@ void CModDoc::OnSaveTemplateModule()
 	for(size_t i = 0; i < 1000; ++i)
 	{
 		sName += P_("newTemplate") + mpt::PathString::FromUnicode(mpt::ufmt::val(i));
-		sName += P_(".") + mpt::PathString::FromUTF8(m_SndFile.GetModSpecifications().fileExtension);
-		if (!(templateFolder + sName).FileOrDirectoryExists())
+		sName += P_(".") + mpt::PathString::FromUnicode(m_SndFile.GetModSpecifications().GetFileExtension());
+		if (!mpt::native_fs{}.exists(templateFolder + sName))
 			break;
 	}
 
 	// Ask file name from user.
 	FileDialog dlg = SaveFileDialog()
-		.DefaultExtension(m_SndFile.GetModSpecifications().fileExtension)
+		.DefaultExtension(m_SndFile.GetModSpecifications().GetFileExtension())
 		.DefaultFilename(sName)
 		.ExtensionFilter(ModTypeToFilter(m_SndFile))
 		.WorkingDirectory(templateFolder);
@@ -3177,7 +3189,7 @@ void CModDoc::UpdateOPLInstrument(SAMPLEINDEX smp)
 // Store all view positions t settings file
 void CModDoc::SerializeViews() const
 {
-	const mpt::PathString pathName = theApp.IsPortableMode() ? GetPathNameMpt().AbsolutePathToRelative(theApp.GetInstallPath()) : GetPathNameMpt();
+	const mpt::PathString pathName = theApp.IsPortableMode() ? mpt::AbsolutePathToRelative(GetPathNameMpt(), theApp.GetInstallPath()) : GetPathNameMpt();
 	if(pathName.empty())
 	{
 		return;
@@ -3239,7 +3251,7 @@ void CModDoc::SerializeViews() const
 
 	SettingsContainer &settings = theApp.GetSongSettings();
 	const std::string s = f.str();
-	settings.Write(U_("WindowSettings"), pathName.GetFullFileName().ToUnicode(), pathName);
+	settings.Write(U_("WindowSettings"), pathName.GetFilename().ToUnicode(), pathName);
 	settings.Write(U_("WindowSettings"), pathName.ToUnicode(), mpt::encode_hex(mpt::as_span(s)));
 }
 
@@ -3255,12 +3267,12 @@ void CModDoc::DeserializeViews()
 	if(s.size() < 2)
 	{
 		// Try relative path
-		pathName = pathName.RelativePathToAbsolute(theApp.GetInstallPath());
+		pathName = mpt::RelativePathToAbsolute(pathName, theApp.GetInstallPath());
 		s = settings.Read<mpt::ustring>(U_("WindowSettings"), pathName.ToUnicode());
 		if(s.size() < 2)
 		{
 			// Try searching for filename instead of full path name
-			const mpt::ustring altName = settings.Read<mpt::ustring>(U_("WindowSettings"), pathName.GetFullFileName().ToUnicode());
+			const mpt::ustring altName = settings.Read<mpt::ustring>(U_("WindowSettings"), pathName.GetFilename().ToUnicode());
 			s = settings.Read<mpt::ustring>(U_("WindowSettings"), altName);
 			if(s.size() < 2) return;
 		}

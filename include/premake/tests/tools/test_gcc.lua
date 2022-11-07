@@ -53,9 +53,9 @@
 -- By default, the -MMD -MP are used to generate dependencies.
 --
 
-	function suite.cppflags_defaultWithMMD()
+	function suite.cppflags_defaultWithMD()
 		prepare()
-		test.contains({"-MMD", "-MP"}, gcc.getcppflags(cfg))
+		test.contains({"-MD", "-MP"}, gcc.getcppflags(cfg))
 	end
 
 
@@ -78,6 +78,12 @@
 		warnings "Off"
 		prepare()
 		test.contains({ "-w" }, gcc.getcflags(cfg))
+	end
+
+	function suite.cflags_onDefaultWarnings()
+		warnings "Default"
+		prepare()
+		test.excludes({ "-w", "-Wall", "-Wextra", "-Weverything" }, gcc.getcflags(cfg))
 	end
 
 	function suite.cflags_onHighWarnings()
@@ -110,6 +116,36 @@
 		fatalwarnings { "fatal" }
 		prepare()
 		test.contains({ "-Wenable", "-Wno-disable", "-Werror=fatal" }, gcc.getcflags(cfg))
+	end
+
+	function suite.cflags_onNoExternalWarnings()
+		externalwarnings "Off"
+		prepare()
+		test.excludes({ "-Wsystem-headers" }, gcc.getcflags(cfg))
+	end
+
+	function suite.cflags_onDefaultExternalWarnings()
+		externalwarnings "Default"
+		prepare()
+		test.contains({ "-Wsystem-headers" }, gcc.getcflags(cfg))
+	end
+
+	function suite.cflags_onHighExternalWarnings()
+		externalwarnings "High"
+		prepare()
+		test.contains({ "-Wsystem-headers" }, gcc.getcflags(cfg))
+	end
+
+	function suite.cflags_onExtraExternalWarnings()
+		externalwarnings "Extra"
+		prepare()
+		test.contains({ "-Wsystem-headers" }, gcc.getcflags(cfg))
+	end
+
+	function suite.cflags_onEverythingExternalWarnings()
+		externalwarnings "Everything"
+		prepare()
+		test.contains({ "-Wsystem-headers" }, gcc.getcflags(cfg))
 	end
 
 	function suite.cflags_onFloastFast()
@@ -320,16 +356,22 @@
 -- Check the translation of CXXFLAGS.
 --
 
-	function suite.cflags_onNoExceptions()
+	function suite.cxxflags_onNoExceptions()
 		exceptionhandling "Off"
 		prepare()
 		test.contains({ "-fno-exceptions" }, gcc.getcxxflags(cfg))
 	end
 
-	function suite.cflags_onNoBufferSecurityCheck()
+	function suite.cxxflags_onNoBufferSecurityCheck()
 		flags { "NoBufferSecurityCheck" }
 		prepare()
 		test.contains({ "-fno-stack-protector" }, gcc.getcxxflags(cfg))
+	end
+
+	function suite.cxxflags_onSanitizeAddress()
+		sanitize { "Address" }
+		prepare()
+		test.contains({ "-fsanitize=address" }, gcc.getcxxflags(cfg))
 	end
 
 --
@@ -393,7 +435,7 @@
 		prepare()
 		test.contains({ "-dynamiclib" }, gcc.getldflags(cfg))
 	end
-	
+
 --
 -- Check Mac OS X deployment target flags
 --
@@ -404,14 +446,14 @@
 		prepare()
 		test.contains({ "-mmacosx-version-min=10.9" }, gcc.getcflags(cfg))
 	end
-	
+
 	function suite.cxxflags_macosx_systemversion()
 		system "MacOSX"
 		systemversion "10.9:10.15"
 		prepare()
 		test.contains({ "-mmacosx-version-min=10.9" }, gcc.getcxxflags(cfg))
 	end
-	
+
 	function suite.cxxflags_macosx_systemversion_unspecified()
 		system "MacOSX"
 		prepare()
@@ -600,8 +642,9 @@
 
 	function suite.includeDirsAreRelative()
 		includedirs { "../include", "src/include" }
+		externalincludedirs { "test/include" }
 		prepare()
-		test.isequal({ '-I../include', '-Isrc/include' }, gcc.getincludedirs(cfg, cfg.includedirs))
+		test.isequal({ '-I../include', '-Isrc/include', '-isystem test/include' }, gcc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs))
 	end
 
 
@@ -623,14 +666,16 @@
 
 	function suite.includeDirs_onSpaces()
 		includedirs { "include files" }
+		externalincludedirs { "test include" }
 		prepare()
-		test.isequal({ '-I"include files"' }, gcc.getincludedirs(cfg, cfg.includedirs))
+		test.isequal({ '-I"include files"', '-isystem "test include"' }, gcc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs))
 	end
 
 	function suite.includeDirs_onEnvVars()
 		includedirs { "$(IntDir)/includes" }
+		externalincludedirs { "$(BinDir)/include" }
 		prepare()
-		test.isequal({ '-I"$(IntDir)/includes"' }, gcc.getincludedirs(cfg, cfg.includedirs))
+		test.isequal({ '-I"$(IntDir)/includes"', '-isystem "$(BinDir)/include"' }, gcc.getincludedirs(cfg, cfg.includedirs, cfg.externalincludedirs))
 	end
 
 
@@ -663,16 +708,25 @@
 		test.contains({ "-fstrict-aliasing", "-Wstrict-aliasing=3" }, gcc.getcflags(cfg))
 	end
 
+--
+-- Check handling of openmp.
+--
+
+	function suite.cflags_onOpenmpOn()
+		openmp "On"
+		prepare()
+		test.contains("-fopenmp", gcc.getcflags(cfg))
+	end
+
+	function suite.cflags_onOpenmpOff()
+		openmp "Off"
+		prepare()
+		test.excludes("-fopenmp", gcc.getcflags(cfg))
+	end
 
 --
 -- Check handling of system search paths.
 --
-
-	function suite.includeDirs_onSysIncludeDirs()
-		sysincludedirs { "/usr/local/include" }
-		prepare()
-		test.contains("-isystem /usr/local/include", gcc.getincludedirs(cfg, cfg.includedirs, cfg.sysincludedirs))
-	end
 
 	function suite.libDirs_onSysLibDirs()
 		syslibdirs { "/usr/local/lib" }
@@ -700,9 +754,9 @@
 	function suite.includeDirs_macosx_onFrameworkDirs()
 		system "MacOSX"
 		location "subdir"
-		frameworkdirs { 
+		frameworkdirs {
 			"/Library/Frameworks",
-			"subdir/Relative/Frameworks" 
+			"subdir/Relative/Frameworks"
 		}
 		prepare()
 		test.contains("-F/Library/Frameworks", gcc.getincludedirs(cfg, {}, {}, cfg.frameworkdirs))
@@ -712,7 +766,7 @@
 	function suite.libDirs_macosx_onFrameworkDirs()
 		system "MacOSX"
 		location "subdir"
-		frameworkdirs { 
+		frameworkdirs {
 			"/Library/Frameworks",
 			"subdir/Relative/Frameworks"
 		}
@@ -807,6 +861,13 @@
 		test.contains({ }, gcc.getcxxflags(cfg))
 	end
 
+	function suite.cflags_onC17()
+		cdialect "C17"
+		prepare()
+		test.contains({ "-std=c17" }, gcc.getcflags(cfg))
+		test.contains({ }, gcc.getcxxflags(cfg))
+	end
+
 	function suite.cflags_ongnu89()
 		cdialect "gnu89"
 		prepare()
@@ -832,6 +893,13 @@
 		cdialect "gnu11"
 		prepare()
 		test.contains({ "-std=gnu11" }, gcc.getcflags(cfg))
+		test.contains({ }, gcc.getcxxflags(cfg))
+	end
+
+	function suite.cflags_ongnu17()
+		cdialect "gnu17"
+		prepare()
+		test.contains({ "-std=gnu17" }, gcc.getcflags(cfg))
 		test.contains({ }, gcc.getcxxflags(cfg))
 	end
 

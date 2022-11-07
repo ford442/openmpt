@@ -16,6 +16,7 @@
 #include "FileDialog.h"
 #include "FolderScanner.h"
 #include "resource.h"
+#include "mpt/fs/fs.hpp"
 #include "../soundlib/mod_specifications.h"
 #include <algorithm>
 
@@ -105,27 +106,27 @@ mpt::PathString CAutoSaver::GetBasePath(const CModDoc &modDoc, bool createPath) 
 		if(modDoc.m_bHasValidPath && !(path = modDoc.GetPathNameMpt()).empty())
 		{
 			// File has a user-chosen path - remove filename
-			path = path.GetPath();
+			path = path.GetDirectoryWithDrive();
 		} else
 		{
 			// if it doesn't, put it in settings dir
 			path = theApp.GetConfigPath() + P_("Autosave\\");
 			if(createPath && !CreateDirectory(path.AsNative().c_str(), nullptr) && GetLastError() == ERROR_PATH_NOT_FOUND)
 				path = theApp.GetConfigPath();
-			else if(!createPath && !path.IsDirectory())
+			else if(!createPath && !mpt::native_fs{}.is_directory(path))
 				path = theApp.GetConfigPath();
 		}
 	} else
 	{
 		path = GetPath();
 	}
-	return path.EnsureTrailingSlash();
+	return path.WithTrailingSlash();
 }
 
 
 mpt::PathString CAutoSaver::GetBaseName(const CModDoc &modDoc) const
 {
-	return mpt::PathString::FromCString(modDoc.GetTitle()).SanitizeComponent();
+	return mpt::PathString::FromCString(modDoc.GetTitle()).AsSanitizedComponent();
 }
 
 
@@ -134,7 +135,7 @@ mpt::PathString CAutoSaver::BuildFileName(const CModDoc &modDoc) const
 	mpt::PathString name = GetBasePath(modDoc, true) + GetBaseName(modDoc);
 	const CString timeStamp = CTime::GetCurrentTime().Format(_T(".AutoSave.%Y%m%d.%H%M%S."));
 	name += mpt::PathString::FromCString(timeStamp);  //append backtup tag + timestamp
-	name += mpt::PathString::FromUTF8(modDoc.GetSoundFile().GetModSpecifications().fileExtension);
+	name += mpt::PathString::FromUnicode(modDoc.GetSoundFile().GetModSpecifications().GetFileExtension());
 	return name;
 }
 
