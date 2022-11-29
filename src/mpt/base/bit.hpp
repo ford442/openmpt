@@ -236,10 +236,10 @@ constexpr T bit_floor(T x) noexcept {
 }
 
 template <typename T>
-constexpr T bit_width(T x) noexcept {
+constexpr int bit_width(T x) noexcept {
 	static_assert(std::numeric_limits<T>::is_integer);
 	static_assert(std::is_unsigned<T>::value);
-	T result = 0;
+	int result = 0;
 	while (x > 0) {
 		x >>= 1;
 		result += 1;
@@ -485,7 +485,7 @@ constexpr T byteswap(T x) noexcept {
 template <typename T>
 constexpr int lower_bound_entropy_bits(T x_) {
 	typename std::make_unsigned<T>::type x = static_cast<typename std::make_unsigned<T>::type>(x_);
-	return mpt::bit_width(x) == static_cast<typename std::make_unsigned<T>::type>(mpt::popcount(x)) ? mpt::bit_width(x) : mpt::bit_width(x) - 1;
+	return (static_cast<unsigned int>(mpt::bit_width(x)) == static_cast<typename std::make_unsigned<T>::type>(mpt::popcount(x))) ? mpt::bit_width(x) : mpt::bit_width(x) - 1;
 }
 
 
