@@ -23,7 +23,7 @@
 #include "../../mptrack/FileDialog.h"
 #include "../../mptrack/VstPresets.h"
 #include "mpt/io_file/inputfile.hpp"
-#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "mpt/io_file_read/inputfile_filecursor.hpp"
 #include "mpt/io_file/outputfile.hpp"
 #include "../../common/mptFileIO.h"
 #include "mpt/fs/fs.hpp"
@@ -54,7 +54,6 @@ IMixPlugin::IMixPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN 
 	, m_pMixStruct(&mixStruct)
 {
 	m_SndFile.m_loadedPlugins++;
-	m_pMixStruct->pMixPlugin = this;
 	m_MixState.pMixBuffer = mpt::align_bytes<8, MIXBUFFERSIZE * 2>(m_MixBuffer);
 	while(m_pMixStruct != &(m_SndFile.m_MixPlugins[m_nSlot]) && m_nSlot < MAX_MIXPLUGINS - 1)
 	{
@@ -175,7 +174,7 @@ void IMixPlugin::RecalculateGain()
 	if(IsInstrument())
 	{
 		gain /= m_SndFile.GetPlayConfig().getVSTiAttenuation();
-		gain = static_cast<float>(gain * (m_SndFile.m_nVSTiVolume / m_SndFile.GetPlayConfig().getNormalVSTiVol()));
+		gain = gain * (static_cast<float>(m_SndFile.m_nVSTiVolume) / m_SndFile.GetPlayConfig().getNormalVSTiVol());
 	}
 	m_fGain = gain;
 }
@@ -196,7 +195,7 @@ void IMixPlugin::Bypass(bool bypass)
 
 #ifdef MODPLUG_TRACKER
 	if(m_SndFile.GetpModDoc())
-		m_SndFile.GetpModDoc()->UpdateAllViews(nullptr, PluginHint(m_nSlot + 1).Info(), nullptr);
+		m_SndFile.GetpModDoc()->UpdateAllViews(PluginHint(m_nSlot + 1).Info());
 #endif // MODPLUG_TRACKER
 }
 

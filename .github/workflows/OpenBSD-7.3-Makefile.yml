@@ -1,0 +1,26 @@
+name: OpenBSD 7.3 Makefile
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: macos-12
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: cross-platform-actions/action@3c811ad43b4b92e96900e23fc512e2586f83f8fd
+      with:
+        architecture: x86_64
+        hypervisor: xhyve
+        operating_system: openbsd
+        version: '7.3'
+        shell: bash
+        run: |
+          sudo pkg_add subversion p5-XML-XPath git mawk gmake pkgconf autoconf autoconf-archive automake libtool libltdl help2man doxygen mpg123 libogg libvorbis flac libsndfile pulseaudio portaudio-svn sdl2
+          gmake -j$(sysctl -n hw.ncpu) STRICT=1 VERBOSE=1 AUTO_DEPS=1
+          gmake -j$(sysctl -n hw.ncpu) STRICT=1 VERBOSE=1 AUTO_DEPS=1 check

@@ -293,9 +293,10 @@ void CWaveConvert::FillSamplerates()
 	EncoderSettingsConf &encSettings = m_Settings.GetEncoderSettings();
 	m_CbnSampleRate.CComboBox::ResetContent();
 	int sel = -1;
+	std::vector<uint32> samplerates = (!encTraits->samplerates.empty() ? encTraits->samplerates : TrackerSettings::Instance().GetSampleRates());
 	if(TrackerSettings::Instance().ExportDefaultToSoundcardSamplerate)
 	{
-		for(auto samplerate : encTraits->samplerates)
+		for(auto samplerate : samplerates)
 		{
 			if(samplerate == TrackerSettings::Instance().MixerSamplerate)
 			{
@@ -303,7 +304,7 @@ void CWaveConvert::FillSamplerates()
 			}
 		}
 	}
-	for(auto samplerate : encTraits->samplerates)
+	for(auto samplerate : samplerates)
 	{
 		int ndx = m_CbnSampleRate.AddString(MPT_CFORMAT("{} Hz")(samplerate));
 		m_CbnSampleRate.SetItemData(ndx, samplerate);
@@ -728,7 +729,7 @@ void CWaveConvert::OnOK()
 
 	m_Settings.Tags = FileTags();
 
-	m_Settings.Tags.SetEncoder();
+	m_Settings.Tags.encoder = Version::Current().GetOpenMPTVersionString();
 
 	if(encSettings.Tags)
 	{
@@ -878,7 +879,7 @@ CWaveConvertSettings::CWaveConvertSettings(SettingsContainer &conf, const std::v
 	, silencePlugBuffers(false)
 	, outputToSample(false)
 {
-	Tags.SetEncoder();
+	Tags.encoder = Version::Current().GetOpenMPTVersionString();
 	for(const auto & factory : EncoderFactories)
 	{
 		const Encoder::Traits &encTraits = factory->GetTraits();
@@ -1180,7 +1181,7 @@ void CDoWaveConvert::Run()
 		} else
 		{
 
-			const std::streampos oldPos = fileStream.tellp();
+			const std::streamoff oldPos = static_cast<std::streamoff>(fileStream.tellp());
 			switch(fileEnc->GetSampleFormat())
 			{
 			case SampleFormat::Float64:
@@ -1205,7 +1206,7 @@ void CDoWaveConvert::Run()
 				fileEnc->WriteInterleaved(lRead, buffer.uint8);
 				break;
 			}
-			const std::streampos newPos = fileStream.tellp();
+			const std::streamoff newPos = static_cast<std::streamoff>(fileStream.tellp());
 			bytesWritten += static_cast<uint64>(newPos - oldPos);
 
 			if(!fileStream)
@@ -1284,7 +1285,7 @@ void CDoWaveConvert::Run()
 				normalizeBuffer[i] *= normalizeFactor;
 			}
 
-			const std::streampos oldPos = fileStream.tellp();
+			const std::streamoff oldPos = static_cast<std::streamoff>(fileStream.tellp());
 			std::visit(
 				[&](auto& ditherInstance)
 				{
@@ -1340,8 +1341,8 @@ void CDoWaveConvert::Run()
 				fileEnc->WriteInterleaved(framesChunk, buffer.uint8);
 				break;
 			}
-			const std::streampos newPos = fileStream.tellp();
-			bytesWritten += static_cast<std::size_t>(newPos - oldPos);
+			const std::streamoff newPos = static_cast<std::streamoff>(fileStream.tellp());
+			bytesWritten += static_cast<uint64>(newPos - oldPos);
 
 			auto currentTime = timeGetTime();
 			if((currentTime - prevTime) >= 16)
@@ -1384,7 +1385,7 @@ void CDoWaveConvert::Run()
 			cues.reserve(patternCuePoints.size());
 			for(const auto &cue : patternCuePoints)
 			{
-				cues.push_back(static_cast<uint32>(cue.offset));
+				cues.push_back(cue.offset);
 			}
 			fileEnc->WriteCues(cues);
 		}

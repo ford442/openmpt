@@ -31,9 +31,9 @@ CInputHandler::CInputHandler(CWnd *mainframe)
 	m_activeCommandSet = std::make_unique<CCommandSet>();
 	m_lastCommands.fill(kcNull);
 
-	mpt::PathString sDefaultPath = theApp.GetConfigPath() + P_("Keybindings.mkb");
+	mpt::PathString defaultPath = theApp.GetConfigPath() + P_("Keybindings.mkb");
 
-	const bool bNoExistingKbdFileSetting = TrackerSettings::Instance().m_szKbdFile.empty();
+	const bool noExistingKbdFileSetting = TrackerSettings::Instance().m_szKbdFile.empty();
 
 	// 1. Try to load keybindings from the path saved in the settings.
 	// 2. If the setting doesn't exist or the loading fails, try to load from default location.
@@ -41,28 +41,19 @@ CInputHandler::CInputHandler(CWnd *mainframe)
 	// 4. If there were no keybinding setting already, create a keybinding file to default location
 	//    and set its path to settings.
 
-	if (bNoExistingKbdFileSetting || !(m_activeCommandSet->LoadFile(TrackerSettings::Instance().m_szKbdFile)))
+	if(noExistingKbdFileSetting || !m_activeCommandSet->LoadFile(TrackerSettings::Instance().m_szKbdFile))
 	{
-		if (bNoExistingKbdFileSetting)
-			TrackerSettings::Instance().m_szKbdFile = sDefaultPath;
-		bool bSuccess = false;
-		if (mpt::native_fs{}.is_file(sDefaultPath))
-			bSuccess = m_activeCommandSet->LoadFile(sDefaultPath);
-		if (!bSuccess)
+		if(!mpt::native_fs{}.is_file(defaultPath) || !m_activeCommandSet->LoadFile(defaultPath))
 		{
 			// Load keybindings from resources.
 			MPT_LOG_GLOBAL(LogDebug, "InputHandler", U_("Loading keybindings from resources\n"));
 			m_activeCommandSet->LoadDefaultKeymap();
-			if (bNoExistingKbdFileSetting)
-			{
-				m_activeCommandSet->SaveFile(TrackerSettings::Instance().m_szKbdFile);
-			}
+			if (noExistingKbdFileSetting)
+				m_activeCommandSet->SaveFile(defaultPath);
 		}
-		if (!bSuccess)
-			ErrorBox(IDS_UNABLE_TO_LOAD_KEYBINDINGS);
 	}
 	// We will only overwrite the default Keybindings.mkb file from now on.
-	TrackerSettings::Instance().m_szKbdFile = sDefaultPath;
+	TrackerSettings::Instance().m_szKbdFile = defaultPath;
 
 	//Get Keymap
 	m_activeCommandSet->GenKeyMap(m_keyMap);
@@ -146,6 +137,8 @@ CommandID CInputHandler::KeyEvent(const InputTargetContext context, const Keyboa
 {
 	if(InterceptSpecialKeys(event.key, event.flags, false))
 		return kcDummyShortcut;
+	if(IsKeyPressHandledByTextBox(event.key, ::GetFocus()))
+		return kcNull;
 	KeyMapRange cmd = m_keyMap.equal_range(KeyCombination(context, m_modifierMask, event.key, event.keyEventType));
 
 	if(pSourceWnd == nullptr)
@@ -619,22 +612,31 @@ bool CInputHandler::IsKeyPressHandledByTextBox(DWORD key, HWND hWnd) const
 	if(!textboxHasFocus)
 		return false;
 
-	//Alpha-numerics (only shift or no modifier):
-	if(!GetModifierMask().test_any_except(ModShift)
-		&&  ((key>='A'&&key<='Z') || (key>='0'&&key<='9') ||
-		 key==VK_DIVIDE  || key==VK_MULTIPLY || key==VK_SPACE || key==VK_RETURN ||
-		 key==VK_CAPITAL || (key>=VK_OEM_1 && key<=VK_OEM_3) || (key>=VK_OEM_4 && key<=VK_OEM_8)))
-		return true;
+	// Alpha-numerics (only shift or no modifier):
+	if(!GetModifierMask().test_any_except(ModShift))
+	{
+		if((key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9')
+		   || key == VK_DIVIDE || key == VK_MULTIPLY || key == VK_SPACE || key == VK_CAPITAL
+		   || (key >= VK_OEM_1 && key <= VK_OEM_3) || (key >= VK_OEM_4 && key <= VK_OEM_8))
+			return true;
+		if(key == VK_RETURN && (GetWindowLong(hWnd, GWL_STYLE) & ES_MULTILINE))
+			return true;
+	}
 
-	//navigation (any modifier):
-	if(key == VK_LEFT || key == VK_RIGHT || key == VK_UP || key == VK_DOWN ||
-		key == VK_HOME || key == VK_END || key == VK_DELETE || key == VK_INSERT || key == VK_BACK)
-		return true;
+	// Navigation (any modifier except Alt without any other modifiers):
+	if(GetModifierMask() != ModAlt)
+	{
+		if(key == VK_LEFT || key == VK_RIGHT || key == VK_UP || key == VK_DOWN
+		   || key == VK_HOME || key == VK_END || key == VK_DELETE || key == VK_INSERT || key == VK_BACK)
+			return true;
+	}
 
-	//Copy paste etc..
-	if(GetModifierMask() == ModCtrl &&
-		(key == 'Y' || key == 'Z' || key == 'X' ||  key == 'C' || key == 'V' || key == 'A'))
-		return true;
+	// Copy paste etc..
+	if(GetModifierMask() == ModCtrl)
+	{
+		if(key == 'Y' || key == 'Z' || key == 'X' ||  key == 'C' || key == 'V' || key == 'A')
+			return true;
+	}
 
 	return false;
 }

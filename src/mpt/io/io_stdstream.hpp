@@ -8,6 +8,7 @@
 #include "mpt/base/macros.hpp"
 #include "mpt/base/memory.hpp"
 #include "mpt/base/namespace.hpp"
+#include "mpt/base/saturate_cast.hpp"
 #include "mpt/base/utility.hpp"
 #include "mpt/io/base.hpp"
 
@@ -33,7 +34,7 @@ private:
 	std::ios & f;
 
 public:
-	FileOperationsStdIos(std::ios & f_)
+	inline FileOperationsStdIos(std::ios & f_)
 		: f(f_) {
 		return;
 	}
@@ -51,7 +52,7 @@ private:
 	std::istream & f;
 
 public:
-	FileOperationsStdIstream(std::istream & f_)
+	inline FileOperationsStdIstream(std::istream & f_)
 		: FileOperationsStdIos(f_)
 		, f(f_) {
 		return;
@@ -61,7 +62,7 @@ public:
 	inline bool IsReadSeekable() {
 		f.clear();
 		std::streampos oldpos = f.tellg();
-		if (f.fail() || oldpos == std::streampos(-1)) {
+		if (f.fail() || oldpos == std::streampos(std::streamoff(-1))) {
 			f.clear();
 			return false;
 		}
@@ -80,7 +81,7 @@ public:
 			return false;
 		}
 		std::streampos length = f.tellg();
-		if (f.fail() || length == std::streampos(-1)) {
+		if (f.fail() || length == std::streampos(std::streamoff(-1))) {
 			f.clear();
 			f.seekg(oldpos);
 			f.clear();
@@ -92,11 +93,11 @@ public:
 	}
 
 	inline IO::Offset TellRead() {
-		return f.tellg();
+		return static_cast<std::streamoff>(f.tellg());
 	}
 
 	inline bool SeekBegin() {
-		f.seekg(0);
+		f.seekg(0, std::ios::beg);
 		return !f.fail();
 	}
 
@@ -138,7 +139,7 @@ private:
 	std::ostream & f;
 
 public:
-	FileOperationsStdOstream(std::ostream & f_)
+	inline FileOperationsStdOstream(std::ostream & f_)
 		: FileOperationsStdIos(f_)
 		, f(f_) {
 		return;
@@ -148,7 +149,7 @@ public:
 	inline bool IsWriteSeekable() {
 		f.clear();
 		std::streampos oldpos = f.tellp();
-		if (f.fail() || oldpos == std::streampos(-1)) {
+		if (f.fail() || oldpos == std::streampos(std::streamoff(-1))) {
 			f.clear();
 			return false;
 		}
@@ -167,7 +168,7 @@ public:
 			return false;
 		}
 		std::streampos length = f.tellp();
-		if (f.fail() || length == std::streampos(-1)) {
+		if (f.fail() || length == std::streampos(std::streamoff(-1))) {
 			f.clear();
 			f.seekp(oldpos);
 			f.clear();
@@ -179,11 +180,11 @@ public:
 	}
 
 	inline IO::Offset TellWrite() {
-		return f.tellp();
+		return static_cast<std::streamoff>(f.tellp());
 	}
 
 	inline bool SeekBegin() {
-		f.seekp(0);
+		f.seekp(0, std::ios::beg);
 		return !f.fail();
 	}
 
@@ -227,7 +228,7 @@ private:
 	std::iostream & f;
 
 public:
-	FileOperationsStdIOstream(std::iostream & f_)
+	inline FileOperationsStdIOstream(std::iostream & f_)
 		: FileOperationsStdIstream(f_)
 		, FileOperationsStdOstream(f_)
 		, f(f_) {
@@ -272,7 +273,7 @@ template <typename Tstream>
 struct FileOperations<Tstream, typename std::enable_if_t<std::is_base_of<std::iostream, Tstream>::value>>
 	: public FileOperationsStdIOstream {
 public:
-	FileOperations(Tstream & f)
+	inline FileOperations(Tstream & f)
 		: FileOperationsStdIOstream(f) {
 		return;
 	}
@@ -284,7 +285,7 @@ template <typename Tstream>
 struct FileOperations<Tstream, typename std::enable_if_t<std::is_base_of<std::istream, Tstream>::value && !std::is_base_of<std::iostream, Tstream>::value>>
 	: public FileOperationsStdIstream {
 public:
-	FileOperations(Tstream & f)
+	inline FileOperations(Tstream & f)
 		: FileOperationsStdIstream(f) {
 		return;
 	}
@@ -296,7 +297,7 @@ template <typename Tstream>
 struct FileOperations<Tstream, typename std::enable_if_t<std::is_base_of<std::ostream, Tstream>::value && !std::is_base_of<std::iostream, Tstream>::value>>
 	: public FileOperationsStdOstream {
 public:
-	FileOperations(Tstream & f)
+	inline FileOperations(Tstream & f)
 		: FileOperationsStdOstream(f) {
 		return;
 	}

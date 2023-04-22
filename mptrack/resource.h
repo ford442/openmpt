@@ -37,7 +37,6 @@
 #define ID_INDICATOR_CPU                203
 #define ID_FILE_EXPORTCOMPAT            204
 #define ID_ENVELOPE_SETRELEASENODE      205
-#define IDS_UNABLE_TO_LOAD_KEYBINDINGS  212
 #define IDS_CANT_OPEN_FILE_FOR_WRITING  213
 #define IDS_PATTERN_CLEANUP_UNAVAILABLE 215
 #define IDS_ERR_FILEOPEN                234
@@ -55,7 +54,6 @@
 #define IDB_PATTERNVIEW                 303
 #define IDB_MPTRACK                     304
 #define IDB_COLORSETUP                  305
-#define IDB_VUMETERS                    306
 #define IDB_SPLASHSCREEN                307
 #define IDB_ENVTOOLBAR                  308
 #define IDB_SMPTOOLBAR                  309

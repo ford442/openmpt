@@ -56,32 +56,16 @@ using RawPathString = PathString::raw_path_type;
 
 
 
-#if defined(MPT_ENABLE_CHARSET_LOCALE)
-inline std::string ToAString(const mpt::PathString &x)
-{
-	return x.ToLocale();
-}
-#else
-inline std::string ToAString(const mpt::PathString &x)
-{
-	return x.ToUTF8();
-}
-#endif
-inline mpt::ustring ToUString(const mpt::PathString &x)
+template <typename T, typename std::enable_if<std::is_same<T, mpt::PathString>::value, bool>::type = true>
+inline mpt::ustring ToUString(const T &x)
 {
 	return x.ToUnicode();
 }
-#if MPT_WSTRING_FORMAT
-inline std::wstring ToWString(const mpt::PathString &x)
-{
-	return x.ToWide();
-}
-#endif
 
 
 
 #if MPT_OS_WINDOWS
-#if !(MPT_OS_WINDOWS_WINRT && (_WIN32_WINNT < 0x0a00))
+#if !(MPT_WINRT_BEFORE(MPT_WIN_10))
 // Returns the absolute path for a potentially relative path and removes ".." or "." components. (same as GetFullPathNameW)
 mpt::PathString GetAbsolutePath(const mpt::PathString &path);
 #endif

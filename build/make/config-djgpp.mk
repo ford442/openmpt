@@ -14,8 +14,20 @@ endif
 
 # Note that we are using GNU extensions instead of 100% standards-compliant
 # mode, because otherwise DJGPP-specific headers/functions are unavailable.
+ifneq ($(STDCXX),)
+CXXFLAGS_STDCXX = -std=$(STDCXX) -fexceptions -frtti -fpermissive
+else ifeq ($(shell printf '\n' > bin/empty.cpp ; if $(CXX) -std=gnu++20 -c bin/empty.cpp -o bin/empty.out > /dev/null 2>&1 ; then echo 'c++20' ; fi ), c++20)
+CXXFLAGS_STDCXX = -std=gnu++20 -fexceptions -frtti -fpermissive
+else
 CXXFLAGS_STDCXX = -std=gnu++17 -fexceptions -frtti -fpermissive
-CFLAGS_STDC     = -std=gnu17
+endif
+ifneq ($(STDC),)
+CFLAGS_STDC = -std=$(STDC)
+else ifeq ($(shell printf '\n' > bin/empty.c ; if $(CC) -std=gnu17 -c bin/empty.c -o bin/empty.out > /dev/null 2>&1 ; then echo 'c17' ; fi ), c17)
+CFLAGS_STDC = -std=gnu17
+else
+CFLAGS_STDC = -std=gnu11
+endif
 CXXFLAGS += $(CXXFLAGS_STDCXX) -fallow-store-data-races -fno-threadsafe-statics
 CFLAGS   += $(CFLAGS_STDC)     -fallow-store-data-races
 
@@ -136,8 +148,6 @@ generic/ssse3     := $(___) -march=i686        $(FPU_SSSE3)  -mtune=generic     
 generic/sse4_1    := $(___) -march=i686        $(FPU_SSE4_1) -mtune=generic     $(OPT_SIMD)   # Intel Core-1st, AMD Bulldozer.., Via Nano-3000..
 generic/sse4_2    := $(___) -march=i686        $(FPU_SSE4_2) -mtune=generic     $(OPT_SIMD)   # Intel Core-1st, AMD Bulldozer.., Via Nano-C..
 
-generic/sse4a     := $(X__) -march=i686        $(FPU_SSE4A)  -mtune=generic     $(OPT_SIMD)   # AMD K10..
-
 
 
 intel/i386        := $(XX_) -march=i386        $(FPU_NONE)   -mtune=i386        $(OPT_DEF)  --param l1-cache-size=0  --param l2-cache-size=$(CACHE_386)
@@ -157,7 +167,7 @@ intel/core2       := $(___) -march=core2       $(FPU_SSSE3)  -mtune=core2       
 
 intel/celeron     := $(___) -march=pentium2    $(FPU_MMX)    -mtune=pentium2    $(OPT_SIMD) --param l1-cache-size=16 --param l2-cache-size=$(CACHE_CELERON)
 intel/pentium-m   := $(___) -march=pentium-m   $(FPU_SSE2)   -mtune=pentium-m   $(OPT_SIMD) --param l1-cache-size=16 --param l2-cache-size=$(CACHE_PENTIUMM)
-intel/core        := $(___) -march=pentium-m   $(FPU_SSE3)   -mtune=pentium-m   $(OPT_SIMD) --param l1-cache-size=32 --param l2-cache-size=$(CACHE_CORE)
+intel/core        := $(___) -march=pentium-m   $(FPU_SSE3)   -mtune=core2       $(OPT_SIMD) --param l1-cache-size=32 --param l2-cache-size=$(CACHE_CORE)
 intel/atom        := $(___) -march=bonnell     $(FPU_SSSE3)  -mtune=bonnell     $(OPT_SIMD) --param l1-cache-size=24 --param l2-cache-size=$(CACHE_ATOM)
 
 intel/late        := $(XX_) -march=i686        $(FPU_SSSE3)  -mtune=intel       $(OPT_SIMD) 
@@ -173,6 +183,7 @@ amd/am486dxe      := $(___) -march=i486        $(FPU_387)    -mtune=i486        
 amd/am5x86        := $(___) -march=i486        $(FPU_387)    -mtune=i486        $(OPT_DEF)  --param l1-cache-size=12 --param l2-cache-size=$(CACHE_486)
 amd/k5            := $(XXX) -march=i586        $(FPU_387)    -mtune=i586        $(OPT_DEF)  --param l1-cache-size=8  --param l2-cache-size=$(CACHE_S7)
 amd/k5-pentium    := $(XXX) -march=i586        $(FPU_387)    -mtune=pentium     $(OPT_DEF)  --param l1-cache-size=8  --param l2-cache-size=$(CACHE_S7)
+amd/k5-pentiumpro := $(XXX) -march=i586        $(FPU_387)    -mtune=pentiumpro  $(OPT_DEF)  --param l1-cache-size=8  --param l2-cache-size=$(CACHE_S7)
 amd/k5-pentium2   := $(XXX) -march=i586        $(FPU_387)    -mtune=pentium2    $(OPT_DEF)  --param l1-cache-size=8  --param l2-cache-size=$(CACHE_S7)
 amd/k5-k6         := $(XXX) -march=i586        $(FPU_387)    -mtune=k6          $(OPT_DEF)  --param l1-cache-size=8  --param l2-cache-size=$(CACHE_S7)
 amd/k6            := $(XXX) -march=k6          $(FPU_MMX)    -mtune=k6          $(OPT_SIMD) --param l1-cache-size=32 --param l2-cache-size=$(CACHE_S7)
@@ -188,7 +199,7 @@ amd/duron         := $(XX_) -march=athlon      $(FPU_3DNOWA) -mtune=athlon      
 amd/duron-xp      := $(___) -march=athlon-xp   $(FPU_3DASSE) -mtune=athlon-xp   $(OPT_SIMD) --param l1-cache-size=64 --param l2-cache-size=$(CACHE_DURONXP)
 amd/sempron64     := $(___) -march=k8          $(FPU_SSE2)   -mtune=k8          $(OPT_SIMD) --param l1-cache-size=64 --param l2-cache-size=$(CACHE_SEMPRON64)
 
-amd/geode-gx      := $(___) -march=geode       $(FPU_3DNOW)  -mtune=geode       $(OPT_SIMD) --param l1-cache-size=16 --param l2-cache-size=128
+amd/geode-gx      := $(___) -march=geode       $(FPU_3DNOW)  -mtune=geode       $(OPT_SIMD) --param l1-cache-size=16 --param l2-cache-size=0
 amd/geode-lx      := $(___) -march=geode       $(FPU_3DNOW)  -mtune=geode       $(OPT_SIMD) --param l1-cache-size=64 --param l2-cache-size=128
 amd/geode-nx      := $(___) -march=athlon-xp   $(FPU_3DASSE) -mtune=athlon-xp   $(OPT_SIMD) --param l1-cache-size=64 --param l2-cache-size=256
 amd/bobcat        := $(___) -march=btver1      $(FPU_SSE4A)  -mtune=btver1      $(OPT_SIMD) --param l1-cache-size=32 --param l2-cache-size=512
@@ -227,7 +238,7 @@ cyrix/mediagx-gxm := $(___) -march=i686        $(FPU_MMX)     $(TUNE_686MMX)    
 
 
 nsc/geode-gx1     := $(___) -march=i686        $(FPU_MMX)     $(TUNE_686MMX)    $(OPT_SIMD) --param l1-cache-size=9  --param l2-cache-size=0
-nsc/geode-gx2     := $(___) -march=geode       $(FPU_3DNOW)  -mtune=geode       $(OPT_SIMD) --param l1-cache-size=16 --param l2-cache-size=128
+nsc/geode-gx2     := $(___) -march=geode       $(FPU_3DNOW)  -mtune=geode       $(OPT_SIMD) --param l1-cache-size=16 --param l2-cache-size=0
 
 
 
@@ -379,9 +390,13 @@ IS_CROSS=1
 # generates warnings
 MPT_COMPILER_NOVISIBILITY=1
 
-# causes crashes on process shutdown,
-# makes memory locking difficult
+# causes crashes on process shutdown with liballegro
 MPT_COMPILER_NOGCSECTIONS=1
+
+ifeq ($(OPTIMIZE_LTO),1)
+CXXFLAGS += -flto=auto -Wno-attributes
+CFLAGS   += -flto=auto -Wno-attributes
+endif
 
 ifneq ($(DEBUG),1)
 LDFLAGS  += -s

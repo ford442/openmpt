@@ -11,6 +11,8 @@
 #include "stdafx.h"
 #include "Loaders.h"
 
+#include "mpt/parse/parse.hpp"
+
 OPENMPT_NAMESPACE_BEGIN
 
 // GTK File Header
@@ -75,7 +77,7 @@ static void TranslateGraoumfEffect(CSoundFile &sndFile, ModCommand &m, const uin
 	{
 	case 0x02:  // 2xxx: Set Volume
 		m.volcmd = VOLCMD_VOLUME;
-		m.vol = static_cast<ModCommand::PARAM>(param12bit / 4);
+		m.vol = static_cast<ModCommand::VOL>(std::min(param12bit / 4, 64));
 		return;
 
 	case 0x03:  // 3xxx: Set Logarithmic Volume
@@ -83,7 +85,7 @@ static void TranslateGraoumfEffect(CSoundFile &sndFile, ModCommand &m, const uin
 		if(param12bit == 0)
 			m.vol = 0;
 		else
-			m.vol = mpt::saturate_cast<ModCommand::VOL>(GT2LogToLinearVolume(param12bit) / 4);
+			m.vol = static_cast<ModCommand::VOL>(std::min(GT2LogToLinearVolume(param12bit) / 4, 64));
 		return;
 
 	case 0x04:  // 4xxx: Panning
@@ -1471,13 +1473,13 @@ bool CSoundFile::ReadGT2(FileReader &file, ModLoadingFlags loadFlags)
 				if(instrExt.filterFlags & GT2InstrumentExt::fltVelToCutoff)
 				{
 					// Note: we're missing the velocity to cutoff modulation here, and also the envelope is added on top of this in GT2, while we multiply it.
-					const double maxCutoff = ConvertStrTo<double>(std::string{instrExt.maxVelFreq, sizeof(instrExt.maxVelFreq)});
+					const double maxCutoff = mpt::parse<double>(std::string{instrExt.maxVelFreq, sizeof(instrExt.maxVelFreq)});
 					if(maxCutoff > 20)
 						mptIns->SetCutoff(FrequencyToCutOff(maxCutoff), true);
 				}
 				if(instrExt.filterFlags & GT2InstrumentExt::fltVelToReso)
 				{
-					const double maxReso = ConvertStrTo<double>(std::string{instrExt.maxVelReso, sizeof(instrExt.maxVelReso)});
+					const double maxReso = mpt::parse<double>(std::string{instrExt.maxVelReso, sizeof(instrExt.maxVelReso)});
 					mptIns->SetResonance(mpt::saturate_round<uint8>(maxReso * 127.0 / 24.0), true);
 				}
 			}

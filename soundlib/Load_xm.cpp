@@ -68,13 +68,13 @@ OPENMPT_NAMESPACE_BEGIN
 
 static size_t VorbisfileFilereaderRead(void *ptr, size_t size, size_t nmemb, void *datasource)
 {
-	FileReader &file = *reinterpret_cast<FileReader*>(datasource);
+	FileReader &file = *mpt::void_ptr<FileReader>(datasource);
 	return file.ReadRaw(mpt::span(mpt::void_cast<std::byte*>(ptr), size * nmemb)).size() / size;
 }
 
 static int VorbisfileFilereaderSeek(void *datasource, ogg_int64_t offset, int whence)
 {
-	FileReader &file = *reinterpret_cast<FileReader*>(datasource);
+	FileReader &file = *mpt::void_ptr<FileReader>(datasource);
 	switch(whence)
 	{
 	case SEEK_SET:
@@ -129,7 +129,7 @@ static int VorbisfileFilereaderSeek(void *datasource, ogg_int64_t offset, int wh
 
 static long VorbisfileFilereaderTell(void *datasource)
 {
-	FileReader &file = *reinterpret_cast<FileReader*>(datasource);
+	FileReader &file = *mpt::void_ptr<FileReader>(datasource);
 	FileReader::off_t result = file.GetPosition();
 	if(!mpt::in_range<long>(result))
 	{
@@ -453,7 +453,7 @@ static bool ReadSampleData(ModSample &sample, SampleIO sampleFlags, FileReader &
 		};
 		OggVorbis_File vf;
 		MemsetZero(vf);
-		if(ov_open_callbacks(&sampleData, &vf, nullptr, 0, callbacks) == 0)
+		if(ov_open_callbacks(mpt::void_ptr<FileReader>(&sampleData), &vf, nullptr, 0, callbacks) == 0)
 		{
 			if(ov_streams(&vf) == 1)
 			{ // we do not support chained vorbis samples
@@ -698,6 +698,7 @@ bool CSoundFile::ReadXM(FileReader &file, ModLoadingFlags loadFlags)
 	uint8 sampleReserved = 0;
 	int instrType = -1;
 	bool unsupportedSamples = false;
+	bool anyADPCM = false;
 
 	// Reading instruments
 	for(INSTRUMENTINDEX instr = 1; instr <= m_nInstruments; instr++)
@@ -824,6 +825,8 @@ bool CSoundFile::ReadXM(FileReader &file, ModLoadingFlags loadFlags)
 						madeWith.set(verModPlug1_09);
 					}
 				}
+				if(sampleFlags.back().GetEncoding() == SampleIO::ADPCM)
+					anyADPCM = true;
 			}
 
 			// Read samples
@@ -1037,6 +1040,9 @@ bool CSoundFile::ReadXM(FileReader &file, ModLoadingFlags loadFlags)
 	{
 		m_modFormat.type = U_("xm");
 	}
+
+	if(anyADPCM)
+		m_modFormat.madeWithTracker += U_(" (ADPCM packed)");
 
 	return true;
 }

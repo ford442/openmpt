@@ -10,9 +10,12 @@
 #include "stdafx.h"
 #include "version.h"
 
+#include "mpt/format/join.hpp"
+#include "mpt/parse/parse.hpp"
+#include "mpt/string/utility.hpp"
+
 #include "mptString.h"
 #include "mptStringFormat.h"
-#include "mptStringParse.h" 
 
 #include "versionNumber.h"
 
@@ -52,10 +55,10 @@ mpt::ustring Version::GetOpenMPTVersionString() const
 Version Version::Parse(const mpt::ustring &s)
 {
 	uint32 result = 0;
-	std::vector<mpt::ustring> numbers = mpt::String::Split<mpt::ustring>(s, U_("."));
+	std::vector<mpt::ustring> numbers = mpt::split(s, U_("."));
 	for (std::size_t i = 0; i < numbers.size() && i < 4; ++i)
 	{
-		result |= (mpt::String::Parse::Hex<unsigned int>(numbers[i]) & 0xff) << ((3 - i) * 8);
+		result |= (mpt::parse_hex<unsigned int>(numbers[i]) & 0xff) << ((3 - i) * 8);
 	}
 	return Version(result);
 }
@@ -142,7 +145,7 @@ static int GetRevision()
 		{
 			svnversion = svnversion.substr(0, svnversion.find("P"));
 		}
-		return ConvertStrTo<int>(svnversion);
+		return mpt::parse<int>(svnversion);
 	#else
 		MPT_WARNING_STATEMENT("SVN revision unknown. Please check your build system.");
 		return 0;
@@ -278,14 +281,14 @@ VersionWithRevision VersionWithRevision::Parse(const mpt::ustring &s)
 {
 	Version version = Version::Parse(mpt::ustring());
 	uint64 revision = 0;
-	const auto tokens = mpt::String::Split<mpt::ustring>(s, U_("-"));
+	const auto tokens = mpt::split(s, U_("-"));
 	if(tokens.size() >= 1)
 	{
 		version = Version::Parse(tokens[0]);
 	}
 	if(tokens.size() >= 2)
 	{
-		revision = ConvertStrTo<uint64>(tokens[1].substr(1));
+		revision = mpt::parse<uint64>(tokens[1].substr(1));
 	}
 	return {version, revision};
 }
@@ -518,7 +521,7 @@ mpt::ustring GetVersionString(FlagSet<Build::Strings> strings)
 	{
 		result.push_back(GetBuildFeaturesString());
 	}
-	return mpt::trim(mpt::String::Combine<mpt::ustring>(result, U_("")));
+	return mpt::trim(mpt::join_format<mpt::ustring>(result, U_("")));
 }
 
 mpt::ustring GetVersionStringPure()
@@ -597,12 +600,12 @@ mpt::ustring GetFullCreditsString()
 		"libopenmpt (based on OpenMPT / Open ModPlug Tracker)\n"
 #endif
 		"\n"
-		"Copyright \xC2\xA9 2004-2022 OpenMPT Project Developers and Contributors\n"
+		"Copyright \xC2\xA9 2004-2023 OpenMPT Project Developers and Contributors\n"
 		"Copyright \xC2\xA9 1997-2003 Olivier Lapicque\n"
 		"\n"
 		"Developers:\n"
-		"Johannes Schultz (2008-2022)\n"
-		"J\xC3\xB6rn Heusipp (2012-2022)\n"
+		"Johannes Schultz (2008-2023)\n"
+		"J\xC3\xB6rn Heusipp (2012-2023)\n"
 		"Ahti Lepp\xC3\xA4nen (2005-2011)\n"
 		"Robin Fernandes (2004-2007)\n"
 		"Sergiy Pylypenko (2007)\n"
@@ -775,10 +778,10 @@ mpt::ustring GetFullCreditsString()
 		"Daniel Collin (emoon/TBL) for providing test infrastructure\n"
 		"https://twitter.com/daniel_collin\n"
 		"\n"
-		"The people at ModPlug forums for crucial contribution\n"
+		"The people in the ModPlug community for crucial contribution\n"
 		"in the form of ideas, testing and support;\n"
 		"thanks particularly to:\n"
-		"33, 8bitbubsy, Anboi, BooT-SectoR-ViruZ, Bvanoudtshoorn\n"
+		"33, 8bitbubsy, AliceLR, Anboi, BooT-SectoR-ViruZ, Bvanoudtshoorn\n"
 		"christofori, cubaxd, Diamond, Ganja, Georg, Goor00,\n"
 		"Harbinger, jmkz, KrazyKatz, LPChip, Nofold, Rakib, Sam Zen\n"
 		"Skaven, Skilletaudio, Snu, Squirrel Havoc, Teimoso, Waxhead\n"
@@ -797,7 +800,7 @@ mpt::ustring GetFullCreditsString()
 mpt::ustring GetLicenseString()
 {
 	return MPT_UTF8(
-		"Copyright (c) 2004-2022, OpenMPT Project Developers and Contributors" "\n"
+		"Copyright (c) 2004-2023, OpenMPT Project Developers and Contributors" "\n"
 		"Copyright (c) 1997-2003, Olivier Lapicque" "\n"
 		"All rights reserved." "\n"
 		"" "\n"

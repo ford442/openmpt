@@ -33,6 +33,8 @@
 #include "mpt/osinfo/class.hpp"
 #include "mpt/osinfo/dos_version.hpp"
 #include "mpt/osinfo/dos_memory.hpp"
+#include "mpt/parse/parse.hpp"
+#include "mpt/parse/split.hpp"
 #include "mpt/test/test.hpp"
 #include "mpt/test/test_macros.hpp"
 #include "mpt/uuid/uuid.hpp"
@@ -69,8 +71,8 @@
 #endif // MODPLUG_TRACKER
 #include "mpt/io_file/fileref.hpp"
 #include "mpt/io_file/inputfile.hpp"
-#include "mpt/io_file/inputfile_filecursor.hpp"
 #include "mpt/io_file/outputfile.hpp"
+#include "mpt/io_file_read/inputfile_filecursor.hpp"
 #include "../common/mptFileIO.h"
 #ifdef MODPLUG_TRACKER
 #include "mpt/crypto/hash.hpp"
@@ -599,7 +601,7 @@ static MPT_NOINLINE void TestVersion()
 		{
 			continue;
 		}
-		std::vector<std::string> line_fields = mpt::String::Split<std::string>(line, std::string("="));
+		std::vector<std::string> line_fields = mpt::split(line, std::string("="));
 		VERIFY_EQUAL_NONCONT(line_fields.size(), 2u);
 		line_fields[0] = mpt::trim(line_fields[0]);
 		line_fields[1] = mpt::trim(line_fields[1]);
@@ -700,12 +702,12 @@ static std::string StringFormat(std::string format, T x)
 #endif
 
 template <typename Tfloat>
-static void TestFloatFormat(Tfloat x, std::string format, mpt::FormatFlags f, std::size_t width = 0, int precision = -1)
+static void TestFloatFormat(Tfloat x, std::string format, mpt::format_simple_flags f, std::size_t width = 0, int precision = -1)
 {
 #ifdef MODPLUG_TRACKER
 	std::string str_sprintf = StringFormat(format, x);
 #endif
-	std::string str_iostreams = mpt::afmt::fmt(x, mpt::FormatSpec<std::string>().SetFlags(f).SetWidth(width).SetPrecision(precision));
+	std::string str_iostreams = mpt::afmt::fmt(x, mpt::format_simple_spec<std::string>().SetFlags(f).SetWidth(width).SetPrecision(precision));
 #ifdef MODPLUG_TRACKER
 	//MPT_LOG_GLOBAL(LogDebug, "test", mpt::ToUnicode(mpt::Charset::ASCII, str_sprintf));
 #endif
@@ -784,7 +786,7 @@ static MPT_NOINLINE void TestStringFormatting()
 	VERIFY_EQUAL(mpt::ufmt::HEX0<9>(0xa2345678), U_("0A2345678"));
 	VERIFY_EQUAL(mpt::ufmt::HEX0<10>(0xa2345678), U_("00A2345678"));
 
-#if MPT_WSTRING_FORMAT
+#if !defined(MPT_COMPILER_QUIRK_NO_WCHAR)
 	VERIFY_EQUAL(mpt::wfmt::hex(0x123e), L"123e");
 	VERIFY_EQUAL(mpt::wfmt::hex0<6>(0x123e), L"00123e");
 	VERIFY_EQUAL(mpt::wfmt::hex0<2>(0x123e), L"123e");
@@ -868,38 +870,47 @@ static MPT_NOINLINE void TestStringFormatting()
 		VERIFY_EQUAL(mpt::cfmt::center(4, CString(_T("a"))), CString(_T(" a  ")));
 	#endif // MPT_WITH_MFC
 
-	VERIFY_EQUAL(ConvertStrTo<uint32>("586"), 586u);
-	VERIFY_EQUAL(ConvertStrTo<uint32>("2147483647"), (uint32)int32_max);
-	VERIFY_EQUAL(ConvertStrTo<uint32>("4294967295"), uint32_max);
+	VERIFY_EQUAL(mpt::parse_or<int>("", -1), -1);
+	VERIFY_EQUAL(mpt::parse_or<int>("0", -1), 0);
 
-	VERIFY_EQUAL(ConvertStrTo<int64>("-9223372036854775808"), int64_min);
-	VERIFY_EQUAL(ConvertStrTo<int64>("-159"), -159);
-	VERIFY_EQUAL(ConvertStrTo<int64>("9223372036854775807"), int64_max);
+	VERIFY_EQUAL(mpt::parse<bool>("1"), true);
+	VERIFY_EQUAL(mpt::parse<bool>("0"), false);
+	VERIFY_EQUAL(mpt::parse<bool>("2"), true);
+	VERIFY_EQUAL(mpt::parse<bool>("-0"), false);
+	VERIFY_EQUAL(mpt::parse<bool>("-1"), true);
 
-	VERIFY_EQUAL(ConvertStrTo<uint64>("85059"), 85059u);
-	VERIFY_EQUAL(ConvertStrTo<uint64>("9223372036854775807"), (uint64)int64_max);
-	VERIFY_EQUAL(ConvertStrTo<uint64>("18446744073709551615"), uint64_max);
+	VERIFY_EQUAL(mpt::parse<uint32>("586"), 586u);
+	VERIFY_EQUAL(mpt::parse<uint32>("2147483647"), (uint32)int32_max);
+	VERIFY_EQUAL(mpt::parse<uint32>("4294967295"), uint32_max);
 
-	VERIFY_EQUAL(ConvertStrTo<float>("-87.0"), -87.0f);
+	VERIFY_EQUAL(mpt::parse<int64>("-9223372036854775808"), int64_min);
+	VERIFY_EQUAL(mpt::parse<int64>("-159"), -159);
+	VERIFY_EQUAL(mpt::parse<int64>("9223372036854775807"), int64_max);
+
+	VERIFY_EQUAL(mpt::parse<uint64>("85059"), 85059u);
+	VERIFY_EQUAL(mpt::parse<uint64>("9223372036854775807"), (uint64)int64_max);
+	VERIFY_EQUAL(mpt::parse<uint64>("18446744073709551615"), uint64_max);
+
+	VERIFY_EQUAL(mpt::parse<float>("-87.0"), -87.0f);
 #if !MPT_OS_DJGPP
-	VERIFY_EQUAL(ConvertStrTo<double>("-0.5e-6"), -0.5e-6);
+	VERIFY_EQUAL(mpt::parse<double>("-0.5e-6"), -0.5e-6);
 #endif
 #if !MPT_OS_DJGPP
-	VERIFY_EQUAL(ConvertStrTo<double>("58.65403492763"), 58.65403492763);
+	VERIFY_EQUAL(mpt::parse<double>("58.65403492763"), 58.65403492763);
 #else
-	VERIFY_EQUAL_EPS(ConvertStrTo<double>("58.65403492763"), 58.65403492763, 0.0001);
+	VERIFY_EQUAL_EPS(mpt::parse<double>("58.65403492763"), 58.65403492763, 0.0001);
 #endif
 
-	VERIFY_EQUAL(ConvertStrTo<float>(mpt::afmt::val(-87.0)), -87.0f);
+	VERIFY_EQUAL(mpt::parse<float>(mpt::afmt::val(-87.0)), -87.0f);
 #if !MPT_OS_DJGPP
-	VERIFY_EQUAL(ConvertStrTo<double>(mpt::afmt::val(-0.5e-6)), -0.5e-6);
+	VERIFY_EQUAL(mpt::parse<double>(mpt::afmt::val(-0.5e-6)), -0.5e-6);
 #endif
 
-	VERIFY_EQUAL(mpt::String::Parse::Hex<unsigned char>("fe"), 254);
-#if MPT_WSTRING_FORMAT
-	VERIFY_EQUAL(mpt::String::Parse::Hex<unsigned char>(L"fe"), 254);
+	VERIFY_EQUAL(mpt::parse_hex<unsigned char>("fe"), 254);
+#if !defined(MPT_COMPILER_QUIRK_NO_WCHAR)
+	VERIFY_EQUAL(mpt::parse_hex<unsigned char>(L"fe"), 254);
 #endif
-	VERIFY_EQUAL(mpt::String::Parse::Hex<unsigned int>(U_("ffff")), 65535);
+	VERIFY_EQUAL(mpt::parse_hex<unsigned int>(U_("ffff")), 65535);
 
 	TestFloatFormats(0.0f);
 	TestFloatFormats(-0.0f);
@@ -939,7 +950,7 @@ static MPT_NOINLINE void TestStringFormatting()
 	VERIFY_EQUAL(mpt::afmt::flt(6.12345, 4), "6.123");
 	VERIFY_EQUAL(mpt::afmt::fix(6.12345, 4), "6.1235");
 
-#if MPT_WSTRING_FORMAT
+#if !defined(MPT_COMPILER_QUIRK_NO_WCHAR)
 	VERIFY_EQUAL(mpt::wfmt::flt(6.12345, 3), L"6.12");
 	VERIFY_EQUAL(mpt::wfmt::fix(6.12345, 3), L"6.123");
 	VERIFY_EQUAL(mpt::wfmt::flt(6.12345, 4), L"6.123");
@@ -960,7 +971,7 @@ static MPT_NOINLINE void TestStringFormatting()
 
 	//VERIFY_EQUAL(MPT_AFORMAT("{2}{1}{0}{2}{1}{0}{10}{9}{8}")(0,1,2,3,4,5,6,7,8,9,"a"), "210210a98");
 
-#if MPT_WSTRING_FORMAT
+#if !defined(MPT_COMPILER_QUIRK_NO_WCHAR)
 	VERIFY_EQUAL(MPT_WFORMAT("{}{}{}")(1,2,3), L"123");
 #endif
 
@@ -1496,7 +1507,7 @@ static MPT_NOINLINE void TestMisc2()
 		float f  = ::powf(2.0f,         exp);
 		double d = ::pow (2.0 , (double)exp);
 		VERIFY_EQUAL_EPS(d, 6.349605, 0.00001);
-		VERIFY_EQUAL_EPS(f, 6.349605, 0.00001);
+		VERIFY_EQUAL_EPS(f, 6.349605f, 0.00001f);
 	#endif
 
 }
@@ -1808,12 +1819,16 @@ static MPT_NOINLINE void TestPathNative()
 
 
 
-static MPT_NOINLINE void TestPathForeign()
+
+#if MPT_OS_EMSCRIPTEN
+#define MPT_EMSCRIPTEN_TEST_PATH_CRASH
+#endif // MPT_OS_EMSCRIPTEN
+
+
+#if !defined(MPT_EMSCRIPTEN_TEST_PATH_CRASH)
+
+static MPT_NOINLINE void TestPathForeignWindowsNT()
 {
-
-// emscripten compiler crash
-#if !MPT_OS_EMSCRIPTEN
-
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::WindowsNT>>>;
 
@@ -1973,7 +1988,10 @@ static MPT_NOINLINE void TestPathForeign()
 		VERIFY_EQUAL(P::FromNative("\\\\?\\UNC\\server\\share\\dir1\\dir2\\name.foo.ext").GetFilename(), P::FromNative("name.foo.ext"));
 
 	}
+}
 
+static MPT_NOINLINE void TestPathForeignWindows9x()
+{
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::Windows9x>>>;
 
@@ -2117,7 +2135,10 @@ static MPT_NOINLINE void TestPathForeign()
 		VERIFY_EQUAL(P::FromNative("\\\\server\\share\\dir1\\dir2\\name.foo.ext").GetFilename(), P::FromNative("name.foo.ext"));
 
 	}
+}
 
+static MPT_NOINLINE void TestPathForeignDOSDJGPP()
+{
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::DOS_DJGPP>>>;
 
@@ -2221,7 +2242,10 @@ static MPT_NOINLINE void TestPathForeign()
 		VERIFY_EQUAL(P::FromNative("C:\\tempdir\\tmp.foo.txt").GetFilenameExtension(), P::FromNative(".txt"));
 
 	}
+}
 
+static MPT_NOINLINE void TestPathForeignPOSIX()
+{
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::Posix>>>;
 
@@ -2276,8 +2300,20 @@ static MPT_NOINLINE void TestPathForeign()
 		VERIFY_EQUAL(P::FromNative("//server").GetFilename(), P::FromNative("server"));
 
 	}
+}
 
-#endif
+#endif // !MPT_EMSCRIPTEN_TEST_PATH_CRASH
+
+
+static MPT_NOINLINE void TestPathForeign()
+{
+
+#if !defined(MPT_EMSCRIPTEN_TEST_PATH_CRASH)
+	TestPathForeignWindowsNT();
+	TestPathForeignWindows9x();
+	TestPathForeignDOSDJGPP();
+	TestPathForeignPOSIX();
+#endif // !MPT_EMSCRIPTEN_TEST_PATH_CRASH
 
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::WindowsNT>>>;
@@ -2509,7 +2545,7 @@ inline Test::CustomSettingsTestType FromSettingValue(const SettingValue &val)
 	std::size_t pos = xy.find(U_("|"));
 	mpt::ustring x = xy.substr(0, pos);
 	mpt::ustring y = xy.substr(pos + 1);
-	return Test::CustomSettingsTestType(ConvertStrTo<float>(x), ConvertStrTo<float>(y));
+	return Test::CustomSettingsTestType(mpt::parse<float>(x), mpt::parse<float>(y));
 }
 
 template <>
@@ -3051,8 +3087,8 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 	{
 		const ModInstrument *pIns = sndFile.Instruments[ins];
 		VERIFY_EQUAL_NONCONT(pIns->nGlobalVol, 32);
-		VERIFY_EQUAL_NONCONT(pIns->nFadeOut, 1024);
-		VERIFY_EQUAL_NONCONT(pIns->nPan, 64);
+		VERIFY_EQUAL_NONCONT(pIns->nFadeOut, (ins == 1) ? 1023u : 8992u);
+		VERIFY_EQUAL_NONCONT(pIns->nPan, 63);
 		VERIFY_EQUAL_NONCONT(pIns->dwFlags, INS_SETPANNING);
 
 		VERIFY_EQUAL_NONCONT(pIns->nPPS, 8);
@@ -3080,7 +3116,7 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 		VERIFY_EQUAL_NONCONT(pIns->nMidiChannel, 16);
 		VERIFY_EQUAL_NONCONT(pIns->nMidiProgram, 64);
 		VERIFY_EQUAL_NONCONT(pIns->wMidiBank, 2);
-		VERIFY_EQUAL_NONCONT(pIns->midiPWD, ins);
+		VERIFY_EQUAL_NONCONT(pIns->midiPWD, -1);
 
 		VERIFY_EQUAL_NONCONT(pIns->pTuning, sndFile.GetDefaultTuning());
 
@@ -3219,9 +3255,9 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(chns[69].color, ModChannelSettings::INVALID_COLOR);
 #endif
 
-	VERIFY_EQUAL_NONCONT(sndFile.FrequencyToCutOff(sndFile.CutOffToFrequency(0)), 0);
-	VERIFY_EQUAL_NONCONT(sndFile.FrequencyToCutOff(sndFile.CutOffToFrequency(80)), 80);
-	VERIFY_EQUAL_NONCONT(sndFile.FrequencyToCutOff(sndFile.CutOffToFrequency(127)), 127);
+	VERIFY_EQUAL_NONCONT(sndFile.FrequencyToCutOff(static_cast<double>(sndFile.CutOffToFrequency(0))), 0);
+	VERIFY_EQUAL_NONCONT(sndFile.FrequencyToCutOff(static_cast<double>(sndFile.CutOffToFrequency(80))), 80);
+	VERIFY_EQUAL_NONCONT(sndFile.FrequencyToCutOff(static_cast<double>(sndFile.CutOffToFrequency(127))), 127);
 }
 
 
@@ -3465,7 +3501,7 @@ static mpt::PathString GetTempFilenameBase()
 	return GetTestFilenameBase();
 }
 
-typedef CModDoc *TSoundFileContainer;
+using TSoundFileContainer = CModDoc *;
 
 static CSoundFile &GetSoundFile(TSoundFileContainer &sndFile)
 {
@@ -3525,7 +3561,7 @@ static mpt::PathString GetTempFilenameBase()
 #endif
 }
 
-typedef std::shared_ptr<CSoundFile> TSoundFileContainer;
+using TSoundFileContainer = std::shared_ptr<CSoundFile>;
 
 static CSoundFile &GetSoundFile(TSoundFileContainer &sndFile)
 {
@@ -4074,8 +4110,15 @@ static inline std::size_t strnlen(const char *str, std::size_t n)
 
 
 // Test String I/O functionality
-static MPT_NOINLINE void TestStringIO()
+
+static MPT_NOINLINE void TestStringIO1()
 {
+
+#if MPT_COMPILER_MSVC
+#pragma warning(push)
+#pragma warning(disable:6054) // String '' might not be zero-terminated.
+#endif // MPT_COMPILER_MSVC
+
 	char src0[4] = { '\0', 'X', ' ', 'X' };		// Weird empty buffer
 	char src1[4] = { 'X', ' ', '\0', 'X' };		// Weird buffer (hello Impulse Tracker)
 	char src2[4] = { 'X', 'Y', 'Z', ' ' };		// Full buffer, last character space
@@ -4213,6 +4256,10 @@ static MPT_NOINLINE void TestStringIO()
 #undef ReadTest
 #undef WriteTest
 
+#if MPT_COMPILER_MSVC
+#pragma warning(push)
+#endif // MPT_COMPILER_MSVC
+
 	{
 
 		std::string dststring;
@@ -4320,7 +4367,10 @@ static MPT_NOINLINE void TestStringIO()
 #undef WriteTest
 
 	}
+}
 
+static MPT_NOINLINE void TestStringIO2()
+{
 	{
 	
 		char s0[4] = {'\0', 'X', ' ', 'X' };
@@ -4431,41 +4481,39 @@ static MPT_NOINLINE void TestStringIO()
 		#undef CopyTest
 
 	}
-
 }
 
+static MPT_NOINLINE void TestStringIO()
+{
+	TestStringIO1();
+	TestStringIO2();
+}
 
 static MPT_NOINLINE void TestSampleConversion()
 {
-	std::vector<uint8> sourceBufContainer(65536 * 4);
-	std::vector<uint8> targetBufContainer(65536 * 6);
-
-	uint8 *sourceBuf = &(sourceBufContainer[0]);
-	void *targetBuf = &(targetBufContainer[0]);
-
 	// Signed 8-Bit Integer PCM
 	// Unsigned 8-Bit Integer PCM
 	// Delta 8-Bit Integer PCM
 	{
-		uint8 *source8 = sourceBuf;
-		for(size_t i = 0; i < 256; i++)
+		std::vector<std::byte> source8(256);
+		for(std::size_t i = 0; i < 256; i++)
 		{
-			source8[i] = static_cast<uint8>(i);
+			source8[i] = mpt::byte_cast<std::byte>(static_cast<uint8>(i));
 		}
 
-		int8 *signed8 = static_cast<int8 *>(targetBuf);
-		uint8 *unsigned8 = static_cast<uint8 *>(targetBuf) + 256;
-		int8 *delta8 = static_cast<int8 *>(targetBuf) + 512;
+		std::vector<int8> signed8(256);
+		std::vector<int8> unsigned8(256);
+		std::vector<int8> delta8(256);
 		int8 delta = 0;
-		CopySample<SC::DecodeInt8>(signed8, 256, 1, mpt::byte_cast<const std::byte *>(source8), 256, 1);
-		CopySample<SC::DecodeUint8>(reinterpret_cast<int8 *>(unsigned8), 256, 1, mpt::byte_cast<const std::byte *>(source8), 256, 1);
-		CopySample<SC::DecodeInt8Delta>(delta8, 256, 1, mpt::byte_cast<const std::byte *>(source8), 256, 1);
+		CopySample<SC::DecodeInt8>(signed8.data(), 256, 1, source8.data(), 256, 1);
+		CopySample<SC::DecodeUint8>(unsigned8.data(), 256, 1, source8.data(), 256, 1);
+		CopySample<SC::DecodeInt8Delta>(delta8.data(), 256, 1, source8.data(), 256, 1);
 
-		for(size_t i = 0; i < 256; i++)
+		for(std::size_t i = 0; i < 256; i++)
 		{
 			delta += static_cast<int8>(i);
 			VERIFY_EQUAL_QUIET_NONCONT(signed8[i], static_cast<int8>(i));
-			VERIFY_EQUAL_QUIET_NONCONT(unsigned8[i], static_cast<uint8>(i + 0x80u));
+			VERIFY_EQUAL_QUIET_NONCONT(unsigned8[i], static_cast<int8>(static_cast<int>(i) - 0x80));
 			VERIFY_EQUAL_QUIET_NONCONT(delta8[i], static_cast<int8>(delta));
 		}
 	}
@@ -4476,47 +4524,47 @@ static MPT_NOINLINE void TestSampleConversion()
 	{
 		// Little Endian
 
-		uint8 *source16 = sourceBuf;
-		for(size_t i = 0; i < 65536; i++)
+		std::vector<std::byte> source16(65536 * 2);
+		for(std::size_t i = 0; i < 65536; i++)
 		{
-			source16[i * 2 + 0] = static_cast<uint8>(i & 0xFF);
-			source16[i * 2 + 1] = static_cast<uint8>(i >> 8);
+			source16[i * 2 + 0] = mpt::byte_cast<std::byte>(static_cast<uint8>(i & 0xFF));
+			source16[i * 2 + 1] = mpt::byte_cast<std::byte>(static_cast<uint8>(i >> 8));
 		}
 
-		int16 *signed16 = static_cast<int16 *>(targetBuf);
-		uint16 *unsigned16 = static_cast<uint16 *>(targetBuf) + 65536;
-		int16 *delta16 = static_cast<int16 *>(targetBuf) + 65536 * 2;
+		std::vector<int16> signed16(65536);
+		std::vector<int16> unsigned16(65536);
+		std::vector<int16> delta16(65536);
 		int16 delta = 0;
-		CopySample<SC::DecodeInt16<0, littleEndian16> >(signed16, 65536, 1, mpt::byte_cast<const std::byte *>(source16), 65536 * 2, 1);
-		CopySample<SC::DecodeInt16<0x8000u, littleEndian16> >(reinterpret_cast<int16*>(unsigned16), 65536, 1, mpt::byte_cast<const std::byte *>(source16), 65536 * 2, 1);
-		CopySample<SC::DecodeInt16Delta<littleEndian16> >(delta16, 65536, 1, mpt::byte_cast<const std::byte *>(source16), 65536 * 2, 1);
+		CopySample<SC::DecodeInt16<0, littleEndian16> >(signed16.data(), 65536, 1, source16.data(), 65536 * 2, 1);
+		CopySample<SC::DecodeInt16<0x8000u, littleEndian16> >(unsigned16.data(), 65536, 1, source16.data(), 65536 * 2, 1);
+		CopySample<SC::DecodeInt16Delta<littleEndian16> >(delta16.data(), 65536, 1, source16.data(), 65536 * 2, 1);
 
-		for(size_t i = 0; i < 65536; i++)
+		for(std::size_t i = 0; i < 65536; i++)
 		{
 			delta += static_cast<int16>(i);
 			VERIFY_EQUAL_QUIET_NONCONT(signed16[i], static_cast<int16>(i));
-			VERIFY_EQUAL_QUIET_NONCONT(unsigned16[i], static_cast<uint16>(i + 0x8000u));
+			VERIFY_EQUAL_QUIET_NONCONT(unsigned16[i], static_cast<int16>(static_cast<int>(i) - 0x8000));
 			VERIFY_EQUAL_QUIET_NONCONT(delta16[i], static_cast<int16>(delta));
 		}
 
 		// Big Endian
 
-		for(size_t i = 0; i < 65536; i++)
+		for(std::size_t i = 0; i < 65536; i++)
 		{
-			source16[i * 2 + 0] = static_cast<uint8>(i >> 8);
-			source16[i * 2 + 1] = static_cast<uint8>(i & 0xFF);
+			source16[i * 2 + 0] = mpt::byte_cast<std::byte>(static_cast<uint8>(i >> 8));
+			source16[i * 2 + 1] = mpt::byte_cast<std::byte>(static_cast<uint8>(i & 0xFF));
 		}
 
-		CopySample<SC::DecodeInt16<0, bigEndian16> >(signed16, 65536, 1, mpt::byte_cast<const std::byte *>(source16), 65536 * 2, 1);
-		CopySample<SC::DecodeInt16<0x8000u, bigEndian16> >(reinterpret_cast<int16*>(unsigned16), 65536, 1, mpt::byte_cast<const std::byte *>(source16), 65536 * 2, 1);
-		CopySample<SC::DecodeInt16Delta<bigEndian16> >(delta16, 65536, 1, mpt::byte_cast<const std::byte *>(source16), 65536 * 2, 1);
+		CopySample<SC::DecodeInt16<0, bigEndian16> >(signed16.data(), 65536, 1, source16.data(), 65536 * 2, 1);
+		CopySample<SC::DecodeInt16<0x8000u, bigEndian16> >(unsigned16.data(), 65536, 1, source16.data(), 65536 * 2, 1);
+		CopySample<SC::DecodeInt16Delta<bigEndian16> >(delta16.data(), 65536, 1, source16.data(), 65536 * 2, 1);
 
 		delta = 0;
 		for(size_t i = 0; i < 65536; i++)
 		{
 			delta += static_cast<int16>(i);
 			VERIFY_EQUAL_QUIET_NONCONT(signed16[i], static_cast<int16>(i));
-			VERIFY_EQUAL_QUIET_NONCONT(unsigned16[i], static_cast<uint16>(i + 0x8000u));
+			VERIFY_EQUAL_QUIET_NONCONT(unsigned16[i], static_cast<int16>(static_cast<int>(i) - 0x8000));
 			VERIFY_EQUAL_QUIET_NONCONT(delta16[i], static_cast<int16>(delta));
 		}
 
@@ -4524,24 +4572,25 @@ static MPT_NOINLINE void TestSampleConversion()
 
 	// Signed 24-Bit Integer PCM
 	{
-		uint8 *source24 = sourceBuf;
-		for(size_t i = 0; i < 65536; i++)
+		std::vector<std::byte> source24(65536 * 3);
+		for(std::size_t i = 0; i < 65536; i++)
 		{
-			source24[i * 3 + 0] = 0;
-			source24[i * 3 + 1] = static_cast<uint8>(i & 0xFF);
-			source24[i * 3 + 2] = static_cast<uint8>(i >> 8);
+			source24[i * 3 + 0] = mpt::byte_cast<std::byte>(static_cast<uint8>(0));
+			source24[i * 3 + 1] = mpt::byte_cast<std::byte>(static_cast<uint8>(i & 0xFF));
+			source24[i * 3 + 2] = mpt::byte_cast<std::byte>(static_cast<uint8>(i >> 8));
 		}
 
-		int16 *truncated16 = static_cast<int16 *>(targetBuf);
+		std::vector<int16> truncated16(65536);
+		std::vector<int16> sampleBuf(65536);
 		ModSample sample;
 		sample.Initialize();
 		sample.nLength = 65536;
 		sample.uFlags.set(CHN_16BIT);
-		sample.pData.pSample = (static_cast<int16 *>(targetBuf) + 65536);
-		CopyAndNormalizeSample<SC::NormalizationChain<SC::Convert<int16, int32>, SC::DecodeInt24<0, littleEndian24> > >(sample, mpt::byte_cast<const std::byte *>(source24), 3*65536);
-		CopySample<SC::ConversionChain<SC::ConvertShift<int16, int32, 16>, SC::DecodeInt24<0, littleEndian24> > >(truncated16, 65536, 1, mpt::byte_cast<const std::byte *>(source24), 65536 * 3, 1);
+		sample.pData.pSample = sampleBuf.data();
+		CopyAndNormalizeSample<SC::NormalizationChain<SC::Convert<int16, int32>, SC::DecodeInt24<0, littleEndian24> > >(sample, source24.data(), 3*65536);
+		CopySample<SC::ConversionChain<SC::ConvertShift<int16, int32, 16>, SC::DecodeInt24<0, littleEndian24> > >(truncated16.data(), 65536, 1, source24.data(), 65536 * 3, 1);
 
-		for(size_t i = 0; i < 65536; i++)
+		for(std::size_t i = 0; i < 65536; i++)
 		{
 			VERIFY_EQUAL_QUIET_NONCONT(sample.sample16()[i], static_cast<int16>(i));
 			VERIFY_EQUAL_QUIET_NONCONT(truncated16[i], static_cast<int16>(i));
@@ -4550,26 +4599,27 @@ static MPT_NOINLINE void TestSampleConversion()
 
 	// Float 32-Bit
 	{
-		uint8 *source32 = sourceBuf;
-		for(size_t i = 0; i < 65536; i++)
+		std::vector<std::byte> source32(65536 * 4);
+		for(std::size_t i = 0; i < 65536; i++)
 		{
 			IEEE754binary32BE floatbits = IEEE754binary32BE((static_cast<float>(i) / 65536.0f) - 0.5f);
-			source32[i * 4 + 0] = mpt::byte_cast<uint8>(floatbits.GetByte(0));
-			source32[i * 4 + 1] = mpt::byte_cast<uint8>(floatbits.GetByte(1));
-			source32[i * 4 + 2] = mpt::byte_cast<uint8>(floatbits.GetByte(2));
-			source32[i * 4 + 3] = mpt::byte_cast<uint8>(floatbits.GetByte(3));
+			source32[i * 4 + 0] = mpt::byte_cast<std::byte>(floatbits.GetByte(0));
+			source32[i * 4 + 1] = mpt::byte_cast<std::byte>(floatbits.GetByte(1));
+			source32[i * 4 + 2] = mpt::byte_cast<std::byte>(floatbits.GetByte(2));
+			source32[i * 4 + 3] = mpt::byte_cast<std::byte>(floatbits.GetByte(3));
 		}
 
-		int16 *truncated16 = static_cast<int16 *>(targetBuf);
+		std::vector<int16> truncated16(65536);
+		std::vector<int16> sampleBuf(65536);
 		ModSample sample;
 		sample.Initialize();
 		sample.nLength = 65536;
 		sample.uFlags.set(CHN_16BIT);
-		sample.pData.pSample = static_cast<int16 *>(targetBuf) + 65536;
-		CopyAndNormalizeSample<SC::NormalizationChain<SC::Convert<int16, float32>, SC::DecodeFloat32<bigEndian32> > >(sample, mpt::byte_cast<const std::byte *>(source32), 4*65536);
-		CopySample<SC::ConversionChain<SC::Convert<int16, float32>, SC::DecodeFloat32<bigEndian32> > >(truncated16, 65536, 1, mpt::byte_cast<const std::byte *>(source32), 65536 * 4, 1);
+		sample.pData.pSample = sampleBuf.data();
+		CopyAndNormalizeSample<SC::NormalizationChain<SC::Convert<int16, float32>, SC::DecodeFloat32<bigEndian32> > >(sample, source32.data(), 4*65536);
+		CopySample<SC::ConversionChain<SC::Convert<int16, float32>, SC::DecodeFloat32<bigEndian32> > >(truncated16.data(), 65536, 1, source32.data(), 65536 * 4, 1);
 
-		for(size_t i = 0; i < 65536; i++)
+		for(std::size_t i = 0; i < 65536; i++)
 		{
 			VERIFY_EQUAL_QUIET_NONCONT(sample.sample16()[i], static_cast<int16>(i - 0x8000u));
 			VERIFY_EQUAL_QUIET_NONCONT(std::abs(truncated16[i] - static_cast<int16>((i - 0x8000u) / 2)) <= 1, true);
@@ -4643,10 +4693,11 @@ static MPT_NOINLINE void TestSampleConversion()
 
 	// Range checks
 	{
-		int8 oneSample = 1;
-		char *signed8 = reinterpret_cast<char *>(targetBuf);
-		memset(signed8, 0, 4);
-		CopySample<SC::DecodeInt8>(reinterpret_cast<int8*>(targetBuf), 4, 1, reinterpret_cast<const std::byte*>(&oneSample), sizeof(oneSample), 1);
+		std::byte oneSample = mpt::byte_cast<std::byte>(static_cast<int8>(1));
+		int8 targetBuf4[4];
+		int8 *signed8 = targetBuf4;
+		std::memset(signed8, 0, 4);
+		CopySample<SC::DecodeInt8>(targetBuf4, 4, 1, &oneSample, sizeof(oneSample), 1);
 		VERIFY_EQUAL_NONCONT(signed8[0], 1);
 		VERIFY_EQUAL_NONCONT(signed8[1], 0);
 		VERIFY_EQUAL_NONCONT(signed8[2], 0);

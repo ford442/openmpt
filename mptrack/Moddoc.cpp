@@ -39,7 +39,7 @@
 #include "../common/mptStringBuffer.h"
 #include "../common/mptFileTemporary.h"
 #include "mpt/io_file/inputfile.hpp"
-#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "mpt/io_file_read/inputfile_filecursor.hpp"
 #include "mpt/io_file/outputfile.hpp"
 #include "../common/mptFileIO.h"
 #include <sstream>
@@ -265,7 +265,7 @@ BOOL CModDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	}
 	// If the file was packed in some kind of container (e.g. ZIP, or simply a format like MO3), prompt for new file extension as well
 	// Same if MOD_TYPE_XXX does not indicate actual song format
-	if(m_SndFile.GetContainerType() != MOD_CONTAINERTYPE_NONE || m_SndFile.m_SongFlags[SONG_IMPORTED])
+	if(m_SndFile.GetContainerType() != ModContainerType::None || m_SndFile.m_SongFlags[SONG_IMPORTED])
 	{
 		m_ShowSavedialog = true;
 	}
@@ -898,7 +898,7 @@ UINT CModDoc::ShowLog(const CString &preamble, const CString &title, CWnd *paren
 }
 
 
-void CModDoc::ProcessMIDI(uint32 midiData, INSTRUMENTINDEX ins, IMixPlugin *plugin, InputTargetContext ctx)
+void CModDoc::ProcessMIDI(uint32 midiData, SAMPLEINDEX smp, INSTRUMENTINDEX ins, IMixPlugin *plugin, InputTargetContext ctx)
 {
 	static uint8 midiVolume = 127;
 
@@ -932,6 +932,7 @@ void CModDoc::ProcessMIDI(uint32 midiData, INSTRUMENTINDEX ins, IMixPlugin *plug
 		return;
 	}
 
+	const bool validInstr = (ins > 0 && ins <= GetNumInstruments()), validSample = (smp > 0 && smp <= GetNumSamples());
 	switch(event)
 	{
 	case MIDIEvents::evNoteOff:
@@ -940,12 +941,12 @@ void CModDoc::ProcessMIDI(uint32 midiData, INSTRUMENTINDEX ins, IMixPlugin *plug
 			m_midiSustainBuffer[channel].push_back(midiData);
 			return;
 		}
-		if(ins > 0 && ins <= GetNumInstruments())
+		if(validInstr || validSample)
 		{
 			LimitMax(note, NOTE_MAX);
 			if(m_midiPlayingNotes[channel][note])
 				m_midiPlayingNotes[channel][note] = false;
-			NoteOff(note, false, ins, m_noteChannel[note - NOTE_MIN]);
+			NoteOff(note, validSample, ins, m_noteChannel[note - NOTE_MIN]);
 			return;
 		} else if(plugin != nullptr)
 		{
@@ -954,11 +955,11 @@ void CModDoc::ProcessMIDI(uint32 midiData, INSTRUMENTINDEX ins, IMixPlugin *plug
 		break;
 
 	case MIDIEvents::evNoteOn:
-		if(ins > 0 && ins <= GetNumInstruments())
+		if(validInstr || validSample)
 		{
 			LimitMax(note, NOTE_MAX);
 			vol = CMainFrame::ApplyVolumeRelatedSettings(midiData, midiVolume);
-			PlayNote(PlayNoteParam(note).Instrument(ins).Volume(vol).CheckNNA(m_midiPlayingNotes[channel]), &m_noteChannel);
+			PlayNote(PlayNoteParam(note).Instrument(ins).Sample(smp).Volume(vol).CheckNNA(m_midiPlayingNotes[channel]), &m_noteChannel);
 			return;
 		} else if(plugin != nullptr)
 		{
@@ -979,7 +980,7 @@ void CModDoc::ProcessMIDI(uint32 midiData, INSTRUMENTINDEX ins, IMixPlugin *plug
 				// Release all notes
 				for(const auto offEvent : m_midiSustainBuffer[channel])
 				{
-					ProcessMIDI(offEvent, ins, plugin, ctx);
+					ProcessMIDI(offEvent, 0, ins, plugin, ctx);
 				}
 				m_midiSustainBuffer[channel].clear();
 			}
@@ -1631,7 +1632,7 @@ void CModDoc::UpdateAllViews(CView *pSender, UpdateHint hint, CObject *pHint)
 		for(auto &plug : m_SndFile.m_MixPlugins)
 		{
 			auto mixPlug = plug.pMixPlugin;
-			if(mixPlug != nullptr && mixPlug->GetEditor())
+			if(mixPlug != nullptr && mixPlug->GetEditor() && mixPlug->GetEditor() != pHint)
 			{
 				mixPlug->GetEditor()->UpdateView(hint);
 			}
@@ -2127,7 +2128,7 @@ void CModDoc::OnPlayerPlay()
 		}
 
 		const bool isPlaying = (pMainFrm->GetModPlaying() == this);
-		if(isPlaying && !m_SndFile.m_SongFlags[SONG_PAUSED | SONG_STEP/*|SONG_PATTERNLOOP*/])
+		if(isPlaying && !m_SndFile.m_SongFlags[SONG_PAUSED | SONG_STEP])
 		{
 			OnPlayerPause();
 			return;
@@ -2732,15 +2733,30 @@ LRESULT CModDoc::OnCustomKeyMsg(WPARAM wParam, LPARAM /*lParam*/)
 
 		case kcPlayPatternFromCursor: OnPatternPlay(); break;
 		case kcPlayPatternFromStart: OnPatternRestart(); break;
+		case kcPlaySongFromCursorPause:
+			if(CMainFrame::GetMainFrame()->GetModPlaying() == this && !m_SndFile.m_SongFlags[SONG_PAUSED | SONG_STEP])
+			{
+				OnPlayerPause();
+				break;
+			}
+			[[fallthrough]];
 		case kcPlaySongFromCursor: OnPatternPlayNoLoop(); break;
 		case kcPlaySongFromStart: OnPlayerPlayFromStart(); break;
-		case kcPlayPauseSong: OnPlayerPlay(); break;
 		case kcPlayStopSong:
-			if(CMainFrame::GetMainFrame()->GetModPlaying() == this)
+			if(CMainFrame::GetMainFrame()->GetModPlaying() == this && !m_SndFile.m_SongFlags[SONG_PAUSED | SONG_STEP])
+			{
 				OnPlayerStop();
-			else
-				OnPlayerPlay();
-			break;
+				break;
+			}
+			[[fallthrough]];
+		case kcPlayPauseSong: OnPlayerPlay(); break;
+		case kcPlaySongFromPatternPause:
+			if(CMainFrame::GetMainFrame()->GetModPlaying() == this && !m_SndFile.m_SongFlags[SONG_PAUSED | SONG_STEP])
+			{
+				OnPlayerPause();
+				break;
+			}
+			[[fallthrough]];
 		case kcPlaySongFromPattern: OnPatternRestart(false); break;
 		case kcStopSong: OnPlayerStop(); break;
 		case kcPanic: OnPanic(); break;

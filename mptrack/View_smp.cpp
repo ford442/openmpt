@@ -308,16 +308,19 @@ void CViewSample::UpdateScrollSize(int newZoom, bool forceRefresh, SmpLength cen
 }
 
 
-// Center given sample in the view
-void CViewSample::ScrollToSample(SmpLength centeredSample, bool refresh)
+void CViewSample::ScrollToSample(SmpLength sample, bool refresh, ScrollTarget target)
 {
-	int scrollToSample = centeredSample >> (std::max(1, m_nZoom) - 1);
-	scrollToSample -= (m_rcClient.Width() / 2) >> (-std::min(-1, m_nZoom) - 1);
+	int scrollToSample = sample >> (std::max(1, m_nZoom) - 1);
+	if(target != ScrollTarget::Left)
+		scrollToSample -= (m_rcClient.Width() / ((target == ScrollTarget::Right) ? 1 : 2)) >> (-std::min(-1, m_nZoom) - 1);
 
 	Limit(scrollToSample, 0, GetScrollLimit(SB_HORZ));
-	SetScrollPos(SB_HORZ, scrollToSample);
-
-	if(refresh) InvalidateSample();
+	if(GetScrollPos(SB_HORZ) != scrollToSample)
+	{
+		SetScrollPos(SB_HORZ, scrollToSample);
+		if(refresh)
+			InvalidateSample();
+	}
 }
 
 
@@ -887,197 +890,6 @@ void CViewSample::DrawSampleData1(HDC hdc, int ymed, int cx, int cy, SmpLength l
 }
 
 
-#if defined(MPT_ENABLE_ARCH_INTRINSICS_SSE2)
-
-OPENMPT_NAMESPACE_END
-#include <emmintrin.h>
-OPENMPT_NAMESPACE_BEGIN
-
-// SSE2 implementation for min/max finder, packs 8*int16 in a 128-bit XMM register.
-// scanlen = How many samples to process on this channel
-static void sse2_findminmax16(const void *p, SmpLength scanlen, int channels, int &smin, int &smax)
-{
-	scanlen *= channels;
-
-	// Put minimum / maximum in 8 packed int16 values
-	__m128i minVal = _mm_set1_epi16(static_cast<int16>(smin));
-	__m128i maxVal = _mm_set1_epi16(static_cast<int16>(smax));
-
-	SmpLength scanlen8 = scanlen / 8;
-	if(scanlen8)
-	{
-		const __m128i *v = static_cast<const __m128i *>(p);
-		p = static_cast<const __m128i *>(p) + scanlen8;
-
-		while(scanlen8--)
-		{
-			__m128i curVals = _mm_loadu_si128(v++);
-			minVal = _mm_min_epi16(minVal, curVals);
-			maxVal = _mm_max_epi16(maxVal, curVals);
-		}
-
-		// Now we have 8 minima and maxima each, in case of stereo they are interleaved L/R values.
-		// Move the upper 4 values to the lower half and compute the minima/maxima of that.
-		__m128i minVal2 = _mm_unpackhi_epi64(minVal, minVal);
-		__m128i maxVal2 = _mm_unpackhi_epi64(maxVal, maxVal);
-		minVal = _mm_min_epi16(minVal, minVal2);
-		maxVal = _mm_max_epi16(maxVal, maxVal2);
-
-		// Now we have 4 minima and maxima each, in case of stereo they are interleaved L/R values.
-		// Move the upper 2 values to the lower half and compute the minima/maxima of that.
-		minVal2 = _mm_shuffle_epi32(minVal, _MM_SHUFFLE(1, 1, 1, 1));
-		maxVal2 = _mm_shuffle_epi32(maxVal, _MM_SHUFFLE(1, 1, 1, 1));
-		minVal = _mm_min_epi16(minVal, minVal2);
-		maxVal = _mm_max_epi16(maxVal, maxVal2);
-
-		if(channels < 2)
-		{
-			// Mono: Compute the minima/maxima of the both remaining values
-			minVal2 = _mm_shufflelo_epi16(minVal, _MM_SHUFFLE(1, 1, 1, 1));
-			maxVal2 = _mm_shufflelo_epi16(maxVal, _MM_SHUFFLE(1, 1, 1, 1));
-			minVal = _mm_min_epi16(minVal, minVal2);
-			maxVal = _mm_max_epi16(maxVal, maxVal2);
-		}
-	}
-
-	const int16 *p16 = static_cast<const int16 *>(p);
-	while(scanlen & 7)
-	{
-		scanlen -= channels;
-		__m128i curVals = _mm_set1_epi16(*p16);
-		p16 += channels;
-		minVal = _mm_min_epi16(minVal, curVals);
-		maxVal = _mm_max_epi16(maxVal, curVals);
-	}
-
-	smin = static_cast<int16>(_mm_cvtsi128_si32(minVal));
-	smax = static_cast<int16>(_mm_cvtsi128_si32(maxVal));
-}
-
-
-// SSE2 implementation for min/max finder, packs 16*int8 in a 128-bit XMM register.
-// scanlen = How many samples to process on this channel
-static void sse2_findminmax8(const void *p, SmpLength scanlen, int channels, int &smin, int &smax)
-{
-	scanlen *= channels;
-
-	// Put minimum / maximum in 16 packed int8 values
-	__m128i minVal = _mm_set1_epi8(static_cast<int8>(smin ^ 0x80u));
-	__m128i maxVal = _mm_set1_epi8(static_cast<int8>(smax ^ 0x80u));
-
-	// For signed <-> unsigned conversion (_mm_min_epi8/_mm_max_epi8 is SSE4)
-	__m128i xorVal = _mm_set1_epi8(0x80u);
-
-	SmpLength scanlen16 = scanlen / 16;
-	if(scanlen16)
-	{
-		const __m128i *v = static_cast<const __m128i *>(p);
-		p = static_cast<const __m128i *>(p) + scanlen16;
-
-		while(scanlen16--)
-		{
-			__m128i curVals = _mm_loadu_si128(v++);
-			curVals = _mm_xor_si128(curVals, xorVal);
-			minVal = _mm_min_epu8(minVal, curVals);
-			maxVal = _mm_max_epu8(maxVal, curVals);
-		}
-
-		// Now we have 16 minima and maxima each, in case of stereo they are interleaved L/R values.
-		// Move the upper 8 values to the lower half and compute the minima/maxima of that.
-		__m128i minVal2 = _mm_unpackhi_epi64(minVal, minVal);
-		__m128i maxVal2 = _mm_unpackhi_epi64(maxVal, maxVal);
-		minVal = _mm_min_epu8(minVal, minVal2);
-		maxVal = _mm_max_epu8(maxVal, maxVal2);
-
-		// Now we have 8 minima and maxima each, in case of stereo they are interleaved L/R values.
-		// Move the upper 4 values to the lower half and compute the minima/maxima of that.
-		minVal2 = _mm_shuffle_epi32(minVal, _MM_SHUFFLE(1, 1, 1, 1));
-		maxVal2 = _mm_shuffle_epi32(maxVal, _MM_SHUFFLE(1, 1, 1, 1));
-		minVal = _mm_min_epu8(minVal, minVal2);
-		maxVal = _mm_max_epu8(maxVal, maxVal2);
-
-		// Now we have 4 minima and maxima each, in case of stereo they are interleaved L/R values.
-		// Move the upper 2 values to the lower half and compute the minima/maxima of that.
-		minVal2 = _mm_srai_epi32(minVal, 16);
-		maxVal2 = _mm_srai_epi32(maxVal, 16);
-		minVal = _mm_min_epu8(minVal, minVal2);
-		maxVal = _mm_max_epu8(maxVal, maxVal2);
-
-		if(channels < 2)
-		{
-			// Mono: Compute the minima/maxima of the both remaining values
-			minVal2 = _mm_srai_epi16(minVal, 8);
-			maxVal2 = _mm_srai_epi16(maxVal, 8);
-			minVal = _mm_min_epu8(minVal, minVal2);
-			maxVal = _mm_max_epu8(maxVal, maxVal2);
-		}
-	}
-
-	const int8 *p8 = static_cast<const int8 *>(p);
-	while(scanlen & 15)
-	{
-		scanlen -= channels;
-		__m128i curVals = _mm_set1_epi8((*p8) ^ 0x80u);
-		p8 += channels;
-		minVal = _mm_min_epu8(minVal, curVals);
-		maxVal = _mm_max_epu8(maxVal, curVals);
-	}
-
-	smin = static_cast<int8>(_mm_cvtsi128_si32(minVal) ^ 0x80u);
-	smax = static_cast<int8>(_mm_cvtsi128_si32(maxVal) ^ 0x80u);
-}
-
-
-#endif
-
-
-std::pair<int, int> CViewSample::FindMinMax(const int8 *p, SmpLength numSamples, int numChannels)
-{
-	int minVal = 127;
-	int maxVal = -128;
-#if defined(MPT_ENABLE_ARCH_INTRINSICS_SSE2)
-	if(CPU::HasFeatureSet(CPU::feature::sse2) && CPU::HasModesEnabled(CPU::mode::xmm128sse) && numSamples >= 16)
-	{
-		sse2_findminmax8(p, numSamples, numChannels, minVal, maxVal);
-	} else
-#endif
-	{
-		while(numSamples--)
-		{
-
-			int s = *p;
-			if(s < minVal) minVal = s;
-			if(s > maxVal) maxVal = s;
-			p += numChannels;
-		}
-	}
-	return { minVal, maxVal };
-}
-
-
-std::pair<int, int> CViewSample::FindMinMax(const int16 *p, SmpLength numSamples, int numChannels)
-{
-	int minVal = 32767;
-	int maxVal = -32768;
-#if defined(MPT_ENABLE_ARCH_INTRINSICS_SSE2)
-	if(CPU::HasFeatureSet(CPU::feature::sse2) && CPU::HasModesEnabled(CPU::mode::xmm128sse) && numSamples >= 8)
-	{
-		sse2_findminmax16(p, numSamples, numChannels, minVal, maxVal);
-	} else
-#endif
-	{
-		while(numSamples--)
-		{
-			int s = *p;
-			if(s < minVal) minVal = s;
-			if(s > maxVal) maxVal = s;
-			p += numChannels;
-		}
-	}
-	return { minVal, maxVal };
-}
-
-
 // Draw one channel of zoomed-out sample data
 void CViewSample::DrawSampleData2(HDC hdc, int ymed, int cx, int cy, SmpLength len, SampleFlags uFlags, const void *pSampleData)
 {
@@ -1129,14 +941,14 @@ void CViewSample::DrawSampleData2(HDC hdc, int ymed, int cx, int cy, SmpLength l
 		if (uFlags & CHN_16BIT)
 		{
 			signed short *p = (signed short *)(psample + poshi*smplsize);
-			auto minMax = FindMinMax(p, scanlen, numChannels);
+			auto minMax = SampleEdit::FindMinMax(p, scanlen, numChannels);
 			smin = YCVT(minMax.first, 15);
 			smax = YCVT(minMax.second, 15);
 		} else
 		// 8-bit
 		{
 			const int8 *p = psample + poshi * smplsize;
-			auto minMax = FindMinMax(p, scanlen, numChannels);
+			auto minMax = SampleEdit::FindMinMax(p, scanlen, numChannels);
 			smin = YCVT(minMax.first, 7);
 			smax = YCVT(minMax.second, 7);
 		}
@@ -1572,6 +1384,48 @@ LRESULT CViewSample::OnPlayerNotify(Notification *pnotify)
 			HDC hdc = ::GetDC(m_hWnd);
 			DrawPositionMarks();	// Erase old marks...
 			m_dwNotifyPos = pnotify->pos;
+
+			if(m_nZoom != 0 && TrackerSettings::Instance().m_followSamplePlayCursor != FollowSamplePlayCursor::DoNotFollow)
+			{
+				// Scroll sample into view if it's not in the visible range
+				size_t count = 0;
+				SmpLength scrollToPos = 0;
+				bool backwards = false;
+				const auto &playChns = GetDocument()->GetSoundFile().m_PlayState.Chn;
+				for(CHANNELINDEX chn = 0; chn < MAX_CHANNELS; chn++)
+				{
+					if(m_dwNotifyPos[chn] == Notification::PosInvalid)
+						continue;
+
+					// Only update based on notes triggered by this view
+					if(!playChns[chn].isPreviewNote)
+						continue;
+					if(!ModCommand::IsNote(playChns[chn].nNewNote) || m_noteChannel[playChns[chn].nNewNote - NOTE_MIN] != chn)
+						continue;
+
+					count++;
+					if(count > 1)
+						break;
+
+					scrollToPos = m_dwNotifyPos[chn];
+					backwards = playChns[chn].dwFlags[CHN_PINGPONGFLAG];
+				}
+				if(count == 1)
+				{
+					const auto screenPos = SampleToScreen(scrollToPos);
+					const bool alwaysCenter = (TrackerSettings::Instance().m_followSamplePlayCursor == FollowSamplePlayCursor::FollowCentered);
+					if(alwaysCenter || screenPos < m_rcClient.left || screenPos >= m_rcClient.right)
+					{
+						ScrollTarget target = ScrollTarget::Left;
+						if(alwaysCenter)
+							target = ScrollTarget::Center;
+						else if(backwards)
+							target = ScrollTarget::Right;
+						ScrollToSample(scrollToPos, true, target);
+					}
+				}
+			}
+
 			DrawPositionMarks();	// ...and draw new ones
 			BitBlt(hdc, m_rcClient.left, m_rcClient.top, m_rcClient.Width(), m_rcClient.Height(), m_offScreenDC, 0, 0, SRCCOPY);
 			::ReleaseDC(m_hWnd, hdc);
@@ -2205,14 +2059,96 @@ void CViewSample::OnLButtonUp(UINT, CPoint)
 }
 
 
-void CViewSample::OnLButtonDblClk(UINT, CPoint)
+void CViewSample::OnLButtonDblClk(UINT, CPoint pt)
 {
-	CModDoc *pModDoc = GetDocument();
+	CModDoc *modDoc = GetDocument();
+	if(!modDoc)
+		return;
 
-	if (pModDoc)
+	auto &sample = modDoc->GetSoundFile().GetSample(m_nSample);
+	if(pt.y < m_timelineHeight)
 	{
-		SmpLength len = pModDoc->GetSoundFile().GetSample(m_nSample).nLength;
-		if (len && !m_dwStatus[SMPSTATUS_DRAWING]) SetCurSel(0, len);
+		const auto item = PointToItem(pt).first;
+		const char *undoName = "";
+		CString name;
+		SmpLength minVal = 0, maxVal = sample.nLength;
+		SmpLength *target = nullptr;
+		switch(item)
+		{
+		case HitTestItem::LoopStart:
+			undoName = "Set Loop Start";
+			name = _T("Loop Start");
+			target = &sample.nLoopStart;
+			if(sample.uFlags[CHN_LOOP])
+				maxVal = sample.nLoopEnd;
+			break;
+		case HitTestItem::LoopEnd:
+			undoName = "Set Loop End";
+			name = _T("Loop End");
+			if(sample.uFlags[CHN_LOOP])
+				minVal = sample.nLoopStart;
+			target = &sample.nLoopEnd;
+			break;
+		case HitTestItem::SustainStart:
+			undoName = "Set Sustain Loop Start";
+			name = _T("Sustain Loop Start");
+			target = &sample.nSustainStart;
+			if(sample.uFlags[CHN_SUSTAINLOOP])
+				maxVal = sample.nSustainEnd;
+			break;
+		case HitTestItem::SustainEnd:
+			undoName = "Set Sustain Loop End";
+			name = _T("Sustain Loop End");
+			target = &sample.nSustainEnd;
+			if(sample.uFlags[CHN_SUSTAINLOOP])
+				minVal = sample.nSustainStart;
+			break;
+		default:
+			if(IsCuePoint(item))
+			{
+				undoName = "Set Cue Point";
+				name.Format(_T("Cue Point %d"), CuePointFromItem(item) + 1);
+				target = &sample.cues[CuePointFromItem(item)];
+				maxVal = sample.nLength - 1u;
+			}
+			break;
+		}
+		
+		if(!target)
+			return;
+
+		CInputDlg dlg{this, _T("Enter new position of ") + name, static_cast<int32>(minVal), static_cast<int32>(maxVal), static_cast<int32>(*target)};
+		if(dlg.DoModal() == IDOK)
+		{
+			modDoc->GetSampleUndo().PrepareUndo(m_nSample, sundo_none, undoName);
+			*target = dlg.resultAsInt;
+			switch(item)
+			{
+			case HitTestItem::LoopStart:
+				if(!sample.uFlags[CHN_LOOP] && sample.nLoopEnd <= sample.nLoopStart)
+					sample.nLoopEnd = sample.nLength;
+				break;
+			case HitTestItem::LoopEnd:
+				if(!sample.uFlags[CHN_LOOP] && sample.nLoopEnd <= sample.nLoopStart)
+					sample.nLoopStart = 0;
+				break;
+			case HitTestItem::SustainStart:
+				if(!sample.uFlags[CHN_SUSTAINLOOP] && sample.nSustainEnd <= sample.nSustainStart)
+					sample.nSustainEnd = sample.nLength;
+				break;
+			case HitTestItem::SustainEnd:
+				if(!sample.uFlags[CHN_SUSTAINLOOP] && sample.nSustainEnd <= sample.nSustainStart)
+					sample.nSustainStart = 0;
+				break;
+			}
+			sample.PrecomputeLoops(modDoc->GetSoundFile());
+			SetModified(SampleHint().Info(), true, false);
+		}
+	} else
+	{
+		SmpLength len = sample.nLength;
+		if(len && !m_dwStatus[SMPSTATUS_DRAWING])
+			SetCurSel(0, len);
 	}
 }
 
@@ -2612,7 +2548,7 @@ void CViewSample::OnEditCopy()
 	{
 		std::pair<mpt::byte_span, mpt::IO::Offset> mf(data, 0);
 		mpt::IO::OFile<std::pair<mpt::byte_span, mpt::IO::Offset>> ff(mf);
-		WAVWriter file(ff);
+		WAVSampleWriter file(ff);
 
 		// Write sample format
 		file.WriteFormat(sample.GetSampleRate(sndFile.GetType()), sample.GetElementarySampleSize() * 8, sample.GetNumChannels(), WAVFormatChunk::fmtPCM);
@@ -2620,7 +2556,7 @@ void CViewSample::OnEditCopy()
 		// Write sample data
 		file.StartChunk(RIFFChunk::iddata);
 		
-		uint8 *sampleData = mpt::byte_cast<uint8 *>(data.data()) + file.GetPosition();
+		uint8 *sampleData = mpt::byte_cast<uint8 *>(data.data()) + ff.TellWrite();
 		memcpy(sampleData, sample.sampleb() + smpOffset, smpSize);
 		if(sample.GetElementarySampleSize() == 1)
 		{
@@ -2630,8 +2566,7 @@ void CViewSample::OnEditCopy()
 				*(sampleData++) ^= 0x80u;
 			}
 		}
-		
-		file.Skip(smpSize);
+		ff.SeekRelative(smpSize);
 
 		if(addLoopInfo)
 		{
@@ -2640,7 +2575,10 @@ void CViewSample::OnEditCopy()
 		}
 		file.WriteExtraInformation(sample, sndFile.GetType(), sndFile.GetSampleName(m_nSample));
 
-		file.Finalize();
+		mpt::IO::Offset totalSize = file.Finalize();
+		MPT_ASSERT(totalSize <= static_cast<mpt::IO::Offset>(memSize));
+		MPT_UNUSED_VARIABLE(totalSize);
+
 		clipboard.Close();
 	}
 	EndWaitCursor();
@@ -3080,7 +3018,7 @@ void CViewSample::PlayNote(ModCommand::NOTE note, const SmpLength nStartPos, int
 		} else
 		{
 			if(m_dwStatus[SMPSTATUS_KEYDOWN])
-				pModDoc->NoteOff(note, true, m_noteChannel[note - NOTE_MIN]);
+				pModDoc->NoteOff(note, true, INSTRUMENTINDEX_INVALID, m_noteChannel[note - NOTE_MIN]);
 			else
 				pModDoc->NoteOff(0, true);
 
@@ -3218,7 +3156,7 @@ BOOL CViewSample::OnDragonDrop(BOOL doDrop, const DRAGONDROP *dropInfo)
 				if (dropInfo->dropItem & 0x80)
 				{
 					UINT key = dropInfo->dropItem & 0x7F;
-					pDlsIns = dlsbank.FindInstrument(TRUE, 0xFFFF, 0xFF, key, &nIns);
+					pDlsIns = dlsbank.FindInstrument(true, 0xFFFF, 0xFF, key, &nIns);
 					if(pDlsIns)
 					{
 						nRgn = dlsbank.GetRegionFromKey(nIns, key);
@@ -3229,7 +3167,7 @@ BOOL CViewSample::OnDragonDrop(BOOL doDrop, const DRAGONDROP *dropInfo)
 				} else
 				// Melodic
 				{
-					pDlsIns = dlsbank.FindInstrument(FALSE, 0xFFFF, dropInfo->dropItem, 60, &nIns);
+					pDlsIns = dlsbank.FindInstrument(false, 0xFFFF, dropInfo->dropItem, 60, &nIns);
 					if (pDlsIns) nRgn = dlsbank.GetRegionFromKey(nIns, 60);
 				}
 				canDrop = FALSE;
@@ -3741,6 +3679,23 @@ LRESULT CViewSample::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		// Those don't seem to work.
 		case kcNoteOff:			PlayNote(NOTE_KEYOFF); return wParam;
 		case kcNoteCut:			PlayNote(NOTE_NOTECUT); return wParam;
+
+		case kcSampleToggleFollowPlayCursor:
+			TrackerSettings::Instance().m_followSamplePlayCursor = static_cast<FollowSamplePlayCursor>(
+				(static_cast<int>(TrackerSettings::Instance().m_followSamplePlayCursor.Get()) + 1) % int(FollowSamplePlayCursor::MaxOptions));
+			switch(TrackerSettings::Instance().m_followSamplePlayCursor.Get())
+			{
+			case FollowSamplePlayCursor::DoNotFollow:
+				CMainFrame::GetMainFrame()->SetHelpText(_T("Follow Sample Play Cursor: Do not follow"));
+				break;
+			case FollowSamplePlayCursor::Follow:
+				CMainFrame::GetMainFrame()->SetHelpText(_T("Follow Sample Play Cursor: Follow"));
+				break;
+			case FollowSamplePlayCursor::FollowCentered:
+				CMainFrame::GetMainFrame()->SetHelpText(_T("Follow Sample Play Cursor: Follow centered"));
+				break;
+			}
+			return wParam;
 	}
 
 	if(wParam >= kcSampStartNotes && wParam <= kcSampEndNotes)

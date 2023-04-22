@@ -27,11 +27,13 @@
 
 #include "mpt/audio/span.hpp"
 #include "mpt/base/algorithm.hpp"
+#include "mpt/base/detect.hpp"
 #include "mpt/base/saturate_cast.hpp"
 #include "mpt/base/saturate_round.hpp"
 #include "mpt/format/default_integer.hpp"
 #include "mpt/format/default_floatingpoint.hpp"
 #include "mpt/format/default_string.hpp"
+#include "mpt/format/join.hpp"
 #include "mpt/io_read/callbackstream.hpp"
 #include "mpt/io_read/filecursor_callbackstream.hpp"
 #include "mpt/io_read/filecursor_memory.hpp"
@@ -59,17 +61,9 @@ OPENMPT_NAMESPACE_BEGIN
 
 #if !defined(MPT_BUILD_SILENCE_LIBOPENMPT_CONFIGURATION_WARNINGS)
 
-#if MPT_OS_WINDOWS && MPT_OS_WINDOWS_WINRT
-#if defined(NTDDI_VERSION)
-#if (NTDDI_VERSION < 0x06020000)
+#if MPT_WINRT_BEFORE(MPT_WIN_8)
 MPT_WARNING("Warning: libopenmpt for WinRT is built with reduced functionality. Please #define NTDDI_VERSION 0x0602000.")
-#endif
-#elif defined(_WIN32_WINNT)
-#if (_WIN32_WINNT < 0x0602)
-MPT_WARNING("Warning: libopenmpt for WinRT is built with reduced functionality. Please #define _WIN32_WINNT 0x0602.")
-#endif // _WIN32_WINNT
-#endif // _WIN32_WINNT
-#endif // MPT_OS_WINDOWS && MPT_OS_WINDOWS_WINRT
+#endif // MPT_WINRT_BEFORE(MPT_WIN_8)
 
 #if MPT_PLATFORM_MULTITHREADED && MPT_MUTEX_NONE
 MPT_WARNING("Warning: libopenmpt built in non thread-safe mode because mutexes are not supported by the C++ standard library available.")
@@ -90,11 +84,11 @@ MPT_WARNING("Warning: libopenmpt is known to trigger bad code generation with Cl
 MPT_NOINLINE void AssertHandler(const mpt::source_location &loc, const char *expr, const char *msg) {
 	if(msg) {
 		mpt::log::GlobalLogger().SendLogMessage(loc, LogError, "ASSERT",
-			MPT_USTRING("ASSERTION FAILED: ") + mpt::ToUnicode(mpt::CharsetSource, msg) + MPT_USTRING(" (") + mpt::ToUnicode(mpt::CharsetSource, expr) + MPT_USTRING(")")
+			MPT_USTRING("ASSERTION FAILED: ") + mpt::transcode<mpt::ustring>(mpt::source_encoding, msg) + MPT_USTRING(" (") + mpt::transcode<mpt::ustring>(mpt::source_encoding, expr) + MPT_USTRING(")")
 			);
 	} else {
 		mpt::log::GlobalLogger().SendLogMessage(loc, LogError, "ASSERT",
-			MPT_USTRING("ASSERTION FAILED: ") + mpt::ToUnicode(mpt::CharsetSource, expr)
+			MPT_USTRING("ASSERTION FAILED: ") + mpt::transcode<mpt::ustring>(mpt::source_encoding, expr)
 			);
 	}
 	#if defined(MPT_BUILD_FATAL_ASSERTS)
@@ -145,7 +139,7 @@ static std::string get_library_version_string() {
 	}
 	if ( !fields.empty() ) {
 		str += "+";
-		str += OpenMPT::mpt::String::Combine( fields, std::string(".") );
+		str += OpenMPT::mpt::join_format( fields, std::string(".") );
 	}
 	return str;
 }
@@ -948,7 +942,7 @@ std::int32_t module_impl::get_render_param( int param ) const {
 void module_impl::set_render_param( int param, std::int32_t value ) {
 	switch ( param ) {
 		case module::RENDER_MASTERGAIN_MILLIBEL: {
-			m_Gain = static_cast<float>( std::pow( 10.0f, value * 0.001f * 0.5f ) );
+			m_Gain = std::pow( 10.0f, static_cast<float>( value ) * 0.001f * 0.5f );
 		} break;
 		case module::RENDER_STEREOSEPARATION_PERCENT: {
 			std::int32_t newvalue = value * OpenMPT::MixerSettings::StereoSeparationScale / 100;
@@ -1069,7 +1063,7 @@ std::size_t module_impl::read_interleaved_quad( std::int32_t samplerate, std::si
 
 
 double module_impl::get_duration_seconds() const {
-	std::unique_ptr<subsongs_type> subsongs_temp = has_subsongs_inited() ?  std::unique_ptr<subsongs_type>() : std::make_unique<subsongs_type>( get_subsongs() );
+	std::unique_ptr<subsongs_type> subsongs_temp = has_subsongs_inited() ? std::unique_ptr<subsongs_type>() : std::make_unique<subsongs_type>( get_subsongs() );
 	const subsongs_type & subsongs = has_subsongs_inited() ? m_subsongs : *subsongs_temp;
 	if ( m_current_subsong == all_subsongs ) {
 		// Play all subsongs consecutively.
@@ -1082,7 +1076,7 @@ double module_impl::get_duration_seconds() const {
 	return subsongs[m_current_subsong].duration;
 }
 void module_impl::select_subsong( std::int32_t subsong ) {
-	std::unique_ptr<subsongs_type> subsongs_temp = has_subsongs_inited() ?  std::unique_ptr<subsongs_type>() : std::make_unique<subsongs_type>( get_subsongs() );
+	std::unique_ptr<subsongs_type> subsongs_temp = has_subsongs_inited() ? std::unique_ptr<subsongs_type>() : std::make_unique<subsongs_type>( get_subsongs() );
 	const subsongs_type & subsongs = has_subsongs_inited() ? m_subsongs : *subsongs_temp;
 	if ( subsong != all_subsongs && ( subsong < 0 || subsong >= static_cast<std::int32_t>( subsongs.size() ) ) ) {
 		throw openmpt::exception("invalid subsong");
@@ -1109,7 +1103,7 @@ double module_impl::get_position_seconds() const {
 	return m_currentPositionSeconds;
 }
 double module_impl::set_position_seconds( double seconds ) {
-	std::unique_ptr<subsongs_type> subsongs_temp = has_subsongs_inited() ?  std::unique_ptr<subsongs_type>() : std::make_unique<subsongs_type>( get_subsongs() );
+	std::unique_ptr<subsongs_type> subsongs_temp = has_subsongs_inited() ? std::unique_ptr<subsongs_type>() : std::make_unique<subsongs_type>( get_subsongs() );
 	const subsongs_type & subsongs = has_subsongs_inited() ? m_subsongs : *subsongs_temp;
 	const subsong_data * subsong = 0;
 	double base_seconds = 0.0;
@@ -1369,7 +1363,7 @@ float module_impl::get_current_channel_vu_rear_right( std::int32_t channel ) con
 }
 
 std::int32_t module_impl::get_num_subsongs() const {
-	std::unique_ptr<subsongs_type> subsongs_temp = has_subsongs_inited() ?  std::unique_ptr<subsongs_type>() : std::make_unique<subsongs_type>( get_subsongs() );
+	std::unique_ptr<subsongs_type> subsongs_temp = has_subsongs_inited() ? std::unique_ptr<subsongs_type>() : std::make_unique<subsongs_type>( get_subsongs() );
 	const subsongs_type & subsongs = has_subsongs_inited() ? m_subsongs : *subsongs_temp;
 	return static_cast<std::int32_t>( subsongs.size() );
 }
@@ -1391,7 +1385,7 @@ std::int32_t module_impl::get_num_samples() const {
 
 std::vector<std::string> module_impl::get_subsong_names() const {
 	std::vector<std::string> retval;
-	std::unique_ptr<subsongs_type> subsongs_temp = has_subsongs_inited() ?  std::unique_ptr<subsongs_type>() : std::make_unique<subsongs_type>( get_subsongs() );
+	std::unique_ptr<subsongs_type> subsongs_temp = has_subsongs_inited() ? std::unique_ptr<subsongs_type>() : std::make_unique<subsongs_type>( get_subsongs() );
 	const subsongs_type & subsongs = has_subsongs_inited() ? m_subsongs : *subsongs_temp;
 	retval.reserve( subsongs.size() );
 	for ( const auto & subsong : subsongs ) {
@@ -1923,13 +1917,13 @@ void module_impl::ctl_set( std::string ctl, const std::string & value, bool thro
 	}
 	switch ( found_ctl->type ) {
 		case ctl_type::boolean:
-			ctl_set_boolean( ctl, mpt::ConvertStringTo<bool>( value ), throw_if_unknown );
+			ctl_set_boolean( ctl, mpt::parse<bool>( value ), throw_if_unknown );
 			break;
 		case ctl_type::integer:
-			ctl_set_integer( ctl, mpt::ConvertStringTo<std::int64_t>( value ), throw_if_unknown );
+			ctl_set_integer( ctl, mpt::parse<std::int64_t>( value ), throw_if_unknown );
 			break;
 		case ctl_type::floatingpoint:
-			ctl_set_floatingpoint( ctl, mpt::ConvertStringTo<double>( value ), throw_if_unknown );
+			ctl_set_floatingpoint( ctl, mpt::parse<double>( value ), throw_if_unknown );
 			break;
 		case ctl_type::text:
 			ctl_set_text( ctl, value, throw_if_unknown );

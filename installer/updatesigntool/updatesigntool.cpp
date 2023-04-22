@@ -5,7 +5,7 @@
 #include "mpt/crypto/hash.hpp"
 #include "mpt/crypto/jwk.hpp"
 #include "mpt/environment/environment.hpp"
-#include "mpt/exception_text/exception_text.hpp"
+#include "mpt/exception/exception_text.hpp"
 #include "mpt/io/base.hpp"
 #include "mpt/io/io.hpp"
 #include "mpt/io/io_stdstream.hpp"
@@ -17,6 +17,7 @@
 #include "mpt/uuid/uuid.hpp"
 #include "mpt/uuid_namespace/uuid_namespace.hpp"
 
+#include "../common/mptAssert.h"
 #include "../common/mptBaseMacros.h"
 #include "../common/mptBaseTypes.h"
 #include "../common/mptBaseUtils.h"
@@ -24,7 +25,6 @@
 #include "../common/mptPathString.h"
 #include "../common/mptFileIO.h"
 #include "../common/Logging.h"
-#include "../common/misc_util.h"
 
 #include <exception>
 #include <iostream>

@@ -23,6 +23,9 @@
 #include "../sounddsp/EQ.h"
 #include "../sounddsp/DSP.h"
 #include "../sounddsp/Reverb.h"
+#include "mpt/format/join.hpp"
+#include "mpt/parse/parse.hpp"
+#include "mpt/parse/split.hpp"
 #include "openmpt/sounddevice/SoundDevice.hpp"
 #include "StreamEncoderSettings.h"
 #include "Settings.h"
@@ -238,6 +241,15 @@ enum SampleEditorDefaultFormat
 	dfWAV,
 	dfRAW,
 	dfS3I,
+	dfIFF,
+};
+
+enum class FollowSamplePlayCursor
+{
+	DoNotFollow = 0,
+	Follow,
+	FollowCentered,
+	MaxOptions
 };
 
 enum class TimelineFormat
@@ -293,6 +305,9 @@ template<> inline RecordAftertouchOptions FromSettingValue(const SettingValue &v
 template<> inline SettingValue ToSettingValue(const SampleEditorKeyBehaviour &val) { return SettingValue(int32(val)); }
 template<> inline SampleEditorKeyBehaviour FromSettingValue(const SettingValue &val) { return SampleEditorKeyBehaviour(val.as<int32>()); }
 
+template<> inline SettingValue ToSettingValue(const FollowSamplePlayCursor &val) { return SettingValue(int32(val)); }
+template<> inline FollowSamplePlayCursor FromSettingValue(const SettingValue& val) { return FollowSamplePlayCursor(val.as<int32>()); }
+
 template<> inline SettingValue ToSettingValue(const TimelineFormat &val) { return SettingValue(int32(val)); }
 template<> inline TimelineFormat FromSettingValue(const SettingValue &val) { return TimelineFormat(val.as<int32>()); }
 
@@ -316,11 +331,11 @@ template<> inline PlugVolumeHandling FromSettingValue(const SettingValue &val)
 	return static_cast<PlugVolumeHandling>(val.as<int32>());
 }
 
-template<> inline SettingValue ToSettingValue(const std::vector<uint32> &val) { return mpt::String::Combine(val, U_(",")); }
-template<> inline std::vector<uint32> FromSettingValue(const SettingValue &val) { return mpt::String::Split<uint32>(val, U_(",")); }
+template<> inline SettingValue ToSettingValue(const std::vector<uint32> &val) { return mpt::join_format(val, U_(",")); }
+template<> inline std::vector<uint32> FromSettingValue(const SettingValue &val) { return mpt::split_parse<uint32>(val.as<mpt::ustring>(), U_(",")); }
 
-template<> inline SettingValue ToSettingValue(const std::vector<mpt::ustring> &val) { return mpt::String::Combine(val, U_(";")); }
-template<> inline std::vector<mpt::ustring> FromSettingValue(const SettingValue &val) { return mpt::String::Split<mpt::ustring>(val, U_(";")); }
+template<> inline SettingValue ToSettingValue(const std::vector<mpt::ustring> &val) { return mpt::join_format(val, U_(";")); }
+template<> inline std::vector<mpt::ustring> FromSettingValue(const SettingValue &val) { return mpt::split(val.as<mpt::ustring>(), U_(";")); }
 
 template<> inline SettingValue ToSettingValue(const SampleFormat &val) { return SettingValue(SampleFormat::ToInt(val)); }
 template<> inline SampleFormat FromSettingValue(const SettingValue &val) { return SampleFormat::FromInt(val.as<int32>()); }
@@ -365,6 +380,9 @@ template<> inline SettingValue ToSettingValue(const SampleEditorDefaultFormat &v
 	case dfS3I:
 		format = U_("s3i");
 		break;
+	case dfIFF:
+		format = U_("iff");
+		break;
 	}
 	return SettingValue(format);
 }
@@ -377,6 +395,8 @@ template<> inline SampleEditorDefaultFormat FromSettingValue(const SettingValue 
 		return dfRAW;
 	if(format == U_("s3i"))
 		return dfS3I;
+	if(format == U_("iff"))
+		return dfIFF;
 	else  // if(format == U_("flac"))
 		return dfFLAC;
 }
@@ -476,7 +496,7 @@ template<> inline SettingValue ToSettingValue(const mpt::Date::Unix &val)
 template<> inline mpt::Date::Unix FromSettingValue(const SettingValue &val)
 {
 	MPT_ASSERT(val.GetTypeTag() == "UnixTime");
-	return mpt::Date::UnixFromSeconds(mpt::ConvertStringTo<int64>(val.as<mpt::ustring>()));
+	return mpt::Date::UnixFromSeconds(mpt::parse<int64>(val.as<mpt::ustring>()));
 }
 
 struct FontSetting
@@ -517,14 +537,14 @@ template<> inline FontSetting FromSettingValue(const SettingValue &val)
 	std::size_t sizeStart = setting.name.rfind(UC_(','));
 	if(sizeStart != std::string::npos)
 	{
-		const std::vector<mpt::ustring> fields = mpt::String::Split<mpt::ustring>(setting.name.substr(sizeStart + 1), U_("|"));
+		const std::vector<mpt::ustring> fields = mpt::split(setting.name.substr(sizeStart + 1), U_("|"));
 		if(fields.size() >= 1)
 		{
-			setting.size = ConvertStrTo<int32>(fields[0]);
+			setting.size = mpt::parse<int32>(fields[0]);
 		}
 		if(fields.size() >= 2)
 		{
-			setting.flags = static_cast<FontSetting::FontFlags>(ConvertStrTo<int32>(fields[1]));
+			setting.flags = static_cast<FontSetting::FontFlags>(mpt::parse<int32>(fields[1]));
 		}
 		setting.name.resize(sizeStart);
 	}
@@ -604,7 +624,7 @@ namespace SoundDevice
 {
 namespace Legacy
 {
-typedef uint16 ID;
+using ID = uint16;
 inline constexpr SoundDevice::Legacy::ID MaskType = 0xff00;
 inline constexpr SoundDevice::Legacy::ID MaskIndex = 0x00ff;
 inline constexpr int ShiftType = 8;
@@ -782,6 +802,7 @@ public:
 	Setting<SampleUndoBufferSize> m_SampleUndoBufferSize;
 	Setting<SampleEditorKeyBehaviour> sampleEditorKeyBehaviour;
 	Setting<SampleEditorDefaultFormat> m_defaultSampleFormat;
+	CachedSetting<FollowSamplePlayCursor> m_followSamplePlayCursor;
 	Setting<TimelineFormat> sampleEditorTimelineFormat;
 	Setting<ResamplingMode> sampleEditorDefaultResampler;
 	Setting<int32> m_nFinetuneStep;	// Increment finetune by x cents when using spin control.

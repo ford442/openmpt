@@ -46,7 +46,7 @@ void CViewPattern::OnEditFind()
 	{
 		CSoundFile &sndFile = pModDoc->GetSoundFile();
 		FindReplace settings = FindReplace::instance;
-		ModCommand m = ModCommand::Empty();
+		ModCommand m{};
 		if(m_Selection.GetUpperLeft() != m_Selection.GetLowerRight())
 		{
 			settings.findFlags.set(FindReplace::InPatSelection);
@@ -556,7 +556,7 @@ EndSearch:
 				result.AppendFormat(_T("-%02d"), FindReplace::instance.findVolumeMax);
 		} else if(!FindReplace::instance.findFlags[FindReplace::PCParam])
 		{
-			result.AppendFormat(_T("??"));
+			result.Append(_T("??"));
 		}
 		result.AppendChar(_T(' '));
 
@@ -585,7 +585,7 @@ EndSearch:
 				result.AppendFormat(_T("-%02X"), FindReplace::instance.findParamMax);
 		} else if(!FindReplace::instance.findFlags[FindReplace::PCValue])
 		{
-			result.AppendFormat(_T("??"));
+			result.Append(_T("??"));
 		}
 
 		result.AppendChar(_T('"'));

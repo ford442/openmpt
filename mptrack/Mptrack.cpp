@@ -41,6 +41,7 @@
 #include "../misc/mptOS.h"
 #include "mpt/arch/arch.hpp"
 #include "mpt/fs/fs.hpp"
+#include "mpt/string/utility.hpp"
 #if MPT_MSVC_AT_LEAST(2022, 2) && MPT_MSVC_BEFORE(2022, 3)
 // Work-around <https://developercommunity.visualstudio.com/t/warning-C4311-in-MFC-header-afxrecovery/10041328>,
 // see <https://developercommunity.visualstudio.com/t/Compiler-warnings-after-upgrading-to-17/10036311#T-N10061908>.
@@ -360,8 +361,7 @@ void CTrackApp::ImportMidiConfig(const mpt::PathString &filename, bool hideWarni
 				{
 					uint32 prog = (ins < 128) ? ins : 0xFF;
 					uint32 key = (ins < 128) ? 0xFF : ins & 0x7F;
-					uint32 bank = (ins < 128) ? 0 : F_INSTRUMENT_DRUMS;
-					if (dlsbank.FindInstrument(ins >= 128, bank, prog, key))
+					if(dlsbank.FindInstrument(ins >= 128, 0xFFFF, prog, key))
 					{
 						midiLibrary[ins] = filename;
 					}
@@ -693,6 +693,17 @@ public:
 		return bRet;
 	}
 
+	BOOL ReopenPreviousDocuments() override
+	{
+		// In case no previously open documents are to be re-opened,
+		// MFC RestartManager integration assumes the default action to be
+		// opening a new empty document (see CWinApp::ProcessShellCommand()
+		// and CWinApp::RestartInstance().
+		// We do not want that, so we always return TRUE.
+		CDataRecoveryHandler::ReopenPreviousDocuments();
+		return TRUE;
+	}
+
 	BOOL ReadOpenDocumentList() override
 	{
 		BOOL bRet = FALSE;  // return TRUE only if at least one document was found
@@ -720,7 +731,15 @@ public:
 
 		DeleteFile((theApp.GetConfigPath() + P_("restart.") + mpt::PathString::FromCString(GetRestartIdentifier()) + P_(".ini")).AsNative().c_str());
 
-		return bRet;
+		// In case no previously open documents are found,
+		// MFC RestartManager integration assumes the default action to be
+		// opening a new empty document (see CWinApp::RestartInstance() and
+		// after the call to RestartInstance()).
+		// We do not want that, so we always return TRUE.
+		
+		// return bRet;
+		return TRUE;
+
 	}
 
 };
@@ -869,7 +888,7 @@ void CTrackApp::SetupPaths(bool overridePortable)
 	bool modeMultiArch = false;
 	bool modeSourceProject = false;
 	const mpt::PathString exePath = mpt::common_directories::get_application_directory();
-	auto exePathComponents = mpt::String::Split<mpt::ustring>(exePath.GetDirectory().WithoutTrailingSlash().ToUnicode(), P_("\\").ToUnicode());
+	auto exePathComponents = mpt::split(exePath.GetDirectory().WithoutTrailingSlash().ToUnicode(), P_("\\").ToUnicode());
 	if(exePathComponents.size() >= 2)
 	{
 		if(exePathComponents[exePathComponents.size()-1] == mpt::OS::Windows::Name(mpt::OS::Windows::GetProcessArchitecture()))
@@ -985,7 +1004,6 @@ void CTrackApp::CreatePaths()
 
 	if(!IsPortableMode())
 	{
-
 		// Move the config files if they're still in the old place.
 		MoveConfigFile(P_("mptrack.ini"));
 		MoveConfigFile(P_("plugin.cache"));
@@ -1009,7 +1027,6 @@ void CTrackApp::CreatePaths()
 			FindClose(hFind);
 			RemoveDirectory(oldTunings.AsNative().c_str());
 		}
-
 	}
 
 }
@@ -2060,6 +2077,26 @@ CString GetWindowTextString(const CWnd &wnd)
 mpt::ustring GetWindowTextUnicode(const CWnd &wnd)
 {
 	return mpt::ToUnicode(GetWindowTextString(wnd));
+}
+
+
+CString FormatFileSize(uint64 fileSize)
+{
+	static constexpr std::array<const TCHAR *, 4> Unit = {_T(" B"), _T(" KB"), _T(" MB"), _T(" GB")};
+	double size = static_cast<double>(fileSize);
+	for(int i = 0; i < 4; i++)
+	{
+		if(size < 1024.0 || i == 3)
+		{
+			// Variable-length formatting may decide on a whim to switch to scientific formatting, so used a fixed width and trim manually...
+			CString s = mpt::cfmt::fix(size, 2);
+			if(i == 0)
+				s.TrimRight(_T("0."));
+			return s + Unit[i];
+		}
+		size /= 1024.0;
+	}
+	return _T("");
 }
 
 

@@ -61,6 +61,19 @@
 			end
 		elseif mykind == "Console" then
 			kind "ConsoleApp"
+			if _OPTIONS["windows-version"] == "win10" then
+				files {
+					"../../build/vs/win10.manifest",
+				}
+			elseif  _OPTIONS["windows-version"] == "win81" then
+				files {
+					"../../build/vs/win81.manifest",
+				}
+			elseif  _OPTIONS["windows-version"] == "win7" then
+				files {
+					"../../build/vs/win7.manifest",
+				}
+			end
 		else
 			-- nothing
 		end
@@ -231,6 +244,12 @@
 		end
 	 runtime "Release"
    optimize "On"
+		if not _OPTIONS["clang"] then
+			if _ACTION >= "vs2022" then
+				buildoptions { "/Gw" }
+				buildoptions { "/Zc:checkGwOdr" }
+			end
+		end
 	 omitframepointer "Off"
 
   filter { "configurations:CheckedShared" }
@@ -239,6 +258,12 @@
    symbols "On"
 	 runtime "Release"
    optimize "On"
+		if not _OPTIONS["clang"] then
+			if _ACTION >= "vs2022" then
+				buildoptions { "/Gw" }
+				buildoptions { "/Zc:checkGwOdr" }
+			end
+		end
 	 omitframepointer "Off"
 
 	 
@@ -247,6 +272,10 @@
    symbols "On"
 		if not _OPTIONS["clang"] then
 			flags { "LinkTimeOptimization" }
+			if _ACTION >= "vs2022" then
+				buildoptions { "/Gw" }
+				buildoptions { "/Zc:checkGwOdr" }
+			end
 		end
 		if _OPTIONS["windows-family"] ~= "uwp" then
 			staticruntime "On"
@@ -259,6 +288,10 @@
    symbols "On"
 		if not _OPTIONS["clang"] then
 			flags { "LinkTimeOptimization" }
+			if _ACTION >= "vs2022" then
+				buildoptions { "/Gw" }
+				buildoptions { "/Zc:checkGwOdr" }
+			end
 		end
 	 runtime "Release"
    optimize "Speed"
@@ -341,16 +374,16 @@
 		defines { "_WIN32_WINNT=0x0A00" }
 		filter {}
 		filter { "architecture:x86" }
-			defines { "NTDDI_VERSION=0x0A000009" } -- Windows 10 20H2 Build 19042 (really 20H1, because 20H2 has no dedicated SDK version)
+			defines { "NTDDI_VERSION=0x0A00000A" } -- Windows 10 21H2 Build 19044
 		filter {}
 		filter { "architecture:x86_64" }
-			defines { "NTDDI_VERSION=0x0A000009" } -- Windows 10 20H2 Build 19042 (really 20H1, because 20H2 has no dedicated SDK version)
+			defines { "NTDDI_VERSION=0x0A00000A" } -- Windows 10 21H2 Build 19044
 		filter {}
 		filter { "architecture:ARM" }
-			defines { "NTDDI_VERSION=0x0A000009" } -- Windows 10 20H2 Build 19042 (really 20H1, because 20H2 has no dedicated SDK version)
+			defines { "NTDDI_VERSION=0x0A00000A" } -- Windows 10 21H2 Build 19044
 		filter {}
 		filter { "architecture:ARM64" }
-			defines { "NTDDI_VERSION=0x0A000009" } -- Windows 10 20H2 Build 19042 (really 20H1, because 20H2 has no dedicated SDK version)
+			defines { "NTDDI_VERSION=0x0A00000A" } -- Windows 10 21H2 Build 19044
 		filter {}
 	elseif _OPTIONS["windows-version"] == "win81" then
 		filter {}
@@ -366,10 +399,10 @@
 		filter {}
 		filter { "architecture:x86" }
 			defines { "_WIN32_WINNT=0x0501" }
-			defines { "NTDDI_VERSION=0x05010100" } -- Windows XP SP1
+			defines { "NTDDI_VERSION=0x05010300" } -- Windows XP SP3
 		filter { "architecture:x86_64" }
 			defines { "_WIN32_WINNT=0x0502" }
-			defines { "NTDDI_VERSION=0x05020000" } -- Windows XP x64
+			defines { "NTDDI_VERSION=0x05020200" } -- Windows XP x64 SP2
 		filter {}
 	end
 

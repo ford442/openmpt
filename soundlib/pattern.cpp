@@ -23,28 +23,27 @@
 OPENMPT_NAMESPACE_BEGIN
 
 
-CSoundFile& CPattern::GetSoundFile() { return m_rPatternContainer.GetSoundFile(); }
-const CSoundFile& CPattern::GetSoundFile() const { return m_rPatternContainer.GetSoundFile(); }
+CSoundFile& CPattern::GetSoundFile() noexcept { return m_rPatternContainer.GetSoundFile(); }
+const CSoundFile& CPattern::GetSoundFile() const noexcept { return m_rPatternContainer.GetSoundFile(); }
 
 
-CHANNELINDEX CPattern::GetNumChannels() const
+CHANNELINDEX CPattern::GetNumChannels() const noexcept
 {
 	return GetSoundFile().GetNumChannels();
 }
 
 
 // Check if there is any note data on a given row.
-bool CPattern::IsEmptyRow(ROWINDEX row) const
+bool CPattern::IsEmptyRow(ROWINDEX row) const noexcept
 {
 	if(m_ModCommands.empty() || !IsValidRow(row))
 	{
 		return true;
 	}
 
-	PatternRow data = GetRow(row);
-	for(CHANNELINDEX chn = 0; chn < GetNumChannels(); chn++, data++)
+	for(const auto &m : GetRow(row))
 	{
-		if(!data->IsEmpty())
+		if(!m.IsEmpty())
 		{
 			return false;
 		}
@@ -53,7 +52,7 @@ bool CPattern::IsEmptyRow(ROWINDEX row) const
 }
 
 
-bool CPattern::SetSignature(const ROWINDEX rowsPerBeat, const ROWINDEX rowsPerMeasure)
+bool CPattern::SetSignature(const ROWINDEX rowsPerBeat, const ROWINDEX rowsPerMeasure) noexcept
 {
 	if(rowsPerBeat < 1
 		|| rowsPerBeat > GetSoundFile().GetModSpecifications().patternRowsMax
@@ -88,7 +87,7 @@ bool CPattern::Resize(const ROWINDEX newRowCount, bool enforceFormatLimits, bool
 		size_t count = ((newRowCount > m_Rows) ? (newRowCount - m_Rows) : (m_Rows - newRowCount)) * GetNumChannels();
 
 		if(newRowCount > m_Rows)
-			m_ModCommands.insert(resizeAtEnd ? m_ModCommands.end() : m_ModCommands.begin(), count, ModCommand::Empty());
+			m_ModCommands.insert(resizeAtEnd ? m_ModCommands.end() : m_ModCommands.begin(), count, ModCommand{});
 		else if(resizeAtEnd)
 			m_ModCommands.erase(m_ModCommands.end() - count, m_ModCommands.end());
 		else
@@ -104,9 +103,9 @@ bool CPattern::Resize(const ROWINDEX newRowCount, bool enforceFormatLimits, bool
 }
 
 
-void CPattern::ClearCommands()
+void CPattern::ClearCommands() noexcept
 {
-	std::fill(m_ModCommands.begin(), m_ModCommands.end(), ModCommand::Empty());
+	std::fill(m_ModCommands.begin(), m_ModCommands.end(), ModCommand{});
 }
 
 
@@ -124,7 +123,7 @@ bool CPattern::AllocatePattern(ROWINDEX rows)
 	} else
 	{
 		// Do this in two steps in order to keep the old pattern data in case of OOM
-		decltype(m_ModCommands) newPattern(newSize, ModCommand::Empty());
+		decltype(m_ModCommands) newPattern(newSize, ModCommand{});
 		m_ModCommands = std::move(newPattern);
 	}
 	m_Rows = rows;
@@ -142,18 +141,29 @@ void CPattern::Deallocate()
 
 CPattern& CPattern::operator= (const CPattern &pat)
 {
+	if(GetNumChannels() != pat.GetNumChannels())
+		return *this;
+
 	m_ModCommands = pat.m_ModCommands;
 	m_Rows = pat.m_Rows;
 	m_RowsPerBeat = pat.m_RowsPerBeat;
 	m_RowsPerMeasure = pat.m_RowsPerMeasure;
 	m_tempoSwing = pat.m_tempoSwing;
 	m_PatternName = pat.m_PatternName;
+
+	if(GetSoundFile().GetType() != pat.GetSoundFile().GetType())
+	{
+		for(ModCommand &m : m_ModCommands)
+		{
+			m.Convert(GetSoundFile().GetType(), pat.GetSoundFile().GetType(), GetSoundFile());
+		}
+	}
 	return *this;
 }
 
 
 
-bool CPattern::operator== (const CPattern &other) const
+bool CPattern::operator== (const CPattern &other) const noexcept
 {
 	return GetNumRows() == other.GetNumRows()
 		&& GetNumChannels() == other.GetNumChannels()
@@ -181,7 +191,7 @@ bool CPattern::Expand()
 	decltype(m_ModCommands) newPattern;
 	try
 	{
-		newPattern.assign(m_ModCommands.size() * 2, ModCommand::Empty());
+		newPattern.assign(m_ModCommands.size() * 2, ModCommand{});
 	} catch(mpt::out_of_memory e)
 	{
 		mpt::delete_out_of_memory(e);
@@ -213,9 +223,9 @@ bool CPattern::Shrink()
 
 	for(ROWINDEX y = 0; y < m_Rows; y++)
 	{
-		const PatternRow srcRow = GetRow(y * 2);
-		const PatternRow nextSrcRow = GetRow(y * 2 + 1);
-		PatternRow destRow = GetRow(y);
+		const auto srcRow = GetRow(y * 2);
+		const auto nextSrcRow = GetRow(y * 2 + 1);
+		auto destRow = GetRow(y);
 
 		for(CHANNELINDEX x = 0; x < nChns; x++)
 		{
@@ -358,9 +368,9 @@ bool CPattern::WriteEffect(EffectWriter &settings)
 					m->command = settings.m_command;
 
 					if(isS3M)
-						m->vol = (m->param + 1u) / 2u;
+						m->vol = static_cast<uint8>((m->param + 1u) / 2u);
 					else
-						m->vol = (m->param + 2u) / 4u;
+						m->vol = static_cast<uint8>((m->param + 2u) / 4u);
 
 					m->param = settings.m_param;
 					return true;
@@ -615,7 +625,7 @@ void ReadData(std::istream& iStrm, CPattern& pat, const size_t)
 			mpt::IO::ReadIntLE<uint8>(iStrm, diffmask);
 		uint8 temp = 0;
 
-		ModCommand dummy = ModCommand::Empty();
+		ModCommand dummy{};
 		ModCommand &m = (ch < chns) ? *pat.GetpModCommand(row, ch) : dummy;
 
 		READITEM(noteBit, note, ModCommand::NOTE);

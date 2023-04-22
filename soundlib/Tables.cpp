@@ -55,6 +55,7 @@ static constexpr ModFormatInfo modFormatInfo[] =
 	{ UL_("FastTracker 2"),                      "xm" },
 	{ UL_("Impulse Tracker"),                    "it" },
 
+	{ UL_("Composer 667"),                       "667" },
 	{ UL_("Composer 669 / UNIS 669"),            "669" },
 	{ UL_("ASYLUM Music Format"),                "amf" },
 	{ UL_("DSMI Advanced Music Format"),         "amf" },
@@ -64,7 +65,9 @@ static constexpr ModFormatInfo modFormatInfo[] =
 	{ UL_("DigiBooster Pro"),                    "dbm" },
 	{ UL_("DigiBooster"),                        "digi" },
 	{ UL_("X-Tracker"),                          "dmf" },
+	{ UL_("DSMI Compact Advanced Music Format"), "dmf" },
 	{ UL_("DSIK Format"),                        "dsm" },
+	{ UL_("Dynamic Studio"),                     "dsm" },
 	{ UL_("Digital Symphony"),                   "dsym" },
 	{ UL_("Digital Tracker"),                    "dtm" },
 	{ UL_("Farandole Composer"),                 "far" },
@@ -100,6 +103,7 @@ static constexpr ModFormatInfo modFormatInfo[] =
 	{ UL_("Graoumf Tracker 1 / 2"),              "gt2"},
 	{ UL_("UltraTracker"),                       "ult" },
 	{ UL_("Mod's Grave"),                        "wow" },
+	{ UL_("Imperium Galactica"),                 "xmf" },
 	// converted formats (no MODTYPE)
 	{ UL_("General Digital Music"),              "gdm" },
 	{ UL_("Un4seen MO3"),                        "mo3" },
@@ -118,7 +122,7 @@ static constexpr ModFormatInfo modFormatInfo[] =
 
 struct ModContainerInfo
 {
-	MODCONTAINERTYPE format;  // MOD_CONTAINERTYPE_XXXX
+	ModContainerType format;  // ModContainerType::XXX
 	const mpt::uchar *name;   // "Unreal Music"
 	const char *extension;    // "umx"
 };
@@ -126,13 +130,14 @@ struct ModContainerInfo
 static constexpr ModContainerInfo modContainerInfo[] =
 {
 	// Container formats
-	{ MOD_CONTAINERTYPE_UMX,   UL_("Unreal Music"),             "umx"   },
-	{ MOD_CONTAINERTYPE_XPK,   UL_("XPK packed"),               "xpk"   },
-	{ MOD_CONTAINERTYPE_PP20,  UL_("PowerPack PP20"),           "ppm"   },
-	{ MOD_CONTAINERTYPE_MMCMP, UL_("Music Module Compressor"),  "mmcmp" },
+	{ ModContainerType::UMX,     UL_("Unreal Music"),             "umx"   },
+	{ ModContainerType::XPK,     UL_("XPK packed"),               "xpk"   },
+	{ ModContainerType::PP20,    UL_("PowerPack PP20"),           "ppm"   },
+	{ ModContainerType::MMCMP,   UL_("Music Module Compressor"),  "mmcmp" },
 #ifdef MODPLUG_TRACKER
-	{ MOD_CONTAINERTYPE_WAV,   UL_("Wave"),                     "wav"   },
-	{ MOD_CONTAINERTYPE_UAX,   UL_("Unreal Sounds"),            "uax"   },
+	{ ModContainerType::WAV,     UL_("Wave"),                     "wav"   },
+	{ ModContainerType::UAX,     UL_("Unreal Sounds"),            "uax"   },
+	{ ModContainerType::Generic, UL_("Generic Archive"),          ""      },
 #endif
 };
 
@@ -153,18 +158,20 @@ std::vector<const char *> CSoundFile::GetSupportedExtensions(bool otherFormats)
 	for(const auto &formatInfo : modFormatInfo)
 	{
 		// Avoid dupes in list
-		if(exts.empty() || strcmp(formatInfo.extension, exts.back()))
-		{
+		const std::string_view ext = formatInfo.extension;
+		if(ext.empty())
+			continue;
+		if(exts.empty() || ext != exts.back())
 			exts.push_back(formatInfo.extension);
-		}
 	}
 	for(const auto &containerInfo : modContainerInfo)
 	{
 		// Avoid dupes in list
-		if(exts.empty() || strcmp(containerInfo.extension, exts.back()))
-		{
-			exts.push_back(containerInfo.extension);
-		}
+		const std::string_view ext = containerInfo.extension;
+		if(ext.empty())
+			continue;
+		if(exts.empty() || ext != exts.back())
+			exts.push_back(ext.data());
 	}
 #ifdef MODPLUG_TRACKER
 	if(otherFormats)
@@ -215,7 +222,7 @@ bool CSoundFile::IsExtensionSupported(std::string_view ext)
 }
 
 
-mpt::ustring CSoundFile::ModContainerTypeToString(MODCONTAINERTYPE containertype)
+mpt::ustring CSoundFile::ModContainerTypeToString(ModContainerType containertype)
 {
 	for(const auto &containerInfo : modContainerInfo)
 	{
@@ -228,7 +235,7 @@ mpt::ustring CSoundFile::ModContainerTypeToString(MODCONTAINERTYPE containertype
 }
 
 
-mpt::ustring CSoundFile::ModContainerTypeToTracker(MODCONTAINERTYPE containertype)
+mpt::ustring CSoundFile::ModContainerTypeToTracker(ModContainerType containertype)
 {
 	std::set<mpt::ustring> retvals;
 	mpt::ustring retval;

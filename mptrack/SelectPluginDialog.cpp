@@ -25,6 +25,7 @@
 #include "SelectPluginDialog.h"
 #include "../pluginBridge/BridgeWrapper.h"
 #include "FolderScanner.h"
+#include "mpt/string/utility.hpp"
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -345,7 +346,7 @@ void CSelectPluginDlg::UpdatePluginsList(const VSTPluginLib *forceSelect)
 
 	const int32 lastPluginID = TrackerSettings::Instance().gnPlugWindowLast;
 	const bool nameFilterActive = !m_nameFilter.empty();
-	const auto currentTags = mpt::String::Split<mpt::ustring>(m_nameFilter, U_(" "));
+	const auto currentTags = mpt::split(m_nameFilter, U_(" "));
 
 	if(pManager)
 	{
@@ -620,6 +621,7 @@ constexpr struct
 	{Vst::kEffectMagic, Vst::FourCC("frV2"), true, false, false},  // ditto
 	{Vst::kEffectMagic, Vst::FourCC("SKV3"), false, true, false},  // SideKick v3 always has to run in a shared instance
 	{Vst::kEffectMagic, Vst::FourCC("YWS!"), false, true, false},  // You Wa Shock ! always has to run in a shared instance
+	{Vst::kEffectMagic, Vst::FourCC("rsfz"), true, true, false},   // rgc:audio sfz has issues with /LARGEADDRESSAWARE, so must run through the legacy bridge
 	{Vst::kEffectMagic, Vst::FourCC("S1Vs"), mpt::arch_bits == 64, true, false},  // Synth1 64-bit has an issue with pointers using the high 32 bits, hence must use the legacy bridge without high-entropy heap
 };
 }  // namespace

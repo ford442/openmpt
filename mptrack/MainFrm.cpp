@@ -42,7 +42,7 @@
 #include "../common/mptFileIO.h"
 #include "mpt/fs/fs.hpp"
 #include "mpt/io_file/inputfile.hpp"
-#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "mpt/io_file_read/inputfile_filecursor.hpp"
 #include "../common/FileReader.h"
 #include "../common/Profiler.h"
 #include "../soundlib/plugins/PlugInterface.h"
@@ -53,6 +53,7 @@
 #include <HtmlHelp.h>
 #include <Dbt.h>  // device change messages
 #include "mpt/audio/span.hpp"
+#include "mpt/string/utility.hpp"
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -150,8 +151,6 @@ HCURSOR CMainFrame::curNoDrop = NULL;
 HCURSOR CMainFrame::curNoDrop2 = NULL;
 HCURSOR CMainFrame::curVSplit = NULL;
 MODPLUGDIB *CMainFrame::bmpNotes = nullptr;
-MODPLUGDIB *CMainFrame::bmpVUMeters = nullptr;
-MODPLUGDIB *CMainFrame::bmpPluginVUMeters = nullptr;
 COLORREF CMainFrame::gcolrefVuMeter[NUM_VUMETER_PENS*2];
 
 CInputHandler *CMainFrame::m_InputHandler = nullptr;
@@ -276,8 +275,6 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	curVSplit = theApp.LoadCursor(AFX_IDC_HSPLITBAR);
 	// bitmaps
 	bmpNotes = LoadDib(MAKEINTRESOURCE(IDB_PATTERNVIEW));
-	bmpVUMeters = LoadDib(MAKEINTRESOURCE(IDB_VUMETERS));
-	bmpPluginVUMeters = LoadDib(MAKEINTRESOURCE(IDB_VUMETERS));
 	// Toolbars
 	EnableDocking(CBRS_ALIGN_ANY);
 	if (!m_wndToolBar.Create(this)) return -1;
@@ -346,12 +343,6 @@ BOOL CMainFrame::DestroyWindow()
 	delete bmpNotes;
 	bmpNotes = nullptr;
 	
-	delete bmpVUMeters;
-	bmpVUMeters = nullptr;
-	
-	delete bmpPluginVUMeters;
-	bmpPluginVUMeters = nullptr;
-
 	PatternFont::DeleteFontData();
 
 	// Kill GDI Objects
@@ -1175,24 +1166,6 @@ void CMainFrame::Dump(CDumpContext& dc) const
 void CMainFrame::UpdateColors()
 {
 	const auto &colors = TrackerSettings::Instance().rgbCustomColors;
-	const struct { MODPLUGDIB *bitmap; uint32 lo, med, hi; } meters[] =
-	{
-		{ bmpVUMeters, MODCOLOR_VUMETER_LO, MODCOLOR_VUMETER_MED, MODCOLOR_VUMETER_HI },
-		{ bmpPluginVUMeters, MODCOLOR_VUMETER_LO_VST, MODCOLOR_VUMETER_MED_VST, MODCOLOR_VUMETER_HI_VST },
-	};
-	for(auto &meter : meters) if(meter.bitmap != nullptr)
-	{
-		meter.bitmap->bmiColors[7] = rgb2quad(GetSysColor(COLOR_BTNFACE));
-		meter.bitmap->bmiColors[8] = rgb2quad(GetSysColor(COLOR_BTNSHADOW));
-		meter.bitmap->bmiColors[15] = rgb2quad(GetSysColor(COLOR_BTNHIGHLIGHT));
-		meter.bitmap->bmiColors[10] = rgb2quad(colors[meter.lo]);
-		meter.bitmap->bmiColors[11] = rgb2quad(colors[meter.med]);
-		meter.bitmap->bmiColors[9] = rgb2quad(colors[meter.hi]);
-		meter.bitmap->bmiColors[2] = rgb2quad((colors[meter.lo] >> 1) & 0x7F7F7F);
-		meter.bitmap->bmiColors[3] = rgb2quad((colors[meter.med] >> 1) & 0x7F7F7F);
-		meter.bitmap->bmiColors[1] = rgb2quad((colors[meter.hi] >> 1) & 0x7F7F7F);
-	}
-
 	// Generel tab VU meters
 	for(UINT i = 0; i < NUM_VUMETER_PENS * 2; i++)
 	{
@@ -1527,10 +1500,17 @@ bool CMainFrame::PlayDLSInstrument(const CDLSBank &bank, UINT instr, UINT region
 	BeginWaitCursor();
 	{
 		CriticalSection cs;
-		InitPreview();
-		if(bank.ExtractInstrument(m_WaveFile, 1, instr, region))
+		if(ModCommand::IsNote(note))
 		{
-			PreparePreview(note, volume);
+			InitPreview();
+			if(bank.ExtractInstrument(m_WaveFile, 1, instr, region))
+			{
+				PreparePreview(note, volume);
+				ok = true;
+			}
+		} else
+		{
+			PreparePreview(NOTE_NOTECUT, volume);
 			ok = true;
 		}
 	}
@@ -1668,6 +1648,15 @@ void CMainFrame::InitPreview()
 
 void CMainFrame::PreparePreview(ModCommand::NOTE note, int volume)
 {
+	if(!ModCommand::IsNote(note))
+	{
+		for(auto &chn : m_WaveFile.m_PlayState.Chn)
+		{
+			chn.nFadeOutVol = 0;
+			chn.dwFlags.set(CHN_NOTEFADE | CHN_FASTVOLRAMP);
+		}
+		return;
+	}
 	m_WaveFile.m_SongFlags.reset(SONG_PAUSED);
 	m_WaveFile.SetRepeatCount(-1);
 	m_WaveFile.ResetPlayPos();
@@ -1880,6 +1869,12 @@ void CMainFrame::SetXInfoText(LPCTSTR lpszText)
 void CMainFrame::SetHelpText(LPCTSTR lpszText)
 {
 	m_wndStatusBar.SetPaneText(0, lpszText);
+}
+
+
+CString CMainFrame::GetHelpText() const
+{
+	return m_wndStatusBar.GetPaneText(0);
 }
 
 
@@ -2483,6 +2478,8 @@ LRESULT CMainFrame::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		case kcPlayPauseSong:
 		case kcPlayStopSong:
 		case kcPlaySongFromPattern:
+		case kcPlaySongFromCursorPause:
+		case kcPlaySongFromPatternPause:
 		case kcStopSong:
 		case kcToggleLoopSong:
 		case kcPanic:
@@ -3057,7 +3054,7 @@ void CMainFrame::UpdateMRUList()
 					path = path.substr(0, start + 1) + _T("...") + path.substr(end);
 				}
 			}
-			path = mpt::String::Replace(path, mpt::winstring(_T("&")), mpt::winstring(_T("&&")));
+			path = mpt::replace(path, mpt::winstring(_T("&")), mpt::winstring(_T("&&")));
 			s += path;
 			pMenu->InsertMenu(firstMenu + i, MF_STRING | MF_BYPOSITION, ID_MRU_LIST_FIRST + i, mpt::ToCString(s));
 		}
@@ -3073,7 +3070,7 @@ BOOL CMainFrame::OnQueryEndSession()
 		if(modDoc->IsModified())
 			modifiedCount++;
 	}
-#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#if MPT_WINNT_AT_LEAST(MPT_WIN_VISTA)
 	ShutdownBlockReasonDestroy(m_hWnd);
 	if(modifiedCount > 0)
 	{

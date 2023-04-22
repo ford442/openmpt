@@ -1,8 +1,11 @@
+667="gf"
+
 669="if"
 669="JN"
 
 amf="ASYLUM Music Format V1.0\x00"
 amf="AMF\x0A"
+amf="DMF\x0E"
 
 ams="Extreme"
 ams="AMShdr\x1A\x02\x02"
@@ -33,6 +36,8 @@ dmf="SMPD"
 
 dsm="RIFF"
 dsm="DSMF"
+
+dsm="DSm\x1A "
 
 dsym="\x02\x01\x13\x13\x14\x12\x01\x0B\x01"
 

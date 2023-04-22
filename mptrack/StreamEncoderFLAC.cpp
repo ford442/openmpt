@@ -14,7 +14,6 @@
 #include "StreamEncoderFLAC.h"
 
 #include "Mptrack.h"
-#include "TrackerSettings.h"
 
 #include <FLAC/metadata.h>
 #include <FLAC/format.h>
@@ -35,29 +34,29 @@ private:
 private:
 	static FLAC__StreamEncoderWriteStatus FLACWriteCallback(const FLAC__StreamEncoder *flacenc, const FLAC__byte buffer[], size_t bytes, unsigned samples, unsigned current_frame, void *client_data)
 	{
-		return reinterpret_cast<FLACStreamWriter*>(client_data)->WriteCallback(flacenc, buffer, bytes, samples, current_frame);
+		return mpt::void_ptr<FLACStreamWriter>(client_data)->WriteCallback(flacenc, buffer, bytes, samples, current_frame);
 	}
 	static FLAC__StreamEncoderSeekStatus FLACSeekCallback(const FLAC__StreamEncoder *flacenc, FLAC__uint64 absolute_byte_offset, void *client_data)
 	{
-		return reinterpret_cast<FLACStreamWriter*>(client_data)->SeekCallback(flacenc, absolute_byte_offset);
+		return mpt::void_ptr<FLACStreamWriter>(client_data)->SeekCallback(flacenc, absolute_byte_offset);
 	}
 	static FLAC__StreamEncoderTellStatus FLACTellCallback(const FLAC__StreamEncoder *flacenc, FLAC__uint64 *absolute_byte_offset, void *client_data)
 	{
-		return reinterpret_cast<FLACStreamWriter*>(client_data)->TellCallback(flacenc, absolute_byte_offset);
+		return mpt::void_ptr<FLACStreamWriter>(client_data)->TellCallback(flacenc, absolute_byte_offset);
 	}
 	FLAC__StreamEncoderWriteStatus WriteCallback(const FLAC__StreamEncoder *flacenc, const FLAC__byte buffer[], size_t bytes, unsigned samples, unsigned current_frame)
 	{
 		MPT_UNREFERENCED_PARAMETER(flacenc);
 		MPT_UNREFERENCED_PARAMETER(samples);
 		MPT_UNREFERENCED_PARAMETER(current_frame);
-		f.write(reinterpret_cast<const char*>(buffer), bytes);
+		mpt::IO::WriteRaw(f, mpt::as_span(buffer, bytes));
 		if(!f) return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 		return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
 	}
 	FLAC__StreamEncoderSeekStatus SeekCallback(const FLAC__StreamEncoder *flacenc, FLAC__uint64 absolute_byte_offset)
 	{
 		MPT_UNREFERENCED_PARAMETER(flacenc);
-		f.seekp(absolute_byte_offset);
+		mpt::IO::SeekAbsolute(f, absolute_byte_offset);
 		if(!f) return FLAC__STREAM_ENCODER_SEEK_STATUS_ERROR;
 		return FLAC__STREAM_ENCODER_SEEK_STATUS_OK;
 	}
@@ -66,7 +65,7 @@ private:
 		MPT_UNREFERENCED_PARAMETER(flacenc);
 		if(absolute_byte_offset)
 		{
-			*absolute_byte_offset = f.tellp();
+			*absolute_byte_offset = mpt::IO::TellWrite(f);
 		}
 		if(!f) return FLAC__STREAM_ENCODER_TELL_STATUS_ERROR;
 		return FLAC__STREAM_ENCODER_TELL_STATUS_OK;
@@ -190,7 +189,7 @@ FLACEncoder::FLACEncoder()
 	traits.encoderSettingsName = U_("FLAC");
 	traits.canTags = true;
 	traits.maxChannels = 4;
-	traits.samplerates = TrackerSettings::Instance().GetSampleRates();
+	traits.samplerates = {};
 	traits.modes = Encoder::ModeLossless;
 	traits.formats.push_back({ Encoder::Format::Encoding::Integer, 32, mpt::get_endian() });
 	traits.formats.push_back({ Encoder::Format::Encoding::Integer, 24, mpt::get_endian() });

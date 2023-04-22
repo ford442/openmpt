@@ -56,19 +56,19 @@ enum
 };
 
 
-const CListCtrlEx::Header gSampleHeaders[SMPLIST_COLUMNS] =
+static constexpr CListCtrlEx::Header SampleHeaders[SMPLIST_COLUMNS] =
 {
 	{ _T("Sample Name"),	192, LVCFMT_LEFT },
 	{ _T("Num"),			45, LVCFMT_RIGHT },
 	{ _T("Size"),			72, LVCFMT_RIGHT },
-	{ _T("Type"),			45, LVCFMT_RIGHT },
+	{ _T("Type"),			80, LVCFMT_RIGHT },
 	{ _T("C-5 Freq"),		80, LVCFMT_RIGHT },
 	{ _T("Instr"),			64, LVCFMT_RIGHT },
 	{ _T("File Name"),		128, LVCFMT_RIGHT },
 	{ _T("Path"),			256, LVCFMT_LEFT },
 };
 
-const CListCtrlEx::Header gInstrumentHeaders[INSLIST_COLUMNS] =
+static constexpr CListCtrlEx::Header InstrumentHeaders[INSLIST_COLUMNS] =
 {
 	{ _T("Instrument Name"),	192, LVCFMT_LEFT },
 	{ _T("Num"),				45, LVCFMT_RIGHT },
@@ -174,10 +174,16 @@ LRESULT CViewComments::OnModViewMsg(WPARAM wParam, LPARAM lParam)
 LRESULT CViewComments::OnMidiMsg(WPARAM midiData_, LPARAM)
 {
 	uint32 midiData = static_cast<uint32>(midiData_);
-	// Handle MIDI messages assigned to shortcuts
-	CInputHandler *ih = CMainFrame::GetInputHandler();
-	ih->HandleMIDIMessage(kCtxViewComments, midiData) != kcNull
-		|| ih->HandleMIDIMessage(kCtxAllContexts, midiData) != kcNull;
+	INSTRUMENTINDEX ins = 0;
+	SAMPLEINDEX smp = 0;
+
+	const int item = m_ItemList.GetSelectionMark() + 1;
+	if(item > 0 && m_nListId == IDC_LIST_SAMPLES)
+		smp = static_cast<SAMPLEINDEX>(item);
+	else if(item > 0 && m_nListId == IDC_LIST_INSTRUMENTS)
+		ins = static_cast<INSTRUMENTINDEX>(item);
+
+	GetDocument()->ProcessMIDI(midiData, smp, ins, GetDocument()->GetSoundFile().GetInstrumentPlugin(ins), kCtxViewComments);
 	return 1;
 }
 
@@ -262,6 +268,10 @@ BOOL CViewComments::PreTranslateMessage(MSG *pMsg)
 			{
 				return TRUE;  // Mapped to a command, no need to pass message on.
 			}
+		} else if(pMsg->message == WM_CHAR)
+		{
+			// Avoid Windows warning sound when holding note key
+			return TRUE;
 		}
 	}
 
@@ -308,11 +318,11 @@ void CViewComments::UpdateView(UpdateHint hint, CObject *)
 		if (m_nCurrentListId == IDC_LIST_SAMPLES)
 		{
 			// Add Sample Headers
-			m_ItemList.SetHeaders(gSampleHeaders);
+			m_ItemList.SetHeaders(SampleHeaders);
 		} else if (m_nCurrentListId == IDC_LIST_INSTRUMENTS)
 		{
 			// Add Instrument Headers
-			m_ItemList.SetHeaders(gInstrumentHeaders);
+			m_ItemList.SetHeaders(InstrumentHeaders);
 		} else
 		updateAll = true;
 	}
@@ -342,19 +352,13 @@ void CViewComments::UpdateView(UpdateHint hint, CObject *)
 						break;
 					case SMPLIST_SIZE:
 						if(sample.nLength && !sample.uFlags[CHN_ADLIB])
-						{
-							auto size = sample.GetSampleSizeInBytes();
-							if(size >= 1024)
-								s.Format(_T("%u KB"), size >> 10);
-							else
-								s.Format(_T("%u B"), size);
-						}
+							s = FormatFileSize(sample.GetSampleSizeInBytes());
 						break;
 					case SMPLIST_TYPE:
 						if(sample.uFlags[CHN_ADLIB])
 							s = _T("OPL");
 						else if(sample.HasSampleData())
-							s = MPT_CFORMAT("{} Bit")(sample.GetElementarySampleSize() * 8);
+							s = MPT_CFORMAT("{}-bit {}")(sample.GetElementarySampleSize() * 8, (sample.GetNumChannels() == 2) ? CString(_T("stereo")) : CString(_T("mono")));
 						break;
 					case SMPLIST_INSTR:
 						if (sndFile.GetNumInstruments())

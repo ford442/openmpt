@@ -39,7 +39,7 @@
 #define OPENMPT_BUILD_VARIANT_MONIKER " RETRO"
 #else
 #if MPT_OS_WINDOWS
-#if (_WIN32_WINNT >= 0x0603)
+#if MPT_WINNT_AT_LEAST(MPT_WIN_10)
 #define OPENMPT_BUILD_VARIANT "Standard"
 #define OPENMPT_BUILD_VARIANT_MONIKER ""
 #else
@@ -57,13 +57,13 @@
 #define MPT_WITH_VST
 
 #if MPT_OS_WINDOWS
-#if (_WIN32_WINNT >= 0x0601)
+#if MPT_WINNT_AT_LEAST(MPT_WIN_7)
 #define MPT_WITH_MEDIAFOUNDATION
 #endif
 #endif
 
 #if MPT_OS_WINDOWS
-#if (_WIN32_WINNT >= 0x0A00)
+#if MPT_WINNT_AT_LEAST(MPT_WIN_10)
 #define MPT_WITH_WINDOWS10
 #endif
 #endif
@@ -202,36 +202,6 @@
 #endif
 
 
-
-#if ((MPT_COMPILER_MSVC && !defined(MPT_USTRING_MODE_UTF8_FORCE)) || defined(MODPLUG_TRACKER)) && !defined(MPT_COMPILER_QUIRK_NO_WCHAR)
-
-	// Use wide strings for MSVC because this is the native encoding on 
-	// microsoft platforms.
-
-	// mpt::ToWString, mpt::wfmt, ConvertStrTo<std::wstring>
-	// Required by the tracker to ease interfacing with WinAPI.
-	// Required by MPT_USTRING_MODE_WIDE to ease type tunneling in mpt::format.
-	#define MPT_WSTRING_FORMAT 1
-
-#else
-
-	#define MPT_WSTRING_FORMAT 0
-
-#endif
-
-#if ((MPT_COMPILER_MSVC && !defined(MPT_USTRING_MODE_UTF8_FORCE)) || MPT_OS_WINDOWS || MPT_WSTRING_FORMAT) && !defined(MPT_COMPILER_QUIRK_NO_WCHAR)
-
-	// mpt::ToWide
-	// Required on Windows by mpt::PathString.
-	// Required by MPT_USTRING_MODE_WIDE as they share the conversion functions.
-	// Required by MPT_WSTRING_FORMAT because of std::string<->std::wstring conversion in mpt::ToAString and mpt::ToWString.
-	#define MPT_WSTRING_CONVERT 1
-
-#else
-
-	#define MPT_WSTRING_CONVERT 0
-
-#endif
 
 #define MPT_TIME_UTC_ON_DISK 0
 #define MPT_TIME_UTC_ON_DISK_VERSION MPT_V("1.31.00.13")

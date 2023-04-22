@@ -20,8 +20,8 @@ if IS_RELEASE:
 	changelog_url = "https://openmpt.org/release_notes/History.txt"
 else:
 	download_base_url = "https://builds.openmpt.org/builds/auto/openmpt/pkg.win/"
-	announcement_url = "https://builds.openmpt.org/builds/auto/openmpt/pkg.win/"
-	changelog_url = "https://source.openmpt.org/browse/openmpt/?op=revision&rev=" + SVNVERSION
+	announcement_url = "https://source.openmpt.org/browse/openmpt/trunk/OpenMPT/?op=log&isdir=1&sr=" + SVNVERSION + "&max=1000"
+	changelog_url = "https://source.openmpt.org/browse/openmpt/trunk/OpenMPT/?op=log&isdir=1&sr=" + SVNVERSION + "&max=1000"
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.chdir("..")
@@ -186,7 +186,7 @@ update = {
 				"can_autoupdate": True,
 				"autoupdate_minversion": "1.30.00.08",
 				"os": "windows",
-				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19042, "wine_major":1, "wine_minor":8, "wine_update":0 },
+				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19044, "wine_major":1, "wine_minor":8, "wine_update":0 },
 				"required_architectures": {},
 				"supported_architectures": { "x86":True },
 				"required_processor_features": { "x86":{"sse2":True} }
@@ -210,7 +210,7 @@ update = {
 				"can_autoupdate": True,
 				"autoupdate_minversion": "1.30.00.08",
 				"os": "windows",
-				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19042, "wine_major":1, "wine_minor":8, "wine_update":0 },
+				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19044, "wine_major":1, "wine_minor":8, "wine_update":0 },
 				"required_architectures": {},
 				"supported_architectures": { "amd64":True },
 				"required_processor_features": { "amd64":{"sse2":True} }
@@ -234,7 +234,7 @@ update = {
 				"can_autoupdate": True,
 				"autoupdate_minversion": "1.30.00.08",
 				"os": "windows",
-				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19042, "wine_major":1, "wine_minor":8, "wine_update":0 },
+				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19044, "wine_major":1, "wine_minor":8, "wine_update":0 },
 				"required_architectures": {},
 				"supported_architectures": { "arm":True },
 				"required_processor_features": { "arm":{} }
@@ -246,7 +246,7 @@ update = {
 				"can_autoupdate": True,
 				"autoupdate_minversion": "1.30.00.08",
 				"os": "windows",
-				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19042, "wine_major":1, "wine_minor":8, "wine_update":0 },
+				"required_windows_version": { "version_major":10, "version_minor":0, "servicepack_major":0, "servicepack_minor":0, "build":19044, "wine_major":1, "wine_minor":8, "wine_update":0 },
 				"required_architectures": {},
 				"supported_architectures": { "arm64":True },
 				"required_processor_features": { "arm64":{} }

@@ -17,7 +17,6 @@
 #include "mpt/io/io_stdstream.hpp"
 
 #include "Mptrack.h"
-#include "TrackerSettings.h"
 
 #include "../soundlib/Sndfile.h"
 #include "../soundlib/WAVTools.h"
@@ -65,45 +64,31 @@ public:
 	}
 	void WriteInterleaved(std::size_t frameCount, const double *interleaved) override
 	{
-		fileWAV->WriteBeforeDirect();
-		auto result = WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
-		fileWAV->WriteAfterDirect(result.first, result.second);
+		WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
 	}
 	void WriteInterleaved(std::size_t frameCount, const float *interleaved) override
 	{
-		fileWAV->WriteBeforeDirect();
-		auto result = WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
-		fileWAV->WriteAfterDirect(result.first, result.second);
+		WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
 	}
 	void WriteInterleaved(std::size_t frameCount, const int32 *interleaved) override
 	{
-		fileWAV->WriteBeforeDirect();
-		auto result = WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
-		fileWAV->WriteAfterDirect(result.first, result.second);
+		WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
 	}
 	void WriteInterleaved(std::size_t frameCount, const int24 *interleaved) override
 	{
-		fileWAV->WriteBeforeDirect();
-		auto result = WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
-		fileWAV->WriteAfterDirect(result.first, result.second);
+		WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
 	}
 	void WriteInterleaved(std::size_t frameCount, const int16 *interleaved) override
 	{
-		fileWAV->WriteBeforeDirect();
-		auto result = WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
-		fileWAV->WriteAfterDirect(result.first, result.second);
+		WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
 	}
 	void WriteInterleaved(std::size_t frameCount, const int8 *interleaved) override
 	{
-		fileWAV->WriteBeforeDirect();
-		auto result = WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
-		fileWAV->WriteAfterDirect(result.first, result.second);
+		WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
 	}
 	void WriteInterleaved(std::size_t frameCount, const uint8 *interleaved) override
 	{
-		fileWAV->WriteBeforeDirect();
-		auto result = WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
-		fileWAV->WriteAfterDirect(result.first, result.second);
+		WriteInterleavedLE(f, settings.Channels, settings.Format, frameCount, interleaved);
 	}
 	void WriteCues(const std::vector<uint64> &cues) override
 	{
@@ -113,7 +98,7 @@ public:
 			fileWAV->StartChunk(RIFFChunk::idcue_);
 			uint32le numPoints;
 			numPoints = mpt::saturate_cast<uint32>(cues.size());
-			fileWAV->Write(numPoints);
+			mpt::IO::Write(f, numPoints);
 
 			// Write all cue points
 			uint32 index = 0;
@@ -126,7 +111,7 @@ public:
 				cuePoint.chunkStart = 0;	// we use no Wave List Chunk (wavl) as we have only one data block, so this should be 0.
 				cuePoint.blockStart = 0;	// ditto
 				cuePoint.offset = cuePoint.position;
-				fileWAV->Write(cuePoint);
+				mpt::IO::Write(f, cuePoint);
 			}
 		}
 	}
@@ -152,7 +137,7 @@ WAVEncoder::WAVEncoder()
 	traits.canTags = true;
 	traits.canCues = true;
 	traits.maxChannels = 4;
-	traits.samplerates = TrackerSettings::Instance().GetSampleRates();
+	traits.samplerates = {};
 	traits.modes = Encoder::ModeLossless;
 	traits.formats.push_back({ Encoder::Format::Encoding::Float, 64, mpt::endian::little });
 	traits.formats.push_back({ Encoder::Format::Encoding::Float, 32, mpt::endian::little });

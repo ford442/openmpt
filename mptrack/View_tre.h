@@ -52,10 +52,10 @@ struct ModTreeDocInfo
 class CModTreeDropTarget: public COleDropTarget
 {
 protected:
-	CModTree *m_pModTree;
+	CModTree *m_pModTree = nullptr;
 
 public:
-	CModTreeDropTarget() { m_pModTree = nullptr; }
+	CModTreeDropTarget() = default;
 	BOOL Register(CModTree *pWnd);
 
 public:
@@ -155,8 +155,8 @@ protected:
 		bool IsPercussion() const noexcept { return ((val1 & DLS_TYPEPERC) == DLS_TYPEPERC); }
 		bool IsMelodic() const noexcept { return !IsPercussion(); }
 
-		static ModItem FromLPARAM(uint32 lparam) { return ModItem{MODITEM_DLSBANK_INSTRUMENT, lparam, 0}; }
-		static LPARAM ToLPARAM(uint16 instr, uint16 region, bool isPerc) { return (instr & DLS_INSTRMASK) | ((region << DLS_REGIONSHIFT) & DLS_REGIONMASK) | (isPerc ? DLS_TYPEPERC : 0); }
+		static ModItem FromLPARAM(uint32 lparam) noexcept { return ModItem{MODITEM_DLSBANK_INSTRUMENT, lparam, 0}; }
+		static LPARAM ToLPARAM(uint16 instr, uint16 region, bool isPerc) noexcept { return (instr & DLS_INSTRMASK) | ((region << DLS_REGIONSHIFT) & DLS_REGIONMASK) | (isPerc ? DLS_TYPEPERC : 0); }
 	};
 
 	static CSoundFile *m_SongFile;  // For browsing samples and instruments inside modules on disk
@@ -177,11 +177,12 @@ protected:
 	HTREEITEM m_tiPerc[128];
 	std::vector<HTREEITEM> m_tiDLS;
 	std::map<const CModDoc *, ModTreeDocInfo> m_docInfo;
+	CString m_HelpText;
 
 	std::unique_ptr<CDLSBank> m_cachedBank;
 	mpt::PathString m_cachedBankName;
 
-#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7)
+#if MPT_WINNT_AT_LEAST(MPT_WIN_7)
 	DWORD m_stringCompareFlags = NORM_IGNORECASE | NORM_IGNOREWIDTH | SORT_DIGITSASNUMBERS;
 #else
 	DWORD m_stringCompareFlags = NORM_IGNORECASE | NORM_IGNOREWIDTH;
@@ -215,6 +216,8 @@ protected:
 	};
 
 	static LibrarySortOrder m_librarySort;
+
+	int m_redrawLockCount = 0;
 
 	bool m_showAllFiles = false;
 	bool m_doLabelEdit = false;
@@ -277,8 +280,6 @@ public:
 	BOOL OnDrop(COleDataObject* pDataObject, DROPEFFECT dropEffect, CPoint point);
 
 protected:
-	static int CALLBACK ModTreeInsLibCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-	static int CALLBACK ModTreeDrumCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 	int ImageToSortOrder(int image) const;
 	ModTreeDocInfo *GetDocumentInfoFromItem(HTREEITEM hItem);
 	CModDoc *GetDocumentFromItem(HTREEITEM hItem) { ModTreeDocInfo *info = GetDocumentInfoFromItem(hItem); return info ? &info->modDoc : nullptr; }
@@ -299,6 +300,18 @@ protected:
 
 	HMENU AddLibraryFindAndSortMenus(HMENU hMenu) const;
 
+	void LockRedraw()
+	{
+		if(!m_redrawLockCount++)
+			SetRedraw(FALSE);
+	}
+
+	void UnlockRedraw()
+	{
+		if(!--m_redrawLockCount)
+			SetRedraw(TRUE);
+	}
+
 protected:
 	//{{AFX_MSG(CModTree)
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
@@ -315,6 +328,7 @@ protected:
 	afx_msg void OnItemRightClick(LPNMHDR, LRESULT *pResult);
 	afx_msg void OnItemExpanded(LPNMHDR pnmhdr, LRESULT *pResult);
 	afx_msg void OnGetDispInfo(LPNMHDR pnmhdr, LRESULT *pResult);
+	afx_msg void OnSelChanged(LPNMHDR pnmhdr, LRESULT *pResult);
 	afx_msg void OnRefreshTree();
 	afx_msg void OnExecuteItem();
 	afx_msg void OnPlayTreeItem();

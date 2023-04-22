@@ -19,7 +19,7 @@
 #endif // MODPLUG_TRACKER
 #ifdef MPT_EXTERNAL_SAMPLES
 #include "mpt/io_file/inputfile.hpp"
-#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "mpt/io_file_read/inputfile_filecursor.hpp"
 #include "../common/mptFileIO.h"
 #include "../common/mptFileIO.h"
 #endif // MPT_EXTERNAL_SAMPLES
@@ -182,6 +182,11 @@ void CSoundFile::InitializeGlobals(MODTYPE type)
 
 	MODTYPE bestType = GetBestSaveFormat();
 	m_playBehaviour = GetDefaultPlaybackBehaviour(bestType);
+	if(bestType == MOD_TYPE_IT && type != bestType)
+	{
+		// This is such an odd behaviour that it's unlikely that any of the other formats will need it by default. Re-enable as needed.
+		m_playBehaviour.reset(kITInitialNoteMemory);
+	}
 	SetModSpecsPointer(m_pModSpecs, bestType);
 
 	// Delete instruments in case some previously called loader already created them.
@@ -191,7 +196,7 @@ void CSoundFile::InitializeGlobals(MODTYPE type)
 		Instruments[i] = nullptr;
 	}
 
-	m_ContainerType = MOD_CONTAINERTYPE_NONE;
+	m_ContainerType = ModContainerType::None;
 	m_nChannels = 0;
 	m_nInstruments = 0;
 	m_nSamples = 0;
@@ -307,9 +312,12 @@ static constexpr FileFormatLoader ModuleFormatLoaders[] =
 	MPT_DECLARE_FORMAT(MOD),
 	MPT_DECLARE_FORMAT(ICE),
 	MPT_DECLARE_FORMAT(669),
+	MPT_DECLARE_FORMAT(667),
 	MPT_DECLARE_FORMAT(C67),
 	MPT_DECLARE_FORMAT(MO3),
+	MPT_DECLARE_FORMAT(DSm),
 	MPT_DECLARE_FORMAT(M15),
+	MPT_DECLARE_FORMAT(XMF),
 };
 
 #undef MPT_DECLARE_FORMAT
@@ -398,7 +406,7 @@ CSoundFile::ProbeResult CSoundFile::Probe(ProbeFlags flags, mpt::span<const std:
 	{
 		if((result == ProbeWantMoreData) && (data.size() >= ProbeRecommendedSize))
 		{
-			// If the prober wants more daat but we already provided the recommended required maximum,
+			// If the prober wants more data but we already provided the recommended required maximum,
 			// just return success as this is the best we can do for the suggestesd probing size.
 			result = ProbeSuccess;
 		}
@@ -431,13 +439,25 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags, CModDoc *pMo
 		CUnarchiver unarchiver(file);
 		if(unarchiver.ExtractBestFile(GetSupportedExtensions(true)))
 		{
-			if(CreateInternal(unarchiver.GetOutputFile(), loadFlags))
+			FileReader outputFile = unarchiver.GetOutputFile();
+#if defined(MPT_WITH_ANCIENT)
+			// Special case for MMCMP/PP20/XPK/etc. inside ZIP/RAR/LHA
+			std::unique_ptr<CAncientArchive> ancientArchive;
+			if(!unarchiver.IsKind<CAncientArchive>())
+			{
+				ancientArchive = std::make_unique<CAncientArchive>(outputFile);
+				if(ancientArchive->IsArchive() && ancientArchive->ExtractFile(0))
+					outputFile = ancientArchive->GetOutputFile();
+			}
+#endif
+			if(CreateInternal(outputFile, loadFlags))
 			{
 				// Read archive comment if there is no song comment
 				if(m_songMessage.empty())
 				{
 					m_songMessage.assign(mpt::ToCharset(mpt::Charset::Locale, unarchiver.GetComment()));
 				}
+				m_ContainerType = ModContainerType::Generic;
 				return true;
 			}
 		}
@@ -453,17 +473,17 @@ bool CSoundFile::CreateInternal(FileReader file, ModLoadingFlags loadFlags)
 	if(file.IsValid())
 	{
 		std::vector<ContainerItem> containerItems;
-		MODCONTAINERTYPE packedContainerType = MOD_CONTAINERTYPE_NONE;
+		ModContainerType packedContainerType = ModContainerType::None;
 		if(!(loadFlags & skipContainer))
 		{
 			ContainerLoadingFlags containerLoadFlags = (loadFlags == onlyVerifyHeader) ? ContainerOnlyVerifyHeader : ContainerUnwrapData;
 #if !defined(MPT_WITH_ANCIENT)
-			if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackXPK(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_XPK;
-			if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackPP20(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_PP20;
-			if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackMMCMP(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_MMCMP;
+			if(packedContainerType == ModContainerType::None && UnpackXPK(containerItems, file, containerLoadFlags)) packedContainerType = ModContainerType::XPK;
+			if(packedContainerType == ModContainerType::None && UnpackPP20(containerItems, file, containerLoadFlags)) packedContainerType = ModContainerType::PP20;
+			if(packedContainerType == ModContainerType::None && UnpackMMCMP(containerItems, file, containerLoadFlags)) packedContainerType = ModContainerType::MMCMP;
 #endif // !MPT_WITH_ANCIENT
-			if(packedContainerType == MOD_CONTAINERTYPE_NONE && UnpackUMX(containerItems, file, containerLoadFlags)) packedContainerType = MOD_CONTAINERTYPE_UMX;
-			if(packedContainerType != MOD_CONTAINERTYPE_NONE)
+			if(packedContainerType == ModContainerType::None && UnpackUMX(containerItems, file, containerLoadFlags)) packedContainerType = ModContainerType::UMX;
+			if(packedContainerType != ModContainerType::None)
 			{
 				if(loadFlags == onlyVerifyHeader)
 				{
@@ -495,14 +515,14 @@ bool CSoundFile::CreateInternal(FileReader file, ModLoadingFlags loadFlags)
 		if(!loaderSuccess)
 		{
 			m_nType = MOD_TYPE_NONE;
-			m_ContainerType = MOD_CONTAINERTYPE_NONE;
+			m_ContainerType = ModContainerType::None;
 		}
 		if(loadFlags == onlyVerifyHeader)
 		{
 			return loaderSuccess;
 		}
 
-		if(packedContainerType != MOD_CONTAINERTYPE_NONE && m_ContainerType == MOD_CONTAINERTYPE_NONE)
+		if(packedContainerType != ModContainerType::None && m_ContainerType == ModContainerType::None)
 		{
 			m_ContainerType = packedContainerType;
 		}
@@ -814,7 +834,7 @@ bool CSoundFile::Destroy()
 #endif // NO_PLUGINS
 
 	m_nType = MOD_TYPE_NONE;
-	m_ContainerType = MOD_CONTAINERTYPE_NONE;
+	m_ContainerType = ModContainerType::None;
 	m_nChannels = m_nSamples = m_nInstruments = 0;
 	return true;
 }
@@ -1151,6 +1171,8 @@ PlayBehaviourSet CSoundFile::GetSupportedPlaybackBehaviour(MODTYPE type)
 		playBehaviour.set(kITDoNotOverrideChannelPan);
 		playBehaviour.set(kITDCTBehaviour);
 		playBehaviour.set(kITPitchPanSeparation);
+		playBehaviour.set(kITResetFilterOnPortaSmpChange);
+		playBehaviour.set(kITInitialNoteMemory);
 		if(type == MOD_TYPE_MPT)
 		{
 			playBehaviour.set(kOPLFlexibleNoteOff);
@@ -1585,7 +1607,7 @@ std::unique_ptr<CTuning> CSoundFile::CreateTuning12TET(const mpt::ustring &name)
 }
 
 
-mpt::ustring CSoundFile::GetNoteName(const ModCommand::NOTE note, const INSTRUMENTINDEX inst) const
+mpt::ustring CSoundFile::GetNoteName(const ModCommand::NOTE note, const INSTRUMENTINDEX inst, const NoteName *noteNames) const
 {
 	// For MPTM instruments with custom tuning, find the appropriate note name. Else, use default note names.
 	if(ModCommand::IsNote(note) && GetType() == MOD_TYPE_MPT && inst >= 1 && inst <= GetNumInstruments() && Instruments[inst] && Instruments[inst]->pTuning)
@@ -1593,7 +1615,7 @@ mpt::ustring CSoundFile::GetNoteName(const ModCommand::NOTE note, const INSTRUME
 		return Instruments[inst]->pTuning->GetNoteName(note - NOTE_MIDDLEC);
 	} else
 	{
-		return GetNoteName(note);
+		return GetNoteName(note, noteNames ? noteNames : m_NoteNames);
 	}
 }
 
@@ -1617,7 +1639,7 @@ mpt::ustring CSoundFile::GetNoteName(const ModCommand::NOTE note, const NoteName
 	{
 		return mpt::ustring()
 			.append(noteNames[(note - NOTE_MIN) % 12])
-			.append(1, UC_('0') + (note - NOTE_MIN) / 12)
+			.append(1, static_cast<mpt::uchar>(UC_('0') + ((note - NOTE_MIN) / 12)))
 			;	// e.g. "C#" + "5"
 	} else if(note == NOTE_NONE)
 	{
@@ -1826,7 +1848,7 @@ uint32 CSoundFile::GetTickDuration(PlayState &playState) const
 
 	case TempoMode::Modern:
 		{
-			double accurateBufferCount = static_cast<double>(m_MixerSettings.gdwMixingFreq) * (60.0 / (playState.m_nMusicTempo.ToDouble() * Util::mul32to64_unsigned(playState.m_nMusicSpeed, playState.m_nCurrentRowsPerBeat)));
+			double accurateBufferCount = static_cast<double>(m_MixerSettings.gdwMixingFreq) * (60.0 / (playState.m_nMusicTempo.ToDouble() * static_cast<double>(Util::mul32to64_unsigned(playState.m_nMusicSpeed, playState.m_nCurrentRowsPerBeat))));
 			const TempoSwing &swing = (Patterns.IsValidPat(playState.m_nPattern) && Patterns[playState.m_nPattern].HasTempoSwing())
 				? Patterns[playState.m_nPattern].GetTempoSwing()
 				: m_tempoSwing;

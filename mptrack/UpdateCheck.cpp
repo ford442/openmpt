@@ -28,13 +28,16 @@
 #include "openmpt/sounddevice/SoundDeviceManager.hpp"
 #include "ProgressDialog.h"
 #include "Moddoc.h"
+#include "mpt/exception/runtime_error.hpp"
+#include "mpt/format/join.hpp"
 #include "mpt/fs/fs.hpp"
 #include "mpt/io/io.hpp"
 #include "mpt/io/io_stdstream.hpp"
 #include "mpt/io_file/inputfile.hpp"
-#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "mpt/io_file_read/inputfile_filecursor.hpp"
 #include "mpt/io_file/outputfile.hpp"
 #include "mpt/path/os_path_long.hpp"
+#include "mpt/string/utility.hpp"
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -225,6 +228,7 @@ static UpdateInfo GetBestDownload(const Update::versions &versions)
 	
 	UpdateInfo result;
 	VersionWithRevision bestVersion = VersionWithRevision::Current();
+	mpt::osinfo::windows::Version bestRequiredWindowsVersion = mpt::osinfo::windows::Version::AnyWindows();
 
 	for(const auto & [versionname, versioninfo] : versions)
 	{
@@ -286,11 +290,14 @@ static UpdateInfo GetBestDownload(const Update::versions &versions)
 				}
 			}
 
-			if(mpt::osinfo::windows::Version::Current().IsBefore(
+			const mpt::osinfo::windows::Version download_required_windows_version = mpt::osinfo::windows::Version(
 					mpt::osinfo::windows::Version::System(mpt::saturate_cast<uint32>(download.required_windows_version->version_major), mpt::saturate_cast<uint32>(download.required_windows_version->version_minor)),
 					mpt::osinfo::windows::Version::ServicePack(mpt::saturate_cast<uint16>(download.required_windows_version->servicepack_major), mpt::saturate_cast<uint16>(download.required_windows_version->servicepack_minor)),
-					mpt::osinfo::windows::Version::Build(mpt::saturate_cast<uint32>(download.required_windows_version->build))
-				))
+					mpt::osinfo::windows::Version::Build(mpt::saturate_cast<uint32>(download.required_windows_version->build)),
+					0
+				);
+
+			if(mpt::osinfo::windows::Version::Current().IsBefore(download_required_windows_version))
 			{
 				download_supported = false;
 			}
@@ -306,12 +313,21 @@ static UpdateInfo GetBestDownload(const Update::versions &versions)
 			if(download_supported)
 			{
 				is_supported = true;
+				bool downloadtype_supported = false;
 				if(theApp.IsInstallerMode() && download.type == U_("installer"))
 				{
-					bestDownloadName = downloadname;
+					downloadtype_supported = true;
 				} else if(theApp.IsPortableMode() && download.type == U_("archive"))
 				{
-					bestDownloadName = downloadname;
+					downloadtype_supported = true;
+				}
+				if(downloadtype_supported)
+				{
+					if(download_required_windows_version.IsAtLeast(bestRequiredWindowsVersion))
+					{
+						bestRequiredWindowsVersion = download_required_windows_version;
+						bestDownloadName = downloadname;
+					}
 				}
 			}
 
@@ -513,7 +529,7 @@ void CUpdateCheck::StartUpdateCheckAsync(bool isAutoUpdate)
 	{
 		const auto enableStatistics = Reporting::Confirm(
 			U_("Do you want to contribute to OpenMPT by providing system statistics?\r\n\r\n") +
-			mpt::String::Replace(CUpdateCheck::GetStatisticsUserInformation(false), U_("\n"), U_("\r\n")) + U_("\r\n\r\n") +
+			mpt::replace(CUpdateCheck::GetStatisticsUserInformation(false), U_("\n"), U_("\r\n")) + U_("\r\n\r\n") +
 			MPT_UFORMAT("This option was previously {} on your system.\r\n")(TrackerSettings::Instance().UpdateStatistics ? U_("enabled") : U_("disabled")),
 			false, !TrackerSettings::Instance().UpdateStatistics.Get());
 		TrackerSettings::Instance().UpdateStatistics = (enableStatistics == ConfirmAnswer::cnfYes);
@@ -955,34 +971,22 @@ class CDoUpdate: public CProgressDialog
 private:
 	Update::download download;
 	class Aborted : public std::exception {};
-	class Warning : public std::exception
+	class Warning : public mpt::runtime_error
 	{
-	private:
-		mpt::ustring msg;
 	public:
-		Warning(const mpt::ustring &msg_)
-			: msg(msg_)
+		Warning(const mpt::ustring &msg)
+			: mpt::runtime_error(msg)
 		{
 			return;
-		}
-		mpt::ustring get_msg() const
-		{
-			return msg;
 		}
 	};
-	class Error : public std::exception
+	class Error : public mpt::runtime_error
 	{
-	private:
-		mpt::ustring msg;
 	public:
-		Error(const mpt::ustring &msg_)
-			: msg(msg_)
+		Error(const mpt::ustring &msg)
+			: mpt::runtime_error(msg)
 		{
 			return;
-		}
-		mpt::ustring get_msg() const
-		{
-			return msg;
 		}
 	};
 public:
@@ -1230,11 +1234,11 @@ public:
 				{
 					if(theApp.IsSourceTreeMode())
 					{
-						throw Warning(MPT_UFORMAT("Refusing to launch update '{} {}' when running from source tree.")(updateFilename, mpt::String::Combine(downloadinfo.autoupdate_installer->arguments, U_(" "))));
+						throw Warning(MPT_UFORMAT("Refusing to launch update '{} {}' when running from source tree.")(updateFilename, mpt::join_format(downloadinfo.autoupdate_installer->arguments, U_(" "))));
 					}
 					if(reinterpret_cast<INT_PTR>(ShellExecute(NULL, NULL,
 						updateFilename.AsNative().c_str(),
-						mpt::ToWin(mpt::String::Combine(downloadinfo.autoupdate_installer->arguments, U_(" "))).c_str(),
+						mpt::ToWin(mpt::join_format(downloadinfo.autoupdate_installer->arguments, U_(" "))).c_str(),
 						dirTempOpenMPTUpdates.AsNative().c_str(),
 						SW_SHOWDEFAULT)) < 32)
 					{
@@ -1260,11 +1264,11 @@ public:
 					arguments.push_back(U_("\"") + downloadinfo.autoupdate_archive->restartbinary + U_("\""));
 					if(theApp.IsSourceTreeMode())
 					{
-						throw Warning(MPT_UFORMAT("Refusing to launch update '{} {}' when running from source tree.")(P_("cscript.exe"), mpt::String::Combine(arguments, U_(" "))));
+						throw Warning(MPT_UFORMAT("Refusing to launch update '{} {}' when running from source tree.")(P_("cscript.exe"), mpt::join_format(arguments, U_(" "))));
 					}
 					if(reinterpret_cast<INT_PTR>(ShellExecute(NULL, NULL,
 						P_("cscript.exe").AsNative().c_str(),
-						mpt::ToWin(mpt::String::Combine(arguments, U_(" "))).c_str(),
+						mpt::ToWin(mpt::join_format(arguments, U_(" "))).c_str(),
 						dirTempOpenMPTUpdates.AsNative().c_str(),
 						SW_SHOWDEFAULT)) < 32)
 					{
@@ -1303,12 +1307,12 @@ public:
 			return;
 		} catch(const Warning &e)
 		{
-			Reporting::Warning(e.get_msg(), U_("OpenMPT Update"));
+			Reporting::Warning(mpt::get_exception_text<mpt::ustring>(e), U_("OpenMPT Update"));
 			EndDialog(IDCANCEL);
 			return;
 		} catch(const Error &e)
 		{
-			Reporting::Error(e.get_msg(), U_("OpenMPT Update Error"));
+			Reporting::Error(mpt::get_exception_text<mpt::ustring>(e), U_("OpenMPT Update Error"));
 			EndDialog(IDCANCEL);
 			return;
 		} catch(const std::exception &e)
@@ -1427,7 +1431,7 @@ void CUpdateCheck::ShowFailureGUI(const bool autoUpdate, const CUpdateCheck::Err
 
 
 CUpdateCheck::Error::Error(CString errorMessage)
-	: std::runtime_error(mpt::ToCharset(mpt::CharsetException, errorMessage))
+	: std::runtime_error(mpt::transcode<std::string>(mpt::exception_encoding, errorMessage))
 	, m_Message(errorMessage)
 {
 	return;
@@ -1435,7 +1439,7 @@ CUpdateCheck::Error::Error(CString errorMessage)
 
 
 CUpdateCheck::Error::Error(CString errorMessage, DWORD errorCode)
-	: std::runtime_error(mpt::ToCharset(mpt::CharsetException, FormatErrorCode(errorMessage, errorCode)))
+	: std::runtime_error(mpt::transcode<std::string>(mpt::exception_encoding, FormatErrorCode(errorMessage, errorCode)))
 	, m_Message(errorMessage)
 {
 	return;
@@ -1612,12 +1616,12 @@ void CUpdateSetupDlg::OnShowStatisticsData(NMHDR * /*pNMHDR*/, LRESULT * /*pResu
 		{
 			statistics += U_("POST ") + settings.apiURL + U_("statistics/") + UL_("\n");
 		}
-		statistics += mpt::String::Replace(mpt::ToUnicode(mpt::Charset::UTF8, CUpdateCheck::GetStatisticsDataV3(settings)), U_("\t"), U_("    "));
+		statistics += mpt::replace(mpt::ToUnicode(mpt::Charset::UTF8, CUpdateCheck::GetStatisticsDataV3(settings)), U_("\t"), U_("    "));
 	}
 
 	InfoDialog dlg(this);
 	dlg.SetCaption(_T("Update Statistics Data"));
-	dlg.SetContent(mpt::ToWin(mpt::String::Replace(statistics, U_("\n"), U_("\r\n"))));
+	dlg.SetContent(mpt::ToWin(mpt::replace(statistics, U_("\n"), U_("\r\n"))));
 	dlg.DoModal();
 }
 

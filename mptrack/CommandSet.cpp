@@ -19,6 +19,8 @@
 #include "../common/mptFileIO.h"
 #include <sstream>
 #include "TrackerSettings.h"
+#include "mpt/parse/parse.hpp"
+#include "mpt/string/utility.hpp"
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -341,6 +343,9 @@ constexpr struct
 	{kcSampleTransposeDown,                    'A',                ModCtrl,            kKeyEventDown,                   kCtxViewSamples,         MPT_V("1.31")},
 	{kcSampleTransposeOctUp,                   'Q',                ModShift | ModCtrl, kKeyEventDown,                   kCtxViewSamples,         MPT_V("1.31")},
 	{kcSampleTransposeOctDown,                 'A',                ModShift | ModCtrl, kKeyEventDown,                   kCtxViewSamples,         MPT_V("1.31")},
+	{kcSampleFinetuneUp,                       VK_UP,              ModShift,           kKeyEventDown | kKeyEventRepeat, kCtxViewSamples,         MPT_V("1.31.00.26")},
+	{kcSampleFinetuneDown,                     VK_DOWN,            ModShift,           kKeyEventDown | kKeyEventRepeat, kCtxViewSamples,         MPT_V("1.31.00.26")},
+	{kcSampleToggleFollowPlayCursor,           'F',                ModShift,           kKeyEventDown,                   kCtxViewSamples,         MPT_V("1.31.00.19")},
 	{kcSampleTrim,                             'T',                ModCtrl,            kKeyEventDown,                   kCtxViewSamples,         MPT_V("1.31")},
 	{kcSampleTrimToLoopEnd,                    'T',                ModShift | ModCtrl, kKeyEventDown,                   kCtxViewSamples,         MPT_V("1.31")},
 	{kcSampleSilence,                          VK_BACK,            ModNone,            kKeyEventDown,                   kCtxViewSamples,         MPT_V("1.31")},
@@ -844,6 +849,7 @@ static constexpr struct
 	{KeyCommand::Hidden, kcSetFXpanSlide, _T("FX Pan Slide")},
 	{KeyCommand::Hidden, kcSetFXsetEnvPos, _T("FX Set Envelope Position (XM)")},
 	{KeyCommand::Hidden, kcSetFXmacro, _T("FX MIDI Macro")},
+	{KeyCommand::Hidden, kcSetFXDummy, _T("FX Dummy") },
 	{1294, kcSetFXmacroSlide, _T("Smooth MIDI Macro Slide")},
 	{1295, kcSetFXdelaycut, _T("Combined Note Delay and Note Cut")},
 	{KeyCommand::Hidden, kcPatternJumpDownh1Select, _T("kcPatternJumpDownh1Select")},
@@ -1234,6 +1240,15 @@ static constexpr struct
 	{2044, kcTreeViewSendToEditorInsertNew, _T("Send To Editor (Insert New)")},
 	{2045, kcPlayStopSong, _T("Play Song / Stop Song")},
 	{2046, kcTreeViewDeletePermanently, _T("Delete Item Permanently")},
+	{2047, kcSampleToggleFollowPlayCursor, _T("Toggle Follow Sample Play Cursor")},
+	{2048, kcPatternScrollLeft, _T("Scroll Left")},
+	{2049, kcPatternScrollRight, _T("Scroll Right") },
+	{2050, kcPatternScrollUp, _T("Scroll Up")},
+	{2051, kcPatternScrollDown, _T("Scroll Down")},
+	{2052, kcPlaySongFromCursorPause, _T("Play Song from Cursor / Pause")},
+	{2053, kcPlaySongFromPatternPause, _T("Play Song from Pattern Start / Pause")},
+	{2054, kcSampleFinetuneUp, _T("Increment Finetune")},
+	{2055, kcSampleFinetuneDown, _T("Decrement Finetune")},
 };
 
 // Get command descriptions etc.. loaded up.
@@ -2087,7 +2102,7 @@ bool CCommandSet::LoadFile(std::istream &iStrm, const mpt::ustring &filenameDesc
 		if (curLine.empty())
 			continue;
 
-		tokens = mpt::String::Split<std::string>(curLine, ":");
+		tokens = mpt::split(curLine, std::string(":"));
 		if(tokens.size() == 2 && !mpt::CompareNoCaseAscii(tokens[0], "version"))
 		{
 			// This line indicates the version of this keymap file (e.g. "version:1" on older versions, in newer version the OpenMPT version that was used to save the file)
@@ -2103,11 +2118,11 @@ bool CCommandSet::LoadFile(std::istream &iStrm, const mpt::ustring &filenameDesc
 		CommandID cmd = kcNumCommands;
 		if(tokens.size() >= 5)
 		{
-			kc.Context(static_cast<InputTargetContext>(ConvertStrTo<int>(tokens[0])));
-			cmd = FindCmd(ConvertStrTo<uint32>(tokens[1]));
+			kc.Context(static_cast<InputTargetContext>(mpt::parse<int>(tokens[0])));
+			cmd = FindCmd(mpt::parse<uint32>(tokens[1]));
 
 			// Modifier
-			kc.Modifier(static_cast<Modifiers>(ConvertStrTo<int>(tokens[2])));
+			kc.Modifier(static_cast<Modifiers>(mpt::parse<int>(tokens[2])));
 
 			// Virtual Key code / Scan code
 			UINT vk = 0;
@@ -2115,7 +2130,7 @@ bool CCommandSet::LoadFile(std::istream &iStrm, const mpt::ustring &filenameDesc
 			if(scPos != std::string::npos)
 			{
 				// Scan code present
-				UINT sc = ConvertStrTo<UINT>(tokens[3].substr(scPos + 1));
+				UINT sc = mpt::parse<UINT>(tokens[3].substr(scPos + 1));
 				for(auto i = layouts.begin(); i != layouts.end() && vk == 0; i++)
 				{
 					vk = MapVirtualKeyEx(sc, MAPVK_VSC_TO_VK, *i);
@@ -2123,12 +2138,12 @@ bool CCommandSet::LoadFile(std::istream &iStrm, const mpt::ustring &filenameDesc
 			}
 			if(vk == 0)
 			{
-				vk = ConvertStrTo<UINT>(tokens[3]);
+				vk = mpt::parse<UINT>(tokens[3]);
 			}
 			kc.KeyCode(vk);
 
 			// Event
-			kc.EventType(static_cast<KeyEventType>(ConvertStrTo<int>(tokens[4])));
+			kc.EventType(static_cast<KeyEventType>(mpt::parse<int>(tokens[4])));
 		}
 
 		// Error checking
@@ -2401,27 +2416,29 @@ bool CCommandSet::QuickChange_SetEffects(const CModSpecifications &modSpecs)
 	}
 	m_oldSpecs = &modSpecs;
 
-	int choices = 0;
 	KeyCombination kc(kCtxViewPatternsFX, ModNone, 0, kKeyEventDown | kKeyEventRepeat);
 
-	for(CommandID cmd = kcFixedFXStart; cmd <= kcFixedFXend; cmd = static_cast<CommandID>(cmd + 1))
+	for(CommandID cmd = kcSetFXStart; cmd <= kcSetFXEnd; cmd = static_cast<CommandID>(cmd + 1))
 	{
-		// Remove all old choices
-		choices = GetKeyListSize(cmd);
-		for(int p = choices; p >= 0; --p)
-		{
-			Remove(p, cmd);
-		}
-
 		char effect = modSpecs.GetEffectLetter(static_cast<ModCommand::COMMAND>(cmd - kcSetFXStart + 1));
 		if(effect >= 'A' && effect <= 'Z')
 		{
 			// VkKeyScanEx needs lowercase letters
 			effect = effect - 'A' + 'a';
-		} else if(effect < '0' || effect > '9')
+		} else if(effect == ' ')
 		{
-			// Don't map effects that use "weird" effect letters (such as # or \)
+			// We don't want to enter "empty" effects in IT / S3M
 			effect = '?';
+		} else if(effect != '?' && (effect < '0' || effect > '9'))
+		{
+			// Don't map effects that use non-alphanumeric effect letters (such as # or \), they are set up manually instead
+			continue;
+		}
+
+		// Remove all old choices
+		for(int p = GetKeyListSize(cmd) - 1; p >= 0; --p)
+		{
+			Remove(p, cmd);
 		}
 
 		if(effect != '?')

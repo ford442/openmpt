@@ -112,7 +112,7 @@ static std::pair<EffectCommand, uint8> TranslateULTCommands(const uint8 e, uint8
 		CMD_OFFSET,
 		CMD_VOLUMESLIDE,
 		CMD_PANNING8,
-		CMD_VOLUME,
+		CMD_VOLUME8,
 		CMD_PATTERNBREAK,
 		CMD_NONE,  // extended effects, processed separately
 		CMD_SPEED,
@@ -149,9 +149,6 @@ static std::pair<EffectCommand, uint8> TranslateULTCommands(const uint8 e, uint8
 		break;
 	case 0x0B:
 		param = (param & 0x0F) * 0x11;
-		break;
-	case 0x0C: // volume
-		param /= 4u;
 		break;
 	case 0x0D: // pattern break
 		param = 10 * (param >> 4) + (param & 0x0F);
@@ -230,7 +227,7 @@ static int ReadULTEvent(ModCommand &m, FileReader &file, uint8 version)
 	{
 		uint32 offset = param1 * 4;
 		param1 = mpt::saturate_cast<uint8>(offset);
-		if(offset > 0xFF && ModCommand::GetEffectWeight(cmd2) < ModCommand::GetEffectType(CMD_OFFSET))
+		if(offset > 0xFF && ModCommand::GetEffectWeight(cmd2) < ModCommand::GetEffectWeight(CMD_OFFSET))
 		{
 			m.SetEffectCommand(CMD_OFFSET, static_cast<ModCommand::PARAM>(offset));
 			m.SetVolumeCommand(VOLCMD_OFFSET, static_cast<ModCommand::VOL>(offset >> 8));
@@ -240,7 +237,7 @@ static int ReadULTEvent(ModCommand &m, FileReader &file, uint8 version)
 	{
 		uint32 offset = param2 * 4;
 		param2 = mpt::saturate_cast<uint8>(offset);
-		if(offset > 0xFF && ModCommand::GetEffectWeight(cmd1) < ModCommand::GetEffectType(CMD_OFFSET))
+		if(offset > 0xFF && ModCommand::GetEffectWeight(cmd1) < ModCommand::GetEffectWeight(CMD_OFFSET))
 		{
 			m.SetEffectCommand(CMD_OFFSET, static_cast<ModCommand::PARAM>(offset));
 			m.SetVolumeCommand(VOLCMD_OFFSET, static_cast<ModCommand::VOL>(offset >> 8));
@@ -269,12 +266,9 @@ static int ReadULTEvent(ModCommand &m, FileReader &file, uint8 version)
 // Functor for postfixing ULT patterns (this is easier than just remembering everything WHILE we're reading the pattern events)
 struct PostFixUltCommands
 {
-	PostFixUltCommands(CHANNELINDEX numChannels)
+	PostFixUltCommands(CHANNELINDEX channels) : numChannels{channels}
 	{
-		this->numChannels = numChannels;
-		curChannel = 0;
-		writeT125 = false;
-		isPortaActive.resize(numChannels, false);
+		isPortaActive.resize(channels, false);
 	}
 
 	void operator()(ModCommand &m)
@@ -326,21 +320,22 @@ struct PostFixUltCommands
 		{
 			writeT125 = false;
 		}
-		curChannel = (curChannel + 1) % numChannels;
+		curChannel++;
+		if(curChannel >= numChannels)
+			curChannel = 0;
 	}
 
 	std::vector<bool> isPortaActive;
-	CHANNELINDEX numChannels, curChannel;
-	bool writeT125;
+	const CHANNELINDEX numChannels;
+	CHANNELINDEX curChannel = 0;
+	bool writeT125 = false;
 };
 
 
 static bool ValidateHeader(const UltFileHeader &fileHeader)
 {
-	if(fileHeader.version < '1'
-		|| fileHeader.version > '4'
-		|| std::memcmp(fileHeader.signature, "MAS_UTrack_V00", sizeof(fileHeader.signature))
-		)
+	if(fileHeader.version < '1' || fileHeader.version > '4'
+	   || std::memcmp(fileHeader.signature, "MAS_UTrack_V00", sizeof(fileHeader.signature)))
 	{
 		return false;
 	}
@@ -464,7 +459,8 @@ bool CSoundFile::ReadULT(FileReader &file, ModLoadingFlags loadFlags)
 				int repeat = ReadULTEvent(evnote, file, fileHeader.version);
 				if(repeat + row > 64)
 					repeat = 64 - row;
-				if(repeat == 0) break;
+				if(repeat == 0)
+					break;
 				while(repeat--)
 				{
 					*note = evnote;

@@ -108,18 +108,19 @@ enum EffectCommand : uint8
 	CMD_DBMECHO             = 43, // DBM enable/disable echo
 	CMD_OFFSETPERCENTAGE    = 44, // PLM Percentage Offset
 	CMD_DIGIREVERSESAMPLE   = 45, // DIGI reverse sample
+	CMD_VOLUME8             = 46, // 8-bit volume
 	MAX_EFFECTS
 };
 
 
-enum EffectType : uint8
+enum class EffectType : uint8
 {
-	EFFECT_TYPE_NORMAL  = 0,
-	EFFECT_TYPE_GLOBAL  = 1,
-	EFFECT_TYPE_VOLUME  = 2,
-	EFFECT_TYPE_PANNING = 3,
-	EFFECT_TYPE_PITCH   = 4,
-	MAX_EFFECT_TYPE     = 5
+	Normal   = 0,
+	Global   = 1,
+	Volume   = 2,
+	Panning  = 3,
+	Pitch    = 4,
+	NumTypes = 5
 };
 
 
@@ -136,9 +137,6 @@ public:
 	// Defines the maximum value for column data when interpreted as 2-byte value
 	// (for example volcmd and vol). The valid value range is [0, maxColumnValue].
 	static constexpr int maxColumnValue = 999;
-
-	// Returns empty modcommand.
-	static ModCommand Empty() { return ModCommand(); }
 
 	bool operator==(const ModCommand &mc) const
 	{
@@ -161,11 +159,11 @@ public:
 	void Set(NOTE n, INSTR ins, uint16 volcol, uint16 effectcol) { note = n; instr = ins; SetValueVolCol(volcol); SetValueEffectCol(effectcol); }
 
 	uint16 GetValueVolCol() const { return GetValueVolCol(volcmd, vol); }
-	static uint16 GetValueVolCol(uint8 volcmd, uint8 vol) { return (volcmd << 8) + vol; }
+	static uint16 GetValueVolCol(uint8 volcmd, uint8 vol) { return static_cast<uint16>(volcmd << 8) + vol; }
 	void SetValueVolCol(const uint16 val) { volcmd = static_cast<VOLCMD>(val >> 8); vol = static_cast<uint8>(val & 0xFF); }
 
 	uint16 GetValueEffectCol() const { return GetValueEffectCol(command, param); }
-	static uint16 GetValueEffectCol(uint8 command, uint8 param) { return (command << 8) + param; }
+	static uint16 GetValueEffectCol(uint8 command, uint8 param) { return static_cast<uint16>(command << 8) + param; }
 	void SetValueEffectCol(const uint16 val) { command = static_cast<COMMAND>(val >> 8); param = static_cast<uint8>(val & 0xFF); }
 
 	// Clears modcommand.
@@ -205,6 +203,11 @@ public:
 	// Returns true if the cell contains an effect command that may affect the global state of the module.
 	bool IsGlobalCommand() const { return IsGlobalCommand(command, param); }
 	static bool IsGlobalCommand(COMMAND command, PARAM param);
+	// Returns true if the cell contains an effect command whose parameter is divided into two nibbles
+	bool CommandHasTwoNibbles() const { return CommandHasTwoNibbles(command); }
+	static bool CommandHasTwoNibbles(COMMAND command);
+	// Returns true if the two commands' parameters have the same 
+	bool IsNormalVolumeSlide() const { return command == CMD_VOLUMESLIDE || command == CMD_VIBRATOVOL || command == CMD_TONEPORTAVOL; }
 
 	// Returns true if the note is inside the Amiga frequency range
 	bool IsAmigaNote() const { return IsAmigaNote(note); }

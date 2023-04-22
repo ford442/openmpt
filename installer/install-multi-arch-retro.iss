@@ -36,7 +36,7 @@ AlwaysShowDirOnReadyPage=yes
 DisableProgramGroupPage=yes
 DisableReadyMemo=no
 DisableWelcomePage=no
-MinVersion=5.1sp1
+MinVersion=5.1sp3
 OutputDir=.\
 OutputBaseFilename=OpenMPT-{#GetAppVersion}-RETRO-Setup
 PrivilegesRequired=admin
@@ -44,7 +44,7 @@ SetupIconFile=..\mptrack\res\MPTRACK.ICO
 SolidCompression=yes
 TimeStampsInUTC=yes
 UninstallDisplayIcon={app}\OpenMPT App Icon.ico
-VersionInfoCopyright=Copyright © 2004-2022 OpenMPT Project Developers and Contributors, Copyright © 1997-2003 Olivier Lapicque
+VersionInfoCopyright=Copyright © 2004-2023 OpenMPT Project Developers and Contributors, Copyright © 1997-2003 Olivier Lapicque
 VersionInfoProductTextVersion={#GetAppVersion}
 VersionInfoProductVersion={#GetAppVersion}
 VersionInfoTextVersion={#GetAppVersion}
@@ -79,19 +79,19 @@ Name: en; MessagesFile: compiler:Default.isl
 ; note: packageTemplate\ contains files specific for the "install package".
 ; for files that are common with the "zip package", use ..\packageTemplate\
 
-Source: ..\bin\{#BuildFolder}\x86\OpenMPT.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp1
-Source: ..\bin\{#BuildFolder}\x86\PluginBridge-x86.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp1
-Source: ..\bin\{#BuildFolder}\x86\PluginBridgeLegacy-x86.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp1
-Source: ..\bin\{#BuildFolder}\x86\openmpt-lame.dll; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp1
-Source: ..\bin\{#BuildFolder}\x86\openmpt-mpg123.dll; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp1
-Source: ..\bin\{#BuildFolder}\x86\openmpt-soundtouch.dll; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp1
+Source: ..\bin\{#BuildFolder}\x86\OpenMPT.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
+Source: ..\bin\{#BuildFolder}\x86\PluginBridge-x86.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
+Source: ..\bin\{#BuildFolder}\x86\PluginBridgeLegacy-x86.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
+Source: ..\bin\{#BuildFolder}\x86\openmpt-lame.dll; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
+Source: ..\bin\{#BuildFolder}\x86\openmpt-mpg123.dll; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
+Source: ..\bin\{#BuildFolder}\x86\openmpt-soundtouch.dll; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
 
-Source: ..\bin\{#BuildFolder}\amd64\OpenMPT.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2; Check: CheckDefaultArch('amd64')
-Source: ..\bin\{#BuildFolder}\amd64\PluginBridge-amd64.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2; Check: CheckDefaultArch('amd64')
-Source: ..\bin\{#BuildFolder}\amd64\PluginBridgeLegacy-amd64.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2; Check: CheckDefaultArch('amd64')
-Source: ..\bin\{#BuildFolder}\amd64\openmpt-lame.dll; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2; Check: CheckDefaultArch('amd64')
-Source: ..\bin\{#BuildFolder}\amd64\openmpt-mpg123.dll; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2; Check: CheckDefaultArch('amd64')
-Source: ..\bin\{#BuildFolder}\amd64\openmpt-soundtouch.dll; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolder}\amd64\OpenMPT.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolder}\amd64\PluginBridge-amd64.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolder}\amd64\PluginBridgeLegacy-amd64.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolder}\amd64\openmpt-lame.dll; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolder}\amd64\openmpt-mpg123.dll; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolder}\amd64\openmpt-soundtouch.dll; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
 
 Source: "..\mptrack\res\MPTRACK.ICO"; DestName: "OpenMPT App Icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\packageTemplate\OpenMPT File Icon.ico"; DestName: "OpenMPT File Icon.ico"; DestDir: "{app}"; Flags: ignoreversion

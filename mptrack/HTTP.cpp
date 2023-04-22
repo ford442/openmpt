@@ -12,8 +12,11 @@
 #include "HTTP.h"
 #include "mpt/system_error/system_error.hpp"
 #include <WinInet.h>
+#include "mpt/format/join.hpp"
 #include "mpt/io/io.hpp"
 #include "mpt/io/io_stdstream.hpp"
+#include "mpt/parse/parse.hpp"
+#include "mpt/string/utility.hpp"
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -109,7 +112,7 @@ namespace HTTP
 
 
 exception::exception(const mpt::ustring &m)
-	: std::runtime_error(std::string("HTTP error: ") + mpt::ToCharset(mpt::CharsetException, m))
+	: std::runtime_error(std::string("HTTP error: ") + mpt::transcode<std::string>(mpt::exception_encoding, m))
 {
 	message = m;
 }
@@ -323,7 +326,7 @@ Result Request::operator()(InternetSession &internet) const
 				arguments.push_back(MPT_UFORMAT("{}")(key));
 			}
 		}
-		queryPath += U_("?") + mpt::String::Combine(arguments, U_("&"));
+		queryPath += U_("?") + mpt::join_format(arguments, U_("&"));
 	}
 	Handle request = NativeHandle(HttpOpenRequest(
 		NativeHandle(connection),
@@ -449,7 +452,7 @@ Request &Request::SetURI(const URI &uri)
 	host = uri.host;
 	if(!uri.port.empty())
 	{
-		port = HTTP::Port(ConvertStrTo<uint16>(uri.port));
+		port = HTTP::Port(mpt::parse<uint16>(uri.port));
 	} else
 	{
 		port = HTTP::Port::Default;
@@ -464,7 +467,7 @@ Request &Request::SetURI(const URI &uri)
 		path = uri.path;
 	}
 	query.clear();
-	auto keyvals = mpt::String::Split<mpt::ustring>(uri.query, U_("&"));
+	auto keyvals = mpt::split(uri.query, U_("&"));
 	for(const auto &keyval : keyvals)
 	{
 		std::size_t delim_pos = keyval.find(U_("="));

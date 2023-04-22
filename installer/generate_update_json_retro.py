@@ -20,8 +20,8 @@ if IS_RELEASE:
 	changelog_url = "https://openmpt.org/release_notes/History.txt"
 else:
 	download_base_url = "https://builds.openmpt.org/builds/auto/openmpt/pkg.win-retro/"
-	announcement_url = "https://builds.openmpt.org/builds/auto/openmpt/pkg.win-retro/"
-	changelog_url = "https://source.openmpt.org/browse/openmpt/?op=revision&rev=" + SVNVERSION
+	announcement_url = "https://source.openmpt.org/browse/openmpt/trunk/OpenMPT/?op=log&isdir=1&sr=" + SVNVERSION + "&max=1000"
+	changelog_url = "https://source.openmpt.org/browse/openmpt/trunk/OpenMPT/?op=log&isdir=1&sr=" + SVNVERSION + "&max=1000"
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 os.chdir("..")
@@ -99,38 +99,38 @@ update = {
 		"announcement_url": announcement_url,
 		"changelog_url": changelog_url,
 		"downloads": {
-			"installer": {
+			"retro-installer": {
 				"url": download_base_url + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT_VERSION_MAJOR + "/OpenMPT-" + version + "-RETRO-Setup.update.json",
 				"download_url": download_base_url + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT_VERSION_MAJOR + "/OpenMPT-" + version + "-RETRO-Setup.exe",
 				"type": "installer",
 				"can_autoupdate": True,
 				"autoupdate_minversion": "1.30.00.08",
 				"os": "windows",
-				"required_windows_version": { "version_major":5, "version_minor":1, "servicepack_major":1, "servicepack_minor":0, "build":0, "wine_major":1, "wine_minor":8, "wine_update":0 },
+				"required_windows_version": { "version_major":5, "version_minor":1, "servicepack_major":3, "servicepack_minor":0, "build":0, "wine_major":1, "wine_minor":8, "wine_update":0 },
 				"required_architectures": { "x86":True },
 				"supported_architectures": { "x86":True,"amd64":True },
 				"required_processor_features": {}
 			},
-			"portable-x86": {
+			"retro-portable-x86": {
 				"url": download_base_url + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT_VERSION_MAJOR + "/OpenMPT-" + version + "-RETRO-portable-x86.update.json",
 				"download_url": download_base_url + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT_VERSION_MAJOR + "/OpenMPT-" + version + "-RETRO-portable-x86.zip",
 				"type": "archive",
 				"can_autoupdate": True,
 				"autoupdate_minversion": "1.30.00.08",
 				"os": "windows",
-				"required_windows_version": { "version_major":5, "version_minor":1, "servicepack_major":1, "servicepack_minor":0, "build":0, "wine_major":1, "wine_minor":8, "wine_update":0 },
+				"required_windows_version": { "version_major":5, "version_minor":1, "servicepack_major":3, "servicepack_minor":0, "build":0, "wine_major":1, "wine_minor":8, "wine_update":0 },
 				"required_architectures": {},
 				"supported_architectures": { "x86":True },
 				"required_processor_features": {}
 			},
-			"portable-amd64": {
+			"retro-portable-amd64": {
 				"url": download_base_url + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT_VERSION_MAJOR + "/OpenMPT-" + version + "-RETRO-portable-amd64.update.json",
 				"download_url": download_base_url + OPENMPT_VERSION_MAJORMAJOR + "." + OPENMPT_VERSION_MAJOR + "/OpenMPT-" + version + "-RETRO-portable-amd64.zip",
 				"type": "archive",
 				"can_autoupdate": True,
 				"autoupdate_minversion": "1.30.00.08",
 				"os": "windows",
-				"required_windows_version": { "version_major":5, "version_minor":2, "servicepack_major":0, "servicepack_minor":0, "build":0, "wine_major":1, "wine_minor":8, "wine_update":0 },
+				"required_windows_version": { "version_major":5, "version_minor":2, "servicepack_major":2, "servicepack_minor":0, "build":0, "wine_major":1, "wine_minor":8, "wine_update":0 },
 				"required_architectures": {},
 				"supported_architectures": { "amd64":True },
 				"required_processor_features": {}

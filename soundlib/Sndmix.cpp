@@ -2001,6 +2001,44 @@ void CSoundFile::ProcessRamping(ModChannel &chn) const
 }
 
 
+int CSoundFile::HandleNoteChangeFilter(ModChannel &chn) const
+{
+	int cutoff = -1;
+	if(!chn.triggerNote)
+		return cutoff;
+
+	bool useFilter = !m_SongFlags[SONG_MPTFILTERMODE];
+	if(const ModInstrument *pIns = chn.pModInstrument; pIns != nullptr)
+	{
+		if(pIns->IsResonanceEnabled())
+		{
+			chn.nResonance = pIns->GetResonance();
+			useFilter = true;
+		}
+		if(pIns->IsCutoffEnabled())
+		{
+			chn.nCutOff = pIns->GetCutoff();
+			useFilter = true;
+		}
+		if(useFilter && (pIns->filterMode != FilterMode::Unchanged))
+		{
+			chn.nFilterMode = pIns->filterMode;
+		}
+	} else
+	{
+		chn.nVolSwing = chn.nPanSwing = 0;
+		chn.nCutSwing = chn.nResSwing = 0;
+	}
+	if((chn.nCutOff < 0x7F || m_playBehaviour[kITFilterBehaviour]) && useFilter)
+	{
+		cutoff = SetupChannelFilter(chn, true);
+		if(cutoff >= 0)
+			cutoff = chn.nCutOff / 2u;
+	}
+	return cutoff;
+}
+
+
 // Returns channel increment and frequency with FREQ_FRACBITS fractional bits
 std::pair<SamplePosition, uint32> CSoundFile::GetChannelIncrement(const ModChannel &chn, uint32 period, int periodFrac) const
 {
@@ -2266,18 +2304,20 @@ bool CSoundFile::ReadNote()
 			chn.nRealPan = 128;
 		}
 
+		// Setup Initial Filter for this note
+		if(int cutoff = HandleNoteChangeFilter(chn); cutoff >= 0 && chn.dwFlags[CHN_ADLIB] && m_opl)
+			m_opl->Volume(nChn, static_cast<uint8>(cutoff), true);
+
 		// Now that all relevant envelopes etc. have been processed, we can parse the MIDI macro data.
 		ProcessMacroOnChannel(nChn);
 
 		// After MIDI macros have been processed, we can also process the pitch / filter envelope and other pitch-related things.
 		if(samplePlaying)
 		{
-			int cutoff = ProcessPitchFilterEnvelope(chn, period);
-			if(cutoff >= 0 && chn.dwFlags[CHN_ADLIB] && m_opl)
-			{
-				// Cutoff doubles as modulator intensity for FM instruments
-				m_opl->Volume(nChn, static_cast<uint8>(cutoff / 4), true);
-			}
+			int envCutoff = ProcessPitchFilterEnvelope(chn, period);
+			// Cutoff doubles as modulator intensity for FM instruments
+			if(envCutoff >= 0 && chn.dwFlags[CHN_ADLIB] && m_opl)
+				m_opl->Volume(nChn, static_cast<uint8>(envCutoff / 4), true);
 		}
 
 		if(chn.rowCommand.volcmd == VOLCMD_VIBRATODEPTH &&
@@ -2525,6 +2565,7 @@ bool CSoundFile::ReadNote()
 		}
 
 		chn.dwOldFlags = chn.dwFlags;
+		chn.triggerNote = false;  // For SONG_PAUSED mode
 	}
 
 	// If there are more channels being mixed than allowed, order them by volume and discard the most quiet ones
@@ -2591,12 +2632,12 @@ void CSoundFile::ProcessMidiOut(CHANNELINDEX nChn)
 	// Check for volume commands
 	uint8 vol = 0xFF;
 	if(chn.rowCommand.volcmd == VOLCMD_VOLUME)
-	{
 		vol = std::min(chn.rowCommand.vol, uint8(64));
-	} else if(chn.rowCommand.command == CMD_VOLUME)
-	{
+	else if(chn.rowCommand.command == CMD_VOLUME)
 		vol = std::min(chn.rowCommand.param, uint8(64));
-	}
+	else if(chn.rowCommand.command == CMD_VOLUME8)
+		vol = static_cast<uint8>((chn.rowCommand.param + 3u) / 4u);
+
 	const bool hasVolCommand = (vol != 0xFF);
 
 	if(m_playBehaviour[kMIDICCBugEmulation])
@@ -2668,11 +2709,11 @@ void CSoundFile::ProcessMidiOut(CHANNELINDEX nChn)
 
 
 template<int channels>
-MPT_FORCEINLINE void ApplyGlobalVolumeWithRamping(int32 *SoundBuffer, int32 *RearBuffer, int32 lCount, int32 m_nGlobalVolume, int32 step, int32 &m_nSamplesToGlobalVolRampDest, int32 &m_lHighResRampingGlobalVolume)
+MPT_FORCEINLINE void ApplyGlobalVolumeWithRamping(int32 *SoundBuffer, int32 *RearBuffer, uint32 lCount, int32 m_nGlobalVolume, int32 step, int32 &m_nSamplesToGlobalVolRampDest, int32 &m_lHighResRampingGlobalVolume)
 {
 	const bool isStereo = (channels >= 2);
 	const bool hasRear = (channels >= 4);
-	for(int pos = 0; pos < lCount; ++pos)
+	for(uint32 pos = 0; pos < lCount; ++pos)
 	{
 		if(m_nSamplesToGlobalVolRampDest > 0)
 		{
@@ -2697,7 +2738,7 @@ MPT_FORCEINLINE void ApplyGlobalVolumeWithRamping(int32 *SoundBuffer, int32 *Rea
 }
 
 
-void CSoundFile::ProcessGlobalVolume(long lCount)
+void CSoundFile::ProcessGlobalVolume(samplecount_t lCount)
 {
 
 	// should we ramp?
@@ -2760,7 +2801,7 @@ void CSoundFile::ProcessGlobalVolume(long lCount)
 }
 
 
-void CSoundFile::ProcessStereoSeparation(long countChunk)
+void CSoundFile::ProcessStereoSeparation(samplecount_t countChunk)
 {
 	ApplyStereoSeparation(MixSoundBuffer, MixRearBuffer, m_MixerSettings.gnChannels, countChunk, m_MixerSettings.m_nStereoSeparation);
 }

@@ -500,11 +500,15 @@ struct PathTraits {
 
 
 
-#if MPT_GCC_AT_LEAST(12, 1, 0) && MPT_GCC_BEFORE(13, 1, 0)
+#if MPT_GCC_AT_LEAST(12, 0, 0) && MPT_GCC_BEFORE(13, 1, 0)
 // Work-around <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105329> /
 // <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651>.
 #pragma GCC push_options
 #pragma GCC optimize("O1")
+// Work-around brain-damaged GCC warning 'void operator delete(void*, std::size_t)' called on a pointer to an unallocated object '"\\\000\\\000\000"'.
+// Probably a duplicate of one of the many incarnations of <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99098>.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
 #endif
 	static void SplitPath(raw_path_type p, raw_path_type * prefix, raw_path_type * drive, raw_path_type * dir, raw_path_type * fbase, raw_path_type * fext) {
 
@@ -674,13 +678,14 @@ struct PathTraits {
 			//static_assert(false);
 		}
 	}
-#if MPT_GCC_AT_LEAST(12, 1, 0) && MPT_GCC_BEFORE(13, 1, 0)
+#if MPT_GCC_AT_LEAST(12, 0, 0) && MPT_GCC_BEFORE(13, 1, 0)
+#pragma GCC diagnostic pop
 #pragma GCC pop_options
 #endif
 
 
 
-#if MPT_GCC_AT_LEAST(12, 1, 0) && MPT_GCC_BEFORE(13, 1, 0)
+#if MPT_GCC_AT_LEAST(12, 0, 0) && MPT_GCC_BEFORE(13, 1, 0)
 // Work-around <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105329> /
 // <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651>.
 #pragma GCC push_options
@@ -801,13 +806,13 @@ struct PathTraits {
 
 		return result;
 	}
-#if MPT_GCC_AT_LEAST(12, 1, 0) && MPT_GCC_BEFORE(13, 1, 0)
+#if MPT_GCC_AT_LEAST(12, 0, 0) && MPT_GCC_BEFORE(13, 1, 0)
 #pragma GCC pop_options
 #endif
 
 
 
-#if MPT_GCC_AT_LEAST(12, 1, 0) && MPT_GCC_BEFORE(13, 1, 0)
+#if MPT_GCC_AT_LEAST(12, 0, 0) && MPT_GCC_BEFORE(13, 1, 0)
 // Work-around <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105329> /
 // <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651>.
 #pragma GCC push_options
@@ -847,7 +852,7 @@ struct PathTraits {
 		}
 		return result;
 	}
-#if MPT_GCC_AT_LEAST(12, 1, 0) && MPT_GCC_BEFORE(13, 1, 0)
+#if MPT_GCC_AT_LEAST(12, 0, 0) && MPT_GCC_BEFORE(13, 1, 0)
 #pragma GCC pop_options
 #endif
 };

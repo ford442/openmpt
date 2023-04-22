@@ -17,31 +17,31 @@
 OPENMPT_NAMESPACE_BEGIN
 
 
-const EffectType effectTypes[] =
+static constexpr EffectType effectTypes[] =
 {
-	EFFECT_TYPE_NORMAL, EFFECT_TYPE_NORMAL,  EFFECT_TYPE_PITCH,  EFFECT_TYPE_PITCH,
-	EFFECT_TYPE_PITCH,  EFFECT_TYPE_PITCH,   EFFECT_TYPE_VOLUME, EFFECT_TYPE_VOLUME,
-	EFFECT_TYPE_VOLUME, EFFECT_TYPE_PANNING, EFFECT_TYPE_NORMAL, EFFECT_TYPE_VOLUME,
-	EFFECT_TYPE_GLOBAL, EFFECT_TYPE_VOLUME,  EFFECT_TYPE_GLOBAL, EFFECT_TYPE_NORMAL,
-	EFFECT_TYPE_GLOBAL, EFFECT_TYPE_GLOBAL,  EFFECT_TYPE_NORMAL, EFFECT_TYPE_NORMAL,
-	EFFECT_TYPE_NORMAL, EFFECT_TYPE_VOLUME,  EFFECT_TYPE_VOLUME, EFFECT_TYPE_GLOBAL,
-	EFFECT_TYPE_GLOBAL, EFFECT_TYPE_NORMAL,  EFFECT_TYPE_PITCH,  EFFECT_TYPE_PANNING,
-	EFFECT_TYPE_PITCH,  EFFECT_TYPE_PANNING, EFFECT_TYPE_NORMAL, EFFECT_TYPE_NORMAL,
-	EFFECT_TYPE_NORMAL, EFFECT_TYPE_NORMAL,  EFFECT_TYPE_NORMAL, EFFECT_TYPE_PITCH,
-	EFFECT_TYPE_PITCH,  EFFECT_TYPE_NORMAL,  EFFECT_TYPE_PITCH,  EFFECT_TYPE_PITCH,
-	EFFECT_TYPE_PITCH,  EFFECT_TYPE_PITCH,   EFFECT_TYPE_NORMAL, EFFECT_TYPE_NORMAL,
-	EFFECT_TYPE_NORMAL, EFFECT_TYPE_NORMAL,
+	EffectType::Normal, EffectType::Normal,  EffectType::Pitch,  EffectType::Pitch,
+	EffectType::Pitch,  EffectType::Pitch,   EffectType::Volume, EffectType::Volume,
+	EffectType::Volume, EffectType::Panning, EffectType::Normal, EffectType::Volume,
+	EffectType::Global, EffectType::Volume,  EffectType::Global, EffectType::Normal,
+	EffectType::Global, EffectType::Global,  EffectType::Normal, EffectType::Normal,
+	EffectType::Normal, EffectType::Volume,  EffectType::Volume, EffectType::Global,
+	EffectType::Global, EffectType::Normal,  EffectType::Pitch,  EffectType::Panning,
+	EffectType::Pitch,  EffectType::Panning, EffectType::Normal, EffectType::Normal,
+	EffectType::Normal, EffectType::Normal,  EffectType::Normal, EffectType::Pitch,
+	EffectType::Pitch,  EffectType::Normal,  EffectType::Pitch,  EffectType::Pitch,
+	EffectType::Pitch,  EffectType::Pitch,   EffectType::Normal, EffectType::Normal,
+	EffectType::Normal, EffectType::Normal,  EffectType::Volume
 };
 
 static_assert(std::size(effectTypes) == MAX_EFFECTS);
 
 
-const EffectType volumeEffectTypes[] =
+static constexpr EffectType volumeEffectTypes[] =
 {
-	EFFECT_TYPE_NORMAL, EFFECT_TYPE_VOLUME,  EFFECT_TYPE_PANNING, EFFECT_TYPE_VOLUME,
-	EFFECT_TYPE_VOLUME, EFFECT_TYPE_VOLUME,  EFFECT_TYPE_VOLUME,  EFFECT_TYPE_PITCH,
-	EFFECT_TYPE_PITCH,  EFFECT_TYPE_PANNING, EFFECT_TYPE_PANNING, EFFECT_TYPE_PITCH,
-	EFFECT_TYPE_PITCH,  EFFECT_TYPE_PITCH,   EFFECT_TYPE_NORMAL,  EFFECT_TYPE_NORMAL,
+	EffectType::Normal, EffectType::Volume,  EffectType::Panning, EffectType::Volume,
+	EffectType::Volume, EffectType::Volume,  EffectType::Volume,  EffectType::Pitch,
+	EffectType::Pitch,  EffectType::Panning, EffectType::Panning, EffectType::Pitch,
+	EffectType::Pitch,  EffectType::Pitch,   EffectType::Normal,  EffectType::Normal,
 };
 
 static_assert(std::size(volumeEffectTypes) == MAX_VOLCMDS);
@@ -52,7 +52,7 @@ EffectType ModCommand::GetEffectType(COMMAND cmd)
 	if(cmd < std::size(effectTypes))
 		return effectTypes[cmd];
 	else
-		return EFFECT_TYPE_NORMAL;
+		return EffectType::Normal;
 }
 
 
@@ -61,7 +61,7 @@ EffectType ModCommand::GetVolumeEffectType(VOLCMD volcmd)
 	if(volcmd < std::size(volumeEffectTypes))
 		return volumeEffectTypes[volcmd];
 	else
-		return EFFECT_TYPE_NORMAL;
+		return EffectType::Normal;
 }
 
 
@@ -79,7 +79,7 @@ void ModCommand::ExtendedMODtoS3MEffect()
 	case 0x20: command = CMD_PORTAMENTODOWN; param |= 0xF0; break;
 	case 0x30: param = (param & 0x0F) | 0x10; break;
 	case 0x40: param = (param & 0x03) | 0x30; break;
-	case 0x50: param = (param & 0x0F) | 0x20; break;
+	case 0x50: param = (param ^ 0x58) | 0x20; break;
 	case 0x60: param = (param & 0x0F) | 0xB0; break;
 	case 0x70: param = (param & 0x03) | 0x40; break;
 	case 0x90: command = CMD_RETRIG; param = (param & 0x0F); break;
@@ -102,7 +102,7 @@ void ModCommand::ExtendedS3MtoMODEffect()
 	switch(param & 0xF0)
 	{
 	case 0x10: param = (param & 0x0F) | 0x30; break;
-	case 0x20: param = (param & 0x0F) | 0x50; break;
+	case 0x20: param = (param ^ 0x28) | 0x50; break;
 	case 0x30: param = (param & 0x0F) | 0x40; break;
 	case 0x40: param = (param & 0x0F) | 0x70; break;
 	case 0x50: command = CMD_XFINEPORTAUPDOWN; break;  // map to unused X5x
@@ -147,6 +147,11 @@ void ModCommand::Convert(MODTYPE fromType, MODTYPE toType, const CSoundFile &snd
 		command = CMD_S3MCMDEX;
 		param = 0x9F;
 	}
+	if(command == CMD_VOLUME8)
+	{
+		command = CMD_VOLUME;
+		param = static_cast<PARAM>((param + 3u) / 4u);
+	}
 
 	// helper variables
 	const bool oldTypeIsMOD = (fromType == MOD_TYPE_MOD), oldTypeIsXM = (fromType == MOD_TYPE_XM),
@@ -169,7 +174,7 @@ void ModCommand::Convert(MODTYPE fromType, MODTYPE toType, const CSoundFile &snd
 	{
 		if(newTypeIsS3M)
 		{
-			param = (param + 1) >> 1;
+			param = static_cast<uint8>((param + 1u) >> 1);
 		} else if(oldTypeIsS3M)
 		{
 			if(param == 0xA4)
@@ -234,9 +239,9 @@ void ModCommand::Convert(MODTYPE fromType, MODTYPE toType, const CSoundFile &snd
 				param -= 0x80;
 			}
 			if(param <= 30)
-				param = 0xE0 | ((param + 1u) / 2u);
+				param = static_cast<uint8>(0xE0u | ((param + 1u) / 2u));
 			else
-				param = 0xF0 | std::min(static_cast<PARAM>((param + 7u) / 8u), PARAM(15));
+				param = static_cast<uint8>(0xF0u | std::min(static_cast<PARAM>((param + 7u) / 8u), PARAM(15)));
 		}
 	} // End if(oldTypeIsMPT)
 
@@ -324,6 +329,12 @@ void ModCommand::Convert(MODTYPE fromType, MODTYPE toType, const CSoundFile &snd
 			}
 			break;
 
+		case CMD_DUMMY:
+			// Command "W" in XM, equivalent implementation in IT / S3M is command " ".
+			// Don't convert this command, as it overwrites effect memory in S3M in particular - a feature not supported by all S3M players.
+			command = CMD_NONE;
+			break;
+
 		default:
 			break;
 		}
@@ -398,7 +409,7 @@ void ModCommand::Convert(MODTYPE fromType, MODTYPE toType, const CSoundFile &snd
 				} else
 				{
 					command = CMD_MODCMDEX;
-					param = (((param & 0x0F) + 3) >> 2) | 0x10;
+					param = static_cast<uint8>((((param & 0x0Fu) + 3u) >> 2) | 0x10u);
 				}
 			} else
 			{
@@ -420,7 +431,7 @@ void ModCommand::Convert(MODTYPE fromType, MODTYPE toType, const CSoundFile &snd
 				} else
 				{
 					command = CMD_MODCMDEX;
-					param = (((param & 0x0F) + 3) >> 2) | 0x20;
+					param = static_cast<uint8>((((param & 0x0Fu) + 3u) >> 2) | 0x20u);
 				}
 			} else
 			{
@@ -495,7 +506,7 @@ void ModCommand::Convert(MODTYPE fromType, MODTYPE toType, const CSoundFile &snd
 			break;
 
 		case CMD_GLOBALVOLUME:
-			param = (std::min(PARAM(0x80), param) + 1) / 2u;
+			param = static_cast<uint8>((std::min(PARAM(0x80), param) + 1u) / 2u);
 			break;
 
 		default:
@@ -511,10 +522,10 @@ void ModCommand::Convert(MODTYPE fromType, MODTYPE toType, const CSoundFile &snd
 		{
 		case CMD_VIBRATO:
 			// With linear slides, strength is roughly doubled.
-			param = (param & 0xF0) | (((param & 0x0F) + 1) / 2u);
+			param = static_cast<uint8>((param & 0xF0u) | (((param & 0x0Fu) + 1u) / 2u));
 			break;
 		case CMD_GLOBALVOLUME:
-			param = (std::min(PARAM(0x80), param) + 1) / 2u;
+			param = static_cast<uint8>((std::min(PARAM(0x80), param) + 1u) / 2u);
 			break;
 		default:
 			break;
@@ -563,7 +574,7 @@ void ModCommand::Convert(MODTYPE fromType, MODTYPE toType, const CSoundFile &snd
 	{
 		switch(command)
 		{
-			case CMD_TONEPORTAVOL:  // lacks memory -> 500 is the same as 300
+		case CMD_TONEPORTAVOL:  // lacks memory -> 500 is the same as 300
 			if(param == 0x00)
 				command = CMD_TONEPORTAMENTO;
 			break;
@@ -580,7 +591,15 @@ void ModCommand::Convert(MODTYPE fromType, MODTYPE toType, const CSoundFile &snd
 				command = CMD_NONE;
 			break;
 
-		case CMD_MODCMDEX:  // This would turn into "Set Active Macro", so let's better remove it
+		case CMD_MODCMDEX:
+			// No effect memory
+			if(param == 0x10 || param == 0x20 || param == 0xA0 || param == 0xB0)
+				command = CMD_NONE;
+			// This would turn into "Set Active Macro", so let's better remove it
+			if((param & 0xF0) == 0xF0)
+				command = CMD_NONE;
+			break;
+
 		case CMD_S3MCMDEX:
 			if((param & 0xF0) == 0xF0)
 				command = CMD_NONE;
@@ -1075,6 +1094,39 @@ bool ModCommand::IsGlobalCommand(COMMAND command, PARAM param)
 	}
 }
 
+
+bool ModCommand::CommandHasTwoNibbles(COMMAND command)
+{
+	switch(command)
+	{
+	case CMD_ARPEGGIO:
+	case CMD_VIBRATO:
+	case CMD_TONEPORTAVOL:
+	case CMD_VIBRATOVOL:
+	case CMD_TREMOLO:
+	case CMD_VOLUMESLIDE:
+	case CMD_RETRIG:
+	case CMD_TREMOR:
+	case CMD_MODCMDEX:
+	case CMD_S3MCMDEX:
+	case CMD_CHANNELVOLSLIDE:
+	case CMD_GLOBALVOLSLIDE:
+	case CMD_FINEVIBRATO:
+	case CMD_PANBRELLO:
+	case CMD_XFINEPORTAUPDOWN:
+	case CMD_PANNINGSLIDE:
+	case CMD_DELAYCUT:
+	case CMD_NOTESLIDEUP:
+	case CMD_NOTESLIDEDOWN:
+	case CMD_NOTESLIDEUPRETRIG:
+	case CMD_NOTESLIDEDOWNRETRIG:
+		return true;
+	default:
+		return false;
+	}
+}
+
+
 // "Importance" of every FX command. Table is used for importing from formats with multiple effect colums
 // and is approximately the same as in SchismTracker.
 size_t ModCommand::GetEffectWeight(COMMAND cmd)
@@ -1110,6 +1162,7 @@ size_t ModCommand::GetEffectWeight(COMMAND cmd)
 		CMD_VOLUMESLIDE,
 		CMD_VIBRATOVOL,
 		CMD_VOLUME,
+		CMD_VOLUME8,
 		CMD_DIGIREVERSESAMPLE,
 		CMD_REVERSEOFFSET,
 		CMD_OFFSETPERCENTAGE,
@@ -1156,6 +1209,10 @@ std::pair<VolumeCommand, ModCommand::VOL> ModCommand::ConvertToVolCommand(const 
 		break;
 	case CMD_VOLUME:
 		return {VOLCMD_VOLUME, std::min(param, PARAM(64))};
+	case CMD_VOLUME8:
+		if(!force && (param & 3))
+			break;
+		return {VOLCMD_VOLUME, static_cast<VOL>((param + 3u) / 4u)};
 	case CMD_PORTAMENTOUP:
 		// if not force, reject when dividing causes loss of data in LSB, or if the final value is too
 		// large to fit. (volume column Ex/Fx are four times stronger than effect column)

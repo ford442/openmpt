@@ -50,6 +50,7 @@ copy /y ..\..\src\mpt\LICENSE.BSD-3-Clause.txt               .\Licenses\License.
 copy /y ..\..\src\mpt\LICENSE.BSL-1.0.txt                    .\Licenses\License.mpt.BSL-1.0.txt || goto error
 rem copy /y ..\..\include\ancient\LICENSE                        .\Licenses\License.ancient.txt || goto error
 rem copy /y ..\..\include\ancient\src\BZIP2Table.hpp             .\Licenses\License.ancient.bzip2.txt || goto error
+rem copy /y ..\..\include\cryptopp\License.txt                   .\Licenses\License.CryptoPP.txt || goto error
 copy /y ..\..\include\flac\COPYING.Xiph                      .\Licenses\License.FLAC.txt || goto error
 rem copy /y ..\..\include\lame\COPYING                           .\Licenses\License.lame.txt || goto error
 rem copy /y ..\..\include\lhasa\COPYING                          .\Licenses\License.lhasa.txt || goto error
@@ -68,7 +69,7 @@ copy /y ..\..\include\portaudio\bindings\cpp\COPYING         .\Licenses\License.
 copy /y ..\..\include\pugixml\LICENSE.md                     .\Licenses\License.PugiXML.txt || goto error
 rem copy /y ..\..\include\r8brain\LICENSE                        .\Licenses\License.R8Brain.txt || goto error
 rem copy /y ..\..\include\rtaudio\README.md                      .\Licenses\License.RtAudio.txt || goto error
-rem copy /y ..\..\include\rtmidi\License.txt                     .\Licenses\License.RtMidi.txt || goto error
+rem copy /y ..\..\include\rtmidi\LICENSE                         .\Licenses\License.RtMidi.txt || goto error
 rem copy /y ..\..\include\smbPitchShift\smbPitchShift.cpp        .\Licenses\License.smbPitchShift.txt || goto error
 rem copy /y ..\..\include\soundtouch\COPYING.TXT                 .\Licenses\License.SoundTouch.txt || goto error
 rem copy /y ..\..\include\stb_vorbis\stb_vorbis.c                .\Licenses\License.stb_vorbis.txt || goto error
@@ -82,10 +83,10 @@ copy /y ..\..\libopenmpt\xmp-openmpt\xmp-openmpt.txt .\XMPlay\ || goto error
 copy /y ..\..\libopenmpt\in_openmpt\in_openmpt.txt .\Winamp\ || goto error
 copy /y ..\..\libopenmpt\xmp-openmpt\xmp-openmpt.txt .\XMPlay-legacy\ || goto error
 copy /y ..\..\libopenmpt\in_openmpt\in_openmpt.txt .\Winamp-legacy\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-static\x86\openmpt123.exe .\openmpt123\x86\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-static\x86\openmpt-mpg123.dll .\openmpt123\x86\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-static\amd64\openmpt123.exe .\openmpt123\amd64\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-static\amd64\openmpt-mpg123.dll .\openmpt123\amd64\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-static\x86\openmpt123.exe .\openmpt123\x86\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-static\x86\openmpt-mpg123.dll .\openmpt123\x86\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-static\amd64\openmpt123.exe .\openmpt123\amd64\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-static\amd64\openmpt-mpg123.dll .\openmpt123\amd64\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win10-static\arm\openmpt123.exe .\openmpt123\arm\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win10-static\arm\openmpt-mpg123.dll .\openmpt123\arm\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win10-static\arm64\openmpt123.exe .\openmpt123\arm64\ || goto error
@@ -94,10 +95,10 @@ copy /y ..\..\bin\release\%MPT_VS_VER%-win7-static\x86\openmpt123.exe .\openmpt1
 copy /y ..\..\bin\release\%MPT_VS_VER%-win7-static\x86\openmpt-mpg123.dll .\openmpt123\x86-legacy\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win7-static\amd64\openmpt123.exe .\openmpt123\amd64-legacy\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win7-static\amd64\openmpt-mpg123.dll .\openmpt123\amd64-legacy\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-static\x86\xmp-openmpt.dll .\XMPlay\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-static\x86\openmpt-mpg123.dll .\XMPlay\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-static\x86\in_openmpt.dll .\Winamp\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-static\x86\openmpt-mpg123.dll .\Winamp\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-static\x86\xmp-openmpt.dll .\XMPlay\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-static\x86\openmpt-mpg123.dll .\XMPlay\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-static\x86\in_openmpt.dll .\Winamp\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-static\x86\openmpt-mpg123.dll .\Winamp\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win7-static\x86\xmp-openmpt.dll .\XMPlay-legacy\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win7-static\x86\openmpt-mpg123.dll .\XMPlay-legacy\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win7-static\x86\in_openmpt.dll .\Winamp-legacy\ || goto error
@@ -189,7 +190,7 @@ rem copy /y ..\..\include\portaudio\bindings\cpp\COPYING         .\Licenses\Lice
 rem copy /y ..\..\include\pugixml\LICENSE.md                     .\Licenses\License.PugiXML.txt || goto error
 rem copy /y ..\..\include\r8brain\LICENSE                        .\Licenses\License.R8Brain.txt || goto error
 rem copy /y ..\..\include\rtaudio\README.md                      .\Licenses\License.RtAudio.txt || goto error
-rem copy /y ..\..\include\rtmidi\License.txt                     .\Licenses\License.RtMidi.txt || goto error
+rem copy /y ..\..\include\rtmidi\LICENSE                         .\Licenses\License.RtMidi.txt || goto error
 rem copy /y ..\..\include\smbPitchShift\smbPitchShift.cpp        .\Licenses\License.smbPitchShift.txt || goto error
 rem copy /y ..\..\include\soundtouch\COPYING.TXT                 .\Licenses\License.SoundTouch.txt || goto error
 rem copy /y ..\..\include\stb_vorbis\stb_vorbis.c                .\Licenses\License.stb_vorbis.txt || goto error
@@ -211,18 +212,18 @@ copy /y ..\..\libopenmpt\libopenmpt_stream_callbacks_file_mingw.h inc\libopenmpt
 copy /y ..\..\libopenmpt\libopenmpt_stream_callbacks_file_msvcrt.h inc\libopenmpt\ || goto error
 copy /y ..\..\libopenmpt\libopenmpt_stream_callbacks_file_posix.h inc\libopenmpt\ || goto error
 copy /y ..\..\libopenmpt\libopenmpt_stream_callbacks_file_posix_lfs64.h inc\libopenmpt\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\x86\libopenmpt.lib lib\x86\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\x86\libopenmpt.dll bin\x86\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\x86\openmpt-mpg123.dll bin\x86\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\x86\openmpt-ogg.dll bin\x86\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\x86\openmpt-vorbis.dll bin\x86\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\x86\openmpt-zlib.dll bin\x86\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\amd64\libopenmpt.lib lib\amd64\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\amd64\libopenmpt.dll bin\amd64\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\amd64\openmpt-mpg123.dll bin\amd64\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\amd64\openmpt-ogg.dll bin\amd64\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\amd64\openmpt-vorbis.dll bin\amd64\ || goto error
-copy /y ..\..\bin\release\%MPT_VS_VER%-win81-shared\amd64\openmpt-zlib.dll bin\amd64\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\x86\libopenmpt.lib lib\x86\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\x86\libopenmpt.dll bin\x86\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\x86\openmpt-mpg123.dll bin\x86\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\x86\openmpt-ogg.dll bin\x86\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\x86\openmpt-vorbis.dll bin\x86\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\x86\openmpt-zlib.dll bin\x86\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\amd64\libopenmpt.lib lib\amd64\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\amd64\libopenmpt.dll bin\amd64\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\amd64\openmpt-mpg123.dll bin\amd64\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\amd64\openmpt-ogg.dll bin\amd64\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\amd64\openmpt-vorbis.dll bin\amd64\ || goto error
+copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\amd64\openmpt-zlib.dll bin\amd64\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\arm\libopenmpt.lib lib\arm\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\arm\libopenmpt.dll bin\arm\ || goto error
 copy /y ..\..\bin\release\%MPT_VS_VER%-win10-shared\arm\openmpt-mpg123.dll bin\arm\ || goto error

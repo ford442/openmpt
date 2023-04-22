@@ -19,6 +19,24 @@
 OPENMPT_NAMESPACE_BEGIN
 
 
+CPatternContainer &CPatternContainer::operator=(const CPatternContainer &other)
+{
+	if(this == &other || m_rSndFile.GetNumChannels() != other.m_rSndFile.GetNumChannels())
+		return *this;
+	m_Patterns = other.m_Patterns;
+	return *this;
+}
+
+
+CPatternContainer &CPatternContainer::operator=(CPatternContainer &&other) noexcept
+{
+	if(this == &other || m_rSndFile.GetNumChannels() != other.m_rSndFile.GetNumChannels())
+		return *this;
+	m_Patterns = std::move(other.m_Patterns);
+	return *this;
+}
+
+
 void CPatternContainer::ClearPatterns()
 {
 	DestroyPatterns();
@@ -93,7 +111,7 @@ void CPatternContainer::Remove(const PATTERNINDEX ipat)
 }
 
 
-bool CPatternContainer::IsPatternEmpty(const PATTERNINDEX nPat) const
+bool CPatternContainer::IsPatternEmpty(const PATTERNINDEX nPat) const noexcept
 {
 	if(!IsValidPat(nPat))
 		return false;
@@ -131,7 +149,7 @@ void CPatternContainer::OnModTypeChanged(const MODTYPE /*oldtype*/)
 }
 
 
-PATTERNINDEX CPatternContainer::GetNumPatterns() const
+PATTERNINDEX CPatternContainer::GetNumPatterns() const noexcept
 {
 	for(PATTERNINDEX pat = Size(); pat > 0; pat--)
 	{
@@ -144,7 +162,7 @@ PATTERNINDEX CPatternContainer::GetNumPatterns() const
 }
 
 
-PATTERNINDEX CPatternContainer::GetNumNamedPatterns() const
+PATTERNINDEX CPatternContainer::GetNumNamedPatterns() const noexcept
 {
 	if(Size() == 0)
 	{
@@ -152,7 +170,7 @@ PATTERNINDEX CPatternContainer::GetNumNamedPatterns() const
 	}
 	for(PATTERNINDEX nPat = Size(); nPat > 0; nPat--)
 	{
-		if(!m_Patterns[nPat - 1].GetName().empty())
+		if(!m_Patterns[nPat - 1].m_PatternName.empty())
 		{
 			return nPat;
 		}

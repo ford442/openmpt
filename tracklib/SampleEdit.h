@@ -15,6 +15,8 @@
 #include "FadeLaws.h"
 #include "../soundlib/Snd_defs.h"
 
+#include <functional>
+
 OPENMPT_NAMESPACE_BEGIN
 
 class CSoundFile;
@@ -31,9 +33,11 @@ enum ResetFlag
 	SmpResetVibrato,
 };
 
+std::pair<int, int> FindMinMax(const int8 *p, SmpLength numSamples, int numChannels);
+std::pair<int, int> FindMinMax(const int16 *p, SmpLength numSamples, int numChannels);
+
 // Get a reference to all cue and loop points of the sample
 std::vector<std::reference_wrapper<SmpLength>> GetCuesAndLoops(ModSample &smp);
-
 
 // Insert silence to given location.
 // Note: Is currently implemented only for inserting silence to the beginning and to the end of the sample.
@@ -59,6 +63,9 @@ double RemoveDCOffset(ModSample &smp, SmpLength start, SmpLength end, CSoundFile
 
 // Amplify / fade  sample data
 bool AmplifySample(ModSample &smp, SmpLength start, SmpLength end, double amplifyStart, double amplifyEnd, bool isFadeIn, Fade::Law fadeLaw, CSoundFile &sndFile);
+
+// Normalize entire sample or just a selection
+bool NormalizeSample(ModSample &smp, SmpLength start, SmpLength end, CSoundFile &sndFile);
 
 // Reverse sample data
 bool ReverseSample(ModSample &smp, SmpLength start, SmpLength end, CSoundFile &sndFile);
@@ -86,6 +93,10 @@ bool ConvertTo16Bit(ModSample &smp, CSoundFile &sndFile);
 
 // Convert ping-pong loops to regular loops
 bool ConvertPingPongLoop(ModSample &smp, CSoundFile &sndFile, bool sustainLoop);
+
+// Resample using given resampling method (SRCMODE_DEFAULT = r8brain).
+// Returns end point of resampled data, or 0 on failure.
+SmpLength Resample(ModSample &smp, SmpLength start, SmpLength end, uint32 newRate, ResamplingMode mode, CSoundFile &sndFile, bool updatePatternCommands, const std::function<void()> &prepareSampleUndoFunc, const std::function<void()> &preparePatternUndoFunc);
 
 } // namespace SampleEdit
 

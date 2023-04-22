@@ -67,7 +67,8 @@
 #  STRICT=0            Treat warnings as errors.
 #  MODERN=0            Pass more modern compiler options.
 #  NATIVE=0            Optimize for system CPU.
-#  STDCXX=c++17        C++ standard version (only for GCC and clang)
+#  STDCXX=c++17        C++ standard version (default depends on compiler)
+#  STDC=c17            C standard version (default depends on compiler)
 #  ANALYZE=0           Enable static analyzer.
 #  CHECKED=0           Enable run-time assertions.
 #  CHECKED_ADDRESS=0   Enable address sanitizer
@@ -295,6 +296,9 @@ endif
 ifeq ($(UNAME_S),Linux)
 HOST_FLAVOUR=LINUX
 endif
+ifeq ($(UNAME_S),NetBSD)
+HOST_FLAVOUR=NETBSD
+endif
 ifeq ($(UNAME_S),FreeBSD)
 HOST_FLAVOUR=FREEBSD
 endif
@@ -444,25 +448,31 @@ else ifeq ($(OPTIMIZE),size)
 CXXFLAGS += -Os
 CFLAGS   += -Os -fno-strict-aliasing
 LDFLAGS  += 
-ifneq ($(MPT_COMPILER_NOGCSECTIONS),1)
+ifneq ($(MPT_COMPILER_NOSECTIONS),1)
 CXXFLAGS += -ffunction-sections -fdata-sections
 CFLAGS   += -ffunction-sections -fdata-sections
+endif
+ifneq ($(MPT_COMPILER_NOGCSECTIONS),1)
 LDFLAGS  += -Wl,--gc-sections
 endif
 else ifeq ($(OPTIMIZE),speed)
 CXXFLAGS += -O2
 CFLAGS   += -O2 -fno-strict-aliasing
-ifneq ($(MPT_COMPILER_NOGCSECTIONS),1)
+ifneq ($(MPT_COMPILER_NOSECTIONS),1)
 CXXFLAGS += -ffunction-sections -fdata-sections
 CFLAGS   += -ffunction-sections -fdata-sections
+endif
+ifneq ($(MPT_COMPILER_NOGCSECTIONS),1)
 LDFLAGS  += -Wl,--gc-sections
 endif
 else ifeq ($(OPTIMIZE),vectorize)
 CXXFLAGS += -O3
 CFLAGS   += -O3 -fno-strict-aliasing
-ifneq ($(MPT_COMPILER_NOGCSECTIONS),1)
+ifneq ($(MPT_COMPILER_NOSECTIONS),1)
 CXXFLAGS += -ffunction-sections -fdata-sections
 CFLAGS   += -ffunction-sections -fdata-sections
+endif
+ifneq ($(MPT_COMPILER_NOGCSECTIONS),1)
 LDFLAGS  += -Wl,--gc-sections
 endif
 endif
@@ -1249,7 +1259,6 @@ LIBOPENMPTTEST_CXX_SOURCES += \
 # test/mpt_tests_uuid_namespace.cpp \
 
 LIBOPENMPTTEST_C_SOURCES += \
- test/libopenmpt_test_djgpp_helper.c \
  
 LIBOPENMPTTEST_OBJECTS = $(LIBOPENMPTTEST_CXX_SOURCES:.cpp=.test$(FLAVOUR_O).o) $(LIBOPENMPTTEST_C_SOURCES:.c=.test$(FLAVOUR_O).o)
 LIBOPENMPTTEST_DEPENDS = $(LIBOPENMPTTEST_CXX_SOURCES:.cpp=.test$(FLAVOUR_O).d) $(LIBOPENMPTTEST_C_SOURCES:.c=.test$(FLAVOUR_O).d)
@@ -1574,25 +1583,25 @@ bin/$(FLAVOUR_DIR)dist-dos.tar: bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIB
 	cd bin/$(FLAVOUR_DIR)dist-dos/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.dos.zip libopenmpt/bin.dos/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/$(FLAVOUR_DIR)dist-dos/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-dos.tar libopenmpt
 
-.PHONY: dist-retro-win9x
-dist-retro-win9x: bin/$(FLAVOUR_DIR)dist-retro-win9x.tar
+.PHONY: dist-retro-win98
+dist-retro-win98: bin/$(FLAVOUR_DIR)dist-retro-win98.tar
 
-bin/$(FLAVOUR_DIR)dist-retro-win9x.tar: bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win9x.zip
-	rm -rf bin/$(FLAVOUR_DIR)dist-retro-win9x.tar
-	cd bin/$(FLAVOUR_DIR)dist-retro-win9x/ && rm -rf libopenmpt
-	cd bin/$(FLAVOUR_DIR)dist-retro-win9x/ && mkdir -p libopenmpt/bin.retro.win9x/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/$(FLAVOUR_DIR)dist-retro-win9x/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win9x.zip libopenmpt/bin.retro.win9x/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/$(FLAVOUR_DIR)dist-retro-win9x/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-retro-win9x.tar libopenmpt
+bin/$(FLAVOUR_DIR)dist-retro-win98.tar: bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win98.zip
+	rm -rf bin/$(FLAVOUR_DIR)dist-retro-win98.tar
+	cd bin/$(FLAVOUR_DIR)dist-retro-win98/ && rm -rf libopenmpt
+	cd bin/$(FLAVOUR_DIR)dist-retro-win98/ && mkdir -p libopenmpt/bin.retro.win98/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
+	cd bin/$(FLAVOUR_DIR)dist-retro-win98/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win98.zip libopenmpt/bin.retro.win98/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
+	cd bin/$(FLAVOUR_DIR)dist-retro-win98/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-retro-win98.tar libopenmpt
 
-.PHONY: dist-retro-win95crt
-dist-retro-win95crt: bin/$(FLAVOUR_DIR)dist-retro-win95crt.tar
+.PHONY: dist-retro-win95
+dist-retro-win95: bin/$(FLAVOUR_DIR)dist-retro-win95.tar
 
-bin/$(FLAVOUR_DIR)dist-retro-win95crt.tar: bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win95crt.zip
-	rm -rf bin/$(FLAVOUR_DIR)dist-retro-win95crt.tar
-	cd bin/$(FLAVOUR_DIR)dist-retro-win95crt/ && rm -rf libopenmpt
-	cd bin/$(FLAVOUR_DIR)dist-retro-win95crt/ && mkdir -p libopenmpt/bin.retro.win95crt/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/$(FLAVOUR_DIR)dist-retro-win95crt/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win95crt.zip libopenmpt/bin.retro.win95crt/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/$(FLAVOUR_DIR)dist-retro-win95crt/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-retro-win95crt.tar libopenmpt
+bin/$(FLAVOUR_DIR)dist-retro-win95.tar: bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win95.zip
+	rm -rf bin/$(FLAVOUR_DIR)dist-retro-win95.tar
+	cd bin/$(FLAVOUR_DIR)dist-retro-win95/ && rm -rf libopenmpt
+	cd bin/$(FLAVOUR_DIR)dist-retro-win95/ && mkdir -p libopenmpt/bin.retro.win95/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
+	cd bin/$(FLAVOUR_DIR)dist-retro-win95/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win95.zip libopenmpt/bin.retro.win95/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
+	cd bin/$(FLAVOUR_DIR)dist-retro-win95/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-retro-win95.tar libopenmpt
 
 .PHONY: bin/$(FLAVOUR_DIR)dist.mk
 bin/$(FLAVOUR_DIR)dist.mk:
@@ -1667,11 +1676,14 @@ bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar: b
 	svn export ./src/mpt/detect         bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/detect
 	svn export ./src/mpt/endian         bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/endian
 	svn export ./src/mpt/environment    bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/environment
-	svn export ./src/mpt/exception_text bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/exception_text
+	svn export ./src/mpt/exception      bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/exception
 	svn export ./src/mpt/format         bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/format
 	#svn export ./src/mpt/fs             bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/fs
 	svn export ./src/mpt/io             bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io
 	svn export ./src/mpt/io_file        bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_file
+	svn export ./src/mpt/io_file_adapter bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_file_adapter
+	svn export ./src/mpt/io_file_read   bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_file_read
+	svn export ./src/mpt/io_file_unique bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_file_unique
 	svn export ./src/mpt/io_read        bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_read
 	svn export ./src/mpt/io_write       bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_write
 	#svn export ./src/mpt/json           bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/json
@@ -1762,11 +1774,14 @@ bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip: bin/$
 	svn export ./src/mpt/detect         bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/detect         --native-eol CRLF
 	svn export ./src/mpt/endian         bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/endian         --native-eol CRLF
 	svn export ./src/mpt/environment    bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/environment    --native-eol CRLF
-	svn export ./src/mpt/exception_text bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/exception_text --native-eol CRLF
+	svn export ./src/mpt/exception      bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/exception      --native-eol CRLF
 	svn export ./src/mpt/format         bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/format         --native-eol CRLF
 	#svn export ./src/mpt/fs             bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/fs             --native-eol CRLF
 	svn export ./src/mpt/io             bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io             --native-eol CRLF
 	svn export ./src/mpt/io_file        bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_file        --native-eol CRLF
+	svn export ./src/mpt/io_file_adapter bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_file_adapter --native-eol CRLF
+	svn export ./src/mpt/io_file_read   bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_file_read   --native-eol CRLF
+	svn export ./src/mpt/io_file_unique bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_file_unique --native-eol CRLF
 	svn export ./src/mpt/io_read        bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_read        --native-eol CRLF
 	svn export ./src/mpt/io_write       bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_write       --native-eol CRLF
 	#svn export ./src/mpt/json           bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/json           --native-eol CRLF
@@ -1879,65 +1894,65 @@ endif
 	cp include/cwsdpmi/bin/CWSDSTR0.EXE          bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/BIN/CWSDSTR0.EXE
 	cd bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/ && zip -r ../libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.dos.zip --compression-method deflate -9 *
 
-.PHONY: bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win9x.zip
-bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win9x.zip:
-	mkdir -p bin/$(FLAVOUR_DIR)dist-retro-win9x
-	rm -rf                                       bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)
-	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)
-	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses
-	svn export ./LICENSE                         bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/LICENSE.TXT --native-eol CRLF
-	svn export ./doc/libopenmpt/changelog.md     bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Changelog.txt --native-eol CRLF
-	svn export ./src/mpt/LICENSE.BSD-3-Clause.txt bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/license.mpt.BSD-3-Clause.txt --native-eol CRLF
-	svn export ./src/mpt/LICENSE.BSL-1.0.txt     bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/license.mpt.BSL-1.0.txt --native-eol CRLF
+.PHONY: bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win98.zip
+bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win98.zip:
+	mkdir -p bin/$(FLAVOUR_DIR)dist-retro-win98
+	rm -rf                                       bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)
+	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)
+	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses
+	svn export ./LICENSE                         bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/LICENSE.TXT --native-eol CRLF
+	svn export ./doc/libopenmpt/changelog.md     bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Changelog.txt --native-eol CRLF
+	svn export ./src/mpt/LICENSE.BSD-3-Clause.txt bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/license.mpt.BSD-3-Clause.txt --native-eol CRLF
+	svn export ./src/mpt/LICENSE.BSL-1.0.txt     bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/license.mpt.BSL-1.0.txt --native-eol CRLF
 ifeq ($(ALLOW_LGPL),1)
-	svn export ./include/mpg123/COPYING          bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.mpg123.txt --native-eol CRLF
-	svn export ./include/mpg123/AUTHORS          bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.Authors.txt --native-eol CRLF
-	svn export ./include/vorbis/COPYING          bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.Vorbis.txt --native-eol CRLF
-	svn export ./include/zlib/README             bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.zlib.txt --native-eol CRLF
+	svn export ./include/mpg123/COPYING          bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.mpg123.txt --native-eol CRLF
+	svn export ./include/mpg123/AUTHORS          bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.Authors.txt --native-eol CRLF
+	svn export ./include/vorbis/COPYING          bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.Vorbis.txt --native-eol CRLF
+	svn export ./include/zlib/README             bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.zlib.txt --native-eol CRLF
 else
-	svn export ./include/minimp3/LICENSE         bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.minimp3.txt --native-eol CRLF
-	svn export ./include/miniz/miniz.c           bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.miniz.txt --native-eol CRLF
-	svn export ./include/stb_vorbis/stb_vorbis.c bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.stb_vorbis.txt --native-eol CRLF
+	svn export ./include/minimp3/LICENSE         bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.minimp3.txt --native-eol CRLF
+	svn export ./include/miniz/miniz.c           bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.miniz.txt --native-eol CRLF
+	svn export ./include/stb_vorbis/stb_vorbis.c bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.stb_vorbis.txt --native-eol CRLF
 endif
-	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/openmpt123
-	cp bin/$(FLAVOUR_DIR)openmpt123.exe                        bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/openmpt123/openmpt123.exe
-	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay
-	svn export ./libopenmpt/xmp-openmpt/xmp-openmpt.txt  bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay/xmp-openmpt.txt --native-eol CRLF
-	cp bin/$(FLAVOUR_DIR)xmp-openmpt.dll                       bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay/xmp-openmpt.dll
-	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp
-	svn export ./libopenmpt/in_openmpt/in_openmpt.txt   bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp/in_openmpt.txt --native-eol CRLF
-	cp bin/$(FLAVOUR_DIR)in_openmpt.dll                        bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp/in_openmpt.dll
-	cd bin/$(FLAVOUR_DIR)dist-retro-win9x/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/ && ../../../build/tools/7zip/7z a -tzip -mx=9 ../libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win9x.zip *
+	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/openmpt123
+	cp bin/$(FLAVOUR_DIR)openmpt123.exe                        bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/openmpt123/openmpt123.exe
+	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay
+	svn export ./libopenmpt/xmp-openmpt/xmp-openmpt.txt  bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay/xmp-openmpt.txt --native-eol CRLF
+	cp bin/$(FLAVOUR_DIR)xmp-openmpt.dll                       bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay/xmp-openmpt.dll
+	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp
+	svn export ./libopenmpt/in_openmpt/in_openmpt.txt   bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp/in_openmpt.txt --native-eol CRLF
+	cp bin/$(FLAVOUR_DIR)in_openmpt.dll                        bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp/in_openmpt.dll
+	cd bin/$(FLAVOUR_DIR)dist-retro-win98/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/ && ../../../build/tools/7zip/7z a -tzip -mx=9 ../libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win98.zip *
 
-.PHONY: bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win95crt.zip
-bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win95crt.zip:
-	mkdir -p bin/$(FLAVOUR_DIR)dist-retro-win95crt
-	rm -rf                                       bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)
-	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)
-	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses
-	svn export ./LICENSE                         bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/LICENSE.TXT --native-eol CRLF
-	svn export ./doc/libopenmpt/changelog.md     bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Changelog.txt --native-eol CRLF
-	svn export ./src/mpt/LICENSE.BSD-3-Clause.txt bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/license.mpt.BSD-3-Clause.txt --native-eol CRLF
-	svn export ./src/mpt/LICENSE.BSL-1.0.txt     bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/license.mpt.BSL-1.0.txt --native-eol CRLF
+.PHONY: bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win95.zip
+bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win95.zip:
+	mkdir -p bin/$(FLAVOUR_DIR)dist-retro-win95
+	rm -rf                                       bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)
+	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)
+	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses
+	svn export ./LICENSE                         bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/LICENSE.TXT --native-eol CRLF
+	svn export ./doc/libopenmpt/changelog.md     bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Changelog.txt --native-eol CRLF
+	svn export ./src/mpt/LICENSE.BSD-3-Clause.txt bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/license.mpt.BSD-3-Clause.txt --native-eol CRLF
+	svn export ./src/mpt/LICENSE.BSL-1.0.txt     bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/license.mpt.BSL-1.0.txt --native-eol CRLF
 ifeq ($(ALLOW_LGPL),1)
-	svn export ./include/mpg123/COPYING          bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.mpg123.txt --native-eol CRLF
-	svn export ./include/mpg123/AUTHORS          bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.Authors.txt --native-eol CRLF
-	svn export ./include/vorbis/COPYING          bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.Vorbis.txt --native-eol CRLF
-	svn export ./include/zlib/README             bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.zlib.txt --native-eol CRLF
+	svn export ./include/mpg123/COPYING          bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.mpg123.txt --native-eol CRLF
+	svn export ./include/mpg123/AUTHORS          bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.Authors.txt --native-eol CRLF
+	svn export ./include/vorbis/COPYING          bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.Vorbis.txt --native-eol CRLF
+	svn export ./include/zlib/README             bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.zlib.txt --native-eol CRLF
 else
-	svn export ./include/minimp3/LICENSE         bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.minimp3.txt --native-eol CRLF
-	svn export ./include/miniz/miniz.c           bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.miniz.txt --native-eol CRLF
-	svn export ./include/stb_vorbis/stb_vorbis.c bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.stb_vorbis.txt --native-eol CRLF
+	svn export ./include/minimp3/LICENSE         bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.minimp3.txt --native-eol CRLF
+	svn export ./include/miniz/miniz.c           bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.miniz.txt --native-eol CRLF
+	svn export ./include/stb_vorbis/stb_vorbis.c bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Licenses/License.stb_vorbis.txt --native-eol CRLF
 endif
-	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/openmpt123
-	cp bin/$(FLAVOUR_DIR)openmpt123.exe                        bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/openmpt123/openmpt123.exe
-	#mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay
-	#svn export ./libopenmpt/xmp-openmpt/xmp-openmpt.txt  bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay/xmp-openmpt.txt --native-eol CRLF
-	#cp bin/$(FLAVOUR_DIR)xmp-openmpt.dll                       bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay/xmp-openmpt.dll
-	#mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp
-	#svn export ./libopenmpt/in_openmpt/in_openmpt.txt   bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp/in_openmpt.txt --native-eol CRLF
-	#cp bin/$(FLAVOUR_DIR)in_openmpt.dll                        bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp/in_openmpt.dll
-	cd bin/$(FLAVOUR_DIR)dist-retro-win95crt/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/ && 7z a -tzip -mx=9 ../libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win95crt.zip *
+	mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/openmpt123
+	cp bin/$(FLAVOUR_DIR)openmpt123.exe                        bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/openmpt123/openmpt123.exe
+	#mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay
+	#svn export ./libopenmpt/xmp-openmpt/xmp-openmpt.txt  bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay/xmp-openmpt.txt --native-eol CRLF
+	#cp bin/$(FLAVOUR_DIR)xmp-openmpt.dll                       bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/XMPlay/xmp-openmpt.dll
+	#mkdir -p                                     bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp
+	#svn export ./libopenmpt/in_openmpt/in_openmpt.txt   bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp/in_openmpt.txt --native-eol CRLF
+	#cp bin/$(FLAVOUR_DIR)in_openmpt.dll                        bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/Winamp/in_openmpt.dll
+	cd bin/$(FLAVOUR_DIR)dist-retro-win95/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/ && 7z a -tzip -mx=9 ../libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win95.zip *
 
 bin/$(FLAVOUR_DIR)libopenmpt.a: $(LIBOPENMPT_OBJECTS)
 	$(INFO) [AR] $@
@@ -1979,10 +1994,6 @@ openmpt123/openmpt123$(FLAVOUR_O).o: openmpt123/openmpt123.cpp
 	$(INFO) [CXX] $<
 	$(VERYSILENT)$(CXX) $(CXXFLAGS) $(CXXFLAGS_OPENMPT123) $(CPPFLAGS) $(CPPFLAGS_OPENMPT123) $(TARGET_ARCH) -M -MT$@ $< > $*$(FLAVOUR_O).d
 	$(SILENT)$(COMPILE.cc) $(CXXFLAGS_OPENMPT123) $(CPPFLAGS_OPENMPT123) $(OUTPUT_OPTION) $<
-openmpt123/openmpt123_djgpp_helper$(FLAVOUR_O).o: openmpt123/openmpt123_djgpp_helper.c
-	$(INFO) [CC] $<
-	$(VERYSILENT)$(CC) $(CFLAGS) $(CFLAGS_OPENMPT123) $(CFLAGS) $(CFLAGS_OPENMPT123) $(TARGET_ARCH) -M -MT$@ $< > $*$(FLAVOUR_O).d
-	$(SILENT)$(COMPILE.c) $(CFLAGS_OPENMPT123) $(CFLAGS_OPENMPT123) $(OUTPUT_OPTION) $<
 bin/$(FLAVOUR_DIR)openmpt123$(EXESUFFIX): $(OPENMPT123_OBJECTS) $(DEPS_ALLEGRO42) $(OBJECTS_LIBOPENMPT) $(OUTPUT_LIBOPENMPT)
 	$(INFO) [LD] $@
 	$(SILENT)$(LINK.cc) $(BIN_LDFLAGS) $(LDFLAGS_LIBOPENMPT) $(LDFLAGS_OPENMPT123) $(OPENMPT123_OBJECTS) $(OBJECTS_LIBOPENMPT) $(LOADLIBES) $(LDLIBS) $(LDLIBS_LIBOPENMPT) $(LDLIBS_OPENMPT123) -o $@

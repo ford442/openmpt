@@ -19,10 +19,16 @@ CXXFLAGS_STDCXX = -std=$(STDCXX) -fexceptions -frtti -pthread
 # in C++20. As we still support C+ü+17, we need to catch these problem cases.
 #else ifeq ($(shell printf '\n' > bin/empty.cpp ; if $(CXX) -std=c++20 -c bin/empty.cpp -o bin/empty.out > /dev/null 2>&1 ; then echo 'c++20' ; fi ), c++20)
 #CXXFLAGS_STDCXX = -std=c++20 -fexceptions -frtti -pthread
-else ifeq ($(shell printf '\n' > bin/empty.cpp ; if $(CXX) -std=c++17 -c bin/empty.cpp -o bin/empty.out > /dev/null 2>&1 ; then echo 'c++17' ; fi ), c++17)
+else
 CXXFLAGS_STDCXX = -std=c++17 -fexceptions -frtti -pthread
 endif
+ifneq ($(STDC),)
+CFLAGS_STDC = -std=$(STDC) -pthread
+else ifeq ($(shell printf '\n' > bin/empty.c ; if $(CC) -std=c17 -c bin/empty.c -o bin/empty.out > /dev/null 2>&1 ; then echo 'c17' ; fi ), c17)
 CFLAGS_STDC = -std=c17 -pthread
+else
+CFLAGS_STDC = -std=c11 -pthread
+endif
 CXXFLAGS += $(CXXFLAGS_STDCXX)
 CFLAGS += $(CFLAGS_STDC)
 LDFLAGS  += -pthread

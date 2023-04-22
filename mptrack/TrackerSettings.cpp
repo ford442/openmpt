@@ -34,6 +34,7 @@
 #include "../soundlib/tuningcollection.h"
 #include "TuningDialog.h"
 #include "mpt/fs/fs.hpp"
+#include "mpt/parse/parse.hpp"
 
 #include <algorithm>
 
@@ -280,6 +281,7 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 	, m_SampleUndoBufferSize(conf, U_("Sample Editor"), U_("UndoBufferSize"), SampleUndoBufferSize())
 	, sampleEditorKeyBehaviour(conf, U_("Sample Editor"), U_("KeyBehaviour"), seNoteOffOnNewKey)
 	, m_defaultSampleFormat(conf, U_("Sample Editor"), U_("DefaultFormat"), dfFLAC)
+	, m_followSamplePlayCursor(conf, U_("Sample Editor"), U_("FollowSamplePlayCursor"), FollowSamplePlayCursor::DoNotFollow)
 	, sampleEditorTimelineFormat(conf, U_("Sample Editor"), U_("TimelineFormat"), TimelineFormat::Seconds)
 	, sampleEditorDefaultResampler(conf, U_("Sample Editor"), U_("DefaultResampler"), SRCMODE_DEFAULT)
 	, m_nFinetuneStep(conf, U_("Sample Editor"), U_("FinetuneStep"), 10)
@@ -1532,7 +1534,7 @@ std::bitset<128> StringToIgnoredCCs(const mpt::ustring &in)
 	CString ccToken = cc.Tokenize(_T(", "), curPos);
 	while(ccToken != _T(""))
 	{
-		int ccNumber = ConvertStrTo<int>(ccToken);
+		int ccNumber = mpt::parse<int>(ccToken);
 		if(ccNumber >= 0 && ccNumber <= 127)
 			midiIgnoreCCs.set(ccNumber);
 		ccToken = cc.Tokenize(_T(", "), curPos);

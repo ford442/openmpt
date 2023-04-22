@@ -27,11 +27,13 @@
 #include "../common/mptStringBuffer.h"
 #include "SelectPluginDialog.h"
 #include "mpt/io_file/inputfile.hpp"
-#include "mpt/io_file/inputfile_filecursor.hpp"
+#include "mpt/io_file_read/inputfile_filecursor.hpp"
 #include "mpt/io_file/outputfile.hpp"
 #include "../common/mptFileIO.h"
 #include "../common/FileReader.h"
 #include "FileDialog.h"
+#include "mpt/string/utility.hpp"
+#include "mpt/base/saturate_round.hpp"
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -1579,8 +1581,8 @@ void CCtrlInstruments::UpdateFilterText()
 
 			if((pIns->IsCutoffEnabled() && pIns->GetCutoff() < 0x7F) || resEnabled)
 			{
-				const BYTE cutoff = (resEnabled && !pIns->IsCutoffEnabled()) ? 0x7F : pIns->GetCutoff();
-				wsprintf(s, _T("Z%02X (%u Hz)"), cutoff, m_sndFile.CutOffToFrequency(cutoff));
+				const auto cutoff = (resEnabled && !pIns->IsCutoffEnabled()) ? 0x7F : pIns->GetCutoff();
+				wsprintf(s, _T("Z%02X (%u Hz)"), cutoff, mpt::saturate_round<int32>(m_sndFile.CutOffToFrequency(cutoff)));
 			} else if(pIns->IsCutoffEnabled())
 			{
 				_tcscpy(s, _T("Z7F (Off)"));
@@ -2090,7 +2092,7 @@ void CCtrlInstruments::SaveInstrument(bool doBatchSave)
 		minIns = 1;
 		maxIns = m_sndFile.GetNumInstruments();
 	}
-	auto numberFmt = mpt::FormatSpec<mpt::ustring>().Dec().FillNul().Width(1 + static_cast<int>(std::log10(maxIns)));
+	auto numberFmt = mpt::format_simple_spec<mpt::ustring>().Dec().FillNul().Width(1 + static_cast<int>(std::log10(maxIns)));
 	CString instrName, instrFilename;
 
 	bool ok = true;
@@ -2113,9 +2115,9 @@ void CCtrlInstruments::SaveInstrument(bool doBatchSave)
 				instrFilename = SanitizePathComponent(instrFilename);
 
 				mpt::ustring fileNameW = fileName.ToUnicode();
-				fileNameW = mpt::String::Replace(fileNameW, U_("%instrument_number%"), mpt::ufmt::fmt(ins, numberFmt));
-				fileNameW = mpt::String::Replace(fileNameW, U_("%instrument_filename%"), mpt::ToUnicode(instrFilename));
-				fileNameW = mpt::String::Replace(fileNameW, U_("%instrument_name%"), mpt::ToUnicode(instrName));
+				fileNameW = mpt::replace(fileNameW, U_("%instrument_number%"), mpt::ufmt::fmt(ins, numberFmt));
+				fileNameW = mpt::replace(fileNameW, U_("%instrument_filename%"), mpt::ToUnicode(instrFilename));
+				fileNameW = mpt::replace(fileNameW, U_("%instrument_name%"), mpt::ToUnicode(instrName));
 				fileName = mpt::PathString::FromUnicode(fileNameW);
 			}
 
@@ -2631,16 +2633,7 @@ void CCtrlInstruments::OnEnableCutOff()
 	{
 		PrepareUndo("Toggle Cutoff");
 		pIns->SetCutoff(pIns->GetCutoff(), enableCutOff);
-		for(auto &chn : m_sndFile.m_PlayState.Chn)
-		{
-			if (chn.pModInstrument == pIns)
-			{
-				if(enableCutOff)
-					chn.nCutOff = pIns->GetCutoff();
-				else
-					chn.nCutOff = 0x7F;
-			}
-		}
+		m_sndFile.UpdateInstrumentFilter(*pIns, false, true, false);
 	}
 	UpdateFilterText();
 	SetModified(InstrumentHint().Info(), false);
@@ -2657,16 +2650,7 @@ void CCtrlInstruments::OnEnableResonance()
 	{
 		PrepareUndo("Toggle Resonance");
 		pIns->SetResonance(pIns->GetResonance(), enableReso);
-		for(auto &chn : m_sndFile.m_PlayState.Chn)
-		{
-			if (chn.pModInstrument == pIns)
-			{
-				if (enableReso)
-					chn.nResonance = pIns->GetResonance();
-				else
-					chn.nResonance = 0;
-			}
-		}
+		m_sndFile.UpdateInstrumentFilter(*pIns, false, false, true);
 	}
 	UpdateFilterText();
 	SetModified(InstrumentHint().Info(), false);
@@ -2688,15 +2672,8 @@ void CCtrlInstruments::OnFilterModeChanged()
 
 			//Update channel settings where this instrument is active, if required.
 			if(instFiltermode != FilterMode::Unchanged)
-			{
-				for(auto &chn : m_sndFile.m_PlayState.Chn)
-				{
-					if(chn.pModInstrument == pIns)
-						chn.nFilterMode = instFiltermode;
-				}
-			}
+				m_sndFile.UpdateInstrumentFilter(*pIns, true, false, false);
 		}
-
 	}
 }
 
@@ -2720,7 +2697,6 @@ void CCtrlInstruments::OnHScroll(UINT nCode, UINT nPos, CScrollBar *pSB)
 			
 		auto *pSlider = reinterpret_cast<const CSliderCtrl *>(pSB);
 		int32 n = pSlider->GetPos();
-		bool filterChanged = false;
 
 		if(pSlider == &m_SliderAttack)
 		{
@@ -2801,7 +2777,8 @@ void CCtrlInstruments::OnHScroll(UINT nCode, UINT nPos, CScrollBar *pSB)
 				pIns->SetCutoff(static_cast<uint8>(n), pIns->IsCutoffEnabled());
 				SetModified(InstrumentHint().Info(), false);
 				UpdateFilterText();
-				filterChanged = true;
+				CriticalSection cs;
+				m_sndFile.UpdateInstrumentFilter(*pIns, false, true, false);
 			}
 		} else if(pSlider == &m_SliderResonance)
 		{
@@ -2816,22 +2793,8 @@ void CCtrlInstruments::OnHScroll(UINT nCode, UINT nPos, CScrollBar *pSB)
 				pIns->SetResonance(static_cast<uint8>(n), pIns->IsResonanceEnabled());
 				SetModified(InstrumentHint().Info(), false);
 				UpdateFilterText();
-				filterChanged = true;
-			}
-		}
-
-		// Update channels
-		if(filterChanged)
-		{
-			for(auto &chn : m_sndFile.m_PlayState.Chn)
-			{
-				if(chn.pModInstrument == pIns)
-				{
-					if(pIns->IsCutoffEnabled())
-						chn.nCutOff = pIns->GetCutoff();
-					if(pIns->IsResonanceEnabled())
-						chn.nResonance = pIns->GetResonance();
-				}
+				CriticalSection cs;
+				m_sndFile.UpdateInstrumentFilter(*pIns, false, false, true);
 			}
 		}
 	} else if(nCode == SB_ENDSCROLL)

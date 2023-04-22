@@ -25,17 +25,17 @@ OPENMPT_NAMESPACE_BEGIN
 
 struct DLSREGION
 {
-	uint32 ulLoopStart;
-	uint32 ulLoopEnd;
-	uint16 nWaveLink;
-	uint16 uPercEnv;
-	uint16 usVolume;     // 0..256
-	uint16 fuOptions;    // flags + key group
-	int16 sFineTune;     // +128 = +1 semitone
-	int16 panning = -1;  // -1= unset (DLS), otherwise 0...256
-	uint8  uKeyMin;
-	uint8  uKeyMax;
-	uint8  uUnityNote;
+	uint32 ulLoopStart = 0;
+	uint32 ulLoopEnd = 0;
+	uint32 uPercEnv = 0;
+	uint16 nWaveLink = 0;
+	uint16 usVolume = 256;  // 0..256
+	uint16 fuOptions = 0;   // flags + key group
+	int16 sFineTune = 0;    // +128 = +1 semitone
+	int16 panning = -1;     // -1= unset (DLS), otherwise 0...256
+	uint8  uKeyMin = 0;
+	uint8  uKeyMax = 0;
+	uint8  uUnityNote = 0xFF;
 	uint8  tuning = 100;
 
 	constexpr bool IsDummy() const noexcept { return uKeyMin == 0xFF || nWaveLink == Util::MaxValueOfType(nWaveLink); }
@@ -71,6 +71,11 @@ struct DLSINSTRUMENT
 	char szName[32];
 	// SF2 stuff (DO NOT USE! -> used internally by the SF2 loader)
 	uint16 wPresetBagNdx = 0, wPresetBagNum = 0;
+
+	constexpr bool operator<(const DLSINSTRUMENT &other) const
+	{
+		return std::tie(ulBank, ulInstrument) < std::tie(other.ulBank, other.ulInstrument);
+	}
 };
 
 struct DLSSAMPLEEX
@@ -138,7 +143,7 @@ public:
 	uint32 GetNumInstruments() const { return static_cast<uint32>(m_Instruments.size()); }
 	uint32 GetNumSamples() const { return static_cast<uint32>(m_WaveForms.size()); }
 	const DLSINSTRUMENT *GetInstrument(uint32 iIns) const { return iIns < m_Instruments.size() ? &m_Instruments[iIns] : nullptr; }
-	const DLSINSTRUMENT *FindInstrument(bool isDrum, uint32 bank = 0xFF, uint32 program = 0xFF, uint32 key = 0xFF, uint32 *pInsNo = nullptr) const;
+	[[nodiscard]] const DLSINSTRUMENT *FindInstrument(bool isDrum, uint32 bank = 0xFF, uint32 program = 0xFF, uint32 key = 0xFF, uint32 *pInsNo = nullptr) const;
 	bool FindAndExtract(CSoundFile &sndFile, const INSTRUMENTINDEX ins, const bool isDrum) const;
 	uint32 GetRegionFromKey(uint32 nIns, uint32 nKey) const;
 	bool ExtractWaveForm(uint32 nIns, uint32 nRgn, std::vector<uint8> &waveData, uint32 &length) const;

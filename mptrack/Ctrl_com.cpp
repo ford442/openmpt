@@ -15,9 +15,11 @@
 #include "Moddoc.h"
 #include "Globals.h"
 #include "Ctrl_com.h"
+#include "mpt/format/join.hpp"
 #include "view_com.h"
 #include "InputHandler.h"
 #include "../soundlib/mod_specifications.h"
+#include "mpt/string/utility.hpp"
 
 
 //#define MPT_COMMENTS_LONG_LINES_WRAP
@@ -253,7 +255,7 @@ void CCtrlComments::OnCommentsUpdated()
 
 #elif defined(MPT_COMMENTS_LONG_LINES_TRUNCATE)
 
-	std::vector<std::string> lines = mpt::String::Split<std::string>(std::string(text.GetString()), std::string("\r\n"));
+	std::vector<std::string> lines = mpt::split(std::string(text.GetString()), std::string("\r\n"));
 	for(std::size_t i = 0; i < lines.size(); ++i)
 	{
 		if(i > 0)
@@ -287,7 +289,7 @@ void CCtrlComments::OnCommentsUpdated()
 			pos += lines[i].length();
 		}
 	}
-	lines_new = mpt::String::Combine(lines, std::string("\r\n"));
+	lines_new = mpt::join_format(lines, std::string("\r\n"));
 
 #endif
 

@@ -293,6 +293,9 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -319,6 +322,9 @@
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -350,6 +356,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -380,6 +389,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -412,6 +424,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -443,6 +458,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -468,6 +486,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -493,6 +514,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -524,6 +548,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -554,6 +581,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -586,6 +616,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -617,6 +650,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
+    <Manifest>
+      <AdditionalManifestFiles>../vs/win81.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
     <PreBuildEvent>
       <Command>..\..\build\svn_version\update_svn_version_vs_premake.cmd $(IntDir)</Command>
     </PreBuildEvent>
@@ -643,7 +679,6 @@
     <ClInclude Include="..\..\common\mptString.h" />
     <ClInclude Include="..\..\common\mptStringBuffer.h" />
     <ClInclude Include="..\..\common\mptStringFormat.h" />
-    <ClInclude Include="..\..\common\mptStringParse.h" />
     <ClInclude Include="..\..\common\mptTime.h" />
     <ClInclude Include="..\..\common\serialization_utils.h" />
     <ClInclude Include="..\..\common\stdafx.h" />
@@ -712,6 +747,7 @@
     <ClInclude Include="..\..\src\mpt\check\windows.hpp" />
     <ClInclude Include="..\..\src\mpt\crc\crc.hpp" />
     <ClInclude Include="..\..\src\mpt\crc\tests\tests_crc.hpp" />
+    <ClInclude Include="..\..\src\mpt\crypto\config.hpp" />
     <ClInclude Include="..\..\src\mpt\crypto\exception.hpp" />
     <ClInclude Include="..\..\src\mpt\crypto\hash.hpp" />
     <ClInclude Include="..\..\src\mpt\crypto\jwk.hpp" />
@@ -728,7 +764,11 @@
     <ClInclude Include="..\..\src\mpt\endian\tests\tests_endian_integer.hpp" />
     <ClInclude Include="..\..\src\mpt\endian\type_traits.hpp" />
     <ClInclude Include="..\..\src\mpt\environment\environment.hpp" />
-    <ClInclude Include="..\..\src\mpt\exception_text\exception_text.hpp" />
+    <ClInclude Include="..\..\src\mpt\exception\exception.hpp" />
+    <ClInclude Include="..\..\src\mpt\exception\exception_text.hpp" />
+    <ClInclude Include="..\..\src\mpt\exception\logic_error.hpp" />
+    <ClInclude Include="..\..\src\mpt\exception\runtime_error.hpp" />
+    <ClInclude Include="..\..\src\mpt\format\concat.hpp" />
     <ClInclude Include="..\..\src\mpt\format\default_floatingpoint.hpp" />
     <ClInclude Include="..\..\src\mpt\format\default_formatter.hpp" />
     <ClInclude Include="..\..\src\mpt\format\default_integer.hpp" />
@@ -751,14 +791,14 @@
     <ClInclude Include="..\..\src\mpt\io\io_stdstream.hpp" />
     <ClInclude Include="..\..\src\mpt\io\io_virtual_wrapper.hpp" />
     <ClInclude Include="..\..\src\mpt\io\tests\tests_io.hpp" />
-    <ClInclude Include="..\..\src\mpt\io_file\fileadapter.hpp" />
     <ClInclude Include="..\..\src\mpt\io_file\fileref.hpp" />
     <ClInclude Include="..\..\src\mpt\io_file\fstream.hpp" />
     <ClInclude Include="..\..\src\mpt\io_file\inputfile.hpp" />
-    <ClInclude Include="..\..\src\mpt\io_file\inputfile_filecursor.hpp" />
     <ClInclude Include="..\..\src\mpt\io_file\outputfile.hpp" />
-    <ClInclude Include="..\..\src\mpt\io_file\unique_basename.hpp" />
-    <ClInclude Include="..\..\src\mpt\io_file\unique_tempfilename.hpp" />
+    <ClInclude Include="..\..\src\mpt\io_file_adapter\fileadapter.hpp" />
+    <ClInclude Include="..\..\src\mpt\io_file_read\inputfile_filecursor.hpp" />
+    <ClInclude Include="..\..\src\mpt\io_file_unique\unique_basename.hpp" />
+    <ClInclude Include="..\..\src\mpt\io_file_unique\unique_tempfilename.hpp" />
     <ClInclude Include="..\..\src\mpt\io_read\callbackstream.hpp" />
     <ClInclude Include="..\..\src\mpt\io_read\filecursor.hpp" />
     <ClInclude Include="..\..\src\mpt\io_read\filecursor_callbackstream.hpp" />
@@ -850,10 +890,7 @@
     <ClCompile Include="..\..\common\mptFileType.cpp" />
     <ClCompile Include="..\..\common\mptPathString.cpp" />
     <ClCompile Include="..\..\common\mptRandom.cpp" />
-    <ClCompile Include="..\..\common\mptString.cpp" />
     <ClCompile Include="..\..\common\mptStringBuffer.cpp" />
-    <ClCompile Include="..\..\common\mptStringFormat.cpp" />
-    <ClCompile Include="..\..\common\mptStringParse.cpp" />
     <ClCompile Include="..\..\common\mptTime.cpp" />
     <ClCompile Include="..\..\common\serialization_utils.cpp" />
     <ClCompile Include="..\..\common\version.cpp" />
@@ -862,6 +899,9 @@
     <ClCompile Include="..\..\misc\mptLibrary.cpp" />
     <ClCompile Include="..\..\misc\mptOS.cpp" />
     <ClCompile Include="..\..\misc\mptWine.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\vs\win81.manifest" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

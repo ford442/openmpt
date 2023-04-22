@@ -5,6 +5,8 @@ Changelog {#changelog}
 For fully detailed change log, please see the source repository directly. This
 is just a high-level summary.
 
+### libopenmpt 0.8.0-pre
+
 ### libopenmpt 0.7.0-pre
 
  *  [**New**] `GTK` and `GT2` files from Gramouf Tracker are now supported.
@@ -49,7 +51,11 @@ is just a high-level summary.
     MinGW-w64 build configurations with the following options:
     `MINGW_FLAVOUR=[|-posix|-win32]`, `WINDOWS_ARCH=[x86|amd64]`,
     `WINDOWS_FAMILY=[|desktop-app|app|phone-app|pc-app]`, and
-    `WINDOWS_VERSION=[win95|win98|winme|winnt4|win2000|winxp|winxp64|winvista|win7|win8|win8.1|win10]`.
+    `WINDOWS_VERSION=[win95|win98|winme|winnt4|win2000|winxp|winxp64|winvista|win7|win8|win8.1|win10|win11]`.
+ *  [**New**] New `Makefile` option `CONFIG=mingw` which consolidates all MinGW
+    build configurations with the following options:
+    `MINGW_FLAVOUR=[|-posix|-win32]`, and
+    `WINDOWS_VERSION=[win95|win98|winme|winnt4|win2000|winxp]`.
  *  [**New**] Building with MSYS2 is now fully supported for Makefile and
     Autotools build systems.
  *  [**New**] `Makefile` `CONFIG=djgpp` now supports `CPU=` option to build
@@ -57,10 +63,26 @@ is just a high-level summary.
     available options. `FLAVOURED_DIR=1` places the CPU-specific optimized
     builds in separate folders below `bin/`.
  *  [**New**] Building with a MinGW32 CRTDLL toolchain is now supported via
-    `Makefile` option `CONFIG=mingw32crt-win95`.
+    `Makefile` option `CONFIG=mingw32crt`.
  *  [**New**] `Makefile` now uses `PKG_CONFIG` as path to `pkg-config`.
  *  [**New**] The C++ API is now also enabled for Emscripten builds by default.
+ *  [**New**] Support for GCC 7 has been restored.
+ *  [**New**] Support for Clang 6 has been restored.
+ *  [**New**] Support for Android NDK 18 has been restored.
+ *  [**New**] openmpt123: `--banner [0|1|2]` allows changing the openmpt123
+    banner style to hidden, shown, or verbose, respectively.
+ *  [**New**] openmpt123: `--assume-terminal` allows skipping the openmpt123
+    terminal check, and thus allows running the UI with non-terminal stdin,
+    which can be useful for some very basic remote control functionality.
 
+ *  [**Change**] xmp-openmpt: The Amiga resampler emulation is now enabled by
+    default.
+ *  [**Change**] in_openmpt: The Amiga resampler emulation is now enabled by
+    default.
+ *  [**Change**] The official Windows builds (x86, amd64, arm, arm64) now
+    require Windows 10 21H2 (or later). The official legacy Windows builds
+    (x86-legacy, amd64-legacy) are unchanged and still require Windows 7 (or
+    later).
  *  [**Change**] `"date"` metadata will now exlude the UTC time zone signifier
     `Z` if the precise time zone is unknown.
  *  [**Change**] ctl `seek.sync_samples` now defaults to 1.
@@ -69,9 +91,15 @@ is just a high-level summary.
  *  [**Change**] `Makefile` `CONFIG=macosx` and `CONFIG=haiku` have been
     removed. The OS is auto-detected.
  *  [**Change**] `Makefile` options `CONFIG=mingw64-win32`,
-    `CONFIG=mingw64-win64`, `CONFIG=mingw64-winrt-x86`, and
-    `CONFIG=mingw64-winrt-amd64` are deprecated. Please use `CONFIG=mingw-w64`
-    instead.
+    `CONFIG=mingw64-win64`, `CONFIG=mingw64-winrt-x86`,
+    `CONFIG=mingw64-winrt-amd64`, and `CONFIG=mingw-win9x` have been replaced by
+    `CONFIG=mingw-w64`, and `CONFIG=mingw`.
+ *  [**Change**] Autotools now default to C++20 and only fall back to C++17 when
+    C++20 is not supported.
+ *  [**Change**] `Makefile` now defaults to C++20 and only falls back to C++17
+    when C++20 is not supported by the compiler.
+ *  [**Change**] `Makefile` now defaults to C17 and only falls back to C11 when
+    C17 is not supported by the compiler.
  *  [**Change**] `Makefile` `CONFIG=djgpp` option `USE_ALLEGRO42` now
     defaults to `1` and implies building a liballegro42 locally. This requires
     executing `build/download_externals.sh` before building to download the
@@ -84,19 +112,21 @@ is just a high-level summary.
     themselves. We will still maintain the status quo of our in_openmpt input
     plugin for users of earlier Winamp version, or users on older systems, or
     users of compatible players.
+ *  [**Change**] The POSIX fd file callbacks implementation now handles `EINTR`
+    and retries the `read()` call.
 
  *  [**Regression**] Full support for Visual Studio 2017 has been removed. We
     still support targeting Windows XP with Visual Studio 2017.
  *  [**Regression**] Support for mingw-std-threads has been removed. If you
     require a thread-safe libopenmpt, please build with POSIX threading model
     and/or complain to MinGW/GCC about not properly supporting C++11 features in
-    2022.
+    2023.
  *  [**Regression**] Support for Emscripten versions older than 3.1.1 has been
     removed.
  *  [**Regression**] C API: `openmpt_stream_get_file_callbacks()` used to
     provide 64bit file access on some platforms where long is 32bit. This never
     worked reliably for all platforms though. The behaviour is now changed to
-    always stick to what standard C supports with fseek and ftell, where the
+    always stick to what standard C supports with `fseek` and `ftell`, where the
     offset type is long. `openmpt_stream_get_file_callbacks()` is deprecated now
     due to behavioral change. Please migrate to
     `openmpt_stream_get_file_callbacks2()`.

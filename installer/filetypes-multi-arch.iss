@@ -21,6 +21,7 @@ Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; V
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".xmz"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".itz"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".mptmz"; ValueData: ""
+Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".667"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".669"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".amf"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".ams"; ValueData: ""
@@ -64,6 +65,7 @@ Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; V
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".ult"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".umx"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".wow"; ValueData: ""
+Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".xmf"; ValueData: ""
 
 Root: HKA; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\OpenMPT.exe"; ValueType: string; ValueName: ""; ValueData: "{app}\bin\{code:CodeGetDefaultArch|}\OpenMPT.exe"; Flags: deletekey uninsdeletekey
 

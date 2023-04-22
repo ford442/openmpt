@@ -273,7 +273,7 @@ public:
 	static HFONT m_hGUIFont, m_hFixedFont;
 	static HPEN penDarkGray, penHalfDarkGray, penGray99;
 	static HCURSOR curDragging, curNoDrop, curArrow, curNoDrop2, curVSplit;
-	static MODPLUGDIB *bmpNotes, *bmpVUMeters, *bmpPluginVUMeters;
+	static MODPLUGDIB *bmpNotes;
 	static COLORREF gcolrefVuMeter[NUM_VUMETER_PENS * 2];	// General tab VU meters
 
 public:
@@ -393,6 +393,7 @@ public:
 	void SetInfoText(LPCTSTR lpszText);
 	void SetXInfoText(LPCTSTR lpszText);
 	void SetHelpText(LPCTSTR lpszText);
+	CString GetHelpText() const;
 	UINT GetBaseOctave() const;
 	CModDoc *GetActiveDoc() const;
 	CView *GetActiveView() const;

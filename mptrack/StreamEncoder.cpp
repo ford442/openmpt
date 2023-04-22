@@ -32,7 +32,7 @@ OPENMPT_NAMESPACE_BEGIN
 
 StreamWriterBase::StreamWriterBase(std::ostream &stream)
 	: f(stream)
-	, fStart(f.tellp())
+	, fStart(mpt::IO::TellWrite(f))
 {
 	return;
 }
@@ -268,7 +268,7 @@ void StreamWriterBase::WriteBuffer()
 	{
 		return;
 	}
-	f.write(buf.data(), buf.size());
+	mpt::IO::WriteRaw(f, mpt::as_span(buf));
 	buf.resize(0);
 }
 

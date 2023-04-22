@@ -281,8 +281,8 @@ class StreamWriterBase
 {
 protected:	
 	std::ostream &f;
-	std::streampos fStart;
-	std::vector<char> buf;
+	mpt::IO::Offset fStart;
+	std::vector<std::byte> buf;
 public:
 	StreamWriterBase(std::ostream &stream);
 	virtual ~StreamWriterBase();

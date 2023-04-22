@@ -16,6 +16,8 @@
 
 #include "BridgeCommon.h"
 #include "../common/ComponentManager.h"
+#include "mpt/exception/exception.hpp"
+#include "mpt/exception/runtime_error.hpp"
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -175,11 +177,11 @@ protected:
 public:
 
 	// Generic bridge exception
-	class BridgeException : public std::exception
+	class BridgeException : public mpt::runtime_error
 	{
 	public:
-		BridgeException(const char *str) : std::exception(str) { }
-		BridgeException() { }
+		BridgeException(mpt::ustring &&str) : mpt::runtime_error(std::move(str)) { }
+		BridgeException() : mpt::runtime_error(U_("unknown BridgeException")) { }
 	};
 	class BridgeNotFoundException : public BridgeException { };
 

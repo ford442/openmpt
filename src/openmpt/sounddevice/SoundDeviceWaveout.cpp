@@ -11,6 +11,7 @@
 #include "SoundDeviceUtilities.hpp"
 
 #include "mpt/base/detect.hpp"
+#include "mpt/base/macros.hpp"
 #include "mpt/base/numeric.hpp"
 #include "mpt/base/saturate_round.hpp"
 #include "mpt/format/message_macros.hpp"
@@ -87,7 +88,7 @@ CWaveDevice::~CWaveDevice()
 
 int CWaveDevice::GetDeviceIndex() const
 {
-	return mpt::ConvertStringTo<int>(GetDeviceInternalID());
+	return mpt::parse<int>(GetDeviceInternalID());
 }
 
 
@@ -422,7 +423,7 @@ void CWaveDevice::InternalFillAudioBuffer()
 	[[maybe_unused]] ULONG nBytesWritten = 0;
 	while((oldBuffersPending < m_nPreparedHeaders) && !m_Failed)
 	{
-#if(_WIN32_WINNT >= 0x0600)
+#if MPT_WINNT_AT_LEAST(MPT_WIN_VISTA)
 		DWORD oldFlags = InterlockedOr(interlocked_access(&m_WaveBuffers[m_nWriteBuffer].dwFlags), 0);
 #else
 		DWORD oldFlags = _InterlockedOr(interlocked_access(&m_WaveBuffers[m_nWriteBuffer].dwFlags), 0);
@@ -461,7 +462,7 @@ void CWaveDevice::InternalFillAudioBuffer()
 		CallbackLockedAudioReadPrepare(m_nWaveBufferSize / bytesPerFrame, nLatency / bytesPerFrame);
 		CallbackLockedAudioProcessVoid(m_WaveBuffers[m_nWriteBuffer].lpData, nullptr, m_nWaveBufferSize / bytesPerFrame);
 		nBytesWritten += m_nWaveBufferSize;
-#if(_WIN32_WINNT >= 0x0600)
+#if MPT_WINNT_AT_LEAST(MPT_WIN_VISTA)
 		InterlockedAnd(interlocked_access(&m_WaveBuffers[m_nWriteBuffer].dwFlags), ~static_cast<DWORD>(WHDR_INQUEUE | WHDR_DONE));
 #else
 		_InterlockedAnd(interlocked_access(&m_WaveBuffers[m_nWriteBuffer].dwFlags), ~static_cast<DWORD>(WHDR_INQUEUE | WHDR_DONE));
@@ -579,7 +580,7 @@ int64 CWaveDevice::InternalGetStreamPositionFrames() const
 void CWaveDevice::HandleWaveoutDone(WAVEHDR *hdr)
 {
 	MPT_SOUNDDEV_TRACE_SCOPE();
-#if(_WIN32_WINNT >= 0x0600)
+#if MPT_WINNT_AT_LEAST(MPT_WIN_VISTA)
 	DWORD flags = InterlockedOr(interlocked_access(&hdr->dwFlags), 0);
 #else
 	DWORD flags = _InterlockedOr(interlocked_access(&hdr->dwFlags), 0);
@@ -656,7 +657,7 @@ std::vector<SoundDevice::Info> CWaveDevice::EnumerateDevices(ILogger &logger, So
 		return logger;
 	};
 #else
-	MPT_UNREFERENCED_PARAMETER(logger);
+	MPT_UNUSED(logger);
 #endif
 	MPT_SOUNDDEV_TRACE_SCOPE();
 	std::vector<SoundDevice::Info> devices;

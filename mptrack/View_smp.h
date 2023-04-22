@@ -54,6 +54,13 @@ protected:
 		CuePointLast = CuePointFirst + mpt::array_size<decltype(ModSample::cues)>::size - 1,
 	};
 
+	enum class ScrollTarget
+	{
+		Left,
+		Right,
+		Center,
+	};
+
 	std::unique_ptr<OPLInstrDlg> m_oplEditor;
 	CImageList m_bmpEnvBar;
 	CRect m_rcClient;
@@ -92,9 +99,6 @@ protected:
 public:
 	CViewSample();
 	DECLARE_SERIAL(CViewSample)
-
-	static std::pair<int, int> FindMinMax(const int8 *p, SmpLength numSamples, int numChannels);
-	static std::pair<int, int> FindMinMax(const int16 *p, SmpLength numSamples, int numChannels);
 
 protected:
 	MPT_NOINLINE void SetModified(SampleHint hint, bool updateAll, bool waveformModified);
@@ -139,7 +143,7 @@ protected:
 	int GetZoomLevel(SmpLength length) const;
 	void DoZoom(int direction, const CPoint &zoomPoint = CPoint(-1, -1));
 	bool CanZoomSelection() const;
-	void ScrollToSample(SmpLength centeredSample, bool refresh = true);
+	void ScrollToSample(SmpLength sample, bool refresh = true, ScrollTarget target = ScrollTarget::Center);
 
 	SmpLength ScrollPosToSamplePos() const {return ScrollPosToSamplePos(m_nZoom);}
 	SmpLength ScrollPosToSamplePos(int nZoom) const;

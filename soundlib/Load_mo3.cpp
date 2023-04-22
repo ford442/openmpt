@@ -656,13 +656,13 @@ static void UnpackMO3DeltaPredictionSample(FileReader &file, typename Properties
 
 static size_t VorbisfileFilereaderRead(void *ptr, size_t size, size_t nmemb, void *datasource)
 {
-	FileReader &file = *reinterpret_cast<FileReader *>(datasource);
+	FileReader &file = *mpt::void_ptr<FileReader>(datasource);
 	return file.ReadRaw(mpt::span(mpt::void_cast<std::byte *>(ptr), size * nmemb)).size() / size;
 }
 
 static int VorbisfileFilereaderSeek(void *datasource, ogg_int64_t offset, int whence)
 {
-	FileReader &file = *reinterpret_cast<FileReader *>(datasource);
+	FileReader &file = *mpt::void_ptr<FileReader>(datasource);
 	switch(whence)
 	{
 	case SEEK_SET:
@@ -712,7 +712,7 @@ static int VorbisfileFilereaderSeek(void *datasource, ogg_int64_t offset, int wh
 
 static long VorbisfileFilereaderTell(void *datasource)
 {
-	FileReader &file = *reinterpret_cast<FileReader *>(datasource);
+	FileReader &file = *mpt::void_ptr<FileReader>(datasource);
 	FileReader::off_t result = file.GetPosition();
 	if(!mpt::in_range<long>(result))
 	{
@@ -1600,7 +1600,7 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 			    &VorbisfileFilereaderTell};
 			OggVorbis_File vf;
 			MemsetZero(vf);
-			if(ov_open_callbacks(&sampleData, &vf, nullptr, 0, callbacks) == 0)
+			if(ov_open_callbacks(mpt::void_ptr<FileReader>(&sampleData), &vf, nullptr, 0, callbacks) == 0)
 			{
 				if(ov_streams(&vf) == 1)
 				{  // we do not support chained vorbis samples

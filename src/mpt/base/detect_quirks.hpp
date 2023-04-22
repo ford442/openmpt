@@ -66,6 +66,12 @@
 
 
 
+#if MPT_MSVC_BEFORE(2019, 0) || MPT_GCC_BEFORE(8, 1, 0)
+#define MPT_COMPILER_QUIRK_NO_AUTO_TEMPLATE_ARGUMENT
+#endif
+
+
+
 #if MPT_GCC_BEFORE(11, 1, 0)
 #define MPT_COMPILER_QUIRK_NO_STDCPP_THREADS
 #elif MPT_CLANG_BEFORE(12, 0, 0)
@@ -77,10 +83,8 @@
 
 
 #if MPT_OS_WINDOWS && MPT_COMPILER_MSVC
-#if defined(_WIN32_WINNT)
-#if (_WIN32_WINNT >= 0x0600) // _WIN32_WINNT_VISTA
+#if MPT_WINNT_AT_LEAST(MPT_WIN_VISTA)
 #define MPT_COMPILER_QUIRK_COMPLEX_STD_MUTEX
-#endif
 #endif
 #endif
 
@@ -105,20 +109,9 @@
 #endif
 #endif
 #endif
-#if defined(__MINGW32__) && !defined(__MINGW64__) && (defined(_WIN32_WINDOWS) || defined(WINVER))
-#if defined(_WIN32_WINDOWS)
-#if (_WIN32_WINDOWS < 0x0500)
+#if defined(__MINGW32__) && !defined(__MINGW64__) && (MPT_OS_WINDOWS_WIN9X || MPT_OS_WINDOWS_WIN32)
 #ifndef MPT_COMPILER_QUIRK_NO_WCHAR
 #define MPT_COMPILER_QUIRK_NO_WCHAR
-#endif
-#endif
-#endif
-#if defined(WINVER)
-#if (WINVER < 0x0500)
-#ifndef MPT_COMPILER_QUIRK_NO_WCHAR
-#define MPT_COMPILER_QUIRK_NO_WCHAR
-#endif
-#endif
 #endif
 #endif
 
@@ -240,14 +233,10 @@
 
 #if MPT_CXX_AT_LEAST(20)
 #if MPT_LIBCXX_MS && MPT_OS_WINDOWS
-#if defined(NTDDI_VERSION)
-#if (NTDDI_VERSION < 0x0A000007) // < Windows 10 1903
+#if MPT_WIN_BEFORE(MPT_WIN_10_1903)
 // std::chrono timezones require Windows 10 1903 with VS2022 as of 2022-01-22.
 // See <https://github.com/microsoft/STL/issues/1911> and
 // <https://github.com/microsoft/STL/issues/2163>.
-#define MPT_LIBCXX_QUIRK_NO_CHRONO_DATE
-#endif
-#else
 #define MPT_LIBCXX_QUIRK_NO_CHRONO_DATE
 #endif
 #endif
@@ -260,7 +249,7 @@
 #elif MPT_LIBCXX_GNU
 #define MPT_LIBCXX_QUIRK_NO_CHRONO_DATE_PARSE
 #endif
-#if MPT_LIBCXX_MS && (MPT_MSVC_BEFORE(2022, 3) || !MPT_COMPILER_MSVC)
+#if MPT_LIBCXX_MS && (MPT_MSVC_BEFORE(2022, 6) || !MPT_COMPILER_MSVC)
 // Causes massive memory leaks.
 // See
 // <https://developercommunity.visualstudio.com/t/stdchronoget-tzdb-list-memory-leak/1644641>
@@ -271,7 +260,13 @@
 
 
 
-#if MPT_OS_MACOSX_OR_IOS
+#if MPT_LIBCXX_GNU_BEFORE(8)
+#define MPT_LIBCXX_QUIRK_NO_TO_CHARS_INT
+#elif MPT_LIBCXX_LLVM_BEFORE(7000)
+#define MPT_LIBCXX_QUIRK_NO_TO_CHARS_INT
+#elif MPT_OS_ANDROID && MPT_LIBCXX_LLVM_BEFORE(8000)
+#define MPT_LIBCXX_QUIRK_NO_TO_CHARS_INT
+#elif MPT_OS_MACOSX_OR_IOS
 #if defined(TARGET_OS_OSX)
 #if TARGET_OS_OSX
 #if (MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_15)
@@ -285,6 +280,12 @@
 
 #if (MPT_LIBCXX_MS && (MPT_MSVC_BEFORE(2019, 4) || !MPT_COMPILER_MSVC)) || MPT_LIBCXX_GNU_BEFORE(11) || MPT_LIBCXX_LLVM || MPT_LIBCXX_GENERIC
 #define MPT_LIBCXX_QUIRK_NO_TO_CHARS_FLOAT
+#endif
+
+
+
+#if MPT_OS_ANDROID && MPT_LIBCXX_LLVM_BEFORE(7000)
+#define MPT_LIBCXX_QUIRK_NO_HAS_UNIQUE_OBJECT_REPRESENTATIONS
 #endif
 
 

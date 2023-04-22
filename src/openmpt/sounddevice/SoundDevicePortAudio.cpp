@@ -8,8 +8,10 @@
 
 #include "SoundDevice.hpp"
 
+#include "mpt/arch/arch.hpp"
 #include "mpt/base/detect.hpp"
 #include "mpt/base/macros.hpp"
+#include "mpt/base/pointer.hpp"
 #include "mpt/base/saturate_cast.hpp"
 #include "mpt/base/saturate_round.hpp"
 #include "mpt/format/message_macros.hpp"
@@ -30,6 +32,12 @@
 #ifdef MPT_WITH_PORTAUDIO
 #if defined(MODPLUG_TRACKER) && MPT_COMPILER_MSVC
 #include "../include/portaudio/src/common/pa_debugprint.h"
+#endif
+#if defined(MPT_BUILD_MSVC) && MPT_COMPILER_MSVC && MPT_ARCH_X86 && !defined(MPT_ARCH_X86_SSE2)
+extern "C"
+{
+void PaUtil_InitializeX86PlainConverters(void);
+}
 #endif
 #if MPT_OS_WINDOWS
 #include <shellapi.h>
@@ -72,7 +80,7 @@ CPortaudioDevice::CPortaudioDevice(ILogger &logger, SoundDevice::Info info, Soun
 	} else
 	{
 		m_DeviceIsDefault = false;
-		m_DeviceIndex = mpt::ConvertStringTo<PaDeviceIndex>(internalID);
+		m_DeviceIndex = mpt::parse<PaDeviceIndex>(internalID);
 	}
 	m_HostApiType = Pa_GetHostApiInfo(Pa_GetDeviceInfo(m_DeviceIndex)->hostApi)->type;
 	m_StreamParameters = {};
@@ -244,7 +252,7 @@ bool CPortaudioDevice::InternalOpen()
 	{
 		flags |= paDitherOff;
 	}
-	if(Pa_OpenStream(&m_Stream, (m_Settings.InputChannels > 0) ? &m_InputStreamParameters : NULL, &m_StreamParameters, m_Settings.Samplerate, framesPerBuffer, flags, StreamCallbackWrapper, reinterpret_cast<void *>(this)) != paNoError)
+	if(Pa_OpenStream(&m_Stream, (m_Settings.InputChannels > 0) ? &m_InputStreamParameters : NULL, &m_StreamParameters, m_Settings.Samplerate, framesPerBuffer, flags, StreamCallbackWrapper, mpt::void_ptr<CPortaudioDevice>(this)) != paNoError)
 	{
 		return false;
 	}
@@ -727,7 +735,7 @@ int CPortaudioDevice::StreamCallback(
 int CPortaudioDevice::StreamCallbackWrapper(
 	const void *input, void *output, unsigned long frameCount, const PaStreamCallbackTimeInfo *timeInfo, PaStreamCallbackFlags statusFlags, void *userData)
 {
-	return reinterpret_cast<CPortaudioDevice *>(userData)->StreamCallback(input, output, frameCount, timeInfo, statusFlags);
+	return mpt::void_ptr<CPortaudioDevice>(userData)->StreamCallback(input, output, frameCount, timeInfo, statusFlags);
 }
 
 
@@ -1046,6 +1054,9 @@ PortAudioInitializer::PortAudioInitializer()
 {
 #if defined(MODPLUG_TRACKER) && MPT_COMPILER_MSVC
 	PaUtil_SetDebugPrintFunction(PortaudioLog);
+#endif
+#if defined(MPT_BUILD_MSVC) && MPT_COMPILER_MSVC && MPT_ARCH_X86 && !defined(MPT_ARCH_X86_SSE2)
+	PaUtil_InitializeX86PlainConverters();
 #endif
 	m_initialized = (Pa_Initialize() == paNoError);
 }

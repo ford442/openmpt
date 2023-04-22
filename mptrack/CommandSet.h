@@ -95,11 +95,13 @@ enum CommandID
 
 	kcStartPlayCommands,
 	kcPlayPauseSong = kcStartPlayCommands,
-	kcPlayStopSong,
 	kcPauseSong,
+	kcPlayStopSong,
 	kcStopSong,
 	kcPlaySongFromStart,
+	kcPlaySongFromCursorPause,
 	kcPlaySongFromCursor,
+	kcPlaySongFromPatternPause,
 	kcPlaySongFromPattern,
 	kcPlayPatternFromStart,
 	kcPlayPatternFromCursor,
@@ -234,7 +236,14 @@ enum CommandID
 
 	//Pattern Editing
 	kcStartPatternEditing,
-	kcStartSelect = kcStartPatternEditing,
+	kcStartPatternScrolling = kcStartPatternEditing,
+	kcPatternScrollLeft = kcStartPatternScrolling,
+	kcPatternScrollRight,
+	kcPatternScrollUp,
+	kcPatternScrollDown,
+	kcEndPatternScrolling = kcPatternScrollDown,
+
+	kcStartSelect,
 	kcSelect = kcStartSelect,
 	kcSelectWithNav,
 	kcSelectOff,
@@ -627,7 +636,6 @@ enum CommandID
 
 	//Effect commands. ORDER IS CRUCIAL and must match EffectCommand enum!
 	kcSetFXStart,
-	kcFixedFXStart = kcSetFXStart,
 	kcSetFXarp = kcSetFXStart,  //0,j
 	kcSetFXportUp,              //1,f
 	kcSetFXportDown,            //2,e
@@ -659,13 +667,13 @@ enum CommandID
 	kcSetFXpanSlide,            //p,p
 	kcSetFXsetEnvPos,           //l,?
 	kcSetFXmacro,               //z,z
-	kcFixedFXend = kcSetFXmacro,
 	kcSetFXmacroSlide,      //?,\ ,
 	kcSetFXdelaycut,        //?,:
 	kcSetFXextension,       //?,#
 	kcSetFXFinetune,        //?,+
 	kcSetFXFinetuneSmooth,  //?,*
-	kcSetFXEnd = kcSetFXFinetuneSmooth,
+	kcSetFXDummy,           //W, 
+	kcSetFXEnd = kcSetFXDummy,
 
 	kcStartInstrumentMisc,
 	kcInstrumentLoad = kcStartInstrumentMisc,
@@ -738,7 +746,10 @@ enum CommandID
 	kcSampleTransposeDown,
 	kcSampleTransposeOctUp,
 	kcSampleTransposeOctDown,
-	kcEndSampleMisc = kcSampleTransposeOctDown,
+	kcSampleFinetuneUp,
+	kcSampleFinetuneDown,
+	kcSampleToggleFollowPlayCursor,
+	kcEndSampleMisc = kcSampleToggleFollowPlayCursor,
 
 	kcStartSampleEditing,
 	kcSampleTrim = kcStartSampleEditing,

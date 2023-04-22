@@ -10,6 +10,7 @@ copy /y ..\src\mpt\LICENSE.BSD-3-Clause.txt               .\Licenses\License.mpt
 copy /y ..\src\mpt\LICENSE.BSL-1.0.txt                    .\Licenses\License.mpt.BSL-1.0.txt || goto error
 copy /y ..\include\ancient\LICENSE                        .\Licenses\License.ancient.txt || goto error
 copy /y ..\include\ancient\src\BZIP2Table.hpp             .\Licenses\License.ancient.bzip2.txt || goto error
+rem copy /y ..\include\cryptopp\License.txt                   .\Licenses\License.CryptoPP.txt || goto error
 copy /y ..\include\flac\COPYING.Xiph                      .\Licenses\License.FLAC.txt || goto error
 copy /y ..\include\lame\COPYING                           .\Licenses\License.lame.txt || goto error
 copy /y ..\include\lhasa\COPYING                          .\Licenses\License.lhasa.txt || goto error
@@ -29,7 +30,7 @@ rem copy /y ..\include\pugixml\LICENSE.md                     .\Licenses\License
 copy /y ..\include\r8brain\LICENSE                        .\Licenses\License.R8Brain.txt || goto error
 copy /y ..\include\rtaudio\README.md                      .\Licenses\License.RtAudio.txt || goto error
 copy /y ..\include\rtkit\rtkit.h                          .\Licenses\License.RealtimeKit.txt || goto error
-copy /y ..\include\rtmidi\License.txt                     .\Licenses\License.RtMidi.txt || goto error
+copy /y ..\include\rtmidi\LICENSE                         .\Licenses\License.RtMidi.txt || goto error
 copy /y ..\include\smbPitchShift\smbPitchShift.cpp        .\Licenses\License.smbPitchShift.txt || goto error
 copy /y ..\include\soundtouch\COPYING.TXT                 .\Licenses\License.SoundTouch.txt || goto error
 rem copy /y ..\include\stb_vorbis\stb_vorbis.c                .\Licenses\License.stb_vorbis.txt || goto error

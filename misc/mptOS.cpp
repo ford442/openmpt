@@ -12,7 +12,9 @@
 #include "mptOS.h"
 
 #include "mpt/binary/hex.hpp"
+#include "mpt/format/join.hpp"
 #include "mpt/library/library.hpp"
+#include "mpt/parse/split.hpp"
 #include "mpt/path/native_path.hpp"
 
 #if MPT_OS_WINDOWS
@@ -414,12 +416,12 @@ Version::Version(const mpt::ustring &rawVersion)
 	{
 		return;
 	}
-	std::vector<uint8> version = mpt::String::Split<uint8>(rawVersion, U_("."));
+	std::vector<uint8> version = mpt::split_parse<uint8>(rawVersion, U_("."));
 	if(version.size() < 2)
 	{
 		return;
 	}
-	mpt::ustring parsedVersion = mpt::String::Combine(version, U_("."));
+	mpt::ustring parsedVersion = mpt::join_format(version, U_("."));
 	std::size_t len = std::min(parsedVersion.length(), rawVersion.length());
 	if(len == 0)
 	{

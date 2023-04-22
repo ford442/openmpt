@@ -21,13 +21,13 @@ Dependencies
         possible configurations to test.
         
      *  **Microsoft Visual Studio 2017 XP targeting toolset**
-     *  **GCC 8.1** or higher
-     *  **Clang 7** or higher
-     *  **MinGW-W64 8.1** or higher (it is recommended to preferably use
+     *  **GCC 7.1** or higher
+     *  **Clang 6** or higher
+     *  **MinGW-W64 7.1** or higher (it is recommended to preferably use
         posix threading model as opposed to win32 threading model)
      *  **emscripten 3.1.1** or higher
-     *  **DJGPP GCC 8.1** or higher
-     *  any other **C++17 compliant** compiler
+     *  **DJGPP GCC 7.1** or higher
+     *  any other **C++20 or C++17 compliant** compiler
         
         libopenmpt makes the following assumptions about the C++ implementation
         used for building:
@@ -59,14 +59,15 @@ Dependencies
             Emscripten when running in `AudioWorkletProcessor` context)
 
  *  Required compilers to use libopenmpt:
-     *  Any **C89** / **C99** / **C11** compatible compiler should work with
-        the C API as long as a **C99** compatible **stdint.h** is available.
-     *  Any **C++17** compatible compiler should work with the C++ API.
+     *  Any **C89** / **C99** / **C11** / **C17** compatible compiler should
+        work with the C API as long as a **C99** compatible **stdint.h** is
+        available.
+     *  Any **C++20** or **C++17** compatible compiler should work with the C++
+        API.
  *  **J2B** support requires an inflate (deflate decompression) implementation:
      *  **zlib** (or **miniz** can be used internally)
  *  **MO3** support requires:
-     *  **libmpg123 >= 1.14.0** (or **minimp3 by Lion (github.com/lieff)** can
-        be used internally)
+     *  **libmpg123 >= 1.14.0** (or **minimp3** can be used internally)
      *  **libogg**, **libvorbis**, and **libvorbisfile** (or **stb_vorbis** can
         be used internally)
  *  Building on Unix-like systems requires:

@@ -11,11 +11,13 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "AboutDialog.h"
+#include "mpt/format/join.hpp"
 #include "Image.h"
 #include "Mptrack.h"
 #include "TrackerSettings.h"
 #include "../common/version.h"
 #include "../misc/mptWine.h"
+#include "mpt/string/utility.hpp"
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -255,7 +257,7 @@ BOOL CAboutDlg::OnInitDialog()
 		+ U_("\n");
 	app += U_("Version ") + Build::GetVersionStringSimple() + U_("\n\n");
 	app += Build::GetURL(Build::Url::Website) + U_("\n");
-	SetDlgItemText(IDC_EDIT3, mpt::ToCString(mpt::String::Replace(app, U_("\n"), U_("\r\n"))));
+	SetDlgItemText(IDC_EDIT3, mpt::ToCString(mpt::replace(app, U_("\n"), U_("\r\n"))));
 
 	m_bmp.SubclassDlgItem(IDC_BITMAP1, this);
 
@@ -291,7 +293,7 @@ void CAboutDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CAboutDlg::OnTabChange(NMHDR * /*pNMHDR*/ , LRESULT * /*pResult*/ )
 {
-	m_TabEdit.SetWindowText(mpt::ToCString(mpt::String::Replace(GetTabText(m_Tab.GetCurSel()), U_("\n"), U_("\r\n"))));
+	m_TabEdit.SetWindowText(mpt::ToCString(mpt::replace(GetTabText(m_Tab.GetCurSel()), U_("\n"), U_("\r\n"))));
 }
 
 
@@ -333,7 +335,7 @@ static mpt::ustring CPUFeaturesToString(mpt::arch::current::feature_flags procSu
 #else
 	MPT_UNUSED_VARIABLE(procSupport);
 #endif
-	return mpt::String::Combine(features, U_(" "));
+	return mpt::join_format(features, U_(" "));
 }
 #endif // MPT_ENABLE_ARCH_INTRINSICS
 
@@ -373,7 +375,7 @@ mpt::ustring CAboutDlg::GetTabText(int tab)
 						if(mpt::arch::current::assumed_features() & mpt::arch::current::feature::avx2) features.push_back(U_("avx2"));
 					#endif
 				#endif
-				text += mpt::String::Combine(features, U_(" "));
+				text += mpt::join_format(features, U_(" "));
 				text += lf;
 			}
 #ifdef MPT_ENABLE_ARCH_INTRINSICS

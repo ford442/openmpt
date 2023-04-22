@@ -298,8 +298,11 @@ enum probe_file_header_flags : std::uint64_t {
 
 //! Possible return values for openmpt::probe_file_header(). \since 0.3.0
 enum probe_file_header_result {
+	//! The file will most likely be supported by libopenmpt. \since 0.3.0
 	probe_file_header_result_success      =  1,
+	//! The file is not supported by libopenmpt. \since 0.3.0
 	probe_file_header_result_failure      =  0,
+	//! An answer could not be determined with the amount of data provided. \since 0.3.0
 	probe_file_header_result_wantmoredata = -1
 };
 
@@ -1069,9 +1072,9 @@ public:
 	           - load.skip_subsongs_init (boolean): Set to "1" to avoid pre-initializing sub-songs. Skipping results in faster module loading but slower seeking.
 	           - seek.sync_samples (boolean): Set to "0" to not sync sample playback when using openmpt::module::set_position_seconds or openmpt::module::set_position_order_row.
 	           - subsong (integer): The current subsong. Setting it has identical semantics as openmpt::module::select_subsong(), getting it returns the currently selected subsong.
-	           - play.at_end (text): Chooses the behaviour when the end of song is reached:
+	           - play.at_end (text): Chooses the behaviour when the end of song is reached. The song end is considered to be reached after the number of reptitions set by openmpt::module::set_repeat_count was played, so if the song is set to repeat infinitely, its end is never considered to be reached.
 	                          - "fadeout": Fades the module out for a short while. Subsequent reads after the fadeout will return 0 rendered frames.
-	                          - "continue": Returns 0 rendered frames when the song end is reached. Subsequent reads will continue playing from the song start or loop start.
+	                          - "continue": Returns 0 rendered frames when the song end is reached. Subsequent reads will continue playing from the loop start (if the song is not programmed to loop, playback resumsed from the song start).
 	                          - "stop": Returns 0 rendered frames when the song end is reached. Subsequent reads will return 0 rendered frames.
 	           - play.tempo_factor (floatingpoint): Set a floating point tempo factor. "1.0" is the default tempo.
 	           - play.pitch_factor (floatingpoint): Set a floating point pitch factor. "1.0" is the default pitch.
@@ -1139,7 +1142,7 @@ public:
 	  \param value The value that should be set.
 	  \throws openmpt::exception Throws an exception derived from openmpt::exception in case the value is not sensible (e.g. negative tempo factor) or under the circumstances outlined in openmpt::module::get_ctls.
 	  \sa openmpt::module::get_ctls
-	  \deprecated Please use openmpt::module::ctl_set_bool(), openmpt::module::ctl_set_int(), openmpt::module::ctl_set_floatingpoint(), or openmpt::module::ctl_set_string().
+	  \deprecated Please use openmpt::module::ctl_set_boolean(), openmpt::module::ctl_set_integer(), openmpt::module::ctl_set_floatingpoint(), or openmpt::module::ctl_set_text().
 	*/
 	LIBOPENMPT_CXX_API_MEMBER LIBOPENMPT_ATTR_DEPRECATED void ctl_set( const std::string & ctl, const std::string & value );
 	//! Set ctl boolean value

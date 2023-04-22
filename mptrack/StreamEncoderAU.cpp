@@ -15,9 +15,9 @@
 
 #include "mpt/io/io.hpp"
 #include "mpt/io/io_stdstream.hpp"
+#include "mpt/string/utility.hpp"
 
 #include "Mptrack.h"
-#include "TrackerSettings.h"
 
 #include "../common/mptFileIO.h"
 
@@ -40,7 +40,7 @@ private:
 		{
 			return std::string();
 		}
-		return MPT_AFORMAT("{}={}\n")(field, mpt::ToCharset(mpt::Charset::UTF8, mpt::String::Replace(tag, U_("="), MPT_UTF8("\xEF\xBF\xBD")))); // U+FFFD
+		return MPT_AFORMAT("{}={}\n")(field, mpt::ToCharset(mpt::Charset::UTF8, mpt::replace(tag, U_("="), MPT_UTF8("\xEF\xBF\xBD")))); // U+FFFD
 	}
 
 public:
@@ -178,7 +178,7 @@ AUEncoder::AUEncoder()
 	traits.canTags = true;
 	traits.canCues = false;
 	traits.maxChannels = 4;
-	traits.samplerates = TrackerSettings::Instance().GetSampleRates();
+	traits.samplerates = {};
 	traits.modes = Encoder::ModeLossless;
 	traits.formats.push_back({ Encoder::Format::Encoding::Float, 64, mpt::endian::big });
 	traits.formats.push_back({ Encoder::Format::Encoding::Float, 32, mpt::endian::big });

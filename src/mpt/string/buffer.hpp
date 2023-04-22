@@ -7,6 +7,7 @@
 
 #include "mpt/base/detect.hpp"
 #include "mpt/base/namespace.hpp"
+#include "mpt/base/saturate_cast.hpp"
 #include "mpt/detect/mfc.hpp"
 #include "mpt/string/types.hpp"
 #include "mpt/string/utility.hpp"
@@ -100,6 +101,16 @@ public:
 	bool empty() const {
 		return buf[0] == char_constants<Tchar>::null;
 	}
+};
+
+template <typename Tstring, typename Tchar>
+struct make_string_type<StringBufRefImpl<Tstring, Tchar>> {
+	using type = Tstring;
+};
+
+template <typename Tstring, typename Tchar>
+struct make_string_view_type<StringBufRefImpl<Tstring, Tchar>> {
+	using type = typename mpt::make_string_view_type<Tstring>::type;
 };
 
 
@@ -244,6 +255,16 @@ public:
 	}
 };
 
+template <typename Tchar>
+struct make_string_type<CStringBufRefImpl<Tchar>> {
+	using type = CString;
+};
+
+template <typename Tchar>
+struct make_string_view_type<CStringBufRefImpl<Tchar>> {
+	using type = CString;
+};
+
 template <typename Tchar, std::size_t size>
 inline CStringBufRefImpl<typename std::add_const<Tchar>::type> ReadCStringBuf(const std::array<Tchar, size> & buf) {
 	return CStringBufRefImpl<typename std::add_const<Tchar>::type>(buf.data(), size);
@@ -334,6 +355,16 @@ public:
 	friend bool operator==(const charbuf & a, const std::string & b) {
 		return static_cast<string_view_type>(a) == b;
 	}
+};
+
+template <std::size_t len>
+struct make_string_type<charbuf<len>> {
+	using type = std::string;
+};
+
+template <std::size_t len>
+struct make_string_view_type<charbuf<len>> {
+	using type = std::string_view;
 };
 
 

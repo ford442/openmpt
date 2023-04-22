@@ -12,17 +12,22 @@
 #include "mpt/base/saturate_cast.hpp"
 #include "mpt/detect/mfc.hpp"
 #include "mpt/string/types.hpp"
+#include "mpt/string/utility.hpp"
 
 #include <array>
 #if !defined(MPT_COMPILER_QUIRK_NO_WCHAR)
 #include <locale>
 #endif // !MPT_COMPILER_QUIRK_NO_WCHAR
+#include <optional>
 #include <stdexcept>
 #include <string>
 #if !defined(MPT_COMPILER_QUIRK_NO_WCHAR)
 #include <type_traits>
 #endif // !MPT_COMPILER_QUIRK_NO_WCHAR
+#include <utility>
 #include <vector>
+
+#include <cstddef>
 
 #if MPT_OS_DJGPP
 #include <cstring>
@@ -1037,11 +1042,8 @@ inline UINT codepage_from_encoding(common_encoding encoding) {
 	return result;
 }
 
-inline common_encoding encoding_from_codepage(UINT codepage, common_encoding fallback, bool * is_fallback = nullptr) {
-	common_encoding result = common_encoding::windows1252;
-	if (is_fallback) {
-		*is_fallback = false;
-	}
+inline std::optional<common_encoding> optional_encoding_from_codepage(UINT codepage) {
+	std::optional<common_encoding> result = std::nullopt;
 	switch (codepage) {
 		case CP_UTF8:
 			result = common_encoding::utf8;
@@ -1107,86 +1109,18 @@ inline common_encoding encoding_from_codepage(UINT codepage, common_encoding fal
 			result = common_encoding::windows1252;
 			break;
 		default:
-			if (is_fallback) {
-				*is_fallback = true;
-			}
-			result = fallback;
+			result = std::nullopt;
 			break;
 	}
 	return result;
 }
 
 inline common_encoding encoding_from_codepage(UINT codepage) {
-	common_encoding result = common_encoding::windows1252;
-	switch (codepage) {
-		case CP_UTF8:
-			result = common_encoding::utf8;
-			break;
-		case 20127:
-			result = common_encoding::ascii;
-			break;
-		case 28591:
-			result = common_encoding::iso8859_1;
-			break;
-		case 28605:
-			result = common_encoding::iso8859_15;
-			break;
-		case 437:
-			result = common_encoding::cp437;
-			break;
-		case 737:
-			result = common_encoding::cp737;
-			break;
-		case 775:
-			result = common_encoding::cp775;
-			break;
-		case 850:
-			result = common_encoding::cp850;
-			break;
-		case 852:
-			result = common_encoding::cp852;
-			break;
-		case 855:
-			result = common_encoding::cp855;
-			break;
-		case 857:
-			result = common_encoding::cp857;
-			break;
-		case 860:
-			result = common_encoding::cp860;
-			break;
-		case 861:
-			result = common_encoding::cp861;
-			break;
-		case 862:
-			result = common_encoding::cp862;
-			break;
-		case 863:
-			result = common_encoding::cp863;
-			break;
-		case 864:
-			result = common_encoding::cp864;
-			break;
-		case 865:
-			result = common_encoding::cp865;
-			break;
-		case 866:
-			result = common_encoding::cp866;
-			break;
-		case 869:
-			result = common_encoding::cp869;
-			break;
-		case 874:
-			result = common_encoding::cp874;
-			break;
-		case 1252:
-			result = common_encoding::windows1252;
-			break;
-		default:
-			throw std::domain_error("unsupported encoding");
-			break;
+	std::optional<common_encoding> optional_result = optional_encoding_from_codepage(codepage);
+	if (!optional_result) {
+		throw std::domain_error("unsupported encoding");
 	}
-	return result;
+	return *optional_result;
 }
 
 #if !defined(MPT_COMPILER_QUIRK_NO_WCHAR)
@@ -1312,6 +1246,91 @@ inline common_encoding djgpp_get_locale_encoding() {
 }
 
 #endif // MPT_OS_DJGPP
+
+
+
+inline std::optional<common_encoding> optional_encoding_from_codepage(uint16 codepage) {
+	std::optional<common_encoding> result = std::nullopt;
+	switch (codepage) {
+		case 65001:
+			result = common_encoding::utf8;
+			break;
+		case 20127:
+			result = common_encoding::ascii;
+			break;
+		case 28591:
+			result = common_encoding::iso8859_1;
+			break;
+		case 28605:
+			result = common_encoding::iso8859_15;
+			break;
+		case 437:
+			result = common_encoding::cp437;
+			break;
+		case 737:
+			result = common_encoding::cp737;
+			break;
+		case 775:
+			result = common_encoding::cp775;
+			break;
+		case 850:
+			result = common_encoding::cp850;
+			break;
+		case 852:
+			result = common_encoding::cp852;
+			break;
+		case 855:
+			result = common_encoding::cp855;
+			break;
+		case 857:
+			result = common_encoding::cp857;
+			break;
+		case 860:
+			result = common_encoding::cp860;
+			break;
+		case 861:
+			result = common_encoding::cp861;
+			break;
+		case 862:
+			result = common_encoding::cp862;
+			break;
+		case 863:
+			result = common_encoding::cp863;
+			break;
+		case 864:
+			result = common_encoding::cp864;
+			break;
+		case 865:
+			result = common_encoding::cp865;
+			break;
+		case 866:
+			result = common_encoding::cp866;
+			break;
+		case 869:
+			result = common_encoding::cp869;
+			break;
+		case 874:
+			result = common_encoding::cp874;
+			break;
+		case 1252:
+			result = common_encoding::windows1252;
+			break;
+		default:
+			result = std::nullopt;
+			break;
+	}
+	return result;
+}
+
+inline common_encoding encoding_from_codepage(uint16 codepage) {
+	std::optional<common_encoding> optional_result = optional_encoding_from_codepage(codepage);
+	if (!optional_result) {
+		throw std::domain_error("unsupported encoding");
+	}
+	return *optional_result;
+}
+
+
 
 
 
@@ -1623,10 +1642,10 @@ inline Tdststring encode(logical_encoding encoding, const mpt::widestring & src)
 #elif MPT_OS_WINDOWS && defined(MPT_COMPILER_QUIRK_NO_WCHAR)
 	switch (encoding) {
 		case logical_encoding::locale:
-			return encode<Tdststring>(encoding_from_codepage(GetACP(), common_encoding::windows1252), src);
+			return encode<Tdststring>(optional_encoding_from_codepage(GetACP()).value_or(common_encoding::windows1252), src);
 			break;
 		case logical_encoding::active_locale:
-			return encode<Tdststring>(encoding_from_codepage(GetACP(), common_encoding::windows1252), src);
+			return encode<Tdststring>(optional_encoding_from_codepage(GetACP()).value_or(common_encoding::windows1252), src);
 			break;
 	}
 	throw std::domain_error("unsupported encoding");
@@ -1654,6 +1673,13 @@ inline Tdststring encode(logical_encoding encoding, const mpt::widestring & src)
 #else
 	throw std::domain_error("unsupported encoding");
 #endif
+}
+
+template <typename Tdststring, typename Ttranscoder>
+inline auto encode(Ttranscoder transcoder, const mpt::widestring & src) -> decltype(transcoder.template encode<Tdststring>(src)) {
+	static_assert(sizeof(typename Tdststring::value_type) == sizeof(char));
+	static_assert(mpt::is_character<typename Tdststring::value_type>::value);
+	return transcoder.template encode<Tdststring>(src);
 }
 
 #if MPT_OS_WINDOWS
@@ -1787,10 +1813,10 @@ inline mpt::widestring decode(logical_encoding encoding, const Tsrcstring & src)
 #elif MPT_OS_WINDOWS && defined(MPT_COMPILER_QUIRK_NO_WCHAR)
 	switch (encoding) {
 		case logical_encoding::locale:
-			return decode(encoding_from_codepage(GetACP(), common_encoding::windows1252), src);
+			return decode(optional_encoding_from_codepage(GetACP()).value_or(common_encoding::windows1252), src);
 			break;
 		case logical_encoding::active_locale:
-			return decode(encoding_from_codepage(GetACP(), common_encoding::windows1252), src);
+			return decode(optional_encoding_from_codepage(GetACP()).value_or(common_encoding::windows1252), src);
 			break;
 	}
 	throw std::domain_error("unsupported encoding");
@@ -1820,6 +1846,13 @@ inline mpt::widestring decode(logical_encoding encoding, const Tsrcstring & src)
 #endif
 }
 
+template <typename Tsrcstring, typename Ttranscoder>
+inline auto decode(Ttranscoder transcoder, const Tsrcstring & src) -> decltype(transcoder.template decode<Tsrcstring>(src)) {
+	static_assert(sizeof(typename Tsrcstring::value_type) == sizeof(char));
+	static_assert(mpt::is_character<typename Tsrcstring::value_type>::value);
+	return transcoder.template decode<Tsrcstring>(src);
+}
+
 
 
 inline bool is_utf8(const std::string & str) {
@@ -1832,9 +1865,10 @@ template <typename Tstring>
 struct string_transcoder {
 };
 
-template <logical_encoding encoding>
-struct string_transcoder<std::basic_string<char, logical_encoding_char_traits<encoding>>> {
-	using string_type = std::basic_string<char, logical_encoding_char_traits<encoding>>;
+#if defined(MPT_COMPILER_QUIRK_NO_AUTO_TEMPLATE_ARGUMENT)
+template <typename encoding_type, encoding_type encoding>
+struct string_transcoder<std::basic_string<char, encoding_char_traits<encoding_type, encoding>>> {
+	using string_type = std::basic_string<char, encoding_char_traits<encoding_type, encoding>>;
 	static inline mpt::widestring decode(const string_type & src) {
 		return mpt::decode<string_type>(encoding, src);
 	}
@@ -1842,10 +1876,10 @@ struct string_transcoder<std::basic_string<char, logical_encoding_char_traits<en
 		return mpt::encode<string_type>(encoding, src);
 	}
 };
-
-template <common_encoding encoding>
-struct string_transcoder<std::basic_string<char, common_encoding_char_traits<encoding>>> {
-	using string_type = std::basic_string<char, common_encoding_char_traits<encoding>>;
+#else
+template <auto encoding>
+struct string_transcoder<std::basic_string<char, encoding_char_traits<encoding>>> {
+	using string_type = std::basic_string<char, encoding_char_traits<encoding>>;
 	static inline mpt::widestring decode(const string_type & src) {
 		return mpt::decode<string_type>(encoding, src);
 	}
@@ -1853,6 +1887,7 @@ struct string_transcoder<std::basic_string<char, common_encoding_char_traits<enc
 		return mpt::encode<string_type>(encoding, src);
 	}
 };
+#endif
 
 #if !defined(MPT_COMPILER_QUIRK_NO_WCHAR)
 template <>
@@ -1957,28 +1992,61 @@ struct string_transcoder<CStringA> {
 
 #endif // MPT_DETECTED_MFC
 
-template <typename Tdststring, typename Tsrcstring, std::enable_if_t<mpt::is_string_type<typename mpt::make_string_type<Tsrcstring>::type>::value, bool> = true>
-inline Tdststring transcode(const Tsrcstring & src) {
-	if constexpr (std::is_same<Tdststring, typename mpt::make_string_type<Tsrcstring>::type>::value) {
-		return mpt::as_string(src);
+template <typename Tdststring, typename Tsrcstring, std::enable_if_t<mpt::is_string_type<typename mpt::make_string_type<typename std::decay<Tsrcstring>::type>::type>::value, bool> = true>
+inline Tdststring transcode(Tsrcstring && src) {
+	if constexpr (std::is_same<Tdststring, typename mpt::make_string_type<typename std::decay<Tsrcstring>::type>::type>::value) {
+		return mpt::as_string(std::forward<Tsrcstring>(src));
 	} else {
-		return string_transcoder<Tdststring>::encode(string_transcoder<decltype(mpt::as_string(src))>::decode(mpt::as_string(src)));
+		return string_transcoder<Tdststring>::encode(string_transcoder<decltype(mpt::as_string(std::forward<Tsrcstring>(src)))>::decode(mpt::as_string(std::forward<Tsrcstring>(src))));
 	}
 }
 
-template <typename Tdststring, typename Tsrcstring, typename Tencoding, std::enable_if_t<std::is_same<Tdststring, std::string>::value, bool> = true, std::enable_if_t<mpt::is_string_type<typename mpt::make_string_type<Tsrcstring>::type>::value, bool> = true>
-inline Tdststring transcode(Tencoding to, const Tsrcstring & src) {
-	return mpt::encode<Tdststring>(to, string_transcoder<decltype(mpt::as_string(src))>::decode(mpt::as_string(src)));
+template <typename Tdststring, typename Tsrcstring, typename Tencoding, std::enable_if_t<std::is_same<Tdststring, std::string>::value, bool> = true, std::enable_if_t<mpt::is_string_type<typename mpt::make_string_type<typename std::decay<Tsrcstring>::type>::type>::value, bool> = true>
+inline Tdststring transcode(Tencoding to, Tsrcstring && src) {
+	if constexpr (std::is_same<Tencoding, mpt::common_encoding>::value) {
+		if constexpr (std::is_same<decltype(mpt::as_string(std::forward<Tsrcstring>(src))), mpt::u8string>::value) {
+			if (to == mpt::common_encoding::utf8) {
+				auto src_ = mpt::as_string(std::forward<Tsrcstring>(src));
+				Tdststring dst;
+				mpt::string_traits<Tdststring>::reserve(dst, mpt::string_traits<decltype(mpt::as_string(std::forward<Tsrcstring>(src)))>::length(src_));
+				for (std::size_t i = 0; i < mpt::saturate_cast<std::size_t>(mpt::string_traits<decltype(mpt::as_string(std::forward<Tsrcstring>(src)))>::length(src_)); ++i) {
+					mpt::string_traits<Tdststring>::append(dst, static_cast<typename mpt::string_traits<Tdststring>::unsigned_char_type>(static_cast<typename mpt::string_traits<decltype(mpt::as_string(std::forward<Tsrcstring>(src)))>::unsigned_char_type>(src_[i])));
+				}
+				return dst;
+			}
+		}
+	}
+	return mpt::encode<Tdststring>(to, string_transcoder<decltype(mpt::as_string(std::forward<Tsrcstring>(src)))>::decode(mpt::as_string(std::forward<Tsrcstring>(src))));
 }
 
-template <typename Tdststring, typename Tsrcstring, typename Tencoding, std::enable_if_t<std::is_same<typename mpt::make_string_type<Tsrcstring>::type, std::string>::value, bool> = true, std::enable_if_t<mpt::is_string_type<typename mpt::make_string_type<Tsrcstring>::type>::value, bool> = true>
-inline Tdststring transcode(Tencoding from, const Tsrcstring & src) {
-	return string_transcoder<Tdststring>::encode(mpt::decode<decltype(mpt::as_string(src))>(from, mpt::as_string(src)));
+template <typename Tdststring, typename Tsrcstring, typename Tencoding, std::enable_if_t<std::is_same<typename mpt::make_string_type<typename std::decay<Tsrcstring>::type>::type, std::string>::value, bool> = true, std::enable_if_t<mpt::is_string_type<typename mpt::make_string_type<typename std::decay<Tsrcstring>::type>::type>::value, bool> = true>
+inline Tdststring transcode(Tencoding from, Tsrcstring && src) {
+	if constexpr (std::is_same<Tencoding, mpt::common_encoding>::value) {
+		if constexpr (std::is_same<Tdststring, mpt::u8string>::value) {
+			if (from == mpt::common_encoding::utf8) {
+				auto src_ = mpt::as_string(std::forward<Tsrcstring>(src));
+				Tdststring dst;
+				mpt::string_traits<Tdststring>::reserve(dst, mpt::string_traits<decltype(mpt::as_string(std::forward<Tsrcstring>(src)))>::length(src_));
+				for (std::size_t i = 0; i < mpt::saturate_cast<std::size_t>(mpt::string_traits<decltype(mpt::as_string(std::forward<Tsrcstring>(src)))>::length(src_)); ++i) {
+					mpt::string_traits<Tdststring>::append(dst, static_cast<typename mpt::string_traits<Tdststring>::unsigned_char_type>(static_cast<typename mpt::string_traits<decltype(mpt::as_string(std::forward<Tsrcstring>(src)))>::unsigned_char_type>(src_[i])));
+				}
+				return dst;
+			}
+		}
+	}
+	return string_transcoder<Tdststring>::encode(mpt::decode<decltype(mpt::as_string(std::forward<Tsrcstring>(src)))>(from, mpt::as_string(std::forward<Tsrcstring>(src))));
 }
 
-template <typename Tdststring, typename Tsrcstring, typename Tto, typename Tfrom, std::enable_if_t<mpt::is_string_type<typename mpt::make_string_type<Tsrcstring>::type>::value, bool> = true>
-inline Tdststring transcode(Tto to, Tfrom from, const Tsrcstring & src) {
-	return mpt::encode<Tdststring>(to, mpt::decode<decltype(mpt::as_string(src))>(from, mpt::as_string(src)));
+template <typename Tdststring, typename Tsrcstring, typename Tto, typename Tfrom, std::enable_if_t<mpt::is_string_type<typename mpt::make_string_type<typename std::decay<Tsrcstring>::type>::type>::value, bool> = true>
+inline Tdststring transcode(Tto to, Tfrom from, Tsrcstring && src) {
+	if constexpr (std::is_same<Tto, Tfrom>::value) {
+		if constexpr (std::is_same<decltype(mpt::as_string(std::forward<Tsrcstring>(src))), Tdststring>::value) {
+			if (to == from) {
+				return mpt::as_string(std::forward<Tsrcstring>(src));
+			}
+		}
+	}
+	return mpt::encode<Tdststring>(to, mpt::decode<decltype(mpt::as_string(std::forward<Tsrcstring>(src)))>(from, mpt::as_string(std::forward<Tsrcstring>(src))));
 }
 
 
