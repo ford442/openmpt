@@ -667,11 +667,13 @@ enum CommandID
 	kcSetFXpanSlide,            //p,p
 	kcSetFXsetEnvPos,           //l,?
 	kcSetFXmacro,               //z,z
-	kcSetFXmacroSlide,      //?,\ ,
-	kcSetFXdelaycut,        //?,:
-	kcSetFXextension,       //?,#
-	kcSetFXFinetune,        //?,+
-	kcSetFXFinetuneSmooth,  //?,*
+	kcSetFXuserBegin,
+	kcSetFXmacroSlide = kcSetFXuserBegin,  //?,\ ,
+	kcSetFXdelaycut,                       //?,:
+	kcSetFXextension,                      //?,#
+	kcSetFXFinetune,                       //?,+
+	kcSetFXFinetuneSmooth,                 //?,*
+	kcSetFXuserEnd = kcSetFXFinetuneSmooth,
 	kcSetFXDummy,           //W, 
 	kcSetFXEnd = kcSetFXDummy,
 
@@ -827,6 +829,7 @@ enum CommandID
 
 	kcStartTreeViewCommands,
 	kcTreeViewStopPreview = kcStartTreeViewCommands,
+	kcTreeViewSwitchViews,
 	kcTreeViewOpen,
 	kcTreeViewPlay,
 	kcTreeViewInsert,
@@ -835,6 +838,7 @@ enum CommandID
 	kcTreeViewDeletePermanently,
 	kcTreeViewRename,
 	kcTreeViewSendToEditorInsertNew,
+	kcTreeViewFolderUp,
 	kcTreeViewFind,
 	kcTreeViewSortByName,
 	kcTreeViewSortByDate,
