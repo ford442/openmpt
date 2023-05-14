@@ -110,11 +110,19 @@ CFLAGS   +=
 LDFLAGS  += -s WASM=1 -s ENVIRONMENT=web
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
+else ifeq ($(EMSCRIPTEN_TARGET),1it1)
+# emits native wasm.
+CPPFLAGS += -DMPT_BUILD_WASM
+CXXFLAGS += -O0 -msimd128 -fwasm-exceptions -ffunction-sections -fdata-sections -ftree-vectorize -fvectorize -ffast-math -msimd128 -stdlib=libc++ -mcpu=bleeding-edge -ffp-contract=fast
+CFLAGS   += 
+LDFLAGS  += -O0 -msimd128 -fwasm-exceptions -ffunction-sections -fdata-sections -ftree-vectorize -fvectorize -ffast-math -msimd128 -stdlib=libc++ -mcpu=bleeding-edge -ffp-contract=fast -DSIMD=1 -sPRECISE_I64_MATH=2 -fwhole-program -polly -sFORCE_FILESYSTEM=1 -sFAST_UNROLLED_MEMCPY_AND_MEMSET=1 -sSTACK_OVERFLOW_CHECK=2 -sWASM_BIGINT=1 -sTOTAL_STACK=8MB -sUSE_GLFW=0 -sGLOBAL_BASE=16384 -sDYNAMIC_EXECUTION=0 -sPRECISE_F32=1 -s INITIAL_MEMORY=2048mb -rtlib=compiler-rt  -mtune=tigerlake -march=corei7-avx 
+
+LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
 else ifeq ($(EMSCRIPTEN_TARGET),wasmnogro)
 # emits native wasm.
 CPPFLAGS += -DMPT_BUILD_WASM
-CXXFLAGS +=  
+CXXFLAGS += 
 CFLAGS   += 
 LDFLAGS  += -s WASM=1 -s ENVIRONMENT=web -s INITIAL_MEMORY=700mb
 
