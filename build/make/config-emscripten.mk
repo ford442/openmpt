@@ -110,6 +110,16 @@ CFLAGS   +=
 LDFLAGS  += -s WASM=1 -s ENVIRONMENT=web
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
+
+else ifeq ($(EMSCRIPTEN_TARGET),wasm2)
+# emits native wasm.
+CPPFLAGS += -DMPT_BUILD_WASM
+CXXFLAGS += -O0
+CFLAGS   += 
+LDFLAGS  += 
+
+LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
+
 else ifeq ($(EMSCRIPTEN_TARGET),1it1)
 # emits native wasm.
 CPPFLAGS += -DMPT_BUILD_WASM
