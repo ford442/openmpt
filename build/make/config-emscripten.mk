@@ -123,9 +123,9 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1)
 # emits native wasm.
 CPPFLAGS += -DMPT_BUILD_WASM
-CXXFLAGS += -O3 -msimd128 -ffunction-sections -fdata-sections -ftree-vectorize -fvectorize -ffast-math -stdlib=libc++ -mcpu=bleeding-edge -ffp-contract=fast
+CXXFLAGS += -O0 -msimd128 -stdlib=libc++ -mcpu=bleeding-edge -ffp-contract=fast
 CFLAGS   += 
-LDFLAGS  += -O3 -msimd128 -ffunction-sections -fdata-sections -ftree-vectorize -fvectorize -ffast-math -stdlib=libc++ -mcpu=bleeding-edge -ffp-contract=fast -DSIMD=1 -sPRECISE_I64_MATH=2 -fwhole-program -polly -polly-position=before-vectorizer -sFORCE_FILESYSTEM=1 -sFAST_UNROLLED_MEMCPY_AND_MEMSET=1 -sSTACK_OVERFLOW_CHECK=2 -sWASM_BIGINT=0 -sTOTAL_STACK=8MB -sUSE_GLFW=0 -sGLOBAL_BASE=16384 -sDYNAMIC_EXECUTION=0 -sPRECISE_F32=1 -s INITIAL_MEMORY=2048mb -sENVIRONMENT=web -rtlib=compiler-rt -sSUPPORT_LONGJMP=wasm -DSIMD=AES -mtune=tigerlake -march=corei7-avx -Wl,-O0,--lto-O0,--stack-first 
+LDFLAGS  += -O0 -msimd128 -stdlib=libc++ -mcpu=bleeding-edge -ffp-contract=fast -DSIMD=1 -sPRECISE_I64_MATH=2 -fwhole-program -polly -polly-position=before-vectorizer -sFORCE_FILESYSTEM=1 -sWASM_BIGINT=0 -sTOTAL_STACK=8MB -sUSE_GLFW=0 -sGLOBAL_BASE=16384 -sPRECISE_F32=1 -s INITIAL_MEMORY=2048mb -sENVIRONMENT=web -rtlib=compiler-rt -sSUPPORT_LONGJMP=wasm -DSIMD=AES -mtune=tigerlake -march=corei7-avx -Wl,-O0,--lto-O0,--stack-first 
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
