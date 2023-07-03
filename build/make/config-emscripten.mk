@@ -123,9 +123,9 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1)
 # emits native wasm.
 CPPFLAGS += -DMPT_BUILD_WASM
-CXXFLAGS += -O0 -msimd128 -stdlib=libc++ -mcpu=bleeding-edge -ffp-contract=fast
+CXXFLAGS += -O3 -stdlib=libc++ -mcpu=bleeding-edge -ffp-contract=off
 CFLAGS   += 
-LDFLAGS  += -O0 -msimd128 -stdlib=libc++ -mcpu=bleeding-edge -ffp-contract=fast -DSIMD=1 -sPRECISE_I64_MATH=2 -fwhole-program -polly -polly-position=before-vectorizer -sFORCE_FILESYSTEM=1 -sWASM_BIGINT=0 -sTOTAL_STACK=8MB -sUSE_GLFW=0 -sGLOBAL_BASE=16384 -sPRECISE_F32=1 -s INITIAL_MEMORY=2048mb -sENVIRONMENT=web -rtlib=compiler-rt -sSUPPORT_LONGJMP=wasm -DSIMD=AES -mtune=tigerlake -march=corei7-avx -Wl,-O0,--lto-O0,--stack-first 
+LDFLAGS  += -O3 -stdlib=libc++ -mcpu=bleeding-edge -ffp-contract=off -DSIMD=AVX -sPRECISE_I64_MATH=2 -polly -polly-position=before-vectorizer -sFORCE_FILESYSTEM=1 -sWASM_BIGINT=0 -sPRECISE_F32=1 -sINITIAL_MEMORY=2048mb -sENVIRONMENT=web -rtlib=compiler-rt -mtune=haswell -march=haswell -Wl,-O3,--lto-O3 
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
