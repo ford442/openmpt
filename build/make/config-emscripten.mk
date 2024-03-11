@@ -117,6 +117,15 @@ LDFLAGS  += -s WASM=1
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
+else ifeq ($(EMSCRIPTEN_TARGET),1it1)
+# emits native wasm.
+CPPFLAGS += 
+CXXFLAGS += 
+CFLAGS   += 
+LDFLAGS  += -s WASM=1
+
+LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
+
 else ifeq ($(EMSCRIPTEN_TARGET),js)
 # emits only plain javascript with plain javascript focused optimizations.
 CPPFLAGS += 
