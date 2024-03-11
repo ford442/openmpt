@@ -118,11 +118,16 @@ LDFLAGS  += -s WASM=1
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
 else ifeq ($(EMSCRIPTEN_TARGET),1it1)
+LINK_SIMD_FLAGS = -mcx16 -mavxifma -mbmi -mbmi2 -mlzcnt -mavxneconvert -msse -msse2 -msse3 -mssse3 \
+	 -msse4 -msse4.1 -msse4.2 -mavx -mavx2 -mpclmul -msha -mfma -mbmi2 -mpopcnt -maes -enable-fma -mavxvnni -msimd128 
 # emits native wasm.
 CPPFLAGS += 
 CXXFLAGS += 
 CFLAGS   += 
-LDFLAGS  += -s WASM=1 -sMALLOC=emmalloc -march=haswell -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -sEMULATE_FUNCTION_POINTER_CASTS=1 -sTRUSTED_TYPES=1 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext -fno-omit-frame-pointer
+LDFLAGS  += -sWASM=1 -sENVIRONMENT=web -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -sPRECISE_F32=1 -march=haswell \
+-mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -sEMULATE_FUNCTION_POINTER_CASTS=1 -sTRUSTED_TYPES=1 \
+-sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
+-fno-omit-frame-pointer
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
