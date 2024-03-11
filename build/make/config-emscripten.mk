@@ -122,7 +122,7 @@ else ifeq ($(EMSCRIPTEN_TARGET),1it1)
 CPPFLAGS += 
 CXXFLAGS += 
 CFLAGS   += 
-LDFLAGS  += -s WASM=1 -march=haswell -polly -polly-position=before-vectorizer -ffp-contract=off -sEMULATE_FUNCTION_POINTER_CASTS=0 -sTRUSTED_TYPES=1 -sALLOW_UNIMPLEMENTED_SYSCALLS=0 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext -fno-omit-frame-pointer
+LDFLAGS  += -s WASM=1 -sMALLOC=emmalloc -march=haswell -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -sEMULATE_FUNCTION_POINTER_CASTS=0 -sTRUSTED_TYPES=1 -sALLOW_UNIMPLEMENTED_SYSCALLS=0 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext -fno-omit-frame-pointer
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
