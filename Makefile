@@ -2046,7 +2046,7 @@ bin/$(FLAVOUR_DIR)libopenmpt.a: $(LIBOPENMPT_OBJECTS) $(LIBOPENMPT_LIBS)
 	$(SILENT)$(AR) $(ARFLAGS) $@ $^
 
 bin/$(FLAVOUR_DIR)libopenmpt$(SOSUFFIX): $(LIBOPENMPT_OBJECTS) $(LIBOPENMPT_LIBS)
-	$(INFO) [LD] $@
+	$(INFO) [LD] Linking 1it1-test.js!
 ifeq ($(NO_SHARED_LINKER_FLAG),1)
 	$(SILENT)$(LINK.cc) $(LIBOPENMPT_LDFLAGS) $(SO_LDFLAGS) $^ $(LOADLIBES) $(LDLIBS) -o bin/$(FLAVOUR_DIR)1it1-test.js
 else
