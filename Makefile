@@ -2054,7 +2054,7 @@ else
 endif
 ifeq ($(SHARED_SONAME),1)
 	$(SILENT)mv bin/$(FLAVOUR_DIR)libopenmpt$(SOSUFFIX) bin/$(FLAVOUR_DIR)$(LIBOPENMPT_SONAME)
-	$(SILENT)ln -sf $(LIBOPENMPT_SONAME) bin/$(FLAVOUR_DIR)libopenmpt$(SOSUFFIX)
+	$(SILENT)ln -sf $(LIBOPENMPT_SONAME) bin/$(FLAVOUR_DIR)libopenmpt_test$(SOSUFFIX)
 endif
 
 bin/$(FLAVOUR_DIR)openmpt123.1: bin/$(FLAVOUR_DIR)openmpt123$(EXESUFFIX) openmpt123/openmpt123.h2m
