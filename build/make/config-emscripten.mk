@@ -156,8 +156,8 @@ include build/make/warnings-clang.mk
 
 REQUIRES_RUNPREFIX=1
 
-EXESUFFIX=1i.js
-SOSUFFIX=1i.js
+EXESUFFIX=.js
+SOSUFFIX=.js
 RUNPREFIX=node 
 TEST_LDFLAGS= -lnodefs.js 
 
