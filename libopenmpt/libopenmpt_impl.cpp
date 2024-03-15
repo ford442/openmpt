@@ -7,6 +7,7 @@
  * The OpenMPT source code is released under the BSD license. Read LICENSE for more details.
  */
 
+#include "emscripten.h"
 #include "common/stdafx.h"
 
 #include "libopenmpt_internal.h"
@@ -1377,6 +1378,7 @@ std::int32_t module_impl::get_num_patterns() const {
 	return m_sndFile->Patterns.GetNumPatterns();
 }
 std::int32_t module_impl::get_num_instruments() const {
+	EM_ASM({console.log('test');});
 	return m_sndFile->GetNumInstruments();
 }
 std::int32_t module_impl::get_num_samples() const {
