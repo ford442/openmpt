@@ -7,6 +7,8 @@
  * The OpenMPT source code is released under the BSD license. Read LICENSE for more details.
  */
 
+#include "emscripten.h"
+
 #include "common/stdafx.h"
 
 #include "libopenmpt_internal.h"
@@ -1214,6 +1216,13 @@ std::string module_impl::get_metadata( const std::string & key ) const {
 	} else if ( key == std::string("container_long") ) {
 		return mpt::transcode<std::string>( mpt::common_encoding::utf8, OpenMPT::CSoundFile::ModContainerTypeToTracker( m_sndFile->GetContainerType() ) );
 	} else if ( key == std::string("tracker") ) {
+
+                 //  test when metadata return - get it to emscripten
+
+		EM_ASM({console.log('test');});
+
+
+		
 		return mpt::transcode<std::string>( mpt::common_encoding::utf8, m_sndFile->m_modFormat.madeWithTracker );
 	} else if ( key == std::string("artist") ) {
 		return mpt::transcode<std::string>( mpt::common_encoding::utf8, m_sndFile->m_songArtist );
