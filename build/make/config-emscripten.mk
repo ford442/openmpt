@@ -134,8 +134,8 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
 # emits native wasm.
-CPPFLAGS += -s ALLOW_MEMORY_GROWTH=1 -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -march=haswell -mtune=wasm32 -ffp-contract=off
-CXXFLAGS += -s ALLOW_MEMORY_GROWTH=1 -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -march=haswell -mtune=wasm32 -ffp-contract=off
+CPPFLAGS += -s ALLOW_MEMORY_GROWTH=1 -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -ffp-contract=off
+CXXFLAGS += -s ALLOW_MEMORY_GROWTH=1 -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -ffp-contract=off
 CFLAGS   += 
 LDFLAGS  += -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -march=haswell \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off \
