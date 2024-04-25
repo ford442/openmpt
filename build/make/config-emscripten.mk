@@ -127,7 +127,7 @@ CFLAGS   +=
 LDFLAGS  += -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -sPRECISE_F32=1 -march=haswell \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -sEMULATE_FUNCTION_POINTER_CASTS=1 -sTRUSTED_TYPES=1 \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
--fno-omit-frame-pointer -sEXPORTED_RUNTIME_METHODS='["malloc"]'
+-fno-omit-frame-pointer -s EXPORTED_FUNCTIONS="['_malloc','_free']"
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
@@ -140,7 +140,7 @@ CFLAGS   +=
 LDFLAGS  += -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -march=haswell \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
--fno-omit-frame-pointer -sEXPORTED_RUNTIME_METHODS='["malloc"]'
+-fno-omit-frame-pointer -s EXPORTED_FUNCTIONS="['_malloc','_free']"
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
