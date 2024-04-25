@@ -101,8 +101,8 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
 else ifeq ($(EMSCRIPTEN_TARGET),audioworkletprocessor)
 # emits an es6 module in a single file suitable for use in an AudioWorkletProcessor
-CPPFLAGS += -DMPT_BUILD_AUDIOWORKLETPROCESSOR
-CXXFLAGS += 
+CPPFLAGS += -DMPT_BUILD_AUDIOWORKLETPROCESSOR -s ALLOW_MEMORY_GROWTH=1
+CXXFLAGS += -s ALLOW_MEMORY_GROWTH=1
 CFLAGS   += 
 LDFLAGS  += -s WASM=1 -s WASM_ASYNC_COMPILATION=0 -s MODULARIZE=1 -s EXPORT_ES6=1 -s SINGLE_FILE=1
 
@@ -134,8 +134,8 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
 # emits native wasm.
-CPPFLAGS += -s ALLOW_MEMORY_GROWTH=1 -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -march=haswell -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off
-CXXFLAGS += -s ALLOW_MEMORY_GROWTH=1 -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -march=haswell -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off
+CPPFLAGS += -s ALLOW_MEMORY_GROWTH=1 -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -march=haswell -mtune=wasm32 -ffp-contract=off
+CXXFLAGS += -s ALLOW_MEMORY_GROWTH=1 -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -march=haswell -mtune=wasm32 -ffp-contract=off
 CFLAGS   += 
 LDFLAGS  += -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -march=haswell \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off \
