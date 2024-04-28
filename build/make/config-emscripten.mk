@@ -140,7 +140,7 @@ CFLAGS   +=
 LDFLAGS  += -DSIMD=AVX $(LINK_SIMD_FLAGS) -march=wasm32-avx \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
--fno-omit-frame-pointer --memory-init-file 0
+-fno-omit-frame-pointer --memory-init-file 1
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=32mb
 
