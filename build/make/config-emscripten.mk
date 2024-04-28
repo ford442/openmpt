@@ -142,7 +142,7 @@ LDFLAGS  += -DSIMD=AVX $(LINK_SIMD_FLAGS) -march=wasm32-avx \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
 -fno-omit-frame-pointer --memory-init-file 0
 
-LDFLAGS += -s ALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=512mb
+LDFLAGS += -s ALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=32mb
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
 # emits only plain javascript with plain javascript focused optimizations.
