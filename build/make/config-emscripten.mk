@@ -132,7 +132,7 @@ LDFLAGS  += -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -sPRECISE_F32=1 -mar
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
-LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx
+LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -mrelaxed-simd
 # emits native wasm.
 CPPFLAGS += -DSIMD=AVX $(LINK_SIMD_FLAGS) -ffp-contract=off
 CXXFLAGS += -DSIMD=AVX $(LINK_SIMD_FLAGS) -ffp-contract=off
