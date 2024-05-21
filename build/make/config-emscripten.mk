@@ -132,7 +132,7 @@ LDFLAGS  += $(LINK_SIMD_FLAGS) -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
-LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -mrelaxed-simd
+LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
 # emits native wasm.
 CPPFLAGS += -ffp-contract=off
 CXXFLAGS += -ffp-contract=off
@@ -143,7 +143,7 @@ LDFLAGS  += $(LINK_SIMD_FLAGS) -march=wasm32-avx \
 -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
 -fno-omit-frame-pointer --memory-init-file 1
 
-LDFLAGS += -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=1 \
+LDFLAGS += -sWASM=0 -sWASM_BIGINT=1 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=1 \
 -sINITIAL_MEMORY=256mb -sALLOW_TABLE_GROWTH
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
