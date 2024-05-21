@@ -134,13 +134,13 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
 # emits native wasm.
-CPPFLAGS += -ffp-contract=off -fno-fast-math
-CXXFLAGS += -ffp-contract=off -fno-fast-math
+CPPFLAGS += -ffp-contract=off -fno-fast-math -mextended-const -mbulk-memory --typed-function-references --enable-reference-types -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext  -fmerge-all-constants 
+CXXFLAGS += -ffp-contract=off -fno-fast-math -mextended-const -mbulk-memory --typed-function-references --enable-reference-types -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext  -fmerge-all-constants 
 CFLAGS   += 
 LDFLAGS  += $(LINK_SIMD_FLAGS) -march=wasm32-avx -fno-fast-math \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
--matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
+-matomics -mmutable-globals -mnontrapping-fptoint -msign-ext  -fmerge-all-constants \
 -fno-omit-frame-pointer --memory-init-file 1
 
 LDFLAGS += -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 \
