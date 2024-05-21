@@ -137,7 +137,7 @@ LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -mr
 CPPFLAGS += -ffp-contract=off
 CXXFLAGS += -ffp-contract=off
 CFLAGS   += 
-LDFLAGS  += -march=wasm32-avx \
+LDFLAGS  += $(LINK_SIMD_FLAGS) -march=wasm32-avx \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory \
 -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
