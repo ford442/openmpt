@@ -143,7 +143,7 @@ LDFLAGS  += -fno-math-errno -dead_strip -march=wasm32-avx -fno-fast-math \
 -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
 -fno-omit-frame-pointer --memory-init-file 1
 
-LDFLAGS += -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 \
+LDFLAGS += -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=1 \
 -sINITIAL_MEMORY=256mb -sALLOW_TABLE_GROWTH -rtlib=compiler-rt-mt \
 -sAUTO_ARCHIVE_INDEXES=0 -wasm-enable-eh
 
