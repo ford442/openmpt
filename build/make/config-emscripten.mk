@@ -67,14 +67,14 @@ CFLAGS   += -Oz
 LDFLAGS  += -Oz
 
 # Enable LTO as recommended by Emscripten
-CXXFLAGS += -flto=thin
-CFLAGS   += -flto=thin
-LDFLAGS  += -flto=thin -Wl,--thinlto-jobs=all
+#CXXFLAGS += -flto=thin
+#CFLAGS   += -flto=thin
+#LDFLAGS  += -flto=thin -Wl,--thinlto-jobs=all
 # As per recommendation in <https://github.com/emscripten-core/emscripten/issues/15638#issuecomment-982772770>,
 # thinLTO is not as well tested as full LTO. Stick to full LTO for now.
-#CXXFLAGS += -flto
-#CFLAGS   += -flto
-#LDFLAGS  += -flto
+CXXFLAGS += -flto
+CFLAGS   += -flto
+LDFLAGS  += -flto
 
 ifeq ($(EMSCRIPTEN_TARGET),default)
 # emits whatever is emscripten's default, currently (13.1.51) this is the same as "wasm" below.
@@ -134,10 +134,10 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
 # emits native wasm.
-CPPFLAGS += -ffp-contract=off
-CXXFLAGS += -ffp-contract=off
+CPPFLAGS += -ffp-contract=off -fno-fast-math
+CXXFLAGS += -ffp-contract=off -fno-fast-math
 CFLAGS   += 
-LDFLAGS  += $(LINK_SIMD_FLAGS) -march=wasm32-avx \
+LDFLAGS  += $(LINK_SIMD_FLAGS) -march=wasm32-avx -fno-fast-math \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory \
 -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
