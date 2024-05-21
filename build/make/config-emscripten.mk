@@ -134,18 +134,14 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
 SIMD_FLAGS = -DSIMD=AVX -msimd128 -mavx
-# emits native wasm.
 CPPFLAGS += -ffp-contract=off -fno-fast-math
 CXXFLAGS += -ffp-contract=off -fno-fast-math
-CFLAGS   += 
-LDFLAGS  += $(LINK_SIMD_FLAGS) -sTRUSTED_TYPES=1 -pipe -dead-strip -march=wasm32-avx -fno-fast-math \
--mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -stdlib=libc++ \
+CFLAGS   += -ffp-contract=off -fno-fast-math
+LDFLAGS  += $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sTRUSTED_TYPES=1 -pipe -dead-strip -march=wasm32-avx -fno-fast-math \
+-mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -fexcess-precision=fast -stdlib=libc++ \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
--matomics -mmutable-globals -msign-ext -fmerge-all-constants \
--fno-omit-frame-pointer
-
-LDFLAGS += -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 \
--sINITIAL_MEMORY=700mb -sALLOW_TABLE_GROWTH
+-matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer \
+-sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=700mb -sALLOW_TABLE_GROWTH
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
 # emits only plain javascript with plain javascript focused optimizations.
