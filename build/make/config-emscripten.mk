@@ -72,9 +72,9 @@ LDFLAGS  += -O1
 #LDFLAGS  += -flto=thin -Wl,--thinlto-jobs=all
 # As per recommendation in <https://github.com/emscripten-core/emscripten/issues/15638#issuecomment-982772770>,
 # thinLTO is not as well tested as full LTO. Stick to full LTO for now.
-CXXFLAGS += -mllvm
-CFLAGS   += -mllvm
-LDFLAGS  += -mllvm
+CXXFLAGS += -flto=thin
+CFLAGS   += -flto=thin
+LDFLAGS  += -flto=thin -Wl,--thinlto-jobs=all
 
 ifeq ($(EMSCRIPTEN_TARGET),default)
 # emits whatever is emscripten's default, currently (13.1.51) this is the same as "wasm" below.
