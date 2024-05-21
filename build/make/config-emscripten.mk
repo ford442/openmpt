@@ -134,10 +134,10 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -mrelaxed-simd
 # emits native wasm.
-CPPFLAGS += -ffp-contract=off -fno-fast-math -fno-math-errno
-CXXFLAGS += -ffp-contract=off -fno-fast-math -fno-math-errno
+CPPFLAGS += -ffp-contract=off
+CXXFLAGS += -ffp-contract=off
 CFLAGS   += 
-LDFLAGS  += -march=wasm32-avx  -fno-fast-math -fno-math-errno \
+LDFLAGS  += -march=wasm32-avx \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory \
 -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
