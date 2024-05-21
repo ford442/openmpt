@@ -143,7 +143,7 @@ LDFLAGS  += $(LINK_SIMD_FLAGS) -march=wasm32-avx \
 -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
 -fno-omit-frame-pointer --memory-init-file 1
 
-LDFLAGS += -sWASM=0 -sWASM_BIGINT=1 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=1 \
+LDFLAGS += -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 \
 -sINITIAL_MEMORY=256mb -sALLOW_TABLE_GROWTH
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
