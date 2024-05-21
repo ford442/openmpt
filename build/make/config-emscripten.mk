@@ -69,7 +69,7 @@ LDFLAGS  += -Oz
 # Enable LTO as recommended by Emscripten
 #CXXFLAGS += -flto=thin
 #CFLAGS   += -flto=thin
-#LDFLAGS  += -flto=thin -Wl,--thinlto-jobs=all
+#LDFLAGS  += -flto=thin -Wl,--thinlto-jobs=all,-O3,--lto-O3,-lc++,-lc++abi,-lm,-ldl
 # As per recommendation in <https://github.com/emscripten-core/emscripten/issues/15638#issuecomment-982772770>,
 # thinLTO is not as well tested as full LTO. Stick to full LTO for now.
 CXXFLAGS += -flto
@@ -101,8 +101,8 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
 else ifeq ($(EMSCRIPTEN_TARGET),audioworkletprocessor)
 # emits an es6 module in a single file suitable for use in an AudioWorkletProcessor
-CPPFLAGS += -DMPT_BUILD_AUDIOWORKLETPROCESSOR
-CXXFLAGS += 
+CPPFLAGS += -DMPT_BUILD_AUDIOWORKLETPROCESSOR -s ALLOW_MEMORY_GROWTH=1
+CXXFLAGS += -s ALLOW_MEMORY_GROWTH=1
 CFLAGS   += 
 LDFLAGS  += -s WASM=1 -s WASM_ASYNC_COMPILATION=0 -s MODULARIZE=1 -s EXPORT_ES6=1 -s SINGLE_FILE=1
 
@@ -116,6 +116,32 @@ CFLAGS   +=
 LDFLAGS  += -s WASM=1
 
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
+
+else ifeq ($(EMSCRIPTEN_TARGET),1it1)
+LINK_SIMD_FLAGS = -mcx16 -mavxifma -mbmi -mbmi2 -mlzcnt -mavxneconvert -msse -msse2 -msse3 -mssse3 \
+	 -msse4 -msse4.1 -msse4.2 -mavx -mavx2 -mpclmul -msha -mfma -mbmi2 -mpopcnt -maes -enable-fma -mavxvnni -msimd128 
+# emits native wasm.
+CPPFLAGS += 
+CXXFLAGS += 
+CFLAGS   += 
+LDFLAGS  += $(LINK_SIMD_FLAGS) -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -sPRECISE_F32=1 -march=haswell \
+-mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -sEMULATE_FUNCTION_POINTER_CASTS=1 -sTRUSTED_TYPES=1 \
+-sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
+-fno-omit-frame-pointer -s EXPORTED_FUNCTIONS="['_malloc','_free']"
+
+LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
+
+else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
+LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
+SIMD_FLAGS = -DSIMD=AVX -msimd128 -mavx
+CPPFLAGS += -ffp-contract=off -fno-fast-math
+CXXFLAGS += -ffp-contract=off -fno-fast-math
+CFLAGS   += -ffp-contract=off -fno-fast-math
+LDFLAGS  += $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sTRUSTED_TYPES=1 -pipe -dead-strip -march=wasm32-avx -fno-fast-math \
+-mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -fexcess-precision=fast -stdlib=libc++ \
+-sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
+-matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer \
+-sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=700mb -sALLOW_TABLE_GROWTH
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
 # emits only plain javascript with plain javascript focused optimizations.
@@ -154,7 +180,7 @@ endif
 DYNLINK=0
 SHARED_LIB=1
 STATIC_LIB=0
-EXAMPLES=1
+EXAMPLES=0
 OPENMPT123=0
 SHARED_SONAME=0
 NO_SHARED_LINKER_FLAG=1
@@ -184,4 +210,3 @@ NO_PULSEAUDIO=1
 NO_SDL2=1
 NO_FLAC=1
 NO_SNDFILE=1
-
