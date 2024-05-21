@@ -72,9 +72,9 @@ LDFLAGS  += -Oz
 #LDFLAGS  += -flto=thin -Wl,--thinlto-jobs=all
 # As per recommendation in <https://github.com/emscripten-core/emscripten/issues/15638#issuecomment-982772770>,
 # thinLTO is not as well tested as full LTO. Stick to full LTO for now.
-CXXFLAGS += -flto
-CFLAGS   += -flto
-LDFLAGS  += -flto
+CXXFLAGS += -mllvm
+CFLAGS   += -mllvm
+LDFLAGS  += -mllvm
 
 ifeq ($(EMSCRIPTEN_TARGET),default)
 # emits whatever is emscripten's default, currently (13.1.51) this is the same as "wasm" below.
@@ -134,15 +134,19 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -mrelaxed-simd
 # emits native wasm.
-CPPFLAGS += -DSIMD=AVX -ffp-contract=off
-CXXFLAGS += -DSIMD=AVX -ffp-contract=off
+CPPFLAGS += -DSIMD=AVX -ffp-contract=off -fno-fast-math
+CXXFLAGS += -DSIMD=AVX -ffp-contract=off -fno-fast-math
 CFLAGS   += 
-LDFLAGS  += -DSIMD=AVX -march=wasm32-avx \
+LDFLAGS  += -DSIMD=AVX -march=wasm32-avx -fno-fast-math \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off \
--sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
+-sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory \
+-matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
 -fno-omit-frame-pointer --memory-init-file 1
 
-LDFLAGS += -sWASM=0 -sFORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -sINITIAL_MEMORY=128mb -sALLOW_TABLE_GROWTH
+LDFLAGS += -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 \
+-sINITIAL_MEMORY=256mb -sALLOW_TABLE_GROWTH -rtlib=compiler-rt-mt \
+-sAUTO_ARCHIVE_INDEXES=0 -wasm-enable-eh
+
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
 # emits only plain javascript with plain javascript focused optimizations.
