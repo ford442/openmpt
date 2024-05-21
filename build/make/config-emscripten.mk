@@ -20,7 +20,7 @@ EMSCRIPTEN_PORTS?=0
 ifneq ($(STDCXX),)
 CXXFLAGS_STDCXX = -std=$(STDCXX)
 else ifeq ($(shell printf '\n' > bin/empty.cpp ; if $(CXX) -std=c++20 -c bin/empty.cpp -o bin/empty.out > /dev/null 2>&1 ; then echo 'c++20' ; fi ), c++20)
-CXXFLAGS_STDCXX = -std=c++20
+CXXFLAGS_STDCXX = -std=c++2b
 else
 CXXFLAGS_STDCXX = -std=c++17
 endif
@@ -124,7 +124,7 @@ LINK_SIMD_FLAGS = -mcx16 -mavxifma -mbmi -mbmi2 -mlzcnt -mavxneconvert -msse -ms
 CPPFLAGS += 
 CXXFLAGS += 
 CFLAGS   += 
-LDFLAGS  += -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -sPRECISE_F32=1 -march=haswell \
+LDFLAGS  += $(LINK_SIMD_FLAGS) -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -sPRECISE_F32=1 -march=haswell \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -sEMULATE_FUNCTION_POINTER_CASTS=1 -sTRUSTED_TYPES=1 \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
 -fno-omit-frame-pointer -s EXPORTED_FUNCTIONS="['_malloc','_free']"
@@ -143,9 +143,8 @@ LDFLAGS  += -dead_strip -fno-math-errno -march=wasm32-avx -fno-fast-math \
 -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
 -fno-omit-frame-pointer --memory-init-file 1
 
-LDFLAGS += -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=1 \
--sINITIAL_MEMORY=256mb -sALLOW_TABLE_GROWTH -rtlib=compiler-rt-mt \
--sAUTO_ARCHIVE_INDEXES=0 -wasm-enable-eh
+LDFLAGS += -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 \
+-sINITIAL_MEMORY=256mb -sALLOW_TABLE_GROWTH
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
 # emits only plain javascript with plain javascript focused optimizations.
