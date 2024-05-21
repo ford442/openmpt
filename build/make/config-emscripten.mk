@@ -62,9 +62,9 @@ NO_MINIMP3=1
 NO_STBVORBIS=1
 endif
 
-CXXFLAGS += -Oz
-CFLAGS   += -Oz
-LDFLAGS  += -Oz
+CXXFLAGS += -O1
+CFLAGS   += -O1
+LDFLAGS  += -O1
 
 # Enable LTO as recommended by Emscripten
 #CXXFLAGS += -flto=thin
