@@ -99,7 +99,7 @@ template <typename T, typename std::enable_if<std::is_floating_point<T>::value, 
 inline constexpr T pi_v = static_cast<T>(M_PI);
 #else
 template <typename T, typename std::enable_if<std::is_floating_point<T>::value, bool>::type = true>
-inline constexpr T pi_v = static_cast<T>(3.14159265358979323846);
+inline constexpr T pi_v = static_cast<T>(3.1415926535897932384626433832795028841971693993751);
 #endif
 
 #ifdef M_1_PI
