@@ -142,7 +142,7 @@ LDFLAGS  += $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sTRUSTED_TYPES=1 -pipe -dead-strip -f
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer -rtlib=compiler-rt \
 -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=256mb -sALLOW_TABLE_GROWTH --closure 0 --closureFriendly \
---output_eol linux -sAUTO_ARCHIVE_INDEXES=0 -sALLOW_UNIMPLEMENTED_SYSCALLS=0 -sIGNORE_MISSING_MAIN=0 -sASSERTIONS=0
+--output_eol linux -sAUTO_ARCHIVE_INDEXES=0 -sIGNORE_MISSING_MAIN=0 -sASSERTIONS=0
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
 # emits only plain javascript with plain javascript focused optimizations.
