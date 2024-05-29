@@ -137,9 +137,9 @@ SIMD_FLAGS = -DSIMD=AVX -msimd128 -mavx
 CPPFLAGS += -ffp-contract=off -fno-fast-math
 CXXFLAGS += -ffp-contract=off -fno-fast-math
 CFLAGS   += -ffp-contract=off -fno-fast-math
-LDFLAGS  += $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sTRUSTED_TYPES=1 -pipe -dead-strip -march=wasm32-avx -fno-fast-math \
+LDFLAGS  += $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sTRUSTED_TYPES=1 -pipe -fno-fast-math \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -fexcess-precision=fast -stdlib=libc++ \
--sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
+-mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer \
 -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=700mb -sALLOW_TABLE_GROWTH
 
