@@ -144,7 +144,7 @@ LDFLAGS  += $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sTRUSTED_TYPES=1 -pipe -dead-strip -f
 -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=768mb -sALLOW_TABLE_GROWTH \
 --closure 0 --closureFriendly -rtlib=compiler-rt -Wl,-O3,--lto-O3,-lc++,-lc++abi,-lm,-ldl \
 --output_eol linux -sAUTO_ARCHIVE_INDEXES=0 -sIGNORE_MISSING_MAIN=0 -sASSERTIONS=0 \
--sLEGALIZE_JS_FFI=1 -march=haswell -sMALLOC=emmalloc -sENVIRONMENT=web,node
+-march=haswell
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
 # emits only plain javascript with plain javascript focused optimizations.
