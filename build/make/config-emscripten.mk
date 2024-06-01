@@ -143,7 +143,7 @@ LDFLAGS  += $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sTRUSTED_TYPES=1 -pipe -dead-strip -f
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer \
 -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=700mb -sALLOW_TABLE_GROWTH \
 -march=haswell -rtlib=compiler-rt -sLEGALIZE_JS_FFI=1 -sENVIRONMENT=web \
---output_eol linux --use-preload-plugins --closure 0 --closureFriendly
+--output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sMODULARIZE
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
 # emits only plain javascript with plain javascript focused optimizations.
