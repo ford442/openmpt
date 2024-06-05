@@ -135,9 +135,9 @@ else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
 SIMD_FLAGS = -DSIMD=AVX -msimd128 -mavx
 CPPFLAGS += -ffp-contract=off -fno-fast-math -fno-strict-aliasing
-CXXFLAGS += -ffp-contract=off -fno-fast-math -fno-strict-aliasing -sUSE_MPG123=1 -DMPT_WITH_MPG123
-CFLAGS   += -ffp-contract=off -fno-fast-math -fno-strict-aliasing -sUSE_MPG123=1 -DMPT_WITH_MPG123
-LDFLAGS  += -sUSE_MPG123=1 -DMPT_WITH_MPG123 $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sTRUSTED_TYPES=1 -pipe -dead-strip -fno-fast-math \
+CXXFLAGS += -ffp-contract=off -fno-fast-math -fno-strict-aliasing
+CFLAGS   += -ffp-contract=off -fno-fast-math -fno-strict-aliasing
+LDFLAGS  += $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sTRUSTED_TYPES=1 -pipe -dead-strip -fno-fast-math \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -fexcess-precision=fast -stdlib=libc++ \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer \
