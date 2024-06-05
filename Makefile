@@ -79,7 +79,7 @@
 #  (defaults are 0):
 #
 #  NO_ZLIB=1        Avoid using zlib, even if found
-#  NO_MPG123=1      Avoid using libmpg123, even if found
+#  NO_MPG123=0      Avoid using libmpg123, even if found
 #  NO_OGG=1         Avoid using libogg, even if found
 #  NO_VORBIS=1      Avoid using libvorbis, even if found
 #  NO_VORBISFILE=1  Avoid using libvorbisfile, even if found
@@ -90,7 +90,7 @@
 #  LOCAL_VORBIS=1      Build local copy of libvorbis, even if found
 #
 #  NO_MINIZ=1       Do not fallback to miniz
-#  NO_MINIMP3=1     Do not fallback to minimp3
+#  NO_MINIMP3=0     Do not fallback to minimp3
 #  NO_STBVORBIS=1   Do not fallback to stb_vorbis
 #
 #  USE_ALLEGRO42=1  Use liballegro 4.2 (DJGPP only)
