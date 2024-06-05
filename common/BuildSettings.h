@@ -174,7 +174,7 @@
 //#define NO_REVERB
 #define NO_DSP
 #define NO_EQ
-#define NO_AGC
+// #define NO_AGC
 //#define NO_PLUGINS
 
 #endif // LIBOPENMPT_BUILD
