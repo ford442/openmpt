@@ -20,9 +20,9 @@ EMSCRIPTEN_PORTS?=0
 ifneq ($(STDCXX),)
 CXXFLAGS_STDCXX = -std=$(STDCXX)
 else ifeq ($(shell printf '\n' > bin/empty.cpp ; if $(CXX) -std=c++20 -c bin/empty.cpp -o bin/empty.out > /dev/null 2>&1 ; then echo 'c++20' ; fi ), c++20)
-CXXFLAGS_STDCXX = -std=c++20
+CXXFLAGS_STDCXX = -std=c++11 -std=c++14 -std=c++17 -std=c++20
 else
-CXXFLAGS_STDCXX = -std=c++17
+CXXFLAGS_STDCXX = -std=c++11 -std=c++14 -std=c++17
 endif
 ifneq ($(STDC),)
 CFLAGS_STDC = -std=$(STDC)
@@ -128,8 +128,8 @@ LDFLAGS  += $(LINK_SIMD_FLAGS) -DSIMD=AVX $(LINK_SIMD_FLAGS) -sMALLOC=emmalloc -
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -sEMULATE_FUNCTION_POINTER_CASTS=1 -sTRUSTED_TYPES=1 \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory -matomics -mmutable-globals -mnontrapping-fptoint -msign-ext \
 -fno-omit-frame-pointer -s EXPORTED_FUNCTIONS="['_malloc','_free']"
-
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
+
 
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
@@ -137,14 +137,16 @@ SIMD_FLAGS = -DSIMD=AVX -msimd128 -mavx
 CPPFLAGS += -ffp-contract=off -fno-fast-math $(SIMD_FLAGS) -ffp-contract=off -fexcess-precision=standard 
 CXXFLAGS += -ffp-contract=off -fno-fast-math $(SIMD_FLAGS) -ffp-contract=off -fexcess-precision=standard 
 CFLAGS   += -ffp-contract=off -fno-fast-math $(SIMD_FLAGS) -ffp-contract=off -fexcess-precision=standard 
-LDFLAGS  += $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sEMULATE_FUNCTION_POINTER_CASTS=1 -sTRUSTED_TYPES=1 -pipe -dead-strip -fno-fast-math \
--mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -fexcess-precision=standard -stdlib=libc++ \
--sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
+LDFLAGS  += $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sEMULATE_FUNCTION_POINTER_CASTS=1 \
+-sTRUSTED_TYPES=1 -pipe -dead-strip -fno-fast-math -mtune=wasm32 -polly -polly-position=before-vectorizer \
+-ffp-contract=off -fexcess-precision=standard -stdlib=libc++ -sALLOW_UNIMPLEMENTED_SYSCALLS=1 \
+-mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer \
 -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=700mb -sALLOW_TABLE_GROWTH \
 -march=haswell -rtlib=compiler-rt -sWASM_BIGINT=1 -sENVIRONMENT=web -WASMFS=1 -sASYNCIFY=0 \
 --output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sASYNCIFY=0 -sSTRICT_JS=0 \
 -sASSERTIONS=0
+
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
 # emits only plain javascript with plain javascript focused optimizations.
