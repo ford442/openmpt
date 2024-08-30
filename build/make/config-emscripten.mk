@@ -58,7 +58,7 @@ CFLAGS   += --use-port=zlib --use-port=mpg123 --use-port=vorbis --use-port=ogg -
 LDFLAGS  += --use-port=zlib --use-port=mpg123 --use-port=vorbis --use-port=ogg
 endif
 NO_MINIZ=1
-NO_MINIMP3=1
+NO_MINIMP3=0
 NO_STBVORBIS=1
 endif
 
@@ -134,10 +134,10 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
 SIMD_FLAGS = -DSIMD=AVX -msimd128 -mavx
-CPPFLAGS += -ffp-contract=off -fno-fast-math
-CXXFLAGS += -ffp-contract=off -fno-fast-math
-CFLAGS   += -ffp-contract=off -fno-fast-math
-LDFLAGS  += $(LINK_SIMD_FLAGS) -DNDEBUG=1 -sEMULATE_FUNCTION_POINTER_CASTS=1 -sTRUSTED_TYPES=1 -pipe -dead-strip -fno-fast-math \
+CPPFLAGS += -ffp-contract=off -fno-fast-math -sUSE_MPG123=1 -DMPT_WITH_MPG123
+CXXFLAGS += -ffp-contract=off -fno-fast-math -sUSE_MPG123=1 -DMPT_WITH_MPG123
+CFLAGS   += -ffp-contract=off -fno-fast-math -sUSE_MPG123=1 -DMPT_WITH_MPG123
+LDFLAGS  += $(LINK_SIMD_FLAGS) -sUSE_MPG123=1 -DMPT_WITH_MPG123 -DNDEBUG=1 -sEMULATE_FUNCTION_POINTER_CASTS=1 -sTRUSTED_TYPES=1 -pipe -dead-strip -fno-fast-math \
 -mtune=wasm32 -polly -polly-position=before-vectorizer -ffp-contract=off -fexcess-precision=fast -stdlib=libc++ \
 -sALLOW_UNIMPLEMENTED_SYSCALLS=1 -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer \
@@ -201,7 +201,7 @@ LOCAL_OGG=1
 LOCAL_VORBIS=1
 else
 NO_ZLIB=1
-NO_MPG123=1
+NO_MPG123=0
 NO_OGG=1
 NO_VORBIS=1
 NO_VORBISFILE=1
@@ -210,5 +210,5 @@ NO_PORTAUDIO=1
 NO_PORTAUDIOCPP=1
 NO_PULSEAUDIO=1
 NO_SDL2=1
-NO_FLAC=1
-NO_SNDFILE=1
+NO_FLAC=0
+NO_SNDFILE=0
