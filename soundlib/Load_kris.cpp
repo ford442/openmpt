@@ -46,7 +46,7 @@ CSoundFile::ProbeResult CSoundFile::ProbeFileHeaderKRIS(MemoryFileReader file, c
 
 bool CSoundFile::ReadKRIS(FileReader &file, ModLoadingFlags loadFlags)
 {
-	if (!file.Seek(952) || !file.ReadMagic("KRIS"))
+	if(!file.Seek(952) || !file.ReadMagic("KRIS"))
 		return false;
 
 	const auto [numOrders, restartPos] = file.ReadArray<uint8, 2>();
@@ -98,7 +98,7 @@ bool CSoundFile::ReadKRIS(FileReader &file, ModLoadingFlags loadFlags)
 	m_nMinPeriod = 113 * 4;
 	m_nMaxPeriod = 856 * 4;
 	m_nSamplePreAmp = 64;
-	m_SongFlags.set(SONG_PT_MODE | SONG_IMPORTED);
+	m_SongFlags.set(SONG_PT_MODE | SONG_IMPORTED | SONG_FORMAT_NO_VOLCOL);
 	m_playBehaviour.set(kMODIgnorePanning);
 	m_playBehaviour.set(kMODSampleSwap);
 	

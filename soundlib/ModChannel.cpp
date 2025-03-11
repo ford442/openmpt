@@ -27,6 +27,7 @@ void ModChannel::Reset(ResetFlags resetMask, const CSoundFile &sndFile, CHANNELI
 		nNote = nNewNote = (sndFile.m_playBehaviour[kITInitialNoteMemory] ? NOTE_MIN : NOTE_NONE);
 		nArpeggioLastNote = lastMidiNoteWithoutArp = NOTE_NONE;
 		nNewIns = nOldIns = 0;
+		swapSampleIndex = 0;
 		pModSample = defaultSample;
 		pModInstrument = nullptr;
 		nPortamentoDest = 0;
@@ -80,6 +81,9 @@ void ModChannel::Reset(ResetFlags resetMask, const CSoundFile &sndFile, CHANNELI
 		nVibratoPos = nTremoloPos = nPanbrelloPos = 0;
 		nOldHiOffset = 0;
 		nLeftVU = nRightVU = 0;
+		nOldExtraFinePortaUpDown = nOldFinePortaUpDown = nOldPortaDown = nOldPortaUp = 0;
+		portamentoSlide = 0;
+		nMasterChn = 0;
 
 		// Custom tuning related
 		m_ReCalculateFreqOnFirstTick = false;
@@ -262,6 +266,8 @@ void ModChannel::PlayControl(uint8 param)
 	case 2: dwFlags.set(CHN_PINGPONGFLAG, false); break;
 	case 3: dwFlags.set(CHN_PINGPONGFLAG, true); break;
 	case 4: dwFlags.flip(CHN_PINGPONGFLAG); break;
+	case 5: oldOffset = position.GetUInt(); break;
+	case 6: position.Set(oldOffset); break;
 	}
 }
 

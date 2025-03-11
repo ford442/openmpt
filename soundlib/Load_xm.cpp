@@ -678,9 +678,10 @@ bool CSoundFile::ReadXM(FileReader &file, ModLoadingFlags loadFlags)
 			m_playBehaviour.reset(kFT2ST3OffsetOutOfRange);
 			// Fix arpeggios in KAPTENFL.XM
 			m_playBehaviour.reset(kFT2Arpeggio);
-		} else if(!memcmp(fileHeader.trackerName, "*Converted ", 11))
+		} else if(!memcmp(fileHeader.trackerName, "*Converted ", 11) && !memcmp(fileHeader.trackerName + 14, "-File*", 6))
 		{
-			madeWith = verDigiTrakker;
+			madeWith = verDigiTrakker | verConfirmed;
+			madeWithTracker = UL_("Digitrakker");
 		}
 	}
 
@@ -1106,7 +1107,7 @@ bool CSoundFile::ReadXM(FileReader &file, ModLoadingFlags loadFlags)
 		if(!Patterns.IsValidPat(0xFE))
 			Order().RemovePattern(0xFE);
 		if(!Patterns.IsValidPat(0xFF))
-			Order().Replace(0xFF, Order.GetInvalidPatIndex());
+			Order().Replace(0xFF, PATTERNINDEX_INVALID);
 	}
 
 	m_modFormat.formatName = MPT_UFORMAT("FastTracker 2 v{}.{}")(fileHeader.version >> 8, mpt::ufmt::hex0<2>(fileHeader.version & 0xFF));
@@ -1186,7 +1187,7 @@ bool CSoundFile::SaveXM(std::ostream &f, bool compatibilityExport)
 	for(ORDERINDEX ord = 0; ord < trimmedLength; ord++)
 	{
 		PATTERNINDEX pat = Order()[ord];
-		if(pat == Order.GetIgnoreIndex() || pat == Order.GetInvalidPatIndex() || pat > uint8_max)
+		if(pat == PATTERNINDEX_SKIP || pat == PATTERNINDEX_INVALID || pat > uint8_max)
 		{
 			changeOrderList = true;
 		} else if(numOrders < orderLimit)
@@ -1262,9 +1263,12 @@ bool CSoundFile::SaveXM(std::ostream &f, bool compatibilityExport)
 			uint8 note = p->note, command = 0, param = 0;
 			ModSaveCommand(*p, command, param, true, compatibilityExport);
 
-			if (note >= NOTE_MIN_SPECIAL) note = 97; else
-			if ((note <= 12) || (note > 96+12)) note = 0; else
-			note -= 12;
+			if(note >= NOTE_MIN_SPECIAL)
+				note = 97;
+			else if(note < NOTE_MIN + 12 || note >= NOTE_MIN + 12 + 96)
+				note = 0;
+			else
+				note -= 12;
 			uint8 vol = 0;
 			if (p->volcmd != VOLCMD_NONE)
 			{
@@ -1387,9 +1391,11 @@ bool CSoundFile::SaveXM(std::ostream &f, bool compatibilityExport)
 			if(Instruments[ins] != nullptr)
 			{
 				// Convert instrument
-				insHeader.ConvertToXM(*Instruments[ins], compatibilityExport);
+				auto sampleList = insHeader.ConvertToXM(*Instruments[ins], compatibilityExport);
+				samples = std::move(sampleList.samples);
+				if(sampleList.tooManySamples)
+					AddToLog(LogInformation, MPT_UFORMAT("Instrument {} references too many samples, only the first {} will be exported.")(ins, samples.size()));
 
-				samples = insHeader.instrument.GetSampleList(*Instruments[ins], compatibilityExport);
 				if(samples.size() > 0 && samples[0] <= GetNumSamples())
 				{
 					// Copy over auto-vibrato settings of first sample
@@ -1522,7 +1528,7 @@ bool CSoundFile::SaveXM(std::ostream &f, bool compatibilityExport)
 		SaveMixPlugins(&f);
 		if(GetNumInstruments())
 		{
-			SaveExtendedInstrumentProperties(writeInstruments, f);
+			SaveExtendedInstrumentProperties(0, MOD_TYPE_XM, f);
 		}
 		SaveExtendedSongProperties(f);
 	}

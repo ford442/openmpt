@@ -12,10 +12,12 @@
 #include "Clipboard.h"
 #include "dlg_misc.h"
 #include "Dlsbank.h"
+#include "HighDPISupport.h"
 #include "Mainfrm.h"
 #include "Moddoc.h"
 #include "Mptrack.h"
 #include "Reporting.h"
+#include "resource.h"
 #include "TrackerSettings.h"
 #include "../common/misc_util.h"
 #include "../common/mptFileIO.h"
@@ -254,13 +256,9 @@ CHANNELINDEX CModDoc::ReArrangeChannels(const std::vector<CHANNELINDEX> &newOrde
 	}
 
 	std::vector<ModChannel> chns(m_SndFile.m_PlayState.Chn.begin(), m_SndFile.m_PlayState.Chn.begin() + oldNumChannels);
-	std::vector<RecordGroup> recordStates(oldNumChannels);
-	auto chnMutePendings = m_SndFile.m_bChannelMuteTogglePending;
-	for(CHANNELINDEX chn = 0; chn < oldNumChannels; chn++)
-	{
-		recordStates[chn] = GetChannelRecordGroup(chn);
-	}
-	ReinitRecordState();
+	const auto chnMutePendings = m_SndFile.m_bChannelMuteTogglePending;
+	const auto recordStates = m_multiRecordGroup;
+	m_multiRecordGroup.clear();
 
 	for(CHANNELINDEX chn = 0; chn < newNumChannels; chn++)
 	{
@@ -269,7 +267,8 @@ CHANNELINDEX CModDoc::ReArrangeChannels(const std::vector<CHANNELINDEX> &newOrde
 		{
 			m_SndFile.ChnSettings[chn] = settings[srcChn];
 			m_SndFile.m_PlayState.Chn[chn] = chns[srcChn];
-			SetChannelRecordGroup(chn, recordStates[srcChn]);
+			if(srcChn < recordStates.size())
+				SetChannelRecordGroup(chn, recordStates[srcChn]);
 			m_SndFile.m_bChannelMuteTogglePending[chn] = chnMutePendings[srcChn];
 			if(m_SndFile.m_opl)
 				m_SndFile.m_opl->MoveChannel(srcChn, chn);
@@ -649,7 +648,7 @@ void CModDoc::ClonePlugin(SNDMIXPLUGIN &target, const SNDMIXPLUGIN &source)
 	if(target.editorX != int32_min)
 	{
 		// Move target editor a bit to visually distinguish it from the original editor
-		int addPixels = Util::ScalePixels(16, CMainFrame::GetMainFrame()->m_hWnd);
+		int addPixels = HighDPISupport::ScalePixels(16, CMainFrame::GetMainFrame()->m_hWnd);
 		target.editorX += addPixels;
 		target.editorY += addPixels;
 	}
@@ -955,7 +954,7 @@ bool CModDoc::MoveOrder(ORDERINDEX sourceOrd, ORDERINDEX destOrd, bool update, b
 		return false;
 
 	auto &sourceSequence = m_SndFile.Order(sourceSeq);
-	const PATTERNINDEX sourcePat = sourceOrd < sourceSequence.size() ? sourceSequence[sourceOrd] : sourceSequence.GetInvalidPatIndex();
+	const PATTERNINDEX sourcePat = sourceOrd < sourceSequence.size() ? sourceSequence[sourceOrd] : PATTERNINDEX_INVALID;
 
 	// Delete source
 	if(!copy)

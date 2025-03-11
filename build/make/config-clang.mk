@@ -61,11 +61,13 @@ endif
 ifeq ($(CHECKED_ADDRESS),1)
 CXXFLAGS += -fsanitize=address
 CFLAGS   += -fsanitize=address
+NO_NO_UNDEFINED_LINKER_FLAG=1
 endif
 
 ifeq ($(CHECKED_UNDEFINED),1)
 CXXFLAGS += -fsanitize=undefined
 CFLAGS   += -fsanitize=undefined
+NO_NO_UNDEFINED_LINKER_FLAG=1
 endif
 
 include build/make/warnings-clang.mk

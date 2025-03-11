@@ -74,6 +74,8 @@ CXXFLAGS += -ffunction-sections -fdata-sections
 CFLAGS   += -ffunction-sections -fdata-sections
 LDFLAGS  += -Wl,--gc-sections
 
+MPT_COMPILER_NOALLOCAH=1
+
 CXXFLAGS += -march=i586 -m80387 -mtune=pentium
 CFLAGS   += -march=i586 -m80387 -mtune=pentium
 
@@ -102,11 +104,19 @@ XMP_OPENMPT=1
 
 IS_CROSS=1
 
+ifeq ($(ALLOW_LGPL),1)
+LOCAL_ZLIB=1
+LOCAL_MPG123=1
+LOCAL_OGG=1
+LOCAL_VORBIS=1
+else
 NO_ZLIB=1
 NO_MPG123=1
 NO_OGG=1
 NO_VORBIS=1
 NO_VORBISFILE=1
+endif
+
 NO_PORTAUDIO=1
 NO_PORTAUDIOCPP=1
 NO_PULSEAUDIO=1

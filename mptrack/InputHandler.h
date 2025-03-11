@@ -52,7 +52,7 @@ public:
 	int GetKeyListSize(CommandID cmd) const;
 
 protected:
-	bool InterceptSpecialKeys(UINT nChar, UINT nFlags, bool generateMsg);
+	bool InterceptSpecialKeys(const KeyboardEvent &event);
 	void SetupSpecialKeyInterception();
 	CommandID SendCommands(CWnd *wnd, const KeyMapRange &cmd);
 
@@ -68,7 +68,7 @@ public:
 	CString GetKeyTextFromCommand(CommandID c, const TCHAR *prependText = nullptr) const;
 	CString GetMenuText(UINT id) const;
 	void UpdateMainMenu();
-	void SetNewCommandSet(const CCommandSet *newSet);
+	void SetNewCommandSet(const CCommandSet &newSet);
 	bool SetEffectLetters(const CModSpecifications &modSpecs);
 };
 

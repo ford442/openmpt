@@ -11,7 +11,6 @@
 
 #include "stdafx.h"
 #include "view_com.h"
-#include "ChannelManagerDlg.h"
 #include "Childfrm.h"
 #include "Clipboard.h"
 #include "Ctrl_com.h"
@@ -21,6 +20,9 @@
 #include "Mainfrm.h"
 #include "Moddoc.h"
 #include "Mptrack.h"
+#include "Reporting.h"
+#include "resource.h"
+#include "TrackerSettings.h"
 #include "WindowMessages.h"
 #include "../common/mptStringBuffer.h"
 #include "../soundlib/mod_specifications.h"
@@ -28,7 +30,7 @@
 OPENMPT_NAMESPACE_BEGIN
 
 
-#define DETAILS_TOOLBAR_CY	Util::ScalePixels(28, m_hWnd)
+#define DETAILS_TOOLBAR_CY HighDPISupport::ScalePixels(28, m_hWnd)
 
 enum
 {
@@ -85,17 +87,18 @@ BEGIN_MESSAGE_MAP(CViewComments, CModScrollView)
 	//{{AFX_MSG_MAP(CViewComments)
 	ON_WM_SIZE()
 	ON_WM_DESTROY()
-	ON_MESSAGE(WM_MOD_KEYCOMMAND,		&CViewComments::OnCustomKeyMsg)
-	ON_MESSAGE(WM_MOD_MIDIMSG,			&CViewComments::OnMidiMsg)
-	ON_COMMAND(IDC_LIST_SAMPLES,		&CViewComments::OnShowSamples)
-	ON_COMMAND(IDC_LIST_INSTRUMENTS,	&CViewComments::OnShowInstruments)
-	ON_COMMAND(IDC_LIST_PATTERNS,		&CViewComments::OnShowPatterns)
-	ON_COMMAND(ID_COPY_ALL_NAMES,		&CViewComments::OnCopyNames)
-	ON_NOTIFY(LVN_ENDLABELEDIT,		IDC_LIST_DETAILS,	&CViewComments::OnEndLabelEdit)
-	ON_NOTIFY(LVN_BEGINLABELEDIT,	IDC_LIST_DETAILS,	&CViewComments::OnBeginLabelEdit)
-	ON_NOTIFY(NM_DBLCLK, IDC_LIST_DETAILS,	&CViewComments::OnDblClickListItem)
-	ON_NOTIFY(NM_RCLICK, IDC_LIST_DETAILS,	&CViewComments::OnRClickListItem)
-	ON_NOTIFY(NM_CUSTOMDRAW, IDC_LIST_DETAILS, &CViewComments::OnCustomDrawList)
+	ON_MESSAGE(WM_MOD_KEYCOMMAND,       &CViewComments::OnCustomKeyMsg)
+	ON_MESSAGE(WM_MOD_MIDIMSG,          &CViewComments::OnMidiMsg)
+	ON_COMMAND(IDC_LIST_SAMPLES,        &CViewComments::OnShowSamples)
+	ON_COMMAND(IDC_LIST_INSTRUMENTS,    &CViewComments::OnShowInstruments)
+	ON_COMMAND(IDC_LIST_PATTERNS,       &CViewComments::OnShowPatterns)
+	ON_COMMAND(ID_EDIT_COPY,            &CViewComments::OnCopyNames)
+	ON_COMMAND(ID_EDIT_PASTE,           &CViewComments::OnPasteNames)
+	ON_NOTIFY(LVN_ENDLABELEDIT,   IDC_LIST_DETAILS, &CViewComments::OnEndLabelEdit)
+	ON_NOTIFY(LVN_BEGINLABELEDIT, IDC_LIST_DETAILS, &CViewComments::OnBeginLabelEdit)
+	ON_NOTIFY(NM_DBLCLK,          IDC_LIST_DETAILS, &CViewComments::OnDblClickListItem)
+	ON_NOTIFY(NM_RCLICK,          IDC_LIST_DETAILS, &CViewComments::OnRClickListItem)
+	ON_NOTIFY(NM_CUSTOMDRAW,      IDC_LIST_DETAILS, &CViewComments::OnCustomDrawList)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
@@ -120,7 +123,7 @@ void CViewComments::OnInitialUpdate()
 
 	if (pFrame)
 	{
-		COMMENTVIEWSTATE &commentState = pFrame->GetCommentViewState();
+		CommentsViewState &commentState = pFrame->GetCommentViewState();
 		if (commentState.initialized)
 		{
 			m_nListId = commentState.nId;
@@ -136,9 +139,20 @@ void CViewComments::OnInitialUpdate()
 	m_ToolBar.AddButton(IDC_LIST_SAMPLES, IMAGE_SAMPLES);
 	m_ToolBar.AddButton(IDC_LIST_INSTRUMENTS, IMAGE_INSTRUMENTS);
 	//m_ToolBar.AddButton(IDC_LIST_PATTERNS, TIMAGE_TAB_PATTERNS);
-	m_ToolBar.SetIndent(4);
 	UpdateButtonState();
-	UpdateView(UpdateHint().ModType().MPTOptions());
+	OnDPIChanged();
+}
+
+
+void CViewComments::OnDPIChanged()
+{
+	UpdateView(GeneralHint().MPTOptions().ModType());
+	m_ToolBar.SetIndent(HighDPISupport::ScalePixels(4, m_hWnd));
+	const int imgSize = HighDPISupport::ScalePixels(16, m_hWnd), btnSizeX = HighDPISupport::ScalePixels(26, m_hWnd), btnSizeY = HighDPISupport::ScalePixels(24, m_hWnd);
+	m_ToolBar.SetButtonSize(CSize(btnSizeX, btnSizeY));
+	m_ToolBar.SetBitmapSize(CSize(imgSize, imgSize));
+	RecalcLayout();
+	CModScrollView::OnDPIChanged();
 }
 
 
@@ -151,7 +165,7 @@ void CViewComments::OnDestroy()
 	CChildFrame *pFrame = (CChildFrame *)GetParentFrame();
 	if (pFrame)
 	{
-		COMMENTVIEWSTATE &commentState = pFrame->GetCommentViewState();
+		CommentsViewState &commentState = pFrame->GetCommentViewState();
 		commentState.initialized = true;
 		commentState.nId = m_nListId;
 	}
@@ -255,6 +269,14 @@ LRESULT CViewComments::OnCustomKeyMsg(WPARAM wParam, LPARAM)
 	{
 		m_ItemList.EditLabel(item - 1);
 		return wParam;
+	} else if(wParam == kcEditCopy)
+	{
+		OnCopyNames();
+		return wParam;
+	} else if(wParam == kcEditPaste)
+	{
+		OnPasteNames();
+		return wParam;
 	}
 	return kcNull;
 }
@@ -264,6 +286,13 @@ BOOL CViewComments::PreTranslateMessage(MSG *pMsg)
 {
 	if(pMsg)
 	{
+		if(m_editLabel && pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
+		{
+			m_editLabel = false;
+			m_ItemList.SetFocus();
+			return TRUE;
+		}
+
 		if((pMsg->message == WM_SYSKEYUP) || (pMsg->message == WM_KEYUP)
 			|| (pMsg->message == WM_SYSKEYDOWN) || (pMsg->message == WM_KEYDOWN))
 		{
@@ -557,6 +586,7 @@ void CViewComments::OnBeginLabelEdit(LPNMHDR, LRESULT *)
 	CEdit *editCtrl = m_ItemList.GetEditControl();
 	if(editCtrl)
 	{
+		m_editLabel = true;
 		const CModSpecifications &specs = GetDocument()->GetSoundFile().GetModSpecifications();
 		const auto maxStrLen = (m_nListId == IDC_LIST_SAMPLES) ? specs.sampleNameLengthMax : specs.instrNameLengthMax;
 		editCtrl->LimitText(maxStrLen);
@@ -565,9 +595,16 @@ void CViewComments::OnBeginLabelEdit(LPNMHDR, LRESULT *)
 }
 
 
-void CViewComments::OnEndLabelEdit(LPNMHDR pnmhdr, LRESULT *)
+void CViewComments::OnEndLabelEdit(LPNMHDR pnmhdr, LRESULT *result)
 {
 	CMainFrame::GetInputHandler()->Bypass(false);
+	if(!m_editLabel)
+	{
+		*result = FALSE;
+		return;
+	}
+	m_editLabel = false;
+
 	LV_DISPINFO &lvDispInfo = *reinterpret_cast<LV_DISPINFO *>(pnmhdr);
 	LV_ITEM &lvItem = lvDispInfo.item;
 	CModDoc *pModDoc = GetDocument();
@@ -615,6 +652,11 @@ void CViewComments::OnSize(UINT nType, int cx, int cy)
 		RecalcLayout();
 	}
 }
+
+
+void CViewComments::OnShowSamples() { SwitchToList(IDC_LIST_SAMPLES); }
+void CViewComments::OnShowInstruments() { SwitchToList(IDC_LIST_INSTRUMENTS); }
+void CViewComments::OnShowPatterns() { SwitchToList(IDC_LIST_PATTERNS); }
 
 
 bool CViewComments::SwitchToList(int list)
@@ -675,8 +717,10 @@ void CViewComments::OnDblClickListItem(NMHDR *, LRESULT *)
 
 void CViewComments::OnRClickListItem(NMHDR *, LRESULT *)
 {
+	const auto ih = CMainFrame::GetMainFrame()->GetInputHandler();
 	HMENU menu = ::CreatePopupMenu();
-	::AppendMenu(menu, MF_STRING, ID_COPY_ALL_NAMES, _T("&Copy Names"));
+	::AppendMenu(menu, MF_STRING, ID_EDIT_COPY, ih->GetKeyTextFromCommand(kcEditCopy, _T("&Copy Names")));
+	::AppendMenu(menu, MF_STRING | (IsClipboardFormatAvailable(CF_UNICODETEXT) ? 0 : MF_DISABLED), ID_EDIT_PASTE, ih->GetKeyTextFromCommand(kcEditPaste, _T("&Paste Names")));
 	CPoint pt;
 	::GetCursorPos(&pt);
 	::TrackPopupMenu(menu, TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 0, m_hWnd, NULL);
@@ -736,6 +780,57 @@ void CViewComments::OnCopyNames()
 	{
 		std::memcpy(dst.data(), names.c_str(), sizeBytes);
 	}
+}
+
+
+void CViewComments::OnPasteNames()
+{
+	Clipboard clipboard(CF_UNICODETEXT);
+	if(!clipboard.IsValid())
+		return;
+
+	if(Reporting::Confirm(MPT_UFORMAT("Replace all {} names?")(m_nListId == IDC_LIST_INSTRUMENTS ? U_("instrument") : U_("sample"))) != cnfYes)
+		return;
+
+	auto whitespace = mpt::default_whitespace<std::wstring>();
+	whitespace.push_back(L'\0');
+	const auto names = mpt::split(mpt::trim_right(std::wstring{clipboard.GetWideString()}, whitespace), std::wstring{L"\n"});
+
+	CSoundFile &sndFile = GetDocument()->GetSoundFile();
+	const auto FormatName = [&](size_t index, size_t maxLength)
+	{
+		if(index >= names.size())
+			return std::string{};
+		return mpt::replace(mpt::ToCharset(sndFile.GetCharsetInternal(), names[index]), "\t", " ").substr(0, maxLength);
+	};
+
+	CriticalSection cs;
+	if(m_nListId == IDC_LIST_SAMPLES)
+	{
+		if(sndFile.GetNumSamples() < names.size())
+			sndFile.m_nSamples = std::min(sndFile.GetModSpecifications().samplesMax, mpt::saturate_cast<SAMPLEINDEX>(names.size()));
+
+		for(SAMPLEINDEX i = 1; i <= sndFile.GetNumSamples(); i++)
+		{
+			sndFile.m_szNames[i] = FormatName(i - 1, sndFile.GetModSpecifications().sampleNameLengthMax);
+		}
+		cs.Leave();
+		GetDocument()->UpdateAllViews(SampleHint().Names());
+	} else if(m_nListId == IDC_LIST_INSTRUMENTS)
+	{
+		if(sndFile.GetNumInstruments() < names.size())
+			sndFile.m_nInstruments = std::min(sndFile.GetModSpecifications().instrumentsMax, mpt::saturate_cast<INSTRUMENTINDEX>(names.size()));
+
+		for(INSTRUMENTINDEX i = 1; i <= sndFile.GetNumInstruments(); i++)
+		{
+			if(sndFile.Instruments[i] || sndFile.AllocateInstrument(i))
+				sndFile.Instruments[i]->name = FormatName(i - 1, sndFile.GetModSpecifications().instrNameLengthMax);
+		}
+		cs.Leave();
+		GetDocument()->UpdateAllViews(InstrumentHint().Names());
+	}
+
+	GetDocument()->SetModified();
 }
 
 

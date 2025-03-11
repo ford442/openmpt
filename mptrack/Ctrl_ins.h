@@ -69,7 +69,7 @@ protected:
 	//{{AFX_MSG(CNoteMapWnd)
 	afx_msg void OnLButtonDown(UINT, CPoint);
 	afx_msg void OnMButtonDown(UINT flags, CPoint pt) { OnLButtonDown(flags, pt); }
-	afx_msg void OnRButtonDown(UINT, CPoint);
+	afx_msg void OnRButtonUp(UINT, CPoint);
 	afx_msg void OnLButtonDblClk(UINT, CPoint);
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnSetFocus(CWnd *pOldWnd);
@@ -86,7 +86,8 @@ protected:
 	afx_msg void OnEditSample(UINT nID);
 	afx_msg void OnEditSampleMap();
 	afx_msg void OnInstrumentDuplicate();
-	afx_msg LRESULT OnCustomKeyMsg(WPARAM, LPARAM); //rewbs.customKeys
+	afx_msg LRESULT OnCustomKeyMsg(WPARAM, LPARAM);
+	afx_msg LRESULT OnDPIChangedAfterParent(WPARAM, LPARAM);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
@@ -138,6 +139,7 @@ public:
 	//{{AFX_VIRTUAL(CCtrlInstruments)
 	Setting<LONG> &GetSplitPosRef() override;
 	BOOL OnInitDialog() override;
+	void OnDPIChanged() override;
 	void DoDataExchange(CDataExchange* pDX) override;	// DDX/DDV support
 	CRuntimeClass *GetAssociatedViewClass() override;
 	void RecalcLayout() override;
@@ -145,7 +147,7 @@ public:
 	void OnDeactivatePage() override;
 	void UpdateView(UpdateHint hint, CObject *pObj = nullptr) override;
 	LRESULT OnModCtrlMsg(WPARAM wParam, LPARAM lParam) override;
-	BOOL GetToolTipText(UINT uId, LPTSTR pszText) override;
+	CString GetToolTipText(UINT uId, HWND hwnd) const override;
 	BOOL PreTranslateMessage(MSG* pMsg) override;
 	//}}AFX_VIRTUAL
 protected:

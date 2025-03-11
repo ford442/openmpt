@@ -49,7 +49,7 @@ struct STMSampleHeader
 			&& mptSmp.nLoopEnd != 0xFFFF)
 		{
 			mptSmp.uFlags = CHN_LOOP;
-			mptSmp.nLoopEnd = std::min(mptSmp.nLoopEnd, mptSmp.nLength);
+			mptSmp.nLength = std::max(mptSmp.nLoopEnd, mptSmp.nLength);  // ST2 does not sanitize loop end, allow it to overflow into the next sample's data
 		}
 	}
 };
@@ -113,7 +113,7 @@ static bool ValidateSTMOrderList(ModSequence &order)
 	for(auto &pat : order)
 	{
 		if(pat == 99 || pat == 255)  // 99 is regular, sometimes a single 255 entry can be found too
-			pat = order.GetInvalidPatIndex();
+			pat = PATTERNINDEX_INVALID;
 		else if(pat > 63)
 			return false;
 	}
@@ -235,8 +235,23 @@ bool CSoundFile::ReadSTM(FileReader &file, ModLoadingFlags loadFlags)
 
 	m_modFormat.formatName = UL_("Scream Tracker 2");
 	m_modFormat.type = UL_("stm");
-	m_modFormat.madeWithTracker = MPT_UFORMAT("Scream Tracker {}.{}")(fileHeader.verMajor, mpt::ufmt::dec0<2>(fileHeader.verMinor));
 	m_modFormat.charset = mpt::Charset::CP437;
+
+	if(!std::memcmp(fileHeader.trackerName, "!Scream!", 8))
+	{
+		if(fileHeader.verMinor >= 21)
+			m_modFormat.madeWithTracker = UL_("Scream Tracker 2.2 - 2.3 or compatible");
+		else
+			m_modFormat.madeWithTracker = MPT_UFORMAT("Scream Tracker {}.{} or compatible")(fileHeader.verMajor, mpt::ufmt::dec0<2>(fileHeader.verMinor));
+	}
+	else if(!std::memcmp(fileHeader.trackerName, "BMOD2STM", 8))
+		m_modFormat.madeWithTracker = UL_("BMOD2STM");
+	else if(!std::memcmp(fileHeader.trackerName, "WUZAMOD!", 8))
+		m_modFormat.madeWithTracker = UL_("Wuzamod");
+	else if(!std::memcmp(fileHeader.trackerName, "SWavePro", 8))
+		m_modFormat.madeWithTracker = UL_("SoundWave Pro");
+	else
+		m_modFormat.madeWithTracker = UL_("Unknown");
 
 	m_playBehaviour.set(kST3SampleSwap);
 

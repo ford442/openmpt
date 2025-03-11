@@ -17,6 +17,7 @@
 #include "Mainfrm.h"
 #include "Moddoc.h"
 #include "Mptrack.h"
+#include "resource.h"
 #include "TrackerSettings.h"
 #include "View_gen.h"
 #include "WindowMessages.h"
@@ -92,7 +93,7 @@ CCtrlGeneral::CCtrlGeneral(CModControlView &parent, CModDoc &document) : CModCon
 // Display range for XM / S3M should be 0...64, for other formats it's 0...256.
 uint32 CCtrlGeneral::GetGlobalVolumeFactor() const
 {
-	return (m_sndFile.GetType() & (MOD_TYPE_XM | MOD_TYPE_S3M)) ? uint32(MAX_SLIDER_GLOBAL_VOL / 64) : uint32(MAX_SLIDER_GLOBAL_VOL / 128);
+	return MAX_GLOBAL_VOLUME / m_sndFile.GlobalVolumeRange();
 }
 
 
@@ -108,7 +109,7 @@ BOOL CCtrlGeneral::OnInitDialog()
 	m_SpinVSTiVol.SetRange(0, 2000);
 	m_SpinRestartPos.SetRange32(0, ORDERINDEX_MAX);
 	
-	m_SliderGlobalVol.SetRange(0, MAX_SLIDER_GLOBAL_VOL);
+	m_SliderGlobalVol.SetRange(0, MAX_GLOBAL_VOLUME);
 	m_SliderVSTiVol.SetRange(0, MAX_SLIDER_VSTI_VOL);
 	m_SliderSamplePreAmp.SetRange(0, MAX_SLIDER_SAMPLE_VOL);
 
@@ -121,7 +122,7 @@ BOOL CCtrlGeneral::OnInitDialog()
 	m_editsLocked = false;
 	UpdateView(GeneralHint().ModType());
 	OnActivatePage(0);
-	m_bInitialized = TRUE;
+	m_initialized = true;
 	
 	return FALSE;
 }
@@ -371,7 +372,7 @@ void CCtrlGeneral::UpdateView(UpdateHint hint, CObject *pHint)
 			SetDlgItemInt(IDC_EDIT_SAMPLEPA, m_sndFile.m_nSamplePreAmp, FALSE);
 		}
 
-		m_SliderGlobalVol.SetPos(MAX_SLIDER_GLOBAL_VOL - m_sndFile.m_nDefaultGlobalVolume);
+		m_SliderGlobalVol.SetPos(MAX_GLOBAL_VOLUME - m_sndFile.m_nDefaultGlobalVolume);
 		m_SliderVSTiVol.SetPos(MAX_SLIDER_VSTI_VOL - m_sndFile.m_nVSTiVolume);
 		m_SliderSamplePreAmp.SetPos(MAX_SLIDER_SAMPLE_VOL - m_sndFile.m_nSamplePreAmp);
 	}
@@ -402,7 +403,7 @@ void CCtrlGeneral::OnVScroll(UINT code, UINT pos, CScrollBar *pscroll)
 {
 	CModControlDlg::OnVScroll(code, pos, pscroll);
 
-	if (m_bInitialized)
+	if (m_initialized)
 	{
 		CSliderCtrl* pSlider = (CSliderCtrl*) pscroll;
 
@@ -420,8 +421,8 @@ void CCtrlGeneral::OnVScroll(UINT code, UINT pos, CScrollBar *pscroll)
 
 		else if (pSlider == &m_SliderGlobalVol)
 		{
-			const UINT gv = MAX_SLIDER_GLOBAL_VOL - m_SliderGlobalVol.GetPos();
-			if ((gv >= 0) && (gv <= MAX_SLIDER_GLOBAL_VOL) && (gv != m_sndFile.m_nDefaultGlobalVolume))
+			const UINT gv = MAX_GLOBAL_VOLUME - m_SliderGlobalVol.GetPos();
+			if ((gv >= 0) && (gv <= MAX_GLOBAL_VOLUME) && (gv != m_sndFile.m_nDefaultGlobalVolume))
 			{
 				m_sndFile.m_PlayState.m_nGlobalVolume = gv;
 				m_sndFile.m_nDefaultGlobalVolume = gv;
@@ -520,7 +521,7 @@ void CCtrlGeneral::OnArtistChanged()
 
 void CCtrlGeneral::OnTempoChanged()
 {
-	if (m_bInitialized && m_EditTempo.GetWindowTextLength() > 0 && !IsLocked())
+	if (m_initialized && m_EditTempo.GetWindowTextLength() > 0 && !IsLocked())
 	{
 		TEMPO tempo = m_EditTempo.GetTempoValue();
 		Limit(tempo, m_tempoMin, m_tempoMax);
@@ -542,7 +543,7 @@ void CCtrlGeneral::OnTempoChanged()
 void CCtrlGeneral::OnSpeedChanged()
 {
 	TCHAR s[16];
-	if(m_bInitialized)
+	if(m_initialized)
 	{
 		m_EditSpeed.GetWindowText(s, mpt::saturate_cast<int>(std::size(s)));
 		if (s[0])
@@ -569,13 +570,13 @@ void CCtrlGeneral::OnSpeedChanged()
 void CCtrlGeneral::OnVSTiVolChanged()
 {
 	TCHAR s[16];
-	if (m_bInitialized)
+	if (m_initialized)
 	{
 		m_EditVSTiVol.GetWindowText(s, mpt::saturate_cast<int>(std::size(s)));
 		if (s[0])
 		{
-			UINT n = mpt::parse<UINT>(s);
-			Limit(n, 0u, 2000u);
+			uint32 n = mpt::parse<uint32>(s);
+			Limit(n, uint32(0), MAX_PREAMP);
 			if (n != m_sndFile.m_nVSTiVolume)
 			{
 				m_editsLocked = true;
@@ -593,13 +594,13 @@ void CCtrlGeneral::OnVSTiVolChanged()
 void CCtrlGeneral::OnSamplePAChanged()
 {
 	TCHAR s[16];
-	if(m_bInitialized)
+	if(m_initialized)
 	{
 		m_EditSamplePA.GetWindowText(s, mpt::saturate_cast<int>(std::size(s)));
 		if (s[0])
 		{
-			UINT n = mpt::parse<UINT>(s);
-			Limit(n, 0u, 2000u);
+			uint32 n = mpt::parse<uint32>(s);
+			Limit(n, uint32(0), MAX_PREAMP);
 			if (n != m_sndFile.m_nSamplePreAmp)
 			{
 				m_editsLocked = true;
@@ -616,7 +617,7 @@ void CCtrlGeneral::OnSamplePAChanged()
 void CCtrlGeneral::OnGlobalVolChanged()
 {
 	TCHAR s[16];
-	if(m_bInitialized)
+	if(m_initialized)
 	{
 		m_EditGlobalVol.GetWindowText(s, mpt::saturate_cast<int>(std::size(s)));
 		if (s[0])
@@ -641,7 +642,7 @@ void CCtrlGeneral::OnGlobalVolChanged()
 
 void CCtrlGeneral::OnRestartPosChanged()
 {
-	if(!m_bInitialized)
+	if(!m_initialized)
 		return;
 	TCHAR s[32];
 	m_EditRestartPos.GetWindowText(s, mpt::saturate_cast<int>(std::size(s)));
@@ -665,7 +666,7 @@ void CCtrlGeneral::OnRestartPosChanged()
 
 void CCtrlGeneral::OnRestartPosDone()
 {
-	if(m_bInitialized)
+	if(m_initialized)
 		SetDlgItemInt(IDC_EDIT_RESTARTPOS, m_sndFile.Order().GetRestartPos());
 }
 
@@ -694,49 +695,50 @@ LRESULT CCtrlGeneral::OnUpdatePosition(WPARAM, LPARAM lParam)
 }
 
 
-BOOL CCtrlGeneral::GetToolTipText(UINT uId, LPTSTR pszText)
+CString CCtrlGeneral::GetToolTipText(UINT uId, HWND) const
 {
-	const TCHAR moreRecentMixModeNote[] = _T("Use a more recent mixmode to see dB offsets.");
-	if ((pszText) && (uId))
+	CString s;
+	if(uId)
 	{
+		const TCHAR moreRecentMixModeNote[] = _T("Use a more recent mixmode to see dB offsets.");
 		const bool displayDBValues = m_sndFile.GetPlayConfig().getDisplayDBValues();
 		const CWnd *wnd = GetDlgItem(uId);
 		const bool isEnabled = wnd ? (wnd->IsWindowEnabled() != FALSE) : true;  // nullptr check is for a Wine bug workaround (https://bugs.openmpt.org/view.php?id=1553)
-		mpt::tstring notAvailable;
+		CString notAvailable;
 		if(!isEnabled)
-			notAvailable = MPT_TFORMAT("Feature is not available in the {} format.")(mpt::ToWin(m_sndFile.GetModSpecifications().GetFileExtensionUpper()));
+			notAvailable = MPT_CFORMAT("Feature is not available in the {} format.")(mpt::ToWin(m_sndFile.GetModSpecifications().GetFileExtensionUpper()));
 
 		switch(uId)
 		{
 		case IDC_BUTTON_MODTYPE:
-			_tcscpy(pszText, _T("Song Properties"));
+			s = _T("Song Properties");
 			{
 				const auto keyText = CMainFrame::GetInputHandler()->m_activeCommandSet->GetKeyTextFromCommand(kcViewSongProperties, 0);
 				if (!keyText.IsEmpty())
-					_tcscat(pszText, MPT_TFORMAT(" ({})")(keyText).c_str());
+					s +=  MPT_CFORMAT(" ({})")(keyText);
 			}
-			return TRUE;
+			break;
 		case IDC_BUTTON1:
 			if(isEnabled)
-				_tcscpy(pszText, _T("Click button multiple times to tap in the desired tempo."));
+				s = _T("Click button multiple times to tap in the desired tempo.");
 			else
-				_tcscpy(pszText, notAvailable.c_str());
-			return TRUE;
+				s = notAvailable;
+			break;
 		case IDC_SLIDER_SAMPLEPREAMP:
-			_tcscpy(pszText, displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_nSamplePreAmp, m_sndFile.GetPlayConfig().getNormalSamplePreAmp()).GetString() : moreRecentMixModeNote);
-			return TRUE;
+			s = displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_nSamplePreAmp, m_sndFile.GetPlayConfig().getNormalSamplePreAmp()).GetString() : moreRecentMixModeNote;
+			break;
 		case IDC_SLIDER_VSTIVOL:
 			if(isEnabled)
-				_tcscpy(pszText, displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_nVSTiVolume, m_sndFile.GetPlayConfig().getNormalVSTiVol()).GetString() : moreRecentMixModeNote);
+				s = displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_nVSTiVolume, m_sndFile.GetPlayConfig().getNormalVSTiVol()).GetString() : moreRecentMixModeNote;
 			else
-				_tcscpy(pszText, notAvailable.c_str());
-			return TRUE;
+				s = notAvailable;
+			break;
 		case IDC_SLIDER_GLOBALVOL:
 			if(isEnabled)
-				_tcscpy(pszText, displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_PlayState.m_nGlobalVolume, m_sndFile.GetPlayConfig().getNormalGlobalVol()).GetString() : moreRecentMixModeNote);
+				s = displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_PlayState.m_nGlobalVolume, m_sndFile.GetPlayConfig().getNormalGlobalVol()).GetString() : moreRecentMixModeNote;
 			else
-				_tcscpy(pszText, notAvailable.c_str());
-			return TRUE;
+				s = notAvailable;
+			break;
 		case IDC_SLIDER_SONGTEMPO:
 		case IDC_EDIT_ARTIST:
 		case IDC_EDIT_TEMPO:
@@ -746,11 +748,11 @@ BOOL CCtrlGeneral::GetToolTipText(UINT uId, LPTSTR pszText)
 		case IDC_EDIT_VSTIVOL:
 			if(isEnabled)
 				break;
-			_tcscpy(pszText, notAvailable.c_str());
-			return TRUE;
+			s = notAvailable;
+			break;
 		}
 	}
-	return FALSE;
+	return s;
 	
 }
 

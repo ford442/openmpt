@@ -44,7 +44,7 @@ struct SymFileHeader
 		return !std::memcmp(magic, "SymM", 4)
 			&& version == 1
 			&& firstChunkID == -1
-			&& numChannels > 0 && numChannels <= MAX_BASECHANNELS;
+			&& numChannels > 0 && numChannels <= 256;
 	}
 };
 
@@ -282,8 +282,8 @@ struct SymTranswaveInst
 		std::pair<SmpLength, SmpLength> ConvertLoop(const ModSample &mptSmp) const
 		{
 			const double loopScale = static_cast<double>(mptSmp.nLength) / (100 << 16);
-			const SmpLength start  = mpt::saturate_cast<SmpLength>(loopScale * std::min(uint32(100 << 16), loopStart.get()));
-			const SmpLength length = mpt::saturate_cast<SmpLength>(loopScale * std::min(uint32(100 << 16), loopLen.get()));
+			const SmpLength start  = mpt::saturate_trunc<SmpLength>(loopScale * std::min(uint32(100 << 16), loopStart.get()));
+			const SmpLength length = mpt::saturate_trunc<SmpLength>(loopScale * std::min(uint32(100 << 16), loopLen.get()));
 			return {start, std::min(mptSmp.nLength - start, length)};
 		}
 	};
@@ -670,8 +670,8 @@ struct SymInstrument
 			loopLen = (loopLen << 16) + loopLenFine;
 
 			const double loopScale = static_cast<double>(mptSmp.nLength) / (100 << 16);
-			loopStart = std::min(mptSmp.nLength, mpt::saturate_cast<SmpLength>(loopStart * loopScale));
-			loopLen = std::min(mptSmp.nLength - loopStart, mpt::saturate_cast<SmpLength>(loopLen * loopScale));
+			loopStart = std::min(mptSmp.nLength, mpt::saturate_trunc<SmpLength>(loopStart * loopScale));
+			loopLen = std::min(mptSmp.nLength - loopStart, mpt::saturate_trunc<SmpLength>(loopLen * loopScale));
 		} else if(mptSmp.HasSampleData())
 		{
 			// The order of operations here may seem weird as it reduces precision, but it's taken directly from the original assembly source (UpdateRecalcLoop)
@@ -985,6 +985,30 @@ static bool ConvertDSP(const SymEvent event, MIDIMacroConfigData::Macro &macro, 
 }
 
 
+static uint8 MapToClosestMidiMacro(const SymEvent event, std::map<SymEvent, uint8> &macroMap)
+{
+	if(event.command == SymEvent::DSPDelay)
+		return 0;
+	uint8 bestMatch = 0;
+	uint32 bestDistance = uint32_max;
+	for(const auto &m : macroMap)
+	{
+		const auto &mapEvent = m.first;
+		if(event.command != mapEvent.command || event.note != mapEvent.note)
+			continue;
+		const uint32 diff1 = static_cast<uint32>(event.param) - mapEvent.param, diff2 = static_cast<uint32>(event.inst) - mapEvent.inst;
+		const uint32 distance = diff1 * diff1 + diff2 * diff2;
+		if(distance >= bestDistance)
+			continue;
+
+		bestMatch = m.second;
+		bestDistance = distance;
+	}
+	macroMap[event] = bestMatch;
+	return bestMatch;
+}
+
+
 CSoundFile::ProbeResult CSoundFile::ProbeFileHeaderSymMOD(MemoryFileReader file, const uint64 *pfilesize)
 {
 	MPT_UNREFERENCED_PARAMETER(pfilesize);
@@ -1006,7 +1030,7 @@ bool CSoundFile::ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags)
 	else if(loadFlags == onlyVerifyHeader)
 		return true;
 
-	InitializeGlobals(MOD_TYPE_MPT, static_cast<CHANNELINDEX>(fileHeader.numChannels));
+	InitializeGlobals(MOD_TYPE_MPT, std::min(MAX_BASECHANNELS, static_cast<CHANNELINDEX>(fileHeader.numChannels)));
 
 	m_SongFlags.set(SONG_LINEARSLIDES | SONG_EXFILTERRANGE | SONG_AUTO_VIBRATO | SONG_AUTO_TREMOLO | SONG_IMPORTED);
 	m_playBehaviour = GetDefaultPlaybackBehaviour(MOD_TYPE_IT);
@@ -1044,6 +1068,7 @@ bool CSoundFile::ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags)
 	uint16 sampleBoost   = 2500;
 	bool isSymphoniePro  = false;
 	bool externalSamples = false;
+	bool unknownHunks    = false;
 	std::vector<SymPosition> positions;
 	std::vector<SymSequence> sequences;
 	std::vector<SymEvent> patternData;
@@ -1197,9 +1222,10 @@ bool CSoundFile::ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags)
 			file.Skip(file.ReadUint32BE());
 			break;
 
-		// Unrecognized chunk/value type
+		// Unrecognized chunk/value type (e.g. garbage at the end of Natsh1.SymMOD)
 		default:
-			return false;
+			unknownHunks = true;
+			break;
 		}
 	}
 
@@ -1207,6 +1233,8 @@ bool CSoundFile::ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags)
 		return false;
 	if((loadFlags & loadPatternData) && (positions.empty() || patternData.empty() || sequences.empty()))
 		return false;
+	if(unknownHunks)
+		AddToLog(LogWarning, U_("Unknown hunks were found and ignored."));
 
 	// Let's hope noone is going to use the 256th instrument ;)
 	if(instruments.size() >= MAX_INSTRUMENTS)
@@ -1307,7 +1335,7 @@ bool CSoundFile::ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags)
 	std::map<SymEvent, uint8> macroMap;
 
 	bool useDSP = false;
-	const uint32 patternSize = GetNumChannels() * trackLen;
+	const uint32 patternSize = fileHeader.numChannels * trackLen;
 	const PATTERNINDEX numPatterns = mpt::saturate_cast<PATTERNINDEX>(patternData.size() / patternSize);
 
 	Patterns.ResizeArray(numPatterns);
@@ -1357,7 +1385,7 @@ bool CSoundFile::ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags)
 		// Sequences are all part of the same song, just add a skip index as a divider
 		ModSequence &order = Order();
 		if(!order.empty())
-			order.push_back(ModSequence::GetIgnoreIndex());
+			order.push_back(PATTERNINDEX_SKIP);
 
 		for(auto &pos : seqPositions)
 		{
@@ -1384,19 +1412,21 @@ bool CSoundFile::ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags)
 				uint8 patternSpeed = static_cast<uint8>(pos.speed);
 
 				// This may intentionally read into the next pattern
-				auto srcEvent = patternData.cbegin() + (pos.pattern * patternSize) + (pos.start * GetNumChannels());
+				auto srcEvent = patternData.cbegin() + (pos.pattern * patternSize) + (pos.start * fileHeader.numChannels);
 				const SymEvent emptyEvent{};
 				ModCommand syncPlayCommand;
 				for(ROWINDEX row = 0; row < pos.length; row++)
 				{
 					ModCommand *rowBase = Patterns[patternIndex].GetpModCommand(row, 0);
 					bool applySyncPlay = false;
-					for(CHANNELINDEX chn = 0; chn < GetNumChannels(); chn++)
+					for(CHANNELINDEX chn = 0; chn < fileHeader.numChannels; chn++)
 					{
-						ModCommand &m = rowBase[chn];
 						const SymEvent &event = (srcEvent != patternData.cend()) ? *srcEvent : emptyEvent;
 						if(srcEvent != patternData.cend())
 							srcEvent++;
+						if(chn >= GetNumChannels())
+							continue;
+						ModCommand &m = rowBase[chn];
 
 						int8 note = (event.note >= 0 && event.note <= 84) ? event.note + 25 : -1;
 						uint8 origInst = event.inst;
@@ -1473,7 +1503,7 @@ bool CSoundFile::ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags)
 									if(mappedInst != chnState.lastInst)
 										break;
 									m.note = note;
-									m.SetEffectCommand(CMD_TONEPORTAMENTO, 0xFF);
+									m.SetEffectCommand(CMD_TONEPORTA_DURATION, 0);
 									chnState.curPitchSlide = 0;
 									chnState.tonePortaRemain = 0;
 									chnState.retrigVibrato = chnState.retrigTremolo = true;
@@ -1624,7 +1654,7 @@ bool CSoundFile::ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags)
 							break;
 						case SymEvent::AddHalfTone:
 							m.note = chnState.lastNote = Clamp(static_cast<uint8>(chnState.lastNote + event.param), NOTE_MIN, NOTE_MAX);
-							m.SetEffectCommand(CMD_TONEPORTAMENTO, 0xFF);
+							m.SetEffectCommand(CMD_TONEPORTA_DURATION, 0);
 							chnState.tonePortaRemain = 0;
 							break;
 
@@ -1634,9 +1664,9 @@ bool CSoundFile::ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags)
 						case SymEvent::DSPEcho:
 						case SymEvent::DSPDelay:
 #endif
-							if(macroMap.count(event))
+							if(auto it = macroMap.find(event); it != macroMap.end() && it->second != 0)
 							{
-								m.SetEffectCommand(CMD_MIDI, macroMap[event]);
+								m.SetEffectCommand(CMD_MIDI, it->second);
 							} else if(macroMap.size() < m_MidiCfg.Zxx.size())
 							{
 								uint8 param = static_cast<uint8>(macroMap.size());
@@ -1647,6 +1677,9 @@ bool CSoundFile::ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags)
 									if(event.command == SymEvent::DSPEcho || event.command == SymEvent::DSPDelay)
 										useDSP = true;
 								}
+							} else if(uint8 param = MapToClosestMidiMacro(event, macroMap))
+							{
+								m.SetEffectCommand(CMD_MIDI, param);
 							}
 							break;
 

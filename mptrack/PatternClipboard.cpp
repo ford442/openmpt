@@ -14,6 +14,7 @@
 #include "Mainfrm.h"
 #include "Moddoc.h"
 #include "Clipboard.h"
+#include "resource.h"
 #include "View_pat.h"
 #include "../soundlib/mod_specifications.h"
 #include "../soundlib/Tables.h"
@@ -87,10 +88,10 @@ bool PatternClipboard::Copy(const CSoundFile &sndFile, ORDERINDEX first, ORDERIN
 		if(ord != first)
 			data += ',';
 		
-		if(pattern == order.GetInvalidPatIndex())
+		if(pattern == PATTERNINDEX_INVALID)
 		{
 			data += '-';
-		} else if(pattern == order.GetIgnoreIndex())
+		} else if(pattern == PATTERNINDEX_SKIP)
 		{
 			data += '+';
 		} else if(sndFile.Patterns.IsValidPat(pattern))
@@ -450,10 +451,10 @@ bool PatternClipboard::HandlePaste(CSoundFile &sndFile, PatternEditPos &pastePos
 
 			if(data[curPos] == '+')
 			{
-				insertPat = order.GetIgnoreIndex();
+				insertPat = PATTERNINDEX_SKIP;
 			} else if(data[curPos] == '-')
 			{
-				insertPat = order.GetInvalidPatIndex();
+				insertPat = PATTERNINDEX_INVALID;
 			} else
 			{
 				insertPat = mpt::parse<PATTERNINDEX>(data.substr(curPos, 10));
@@ -481,8 +482,7 @@ bool PatternClipboard::HandlePaste(CSoundFile &sndFile, PatternEditPos &pastePos
 				}
 			}
 
-			if((insertPat == order.GetIgnoreIndex() && !sndFile.GetModSpecifications().hasIgnoreIndex)
-				|| (insertPat == order.GetInvalidPatIndex() && !sndFile.GetModSpecifications().hasStopIndex)
+			if((insertPat == PATTERNINDEX_SKIP && !sndFile.GetModSpecifications().hasIgnoreIndex)
 				|| insertPat == PATTERNINDEX_INVALID
 				|| patternMode == kMultiOverwrite)
 			{
@@ -551,7 +551,7 @@ bool PatternClipboard::HandlePaste(CSoundFile &sndFile, PatternEditPos &pastePos
 	}
 
 	const CModSpecifications &sourceSpecs = CSoundFile::GetModSpecifications(pasteFormat);
-	const bool overflowPaste = (TrackerSettings::Instance().m_dwPatternSetup & PATTERN_OVERFLOWPASTE) && mode != pmPasteFlood && mode != pmPushForward && patternMode != kMultiInsert && curOrder != ORDERINDEX_INVALID;
+	const bool overflowPaste = (TrackerSettings::Instance().patternSetup & PatternSetup::OverflowPaste) && mode != pmPasteFlood && mode != pmPushForward && patternMode != kMultiInsert && curOrder != ORDERINDEX_INVALID;
 	const bool doITStyleMix = (mode == pmMixPasteIT);
 	const bool doMixPaste = (mode == pmMixPaste) || doITStyleMix;
 	const bool clipboardHasS3MCommands = (pasteFormat & (MOD_TYPE_IT | MOD_TYPE_MPT | MOD_TYPE_S3M));
@@ -743,7 +743,7 @@ bool PatternClipboard::HandlePaste(CSoundFile &sndFile, PatternEditPos &pastePos
 				PatternCursor::Columns firstCol = PatternCursor::lastColumn, lastCol = PatternCursor::firstColumn;
 
 				// Note
-				if(data[pos] != ' ' && (!doMixPaste || ((!doITStyleMix && origModCmd.note == NOTE_NONE) || 
+				if(data[pos] != ' ' && (!doMixPaste || ((!doITStyleMix && origModCmd.note == NOTE_NONE) ||
 					(doITStyleMix && origModCmd.note == NOTE_NONE && origModCmd.instr == 0 && origModCmd.volcmd == VOLCMD_NONE))))
 				{
 					firstCol = PatternCursor::noteColumn;
@@ -760,7 +760,7 @@ bool PatternClipboard::HandlePaste(CSoundFile &sndFile, PatternEditPos &pastePos
 							m.note = NOTE_PCS;
 						else
 							m.note = NOTE_PC;
-					} else if (data[pos] != '.')
+					} else if(data[pos] != '.')
 					{
 						// Check note names
 						for(uint8 i = 0; i < 12; i++)
@@ -791,9 +791,9 @@ bool PatternClipboard::HandlePaste(CSoundFile &sndFile, PatternEditPos &pastePos
 					firstCol = std::min(firstCol, PatternCursor::instrColumn);
 					lastCol = std::max(lastCol, PatternCursor::instrColumn);
 					if(data[pos + 3] >= '0' && data[pos + 3] <= ('0' + (MAX_INSTRUMENTS / 10)))
-					{
 						m.instr = (data[pos + 3] - '0') * 10 + (data[pos + 4] - '0');
-					} else m.instr = 0;
+					else
+						m.instr = 0;
 				}
 
 				// Volume
@@ -846,7 +846,10 @@ bool PatternClipboard::HandlePaste(CSoundFile &sndFile, PatternEditPos &pastePos
 					}
 				} else
 				{
-					if(data[pos + 8] > ' ' && (!doMixPaste || ((!doITStyleMix && origModCmd.command == CMD_NONE) || 
+					if(origModCmd.IsPcNote())
+						m.SetEffectCommand(CMD_NONE, 0);
+					
+					if(data[pos + 8] > ' ' && (!doMixPaste || ((!doITStyleMix && origModCmd.command == CMD_NONE) ||
 						(doITStyleMix && origModCmd.command == CMD_NONE && origModCmd.param == 0))))
 					{
 						firstCol = std::min(firstCol, PatternCursor::effectColumn);
@@ -867,7 +870,7 @@ bool PatternClipboard::HandlePaste(CSoundFile &sndFile, PatternEditPos &pastePos
 					}
 
 					// Effect value
-					if(data[pos + 9] > ' ' && (!doMixPaste || ((!doITStyleMix && (origModCmd.command == CMD_NONE || origModCmd.param == 0)) || 
+					if(data[pos + 9] > ' ' && (!doMixPaste || ((!doITStyleMix && (origModCmd.command == CMD_NONE || origModCmd.param == 0)) ||
 						(doITStyleMix && origModCmd.command == CMD_NONE && origModCmd.param == 0))))
 					{
 						firstCol = std::min(firstCol, PatternCursor::paramColumn);
@@ -1130,7 +1133,7 @@ void PatternClipboardDialog::OnCancel()
 {
 	if(GetFocus() == &m_editNameBox)
 	{
-		// User pressed enter in clipboard name edit box => just cancel editing
+		// User pressed ESC in clipboard name edit box => just cancel editing
 		m_editNameBox.DestroyWindow();
 		return;
 	}

@@ -124,8 +124,6 @@ endif
 LOCAL_SRC_FILES += \
 	common/ComponentManager.cpp \
 	common/Logging.cpp \
-	common/mptFileIO.cpp \
-	common/mptFileTemporary.cpp \
 	common/mptFileType.cpp \
 	common/mptPathString.cpp \
 	common/mptRandom.cpp \
@@ -163,6 +161,7 @@ LOCAL_SRC_FILES += \
 	soundlib/Load_dtm.cpp \
 	soundlib/Load_etx.cpp \
 	soundlib/Load_far.cpp \
+	soundlib/Load_fc.cpp \
 	soundlib/Load_fmt.cpp \
 	soundlib/Load_ftm.cpp \
 	soundlib/Load_gdm.cpp \
@@ -196,13 +195,16 @@ LOCAL_SRC_FILES += \
 	soundlib/Load_stm.cpp \
 	soundlib/Load_stp.cpp \
 	soundlib/Load_symmod.cpp \
-	soundlib/Load_ult.cpp \
+	soundlib/Load_tcb.cpp \
 	soundlib/Load_uax.cpp \
+	soundlib/Load_ult.cpp \
+	soundlib/Load_unic.cpp \
 	soundlib/Load_wav.cpp \
 	soundlib/Load_xm.cpp \
 	soundlib/Load_xmf.cpp \
 	soundlib/Message.cpp \
 	soundlib/MIDIEvents.cpp \
+	soundlib/MIDIMacroParser.cpp \
 	soundlib/MIDIMacros.cpp \
 	soundlib/MixerLoops.cpp \
 	soundlib/MixerSettings.cpp \
@@ -221,6 +223,7 @@ LOCAL_SRC_FILES += \
 	soundlib/Paula.cpp \
 	soundlib/patternContainer.cpp \
 	soundlib/pattern.cpp \
+	soundlib/PlaybackTest.cpp \
 	soundlib/PlayState.cpp \
 	soundlib/RowVisitor.cpp \
 	soundlib/S3MTools.cpp \

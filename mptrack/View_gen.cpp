@@ -12,7 +12,6 @@
 #include "stdafx.h"
 #include "View_gen.h"
 #include "AbstractVstEditor.h"
-#include "ChannelManagerDlg.h"
 #include "Childfrm.h"
 #include "Ctrl_gen.h"
 #include "EffectVis.h"
@@ -22,7 +21,9 @@
 #include "Moddoc.h"
 #include "MoveFXSlotDialog.h"
 #include "Reporting.h"
+#include "resource.h"
 #include "SelectPluginDialog.h"
+#include "WindowMessages.h"
 #include "../common/mptStringBuffer.h"
 #include "../soundlib/mod_specifications.h"
 #include "../soundlib/plugins/PlugInterface.h"
@@ -166,7 +167,16 @@ void CViewGlobals::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_SPIN8,		m_spinPan[3]);
 	DDX_Control(pDX, IDC_BUTTON1,	m_BtnSelect);
 	DDX_Control(pDX, IDC_BUTTON2,	m_BtnEdit);
+	DDX_Control(pDX, IDC_BUTTON4, m_nextPluginButton);
+	DDX_Control(pDX, IDC_BUTTON5, m_prevPluginButton);
 	//}}AFX_DATA_MAP
+}
+
+
+CViewGlobals::CViewGlobals() : CFormView{IDD_VIEW_GLOBALS}
+{
+	m_prevPluginButton.SetAccessibleText(_T("Previous Plugin"));
+	m_nextPluginButton.SetAccessibleText(_T("Next Plugin"));
 }
 
 
@@ -186,7 +196,7 @@ void CViewGlobals::OnInitialUpdate()
 
 	if (pFrame)
 	{
-		GENERALVIEWSTATE &generalState = pFrame->GetGeneralViewState();
+		GeneralViewState &generalState = pFrame->GetGeneralViewState();
 		if (generalState.initialized)
 		{
 			m_TabCtrl.SetCurSel(generalState.nTab);
@@ -246,7 +256,7 @@ void CViewGlobals::OnDestroy()
 	CChildFrame *pFrame = (CChildFrame *)GetParentFrame();
 	if (pFrame)
 	{
-		GENERALVIEWSTATE &generalState = pFrame->GetGeneralViewState();
+		GeneralViewState &generalState = pFrame->GetGeneralViewState();
 		generalState.initialized = true;
 		generalState.nTab = m_nActiveTab;
 		generalState.nPlugin = m_nCurrentPlugin;
@@ -286,6 +296,9 @@ void CViewGlobals::RecalcLayout()
 		m_TabCtrl.SetWindowPos(&CWnd::wndBottom, 0,0, rect.right, rect.bottom, SWP_NOMOVE);
 	}
 }
+
+
+void CViewGlobals::UnlockControls() { PostMessage(WM_MOD_UNLOCKCONTROLS); }
 
 
 int CViewGlobals::GetDlgItemIntEx(UINT nID)
@@ -452,7 +465,7 @@ void CViewGlobals::UpdateView(UpdateHint hint, CObject *pObject)
 		CheckDlgButton(IDC_CHECK11, plugin.IsDryMix() ? BST_CHECKED : BST_UNCHECKED);
 		CheckDlgButton(IDC_CHECK13, plugin.IsAutoSuspendable() ? BST_CHECKED : BST_UNCHECKED);
 		IMixPlugin *pPlugin = plugin.pMixPlugin;
-		m_BtnEdit.EnableWindow((pPlugin != nullptr && (pPlugin->HasEditor() || pPlugin->GetNumParameters())) ? TRUE : FALSE);
+		m_BtnEdit.EnableWindow((pPlugin != nullptr && (pPlugin->HasEditor() || pPlugin->GetNumVisibleParameters())) ? TRUE : FALSE);
 		GetDlgItem(IDC_MOVEFXSLOT)->EnableWindow((pPlugin) ? TRUE : FALSE);
 		GetDlgItem(IDC_INSERTFXSLOT)->EnableWindow((pPlugin) ? TRUE : FALSE);
 		GetDlgItem(IDC_CLONEPLUG)->EnableWindow((pPlugin) ? TRUE : FALSE);
@@ -470,7 +483,7 @@ void CViewGlobals::UpdateView(UpdateHint hint, CObject *pObject)
 
 		if (pPlugin)
 		{
-			const PlugParamIndex nParams = pPlugin->GetNumParameters();
+			const PlugParamIndex nParams = pPlugin->GetNumVisibleParameters();
 			m_CbnParam.SetRedraw(FALSE);
 			m_CbnParam.ResetContent();
 			if (m_nCurrentParam >= nParams) m_nCurrentParam = 0;
@@ -800,14 +813,11 @@ void CViewGlobals::OnEditPan4() {OnEditPan(3, IDC_EDIT8);}
 
 void CViewGlobals::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 {
-	CModDoc *pModDoc;
-	CHANNELINDEX nChn;
-
 	CFormView::OnHScroll(nSBCode, nPos, pScrollBar);
 
-	pModDoc = GetDocument();
-	nChn = (CHANNELINDEX)(m_nActiveTab * CHANNELS_IN_TAB);
-	if ((pModDoc) && (!IsLocked()) && (nChn < MAX_BASECHANNELS))
+	CModDoc *pModDoc = GetDocument();
+	const CHANNELINDEX nChn = (CHANNELINDEX)(m_nActiveTab * CHANNELS_IN_TAB);
+	if(pModDoc && !IsLocked() && nChn < pModDoc->GetNumChannels())
 	{
 		BOOL bUpdate = FALSE;
 		short int pos;
@@ -846,7 +856,6 @@ void CViewGlobals::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 			}
 		}
 
-
 		if ((pScrollBar) && (pScrollBar->m_hWnd == m_sbDryRatio.m_hWnd))
 		{
 			int n = 100 - m_sbDryRatio.GetPos();
@@ -874,7 +883,7 @@ void CViewGlobals::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 				IMixPlugin *pPlugin = GetCurrentPlugin();
 				if(pPlugin != nullptr)
 				{
-					const PlugParamIndex nParams = pPlugin->GetNumParameters();
+					const PlugParamIndex nParams = pPlugin->GetNumVisibleParameters();
 					if(m_nCurrentParam < nParams)
 					{
 						if (nSBCode == SB_THUMBPOSITION || nSBCode == SB_THUMBTRACK || nSBCode == SB_ENDSCROLL)
@@ -1112,7 +1121,7 @@ void CViewGlobals::OnParamChanged()
 
 	if(pPlugin != nullptr && cursel != static_cast<PlugParamIndex>(CB_ERR))
 	{
-		const PlugParamIndex nParams = pPlugin->GetNumParameters();
+		const PlugParamIndex nParams = pPlugin->GetNumVisibleParameters();
 		if(cursel < nParams) m_nCurrentParam = cursel;
 		if(m_nCurrentParam < nParams)
 		{
@@ -1144,7 +1153,7 @@ void CViewGlobals::OnFocusParam()
 	IMixPlugin *pPlugin = GetCurrentPlugin();
 	if(pPlugin != nullptr)
 	{
-		const PlugParamIndex nParams = pPlugin->GetNumParameters();
+		const PlugParamIndex nParams = pPlugin->GetNumVisibleParameters();
 		if(m_nCurrentParam < nParams)
 		{
 			TCHAR s[32];
@@ -1217,7 +1226,7 @@ void CViewGlobals::OnSetParameter()
 
 	if(pPlugin != nullptr)
 	{
-		const PlugParamIndex nParams = pPlugin->GetNumParameters();
+		const PlugParamIndex nParams = pPlugin->GetNumVisibleParameters();
 		TCHAR s[32];
 		GetDlgItemText(IDC_EDIT14, s, mpt::saturate_cast<int>(std::size(s)));
 		if ((m_nCurrentParam < nParams) && (s[0]))
@@ -1711,7 +1720,7 @@ void CViewGlobals::OnFillParamCombo()
 	IMixPlugin *pPlugin = GetCurrentPlugin();
 	if(pPlugin == nullptr) return;
 
-	const PlugParamIndex nParams = pPlugin->GetNumParameters();
+	const PlugParamIndex nParams = pPlugin->GetNumVisibleParameters();
 	m_CbnParam.SetRedraw(FALSE);
 	m_CbnParam.ResetContent();
 
@@ -1754,6 +1763,27 @@ void CViewGlobals::FillPluginProgramBox(int32 firstProg, int32 lastProg)
 
 	m_CbnPreset.SetRedraw(TRUE);
 	m_CbnPreset.Invalidate(FALSE);
+}
+
+
+INT_PTR CViewGlobals::OnToolHitTest(CPoint point, TOOLINFO *pTI) const
+{
+	INT_PTR nHit = CFormView::OnToolHitTest(point, pTI);
+	if(nHit >= 0 && pTI && (pTI->uFlags & TTF_IDISHWND))
+	{
+		// Workaround to get tooltips even for disabled controls inside group boxes that are positioned in the "correct" tab order position.
+		// For some reason doesn't work for enabled controls (probably because pTI->hwnd then doesn't point at the active control under the cursor),
+		// so we use the default code path there, which works just fine.
+		HWND child = reinterpret_cast<HWND>(pTI->uId);
+		if(!::IsWindowEnabled(child))
+		{
+			pTI->uId = nHit;
+			pTI->uFlags &= ~TTF_IDISHWND;
+			::GetWindowRect(child, &pTI->rect);
+			ScreenToClient(&pTI->rect);
+		}
+	}
+	return nHit;
 }
 
 

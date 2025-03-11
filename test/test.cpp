@@ -30,6 +30,7 @@
 #include "mpt/io/base.hpp"
 #include "mpt/io/io.hpp"
 #include "mpt/io/io_stdstream.hpp"
+#include "mpt/io_file/fstream.hpp"
 #include "mpt/io_read/filecursor_stdstream.hpp"
 #include "mpt/osinfo/class.hpp"
 #include "mpt/osinfo/dos_version.hpp"
@@ -57,6 +58,7 @@
 #include "openmpt/soundbase/SampleFormat.hpp"
 #include "../soundlib/SampleCopy.h"
 #include "../soundlib/SampleNormalize.h"
+#include "../soundlib/MIDIMacroParser.h"
 #include "../soundlib/ModSampleCopy.h"
 #include "../soundlib/ITCompression.h"
 #include "../soundlib/tuningcollection.h"
@@ -115,6 +117,10 @@
 
 #include "TestTools.h"
 
+#if defined(LIBOPENMPT_BUILD)
+#include "../libopenmpt/libopenmpt.hpp"
+#endif
+
 
 // enable tests which may fail spuriously
 //#define FLAKY_TESTS
@@ -146,6 +152,7 @@ static MPT_NOINLINE void TestITCompression();
 static MPT_NOINLINE void TestPCnoteSerialization();
 static MPT_NOINLINE void TestLoadSaveFile();
 static MPT_NOINLINE void TestEditing();
+static MPT_NOINLINE void TestMIDIMacroParser();
 
 
 
@@ -164,6 +171,33 @@ mpt::PathString GetPathPrefix()
 }
 
 
+void PrintHeader()
+{
+	#ifdef LIBOPENMPT_BUILD
+		std::cout << "libopenmpt test suite starting." << std::endl;
+		std::cout << "libopenmpt library version: " << std::hex << std::setfill('0') << std::setw(8) << openmpt::get_library_version() << std::endl;
+		std::cout << "libopenmpt core version: " << std::hex << std::setfill('0') << std::setw(8) << openmpt::get_core_version() << std::endl;
+		std::cout << "libopenmpt library_version: " << openmpt::string::get("library_version") << std::endl;
+		std::cout << "libopenmpt library_features: " << openmpt::string::get("library_features") << std::endl;
+		std::cout << "libopenmpt core_version: " << openmpt::string::get("core_version") << std::endl;
+		std::cout << "libopenmpt source_url: " << openmpt::string::get("source_url") << std::endl;
+		std::cout << "libopenmpt source_date: " << openmpt::string::get("source_date") << std::endl;
+		std::cout << "libopenmpt source_revision: " << openmpt::string::get("source_revision") << std::endl;
+		std::cout << "libopenmpt source_is_modified: " << openmpt::string::get("source_is_modified") << std::endl;
+		std::cout << "libopenmpt source_has_mixed_revisions: " << openmpt::string::get("source_has_mixed_revisions") << std::endl;
+		std::cout << "libopenmpt source_is_package: " << openmpt::string::get("source_is_package") << std::endl;
+		std::cout << "libopenmpt build: " << openmpt::string::get("build") << std::endl;
+		std::cout << "libopenmpt build_compiler: " << openmpt::string::get("build_compiler") << std::endl;
+	#endif
+}
+
+void PrintFooter()
+{
+	#ifdef LIBOPENMPT_BUILD
+		std::cout << "libopenmpt test suite finished." << std::endl;
+	#endif
+}
+
 void DoTests()
 {
 
@@ -173,7 +207,7 @@ void DoTests()
 		std::clog << std::flush;
 		std::cerr << std::flush;
 	
-		std::cout << "libopenmpt test suite" << std::endl;
+		std::cout << "libopenmpt test run" << std::endl;
 
 		std::cout << "Version: " << mpt::ToCharset(mpt::Charset::ASCII, Build::GetVersionString(Build::StringVersion | Build::StringRevision | Build::StringSourceInfo | Build::StringBuildFlags | Build::StringBuildFeatures)) << std::endl;
 		std::cout << "Compiler: " << mpt::ToCharset(mpt::Charset::ASCII, Build::GetBuildCompilerString()) << std::endl;
@@ -440,6 +474,7 @@ void DoTests()
 	DO_TEST(TestMIDIEvents);
 	DO_TEST(TestSampleConversion);
 	DO_TEST(TestITCompression);
+	DO_TEST(TestMIDIMacroParser);
 
 	// slower tests, require opening a CModDoc
 	DO_TEST(TestPCnoteSerialization);
@@ -591,7 +626,7 @@ static MPT_NOINLINE void TestVersion()
 #if MPT_TEST_HAS_FILESYSTEM
 #if !MPT_OS_DJGPP
 	mpt::PathString version_mk = GetPathPrefix() + P_("libopenmpt/libopenmpt_version.mk");
-	mpt::ifstream f(version_mk, std::ios::in);
+	mpt::IO::ifstream f(version_mk, std::ios::in);
 	VERIFY_EQUAL(f ? true : false, true);
 	std::map<std::string, std::string> fields;
 	std::string line;
@@ -1148,7 +1183,6 @@ static MPT_NOINLINE void TestMisc2()
 	}
 
 #ifdef MODPLUG_TRACKER
-#ifdef MPT_ENABLE_FILEIO
 
 	{
 		std::vector<std::byte> data;
@@ -1170,7 +1204,6 @@ static MPT_NOINLINE void TestMisc2()
 		RemoveFile(fn);
 	}
 
-#endif
 #endif // MODPLUG_TRACKER
 
 #ifdef MPT_WITH_ZLIB
@@ -2406,6 +2439,8 @@ static MPT_NOINLINE void TestCharsets()
 	VERIFY_EQUAL(mpt::RelativePathToAbsolute(P_("\\foo"), exePath), P_("C:\\foo"));
 	VERIFY_EQUAL(mpt::AbsolutePathToRelative(P_("\\\\server\\path\\file"), exePath), P_("\\\\server\\path\\file"));
 	VERIFY_EQUAL(mpt::RelativePathToAbsolute(P_("\\\\server\\path\\file"), exePath), P_("\\\\server\\path\\file"));
+	VERIFY_EQUAL(mpt::AbsolutePathToRelative(P_("C:\\OpenMPT"), mpt::PathString{}), P_("C:\\OpenMPT"));
+	VERIFY_EQUAL(mpt::RelativePathToAbsolute(P_("C:\\OpenMPT"), mpt::PathString{}), P_("C:\\OpenMPT"));
 #endif
 
 #ifdef MODPLUG_TRACKER
@@ -2804,7 +2839,7 @@ static void TestLoadXMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(pIns->wMidiBank, 2);
 	VERIFY_EQUAL_NONCONT(pIns->midiPWD, 8);
 
-	VERIFY_EQUAL_NONCONT(pIns->pTuning, sndFile.GetDefaultTuning());
+	VERIFY_EQUAL_NONCONT(pIns->pTuning, nullptr);
 
 	VERIFY_EQUAL_NONCONT(pIns->pitchToTempoLock, TEMPO(0, 0));
 
@@ -2863,7 +2898,11 @@ static void TestLoadXMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 0)->instr, 0);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 0)->volcmd, VOLCMD_VIBRATOSPEED);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 0)->vol, 15);
-	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(31, 0)->IsEmpty(), true);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 1)->note, NOTE_MIN + 12);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(1, 1)->note, NOTE_MIN + 12 + 95);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(2, 1)->note, NOTE_KEYOFF);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(30, 0)->IsEmpty(), true);  // Test for resaved out-of-range note
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(31, 0)->IsEmpty(), true);  // Test for resaved out-of-range note
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(31, 1)->IsEmpty(), false);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(31, 1)->IsPcNote(), false);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(31, 1)->note, NOTE_MIDDLEC + 12);
@@ -3121,14 +3160,17 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 		VERIFY_EQUAL_NONCONT(pIns->wMidiBank, 2);
 		VERIFY_EQUAL_NONCONT(pIns->midiPWD, -1);
 
-		VERIFY_EQUAL_NONCONT(pIns->pTuning, sndFile.GetDefaultTuning());
+		if(ins == 1)
+			VERIFY_EQUAL_NONCONT(pIns->pTuning, nullptr);
+		else
+			VERIFY_EQUAL_NONCONT(pIns->pTuning->GetName(), UL_("Test Tuning"));
 
 		VERIFY_EQUAL_NONCONT(pIns->pitchToTempoLock, TEMPO(130, 2000));
 
 		VERIFY_EQUAL_NONCONT(pIns->pluginVelocityHandling, PLUGIN_VELOCITYHANDLING_VOLUME);
 		VERIFY_EQUAL_NONCONT(pIns->pluginVolumeHandling, PLUGIN_VOLUMEHANDLING_MIDI);
 
-		for(size_t i = 0; i < NOTE_MAX; i++)
+		for(size_t i = 0; i < 120; i++)
 		{
 			VERIFY_EQUAL_NONCONT(pIns->Keyboard[i], (i == NOTE_MIDDLEC - 1) ? (ins * 1111) : 1);
 			VERIFY_EQUAL_NONCONT(pIns->NoteMap[i], (i == NOTE_MIDDLEC - 1) ? (i + 13) : (i + 1));
@@ -3140,13 +3182,20 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 		VERIFY_EQUAL_NONCONT(pIns->VolEnv[2].tick, 96);
 		VERIFY_EQUAL_NONCONT(pIns->VolEnv[2].value, 0);
 
-		VERIFY_EQUAL_NONCONT(pIns->PanEnv.dwFlags, ENV_LOOP);
-		VERIFY_EQUAL_NONCONT(pIns->PanEnv.size(), 76);
-		VERIFY_EQUAL_NONCONT(pIns->PanEnv.nLoopStart, 22);
+		VERIFY_EQUAL_NONCONT(pIns->PanEnv.dwFlags, ENV_LOOP | ENV_SUSTAIN);
+		VERIFY_EQUAL_NONCONT(pIns->PanEnv.size(), (ins == 1) ? 74u : 76u);
+		VERIFY_EQUAL_NONCONT(pIns->PanEnv.nLoopStart, 26);
 		VERIFY_EQUAL_NONCONT(pIns->PanEnv.nLoopEnd, 29);
+		VERIFY_EQUAL_NONCONT(pIns->PanEnv.nSustainStart, 27);
+		VERIFY_EQUAL_NONCONT(pIns->PanEnv.nSustainEnd, 28);
 		VERIFY_EQUAL_NONCONT(pIns->PanEnv.nReleaseNode, ENV_RELEASE_NODE_UNSET);
-		VERIFY_EQUAL_NONCONT(pIns->PanEnv[75].tick, 427);
-		VERIFY_EQUAL_NONCONT(pIns->PanEnv[75].value, 27);
+		VERIFY_EQUAL_NONCONT(pIns->PanEnv[73].tick, 417);
+		VERIFY_EQUAL_NONCONT(pIns->PanEnv[73].value, 23);
+		if(ins == 2)
+		{
+			VERIFY_EQUAL_NONCONT(pIns->PanEnv[75].tick, 427);
+			VERIFY_EQUAL_NONCONT(pIns->PanEnv[75].value, 27);
+		}
 
 		VERIFY_EQUAL_NONCONT(pIns->PitchEnv.dwFlags, ENV_ENABLED | ENV_CARRY | ENV_SUSTAIN | ENV_FILTER);
 		VERIFY_EQUAL_NONCONT(pIns->PitchEnv.size(), 3);
@@ -3160,9 +3209,9 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 
 	VERIFY_EQUAL_NONCONT(sndFile.Order(0).GetLengthTailTrimmed(), 3);
 	VERIFY_EQUAL_NONCONT(sndFile.Order(0).GetName(), U_("First Sequence"));
-	VERIFY_EQUAL_NONCONT(sndFile.Order(0)[0], sndFile.Order.GetIgnoreIndex());
+	VERIFY_EQUAL_NONCONT(sndFile.Order(0)[0], PATTERNINDEX_SKIP);
 	VERIFY_EQUAL_NONCONT(sndFile.Order(0)[1], 0);
-	VERIFY_EQUAL_NONCONT(sndFile.Order(0)[2], sndFile.Order.GetIgnoreIndex());
+	VERIFY_EQUAL_NONCONT(sndFile.Order(0)[2], PATTERNINDEX_SKIP);
 	VERIFY_EQUAL_NONCONT(sndFile.Order(0).GetRestartPos(), 1);
 	VERIFY_EQUAL_NONCONT(sndFile.Order(0).GetDefaultTempo(), TEMPO(139, 999));
 	VERIFY_EQUAL_NONCONT(sndFile.Order(0).GetDefaultSpeed(), 5);
@@ -3211,6 +3260,17 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 0)->instr, 99);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 0)->GetValueVolCol(), 1);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 0)->GetValueEffectCol(), 200);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(1, 0)->IsPcNote(), true);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(1, 0)->note, NOTE_PCS);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(1, 0)->instr, 250);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(1, 0)->GetValueVolCol(), 999);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(1, 0)->GetValueEffectCol(), 999);
+
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 1)->note, NOTE_MIN);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(1, 1)->note, NOTE_MIN + 119);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(2, 1)->note, NOTE_KEYOFF);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(3, 1)->note, NOTE_NOTECUT);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(4, 1)->note, NOTE_FADE);
 
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(31, 0)->IsEmpty(), true);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(31, 1)->IsEmpty(), false);
@@ -3282,7 +3342,8 @@ static void TestLoadS3MFile(const CSoundFile &sndFile, bool resaved)
 	VERIFY_EQUAL_NONCONT(sndFile.m_SongFlags, SONG_FASTVOLSLIDES);
 	VERIFY_EQUAL_NONCONT(sndFile.GetMixLevels(), MixLevels::Compatible);
 	VERIFY_EQUAL_NONCONT(sndFile.m_nTempoMode, TempoMode::Classic);
-	VERIFY_EQUAL_NONCONT(sndFile.m_dwLastSavedWithVersion, resaved ? Version::Current() : MPT_V("1.27.00.00"));
+	VERIFY_EQUAL_NONCONT(sndFile.m_dwLastSavedWithVersion, resaved ? Version::Current() : MPT_V("1.32.00.32"));
+	VERIFY_EQUAL_NONCONT(sndFile.GetFileHistory().size(), 1);
 
 	// Channels
 	VERIFY_EQUAL_NONCONT(sndFile.GetNumChannels(), 4);
@@ -3370,8 +3431,8 @@ static void TestLoadS3MFile(const CSoundFile &sndFile, bool resaved)
 	VERIFY_EQUAL_NONCONT(sndFile.Order().GetRestartPos(), 0);
 	VERIFY_EQUAL_NONCONT(sndFile.Order().GetLengthTailTrimmed(), 5);
 	VERIFY_EQUAL_NONCONT(sndFile.Order()[0], 0);
-	VERIFY_EQUAL_NONCONT(sndFile.Order()[1], sndFile.Order.GetIgnoreIndex());
-	VERIFY_EQUAL_NONCONT(sndFile.Order()[2], sndFile.Order.GetInvalidPatIndex());
+	VERIFY_EQUAL_NONCONT(sndFile.Order()[1], PATTERNINDEX_SKIP);
+	VERIFY_EQUAL_NONCONT(sndFile.Order()[2], PATTERNINDEX_INVALID);
 	VERIFY_EQUAL_NONCONT(sndFile.Order()[3], 1);
 	VERIFY_EQUAL_NONCONT(sndFile.Order()[4], 0);
 
@@ -3383,6 +3444,7 @@ static void TestLoadS3MFile(const CSoundFile &sndFile, bool resaved)
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetOverrideSignature(), false);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(0, 0)->note, NOTE_MIN + 12);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(1, 0)->note, NOTE_MIN + 107);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(2, 0)->note, NOTE_NOTECUT);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(0, 1)->volcmd, VOLCMD_VOLUME);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(0, 1)->vol, 0);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(1, 1)->volcmd, VOLCMD_VOLUME);
@@ -3393,6 +3455,11 @@ static void TestLoadS3MFile(const CSoundFile &sndFile, bool resaved)
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(3, 1)->vol, 64);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(0, 3)->command, CMD_SPEED);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(0, 3)->param, 0x11);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(3, 0)->IsEmpty(), false);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(3, 0)->note, NOTE_NONE);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(3, 0)->instr, 99);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(4, 0)->IsEmpty(), true);  // Test for resaved out-of-range note
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetpModCommand(5, 0)->IsEmpty(), true);  // Test for resaved out-of-range note
 
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetNumRows(), 64);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns.IsPatternEmpty(1), false);
@@ -3421,10 +3488,10 @@ static void TestLoadMODFile(CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(allSubSongs.size(), 2);
 	VERIFY_EQUAL_EPS(allSubSongs[0].duration, 2.04, 0.1);
 	VERIFY_EQUAL_EPS(allSubSongs[1].duration, 118.84, 0.1);
-	VERIFY_EQUAL_NONCONT(allSubSongs[0].lastOrder, 0);
-	VERIFY_EQUAL_NONCONT(allSubSongs[0].lastRow, 1);
-	VERIFY_EQUAL_NONCONT(allSubSongs[1].lastOrder, 2);
-	VERIFY_EQUAL_NONCONT(allSubSongs[1].lastRow, 61);
+	VERIFY_EQUAL_NONCONT(allSubSongs[0].restartOrder, 0);
+	VERIFY_EQUAL_NONCONT(allSubSongs[0].restartRow, 1);
+	VERIFY_EQUAL_NONCONT(allSubSongs[1].restartOrder, 2);
+	VERIFY_EQUAL_NONCONT(allSubSongs[1].restartRow, 61);
 	VERIFY_EQUAL_NONCONT(allSubSongs[1].startOrder, 2);
 	VERIFY_EQUAL_NONCONT(allSubSongs[1].startRow, 0);
 
@@ -3577,7 +3644,7 @@ static CSoundFile &GetSoundFile(TSoundFileContainer &sndFile)
 
 static TSoundFileContainer CreateSoundFileContainer(const mpt::PathString &filename)
 {
-	mpt::ifstream stream(filename, std::ios::binary);
+	mpt::IO::ifstream stream(filename, std::ios::binary);
 	FileReader file = mpt::IO::make_FileCursor<mpt::PathString>(stream);
 	std::shared_ptr<CSoundFile> pSndFile = std::make_shared<CSoundFile>();
 	pSndFile->Create(file, CSoundFile::loadCompleteModule);
@@ -3593,25 +3660,25 @@ static void DestroySoundFileContainer(TSoundFileContainer & /* sndFile */ )
 
 static void SaveIT(const TSoundFileContainer &sndFile, const mpt::PathString &filename)
 {
-	mpt::ofstream f(filename, std::ios::binary);
+	mpt::IO::ofstream f(filename, std::ios::binary);
 	sndFile->SaveIT(f, filename, false);
 }
 
 static void SaveXM(const TSoundFileContainer &sndFile, const mpt::PathString &filename)
 {
-	mpt::ofstream f(filename, std::ios::binary);
+	mpt::IO::ofstream f(filename, std::ios::binary);
 	sndFile->SaveXM(f, false);
 }
 
 static void SaveS3M(const TSoundFileContainer &sndFile, const mpt::PathString &filename)
 {
-	mpt::ofstream f(filename, std::ios::binary);
+	mpt::IO::ofstream f(filename, std::ios::binary);
 	sndFile->SaveS3M(f);
 }
 
 static void SaveMOD(const TSoundFileContainer &sndFile, const mpt::PathString &filename)
 {
-	mpt::ofstream f(filename, std::ios::binary);
+	mpt::IO::ofstream f(filename, std::ios::binary);
 	sndFile->SaveMod(f);
 }
 
@@ -3694,6 +3761,8 @@ static MPT_NOINLINE void TestLoadSaveFile()
 		// file still works.
 		GetSoundFile(sndFileContainer).m_nSamples++;
 		GetSoundFile(sndFileContainer).Instruments[1]->Keyboard[110] = GetSoundFile(sndFileContainer).GetNumSamples();
+		GetSoundFile(sndFileContainer).Patterns[1].GetpModCommand(30, 0)->note = NOTE_MIN;        // Should not be saved to file
+		GetSoundFile(sndFileContainer).Patterns[1].GetpModCommand(31, 0)->note = NOTE_MIN + 108;  // Ditto
 
 		#ifndef MODPLUG_NO_FILESAVE
 			// Test file saving
@@ -3754,6 +3823,8 @@ static MPT_NOINLINE void TestLoadSaveFile()
 		#ifndef MODPLUG_NO_FILESAVE
 			// Test file saving
 			sndFile.ChnSettings[1].dwFlags.set(CHN_MUTE);
+			sndFile.Patterns[0].GetpModCommand(4, 0)->note = NOTE_MIN;        // Should not be saved to file
+			sndFile.Patterns[0].GetpModCommand(5, 0)->note = NOTE_MIN + 108;  // Ditto
 			sndFile.m_dwLastSavedWithVersion = Version::Current();
 #if MPT_OS_DJGPP
 			SaveS3M(sndFileContainer, filenameBase + P_("ss3"));
@@ -3956,12 +4027,21 @@ static void RunITCompressionTest(const std::vector<int8> &sampleData, FlagSet<Ch
 static MPT_NOINLINE void TestITCompression()
 {
 	// Test loading / saving of IT-compressed samples
-	const int sampleDataSize = 65536;
+	constexpr int sampleDataSize = 131072;
 	std::vector<int8> sampleData(sampleDataSize, 0);
-	std::srand(0);
 	for(int i = 0; i < sampleDataSize; i++)
 	{
 		sampleData[i] = mpt::random<int8>(*s_PRNG);
+	}
+	// Fade in the first half of the sample so that we test lower bit widths as well
+	for(int i = 0; i < sampleDataSize / 2; i++)
+	{
+		sampleData[i] = static_cast<int8>(Util::muldivr(sampleData[i], i, sampleDataSize / 2));
+	}
+	// Add a few irregularities to the signal to provoke temporary switches to higher bit width
+	for(int i = 99; i < sampleDataSize / 2; i += 100)
+	{
+		sampleData[i] ^= 99;
 	}
 
 	// Run each compression test with IT215 compression and without.
@@ -4791,6 +4871,69 @@ static MPT_NOINLINE void TestSampleConversion()
 			VERIFY_EQUAL_QUIET_NONCONT(buffer[i], expected[i]);
 		}
 	}
+}
+
+
+static void TestMIDIMacroParser()
+{
+	uint8 rawData[] = {0x90, 0x40, 0x70, 0x50, 0x70, 0xF5, 0xF6, 0x60, 0x70, 0xF0};
+	MIDIMacroParser rawParser{mpt::as_span(rawData)};
+	mpt::span<uint8> midiMsg;
+	rawParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 3>{0x90, 0x40, 0x70}), true);
+	rawParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 3>{0x90, 0x50, 0x70}), true);
+	rawParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 1>{0xF5}), true);
+	rawParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 1>{0xF6}), true);
+	rawParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 3>{0x90, 0x60, 0x70}), true);
+	rawParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 1>{0xF0}), true);
+	VERIFY_EQUAL_NONCONT(rawParser.NextMessage(midiMsg), false);
+
+	mpt::heap_value<CSoundFile> sndFile;
+	mpt::heap_value<PlayState> playState;
+	mpt::heap_value<ModInstrument> instr;
+	sndFile->Create(MOD_TYPE_MPT, 2);
+	playState->m_nGlobalVolume = MAX_GLOBAL_VOLUME / 2;
+	playState->Chn[3].nMasterChn = 2;
+	playState->Chn[3].nLastNote = NOTE_MIN + 0x60;
+	playState->Chn[3].nVolume = 193;
+	playState->Chn[3].nVolSwing = 32;
+	playState->Chn[3].nCalcVolume = 8192;
+	playState->Chn[3].nGlobalVol = 32;
+	playState->Chn[3].nInsVol = 32;
+	playState->Chn[3].nPan = 32;
+	playState->Chn[3].nRealPan = 192;
+	playState->Chn[3].oldOffset = 0x123456;
+	playState->Chn[3].pModInstrument = instr.get();
+	instr->nMidiChannel = MidiLastChannel;
+	instr->nMidiProgram = 1 + 9;
+	instr->wMidiBank = 1 + 130;
+	const char macro[] = "r42 9c z v 50 h F5 F6 n u Bc a b xyop F0 41 10 00 10 12 10 00 04 00 2 s";
+	std::vector<uint8> out(std::size(macro) + 1);
+	MIDIMacroParser macroParser{*sndFile, playState.get(), 3, false, mpt::as_span(macro), mpt::as_span(out), 64, 0};
+	macroParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 3>{0x9F, 0x40, 0x0E}), true);
+	macroParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 3>{0x9F, 0x50, 0x01}), true);
+	macroParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 1>{0xF5}), true);
+	macroParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 1>{0xF6}), true);
+	macroParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 3>{0x9F, 0x60, 0x08}), true);
+	macroParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 3>{0xBF, 0x01, 0x02}), true);
+	macroParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 3>{0xBF, 0x10, 0x60}), true);
+	macroParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 3>{0xBF, 0x34, 0x09}), true);
+	macroParser.NextMessage(midiMsg);
+	VERIFY_EQUAL_NONCONT(mpt::span_elements_equal(midiMsg, std::array<uint8, 13>{0xF0, 0x41, 0x10, 0x00, 0x10, 0x12, 0x10, 0x00, 0x04, 0x00, 0x02, 0x6A, 0xF7}), true);
+	VERIFY_EQUAL_NONCONT(macroParser.NextMessage(midiMsg), false);
 }
 
 

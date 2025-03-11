@@ -600,12 +600,12 @@ mpt::ustring GetFullCreditsString()
 		"libopenmpt (based on OpenMPT / Open ModPlug Tracker)\n"
 #endif
 		"\n"
-		"Copyright \xC2\xA9 2004-2024 OpenMPT Project Developers and Contributors\n"
+		"Copyright \xC2\xA9 2004-2025 OpenMPT Project Developers and Contributors\n"
 		"Copyright \xC2\xA9 1997-2003 Olivier Lapicque\n"
 		"\n"
 		"Developers:\n"
-		"Johannes Schultz (2008-2024)\n"
-		"J\xC3\xB6rn Heusipp (2012-2024)\n"
+		"Johannes Schultz (2008-2025)\n"
+		"J\xC3\xB6rn Heusipp (2012-2025)\n"
 		"Ahti Lepp\xC3\xA4nen (2005-2011)\n"
 		"Robin Fernandes (2004-2007)\n"
 		"Sergiy Pylypenko (2007)\n"
@@ -621,6 +621,7 @@ mpt::ustring GetFullCreditsString()
 		"Revenant (https://revenant1.net/)\n"
 		"SYRiNX\n"
 		"xaimus (http://xaimus.com/)\n"
+		"zersal\n"
 		"\n"
 		"Thanks to:\n"
 		"\n"
@@ -657,7 +658,7 @@ mpt::ustring GetFullCreditsString()
 		"https://github.com/iamgreaser/it2everything/\n"
 		"\n"
 		"Antti S. Lankila for Amiga resampler implementation\n"
-		"https://bel.fi/alankila/modguide/interpolate.txt\n"
+		"https://web.archive.org/web/20221228071135/https://bel.fi/alankila/modguide/\n"
 		"\n"
 		"Shayde / Reality Productions for Opal OPL3 emulator\n"
 		"https://www.3eality.com/\n"
@@ -771,7 +772,7 @@ mpt::ustring GetFullCreditsString()
 		"https://www.behance.net/ulfurkolka\n"
 		"\n"
 		"Nobuyuki for file icon\n"
-		"https://twitter.com/nobuyukinyuu\n"
+		"https://github.com/nobuyukinyuu/\n"
 		"\n"
 #endif
 		"Daniel Collin (emoon/TBL) for providing test infrastructure\n"
@@ -781,8 +782,8 @@ mpt::ustring GetFullCreditsString()
 		"in the form of ideas, testing and support;\n"
 		"thanks particularly to:\n"
 		"33, 8bitbubsy, AliceLR, Anboi, BooT-SectoR-ViruZ, Bvanoudtshoorn\n"
-		"christofori, cubaxd, Diamond, Ganja, Georg, Goor00,\n"
-		"Harbinger, jmkz, KrazyKatz, LPChip, Nofold, Rakib, Sam Zen\n"
+		"a11cf0, christofori, cubaxd, Diamond, Ganja, Georg, Goor00,\n"
+		"Harbinger, jmkz, KrazyKatz, LPChip, MiDoRi, Nofold, Rakib, Sam Zen\n"
 		"Skaven, Skilletaudio, Snu, Squirrel Havoc, Teimoso, Waxhead\n"
 		"\n"
 #ifdef MPT_WITH_VST
@@ -799,7 +800,7 @@ mpt::ustring GetFullCreditsString()
 mpt::ustring GetLicenseString()
 {
 	return MPT_UTF8(
-		"Copyright (c) 2004-2024, OpenMPT Project Developers and Contributors" "\n"
+		"Copyright (c) 2004-2025, OpenMPT Project Developers and Contributors" "\n"
 		"Copyright (c) 1997-2003, Olivier Lapicque" "\n"
 		"All rights reserved." "\n"
 		"" "\n"

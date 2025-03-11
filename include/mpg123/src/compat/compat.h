@@ -110,7 +110,42 @@
 
 typedef unsigned char byte;
 
+#if (defined(_UCRT) || defined(_MSC_VER) || (defined(__MINGW32__) || defined(__MINGW64__)) || (defined(__WATCOMC__) && defined(__NT__))) && !defined(__CYGWIN__)
+#define MPG123_COMPAT_MSVCRT_IO
+#endif
+
+#if defined(MPG123_COMPAT_MSVCRT_IO)
+#if defined(_UCRT)
+// needs to get checked separately from MSVC and MinGW becuase it is also used by native Clang on Windows
+#ifndef MPG123_COMPAT_MSVCRT_IO_64
+#define MPG123_COMPAT_MSVCRT_IO_64
+#endif
+#endif
 #if defined(_MSC_VER)
+#if (_MSC_VER >= 1200)
+// >= VC6
+#ifndef MPG123_COMPAT_MSVCRT_IO_64
+#define MPG123_COMPAT_MSVCRT_IO_64
+#endif
+#endif
+#endif
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#if (defined(__MSVCRT__) || defined(_UCRT)) && !defined(__CRTDLL__)
+#ifndef MPG123_COMPAT_MSVCRT_IO_64
+#define MPG123_COMPAT_MSVCRT_IO_64
+#endif
+#endif
+#endif
+#if defined(__WATCOMC__) && defined(__NT__)
+#if (__WATCOMC__ >= 1100)
+#ifndef MPG123_COMPAT_MSVCRT_IO_64
+#define MPG123_COMPAT_MSVCRT_IO_64
+#endif
+#endif
+#endif
+#endif
+
+#if defined(HAVE__SETMODE) || defined(HAVE_SETMODE) || defined(MPG123_COMPAT_MSVCRT_IO)
 // For _setmode(), at least.
 #include <io.h>
 #endif
@@ -154,12 +189,14 @@ FILE* INT123_compat_fdopen(int fd, const char *mode);
 int INT123_compat_close(int infd);
 int INT123_compat_fclose(FILE* stream);
 
+#ifndef NO_FILEMODE  /* OpenMPT */
 /**
  * Setting binary mode on a descriptor, where necessary.
  * We do not bother with errors. This has to work.
  * You can enable or disable binary mode.
  */
 void INT123_compat_binmode(int fd, int enable);
+#endif // NO_FILEMODE  /* OpenMPT */
 
 /* Those do make sense in a separate file, but I chose to include them in compat.c because that's the one source whose object is shared between mpg123 and libmpg123 -- and both need the functionality internally. */
 
@@ -204,6 +241,8 @@ int INT123_win32_wide_utf7(const wchar_t * const wptr, char **mbptr, size_t * bu
 
 int INT123_win32_utf8_wide(const char *const mbptr, wchar_t **wptr, size_t *buflen);
 #endif
+
+#ifndef NO_DIR  /* OpenMPT */
 
 /*
 	A little bit of path abstraction: We always work with plain char strings
@@ -253,6 +292,8 @@ char* INT123_compat_nextfile(struct compat_dir*);
    The returned string is a copy that needs to be freed after use. */
 char* INT123_compat_nextdir (struct compat_dir*);
 
+#endif // NO_DIR  /* OpenMPT */
+
 #ifdef USE_MODULES
 /*
 	For keeping the path mess local, a system-specific dlopen() variant
@@ -281,9 +322,11 @@ size_t INT123_unintr_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *st
 
 #include "../common/true.h"
 
+#ifndef NO_CATCHSIGNAL  /* OpenMPT */
 #if (!defined(WIN32) || defined (__CYGWIN__)) && defined(HAVE_SIGNAL_H)
 void (*INT123_catchsignal(int signum, void(*handler)(int)))(int);
 #endif
+#endif // NO_CATCHSIGNAL  /* OpenMPT */
 
 // Some ancient toolchains miss the documented errno value.
 #if defined(_WIN32) && !defined(EOVERFLOW)

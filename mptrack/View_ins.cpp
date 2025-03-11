@@ -11,19 +11,22 @@
 
 #include "stdafx.h"
 #include "View_ins.h"
-#include "ChannelManagerDlg.h"
 #include "Childfrm.h"
 #include "Ctrl_ins.h"
 #include "Dlsbank.h"
 #include "FileDialog.h"
 #include "Globals.h"
+#include "HighDPISupport.h"
 #include "ImageLists.h"
 #include "InputHandler.h"
 #include "Mainfrm.h"
 #include "Moddoc.h"
 #include "Mptrack.h"
+#include "MPTrackUtil.h"
 #include "Reporting.h"
+#include "resource.h"
 #include "ScaleEnvPointsDlg.h"
+#include "TrackerSettings.h"
 #include "WindowMessages.h"
 #include "../common/mptStringBuffer.h"
 #include "../soundlib/MIDIEvents.h"
@@ -40,11 +43,11 @@ namespace
 
 
 // Non-client toolbar
-#define ENV_LEFTBAR_CY			Util::ScalePixels(29, m_hWnd)
-#define ENV_LEFTBAR_CXSEP		Util::ScalePixels(14, m_hWnd)
-#define ENV_LEFTBAR_CXSPC		Util::ScalePixels(3, m_hWnd)
-#define ENV_LEFTBAR_CXBTN		Util::ScalePixels(24, m_hWnd)
-#define ENV_LEFTBAR_CYBTN		Util::ScalePixels(22, m_hWnd)
+#define ENV_LEFTBAR_CY    HighDPISupport::ScalePixels(29, m_hWnd)
+#define ENV_LEFTBAR_CXSEP HighDPISupport::ScalePixels(14, m_hWnd)
+#define ENV_LEFTBAR_CXSPC HighDPISupport::ScalePixels(3, m_hWnd)
+#define ENV_LEFTBAR_CXBTN HighDPISupport::ScalePixels(24, m_hWnd)
+#define ENV_LEFTBAR_CYBTN HighDPISupport::ScalePixels(22, m_hWnd)
 
 
 static constexpr UINT cLeftBarButtons[ENV_LEFTBAR_BUTTONS] =
@@ -78,9 +81,6 @@ IMPLEMENT_SERIAL(CViewInstrument, CModScrollView, 0)
 
 BEGIN_MESSAGE_MAP(CViewInstrument, CModScrollView)
 	//{{AFX_MSG_MAP(CViewInstrument)
-#if !defined(MPT_BUILD_RETRO)
-	ON_MESSAGE(WM_DPICHANGED, &CViewInstrument::OnDPIChanged)
-#endif
 	ON_WM_ERASEBKGND()
 	ON_WM_SETFOCUS()
 	ON_WM_SIZE()
@@ -92,9 +92,10 @@ BEGIN_MESSAGE_MAP(CViewInstrument, CModScrollView)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_WM_LBUTTONDBLCLK()
-	ON_WM_RBUTTONDOWN()
-	ON_WM_MBUTTONDOWN()
+	ON_WM_RBUTTONUP()
+	ON_WM_MBUTTONUP()
 	ON_WM_XBUTTONUP()
+	ON_WM_MOUSEWHEEL()
 	ON_WM_NCLBUTTONDOWN()
 	ON_WM_NCLBUTTONUP()
 	ON_WM_NCLBUTTONDBLCLK()
@@ -133,7 +134,6 @@ BEGIN_MESSAGE_MAP(CViewInstrument, CModScrollView)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_REDO,		&CViewInstrument::OnUpdateRedo)
 
 	//}}AFX_MSG_MAP
-	ON_WM_MOUSEWHEEL()
 END_MESSAGE_MAP()
 
 
@@ -146,9 +146,6 @@ CViewInstrument::CViewInstrument()
 	m_rcClient.bottom = 2;
 	m_dwNotifyPos.fill(uint32(Notification::PosInvalid));
 	MemsetZero(m_NcButtonState);
-
-	m_bmpEnvBar.Create(&CMainFrame::GetMainFrame()->m_EnvelopeIcons);
-
 	m_baPlayingNote.reset();
 }
 
@@ -157,8 +154,8 @@ void CViewInstrument::OnInitialUpdate()
 {
 	CModScrollView::OnInitialUpdate();
 	ModifyStyleEx(0, WS_EX_ACCEPTFILES);
-	m_zoom = (ENV_POINT_SIZE * m_nDPIx) / 96.0f;
-	m_envPointSize = Util::ScalePixels(ENV_POINT_SIZE, m_hWnd);
+	m_zoom = (ENV_POINT_SIZE * m_dpi) / 96.0f;
+	m_envPointSize = HighDPISupport::ScalePixels(ENV_POINT_SIZE, m_hWnd);
 	UpdateScrollSize();
 	UpdateNcButtonState();
 	EnableToolTips();
@@ -174,9 +171,9 @@ void CViewInstrument::UpdateScrollSize()
 	if(pModDoc)
 	{
 		SIZE sizeTotal, sizePage, sizeLine;
-		uint32 maxTick = EnvGetTick(EnvGetLastPoint());
+		uint32 maxTick = std::max(EnvGetTick(EnvGetLastPoint()), m_maxTickDrag);
 
-		sizeTotal.cx = mpt::saturate_round<int>((maxTick + 2) * m_zoom);
+		sizeTotal.cx = mpt::saturate_round<int>((maxTick + 8) * m_zoom);
 		sizeTotal.cy = 1;
 		sizeLine.cx = mpt::saturate_round<int>(m_zoom);
 		sizeLine.cy = 2;
@@ -187,11 +184,11 @@ void CViewInstrument::UpdateScrollSize()
 }
 
 
-LRESULT CViewInstrument::OnDPIChanged(WPARAM wParam, LPARAM lParam)
+void CViewInstrument::OnDPIChanged()
 {
-	LRESULT res = CModScrollView::OnDPIChanged(wParam, lParam);
-	m_envPointSize = Util::ScalePixels(4, m_hWnd);
-	return res;
+	m_envPointSize = HighDPISupport::ScalePixels(ENV_POINT_SIZE, m_hWnd);
+	UpdateScrollSize();
+	CModScrollView::OnDPIChanged();
 }
 
 
@@ -255,7 +252,7 @@ LRESULT CViewInstrument::OnModViewMsg(WPARAM wParam, LPARAM lParam)
 	case VIEWMSG_LOADSTATE:
 		if(lParam)
 		{
-			INSTRUMENTVIEWSTATE *pState = (INSTRUMENTVIEWSTATE *)lParam;
+			InstrumentViewState *pState = (InstrumentViewState *)lParam;
 			if(pState->initialized)
 			{
 				m_zoom = pState->zoom;
@@ -268,11 +265,12 @@ LRESULT CViewInstrument::OnModViewMsg(WPARAM wParam, LPARAM lParam)
 	case VIEWMSG_SAVESTATE:
 		if(lParam)
 		{
-			INSTRUMENTVIEWSTATE *pState = (INSTRUMENTVIEWSTATE *)lParam;
+			InstrumentViewState *pState = (InstrumentViewState *)lParam;
 			pState->initialized = true;
 			pState->zoom = m_zoom;
 			pState->nEnv = m_nEnv;
 			pState->bGrid = m_bGrid;
+			pState->instrument = m_nInstrument;
 		}
 		break;
 
@@ -788,7 +786,7 @@ UINT CViewInstrument::GetNcButtonAtPoint(CPoint point, CRect *outRect) const
 	GetWindowRect(&rcWnd);
 	for(UINT i = 0; i < ENV_LEFTBAR_BUTTONS; i++)
 	{
-		if(!(m_NcButtonState[i] & NCBTNS_DISABLED) && GetNcButtonRect(i, rect))
+		if(GetNcButtonRect(i, rect))
 		{
 			rect.OffsetRect(rcWnd.left, rcWnd.top);
 			if(rect.PtInRect(point))
@@ -838,7 +836,7 @@ void CViewInstrument::UpdateNcButtonState()
 		case ID_ENVELOPE_LOAD:
 		case ID_ENVELOPE_SAVE:     if(GetInstrumentPtr() == nullptr) dwStyle |= NCBTNS_DISABLED; break;
 		}
-		if (m_nBtnMouseOver == i)
+		if (m_nBtnMouseOver == i && !(m_NcButtonState[i] & NCBTNS_DISABLED))
 		{
 			dwStyle |= NCBTNS_MOUSEOVER;
 			if (m_dwStatus & INSSTATUS_NCLBTNDOWN) dwStyle |= NCBTNS_PUSHED;
@@ -1012,16 +1010,15 @@ void CViewInstrument::OnDraw(CDC *pDC)
 		m_dcMemMain.MoveTo(x2, y2 - nspace);
 		m_dcMemMain.LineTo(x2, y2 + nspace);
 	}
-	uint32 maxpoint = EnvGetNumPoints();
+	uint32 numPoints = EnvGetNumPoints();
 	// Drawing Envelope
-	if(maxpoint)
+	if(numPoints)
 	{
-		maxpoint--;
 		m_dcMemMain.SelectObject(GetStockObject(DC_PEN));
 		m_dcMemMain.SetDCPenColor(TrackerSettings::Instance().rgbCustomColors[MODCOLOR_ENVELOPES]);
 		uint32 releaseNode = EnvGetReleaseNode();
 		RECT rect;
-		for(uint32 i = 0; i <= maxpoint; i++)
+		for(uint32 i = 0; i < numPoints; i++)
 		{
 			int x = PointToScreen(i);
 			int y = ValueToScreen(EnvGetValue(i));
@@ -1082,18 +1079,27 @@ bool CViewInstrument::EnvRemovePoint(uint32 nPoint)
 
 			PrepareUndo("Remove Envelope Point");
 			envelope->erase(envelope->begin() + nPoint);
-			if (nPoint >= envelope->size()) nPoint = envelope->size() - 1;
-			if (envelope->nLoopStart > nPoint) envelope->nLoopStart--;
-			if (envelope->nLoopEnd > nPoint) envelope->nLoopEnd--;
-			if (envelope->nSustainStart > nPoint) envelope->nSustainStart--;
-			if (envelope->nSustainEnd > nPoint) envelope->nSustainEnd--;
-			if (envelope->nReleaseNode>nPoint && envelope->nReleaseNode != ENV_RELEASE_NODE_UNSET) envelope->nReleaseNode--;
-			envelope->at(0).tick = 0;
+			if(nPoint >= envelope->size())
+				nPoint = envelope->size() - 1;
+			if(envelope->nLoopStart > nPoint)
+				envelope->nLoopStart--;
+			if(envelope->nLoopEnd > nPoint)
+				envelope->nLoopEnd--;
+			if(envelope->nSustainStart > nPoint)
+				envelope->nSustainStart--;
+			if(envelope->nSustainEnd > nPoint)
+				envelope->nSustainEnd--;
+			if(envelope->nReleaseNode > nPoint && envelope->nReleaseNode != ENV_RELEASE_NODE_UNSET)
+				envelope->nReleaseNode--;
 
 			if(envelope->size() <= 1)
 			{
-				// if only one node is left, just disable the envelope completely
-				*envelope = InstrumentEnvelope();
+				// If only one node is left, just disable the envelope completely
+				mpt::reset(*envelope);
+			} else
+			{
+				// If we removed the first node, make sure that we have a node on tick 0 again
+				envelope->at(0).tick = 0;
 			}
 
 			SetModified(InstrumentHint().Envelope(), true);
@@ -1248,6 +1254,7 @@ void CViewInstrument::DrawNcButton(CDC *pDC, UINT nBtn)
 	COLORREF crFc = GetSysColor(COLOR_3DFACE);
 	COLORREF c1, c2;
 
+	const bool flat = (TrackerSettings::Instance().patternSetup & PatternSetup::FlatToolbarButtons);
 	if(GetNcButtonRect(nBtn, rect))
 	{
 		DWORD dwStyle = m_NcButtonState[nBtn];
@@ -1255,7 +1262,7 @@ void CViewInstrument::DrawNcButton(CDC *pDC, UINT nBtn)
 		int xofs = 0, yofs = 0, nImage = 0;
 
 		c1 = c2 = c3 = c4 = crFc;
-		if(!(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_FLATBUTTONS))
+		if(!flat)
 		{
 			c1 = c3 = crHi;
 			c2 = crDk;
@@ -1265,13 +1272,13 @@ void CViewInstrument::DrawNcButton(CDC *pDC, UINT nBtn)
 		{
 			c1 = crDk;
 			c2 = crHi;
-			if(!(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_FLATBUTTONS))
+			if(!flat)
 			{
 				c4 = crHi;
 				c3 = (dwStyle & NCBTNS_PUSHED) ? RGB(0, 0, 0) : crDk;
 			}
 			xofs = yofs = 1;
-		} else if((dwStyle & NCBTNS_MOUSEOVER) && (TrackerSettings::Instance().m_dwPatternSetup & PATTERN_FLATBUTTONS))
+		} else if((dwStyle & NCBTNS_MOUSEOVER) && flat)
 		{
 			c1 = crHi;
 			c2 = crDk;
@@ -1302,12 +1309,12 @@ void CViewInstrument::DrawNcButton(CDC *pDC, UINT nBtn)
 		rect.left += xofs;
 		rect.top += yofs;
 		if(dwStyle & NCBTNS_CHECKED)
-			m_bmpEnvBar.Draw(pDC, IIMAGE_CHECKED, rect.TopLeft(), ILD_NORMAL);
-		m_bmpEnvBar.Draw(pDC, nImage, rect.TopLeft(), ILD_NORMAL);
+			CMainFrame::GetMainFrame()->m_EnvelopeIcons.Draw(pDC, IIMAGE_CHECKED, rect.TopLeft(), ILD_NORMAL);
+		CMainFrame::GetMainFrame()->m_EnvelopeIcons.Draw(pDC, nImage, rect.TopLeft(), ILD_NORMAL);
 	} else
 	{
 		c1 = c2 = crFc;
-		if(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_FLATBUTTONS)
+		if(flat)
 		{
 			c1 = crDk;
 			c2 = crHi;
@@ -1402,7 +1409,7 @@ void CViewInstrument::OnNcMouseMove(UINT nHitTest, CPoint point)
 
 void CViewInstrument::OnNcLButtonDown(UINT uFlags, CPoint point)
 {
-	if(m_nBtnMouseOver < ENV_LEFTBAR_BUTTONS)
+	if(m_nBtnMouseOver < ENV_LEFTBAR_BUTTONS && !(m_NcButtonState[m_nBtnMouseOver] & NCBTNS_DISABLED))
 	{
 		m_dwStatus |= INSSTATUS_NCLBTNDOWN;
 		if(cLeftBarButtons[m_nBtnMouseOver] != ID_SEPARATOR)
@@ -1482,6 +1489,7 @@ void CViewInstrument::OnMouseMove(UINT, CPoint pt)
 		{
 			// Ctrl pressed -> move tail of envelope
 			changed = EnvSetValue(m_nDragItem - 1, nTick, nVal, CInputHandler::CtrlPressed());
+			m_maxTickDrag = std::max(m_maxTickDrag, EnvGetTick(EnvGetLastPoint()));
 		} else
 		{
 			int nPoint = ScreenToPoint(pt.x, pt.y);
@@ -1652,7 +1660,7 @@ void CViewInstrument::OnLButtonDown(UINT, CPoint pt)
 		uint32 maxpoint = EnvGetLastPoint();
 		uint32 oldDragItem = m_nDragItem;
 		m_nDragItem = 0;
-		const int hitboxSize = static_cast<int>((6 * m_nDPIx) / 96.0f);
+		const int hitboxSize = static_cast<int>((6 * m_dpi) / 96.0f);
 		for(uint32 i = 0; i <= maxpoint; i++)
 		{
 			int x = PointToScreen(i);
@@ -1661,6 +1669,7 @@ void CViewInstrument::OnLButtonDown(UINT, CPoint pt)
 			if(rect.PtInRect(pt))
 			{
 				m_nDragItem = i + 1;
+				m_maxTickDrag = EnvGetTick(EnvGetLastPoint());
 				break;
 			}
 		}
@@ -1729,6 +1738,11 @@ void CViewInstrument::OnLButtonDown(UINT, CPoint pt)
 void CViewInstrument::OnLButtonUp(UINT, CPoint)
 {
 	m_mouseMoveModified = false;
+	if(m_maxTickDrag)
+	{
+		m_maxTickDrag = 0;
+		UpdateScrollSize();
+	}
 	if(m_dwStatus & INSSTATUS_SPLITCURSOR)
 	{
 		m_dwStatus &= ~INSSTATUS_SPLITCURSOR;
@@ -1742,7 +1756,7 @@ void CViewInstrument::OnLButtonUp(UINT, CPoint)
 }
 
 
-void CViewInstrument::OnRButtonDown(UINT flags, CPoint pt)
+void CViewInstrument::OnRButtonUp(UINT flags, CPoint pt)
 {
 	const CModDoc *pModDoc = GetDocument();
 	if(!pModDoc)
@@ -1755,7 +1769,7 @@ void CViewInstrument::OnRButtonDown(UINT flags, CPoint pt)
 	// Ctrl + Right-Click = Delete point
 	if(flags & MK_CONTROL)
 	{
-		OnMButtonDown(flags, pt);
+		OnMButtonUp(flags, pt);
 		return;
 	}
 
@@ -1784,7 +1798,7 @@ void CViewInstrument::OnRButtonDown(UINT flags, CPoint pt)
 	}
 }
 
-void CViewInstrument::OnMButtonDown(UINT, CPoint pt)
+void CViewInstrument::OnMButtonUp(UINT, CPoint pt)
 {
 	// Middle mouse button: Remove envelope point
 	int point = ScreenToPoint(pt.x, pt.y);
@@ -2284,7 +2298,7 @@ LRESULT CViewInstrument::OnCustomKeyMsg(WPARAM wParam, LPARAM)
 					uint32 point = DragItemToEnvPoint();
 					pt.SetPoint(PointToScreen(point), ValueToScreen(EnvGetValue(point)));
 				}
-				OnRButtonDown(0, pt);
+				OnRButtonUp(0, pt);
 			}
 			return wParam;
 		case kcPrevInstrument:	OnPrevInstrument(); return wParam;
@@ -2852,7 +2866,11 @@ INT_PTR CViewInstrument::OnToolHitTest(CPoint point, TOOLINFO *pTI) const
 	pTI->hwnd = m_hWnd;
 	pTI->uId = buttonID;
 	pTI->rect = ncRect;
-	CString text = LoadResourceString(buttonID);
+	CString text;
+	if(m_NcButtonState[ncButton] & NCBTNS_DISABLED)
+		text = MPT_CFORMAT("Feature is not available in the {} format.")(mpt::ToCString(GetDocument()->GetSoundFile().GetModSpecifications().GetFileExtensionUpper()));
+	else
+		text = LoadResourceString(buttonID);
 
 	CommandID cmd = kcNull;
 	switch(buttonID)
@@ -2873,7 +2891,7 @@ INT_PTR CViewInstrument::OnToolHitTest(CPoint point, TOOLINFO *pTI) const
 	case ID_ENVELOPE_LOAD: cmd = kcInstrumentEnvelopeLoad; break;
 	case ID_ENVELOPE_SAVE: cmd = kcInstrumentEnvelopeSave; break;
 	}
-	if(cmd != kcNull)
+	if(cmd != kcNull && !(m_NcButtonState[ncButton] & NCBTNS_DISABLED))
 	{
 		auto keyText = CMainFrame::GetInputHandler()->m_activeCommandSet->GetKeyTextFromCommand(cmd, 0);
 		if(!keyText.IsEmpty())

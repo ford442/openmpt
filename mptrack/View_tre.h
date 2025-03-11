@@ -182,11 +182,7 @@ protected:
 	std::unique_ptr<CDLSBank> m_cachedBank;
 	mpt::PathString m_cachedBankName;
 
-#if MPT_WINNT_AT_LEAST(MPT_WIN_7)
-	DWORD m_stringCompareFlags = NORM_IGNORECASE | NORM_IGNOREWIDTH | SORT_DIGITSASNUMBERS;
-#else
 	DWORD m_stringCompareFlags = NORM_IGNORECASE | NORM_IGNOREWIDTH;
-#endif
 
 	// Instrument library
 	mpt::PathString m_InstrLibPath;           // Current path to be explored
@@ -314,6 +310,7 @@ protected:
 
 protected:
 	//{{AFX_MSG(CModTree)
+	afx_msg LRESULT OnDPIChangedAfterParent(WPARAM, LPARAM);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnXButtonUp(UINT nFlags, UINT nButton, CPoint point);

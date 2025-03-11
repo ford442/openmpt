@@ -926,6 +926,8 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 		m_nDefaultGlobalVolume = std::min(fileHeader.globalVol.get(), uint8(128)) * 2;
 	else if(m_nType == MOD_TYPE_S3M)
 		m_nDefaultGlobalVolume = std::min(fileHeader.globalVol.get(), uint8(64)) * 4;
+	else if(m_nType == MOD_TYPE_MOD)
+		m_SongFlags.set(SONG_FORMAT_NO_VOLCOL);
 
 	if(fileHeader.sampleVolume < 0)
 		m_nSamplePreAmp = fileHeader.sampleVolume + 52;
@@ -1076,7 +1078,7 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 		CMD_PORTAMENTOUP,       CMD_TREMOR,             CMD_RETRIG,             CMD_FINEVIBRATO,
 		CMD_CHANNELVOLUME,      CMD_CHANNELVOLSLIDE,    CMD_PANNINGSLIDE,       CMD_S3MCMDEX,
 		CMD_TEMPO,              CMD_GLOBALVOLSLIDE,     CMD_PANBRELLO,          CMD_MIDI,
-		CMD_NONE,/*FineVolSld*/ CMD_NONE,/*PortaDown*/  CMD_NONE, /*PortaUp*/   CMD_NONE,
+		CMD_NONE,/*FineVolSld*/ CMD_NONE,/*PortaDown*/  CMD_NONE, /*PortaUp*/   CMD_DUMMY,
 		CMD_NONE,/*ITVolCol*/   CMD_XPARAM,             CMD_SMOOTHMIDI,         CMD_DELAYCUT,
 		CMD_FINETUNE,           CMD_FINETUNE_SMOOTH,
 	};

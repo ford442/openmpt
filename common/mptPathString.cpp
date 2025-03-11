@@ -10,15 +10,13 @@
 #include "stdafx.h"
 #include "mptPathString.h"
 
-#include "mpt/path/os_path_long.hpp"
-
 #include <vector>
 
-#if MPT_OS_WINDOWS
+#if defined(MODPLUG_TRACKER) && MPT_OS_WINDOWS
 #include <tchar.h>
 #endif
 
-#if MPT_OS_WINDOWS
+#if defined(MODPLUG_TRACKER) && MPT_OS_WINDOWS
 #include <windows.h>
 #endif
 
@@ -31,7 +29,9 @@ namespace mpt
 
 
 
-#if MPT_OS_WINDOWS
+#if defined(MODPLUG_TRACKER) && MPT_OS_WINDOWS
+
+
 
 #if !MPT_OS_WINDOWS_WINRT
 
@@ -42,11 +42,6 @@ int PathCompareNoCase(const PathString & a, const PathString & b)
 
 #endif // !MPT_OS_WINDOWS_WINRT
 
-#endif // MPT_OS_WINDOWS
-
-
-
-#if defined(MODPLUG_TRACKER) && MPT_OS_WINDOWS
 
 
 // Convert an absolute path to a path that's relative to "&relativeTo".
@@ -55,7 +50,7 @@ mpt::PathString AbsolutePathToRelative(const mpt::PathString &path, const mpt::P
 	using namespace path_literals;
 	using char_type = RawPathString::value_type;
 	mpt::PathString result = path;
-	if(path.empty())
+	if(path.empty() || relativeTo.empty())
 	{
 		return result;
 	}
@@ -79,7 +74,7 @@ mpt::PathString RelativePathToAbsolute(const mpt::PathString &path, const mpt::P
 	using namespace path_literals;
 	using char_type = RawPathString::value_type;
 	mpt::PathString result = path;
-	if(path.empty())
+	if(path.empty() || relativeTo.empty())
 	{
 		return result;
 	}
@@ -107,11 +102,6 @@ mpt::PathString RelativePathToAbsolute(const mpt::PathString &path, const mpt::P
 }
 
 
-#endif // MODPLUG_TRACKER && MPT_OS_WINDOWS
-
-
-
-#if MPT_OS_WINDOWS
 
 #if !(MPT_WINRT_BEFORE(MPT_WIN_10))
 
@@ -132,33 +122,13 @@ mpt::PathString GetAbsolutePath(const mpt::PathString &path)
 
 #endif
 
-#endif // MPT_OS_WINDOWS
+
+
+#endif // MODPLUG_TRACKER && MPT_OS_WINDOWS
 
 
 
 } // namespace mpt
-
-
-
-#if defined(MODPLUG_TRACKER)
-
-
-
-mpt::ustring SanitizePathComponent(mpt::ustring str)
-{
-	return mpt::PathString::FromUnicode(str).AsSanitizedComponent().ToUnicode();
-}
-
-#if defined(MPT_WITH_MFC)
-CString SanitizePathComponent(CString str)
-{
-	return mpt::PathString::FromCString(str).AsSanitizedComponent().ToCString();
-}
-#endif // MPT_WITH_MFC
-
-
-
-#endif // MODPLUG_TRACKER
 
 
 

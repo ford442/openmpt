@@ -14,11 +14,13 @@
 #include "ChannelManagerDlg.h"
 #include "Childfrm.h"
 #include "Globals.h"
+#include "HighDPISupport.h"
 #include "ImageLists.h"
 #include "InputHandler.h"
 #include "Mainfrm.h"
 #include "Moddoc.h"
 #include "Mptrack.h"
+#include "PatternCursor.h"
 #include "PatternEditorDialogs.h"
 #include "Reporting.h"
 #include "resource.h"
@@ -41,47 +43,50 @@ BEGIN_MESSAGE_MAP(CCtrlPatterns, CModControlDlg)
 	ON_WM_KEYDOWN()
 	ON_WM_VSCROLL()
 	ON_WM_XBUTTONUP()
-	ON_COMMAND(IDC_BUTTON1,					&CCtrlPatterns::OnSequenceNext)
-	ON_COMMAND(IDC_BUTTON2,					&CCtrlPatterns::OnSequencePrev)
-	ON_COMMAND(ID_PLAYER_PAUSE,				&CCtrlPatterns::OnPlayerPause)
-	ON_COMMAND(IDC_PATTERN_NEW,				&CCtrlPatterns::OnPatternNew)
-	ON_COMMAND(IDC_PATTERN_STOP,			&CCtrlPatterns::OnPatternStop)
-	ON_COMMAND(IDC_PATTERN_PLAY,			&CCtrlPatterns::OnPatternPlay)
-	ON_COMMAND(IDC_PATTERN_PLAYFROMSTART,	&CCtrlPatterns::OnPatternPlayFromStart)
-	ON_COMMAND(IDC_PATTERN_RECORD,			&CCtrlPatterns::OnPatternRecord)
-	ON_COMMAND(IDC_PATTERN_LOOP,			&CCtrlPatterns::OnChangeLoopStatus)
-	ON_COMMAND(ID_PATTERN_PLAYROW,			&CCtrlPatterns::OnPatternPlayRow)
-	ON_COMMAND(ID_PATTERN_CHANNELMANAGER,	&CCtrlPatterns::OnChannelManager)
-	ON_COMMAND(ID_PATTERN_VUMETERS,			&CCtrlPatterns::OnPatternVUMeters)
-	ON_COMMAND(ID_VIEWPLUGNAMES,			&CCtrlPatterns::OnPatternViewPlugNames)
-	ON_COMMAND(ID_NEXTINSTRUMENT,			&CCtrlPatterns::OnNextInstrument)
-	ON_COMMAND(ID_PREVINSTRUMENT,			&CCtrlPatterns::OnPrevInstrument)
-	ON_COMMAND(IDC_PATTERN_FOLLOWSONG,		&CCtrlPatterns::OnFollowSong)
-	ON_COMMAND(ID_PATTERN_CHORDEDIT,		&CCtrlPatterns::OnChordEditor)
-	ON_COMMAND(ID_PATTERN_PROPERTIES,		&CCtrlPatterns::OnPatternProperties)
-	ON_COMMAND(ID_PATTERN_EXPAND,			&CCtrlPatterns::OnPatternExpand)
-	ON_COMMAND(ID_PATTERN_SHRINK,			&CCtrlPatterns::OnPatternShrink)
-	ON_COMMAND(ID_PATTERN_AMPLIFY,			&CCtrlPatterns::OnPatternAmplify)
-	ON_COMMAND(ID_ORDERLIST_NEW,			&CCtrlPatterns::OnPatternNew)
-	ON_COMMAND(ID_ORDERLIST_COPY,			&CCtrlPatterns::OnPatternDuplicate)
-	ON_COMMAND(ID_ORDERLIST_MERGE, 			&CCtrlPatterns::OnPatternMerge)
-	ON_COMMAND(ID_PATTERNCOPY,				&CCtrlPatterns::OnPatternCopy)
-	ON_COMMAND(ID_PATTERNPASTE,				&CCtrlPatterns::OnPatternPaste)
-	ON_COMMAND(ID_EDIT_UNDO,				&CCtrlPatterns::OnEditUndo)
-	ON_COMMAND(ID_PATTERNDETAIL_LO,			&CCtrlPatterns::OnDetailLo)
-	ON_COMMAND(ID_PATTERNDETAIL_MED,		&CCtrlPatterns::OnDetailMed)
-	ON_COMMAND(ID_PATTERNDETAIL_HI,			&CCtrlPatterns::OnDetailHi)
-	ON_COMMAND(ID_OVERFLOWPASTE,			&CCtrlPatterns::OnToggleOverflowPaste)
-	ON_CBN_DROPDOWN(IDC_COMBO_INSTRUMENT,	&CCtrlPatterns::OnOpenInstrumentDropdown)
+	ON_COMMAND(IDC_BUTTON1,                   &CCtrlPatterns::OnSequenceNext)
+	ON_COMMAND(IDC_BUTTON2,                   &CCtrlPatterns::OnSequencePrev)
+	ON_COMMAND(ID_PLAYER_PAUSE,               &CCtrlPatterns::OnPlayerPause)
+	ON_COMMAND(IDC_PATTERN_NEW,               &CCtrlPatterns::OnPatternNew)
+	ON_COMMAND(IDC_PATTERN_STOP,              &CCtrlPatterns::OnPatternStop)
+	ON_COMMAND(IDC_PATTERN_PLAY,              &CCtrlPatterns::OnPatternPlay)
+	ON_COMMAND(IDC_PATTERN_PLAYFROMSTART,     &CCtrlPatterns::OnPatternPlayFromStart)
+	ON_COMMAND(IDC_PATTERN_RECORD,            &CCtrlPatterns::OnPatternRecord)
+	ON_COMMAND(IDC_METRONOME,                 &CCtrlPatterns::OnToggleMetronome)
+	ON_COMMAND(ID_METRONOME_SETTINGS,         &CCtrlPatterns::OnMetronomeSettings)
+	ON_COMMAND(IDC_PATTERN_LOOP,              &CCtrlPatterns::OnChangeLoopStatus)
+	ON_COMMAND(ID_PATTERN_PLAYROW,            &CCtrlPatterns::OnPatternPlayRow)
+	ON_COMMAND(ID_PATTERN_CHANNELMANAGER,     &CCtrlPatterns::OnChannelManager)
+	ON_COMMAND(ID_PATTERN_VUMETERS,           &CCtrlPatterns::OnPatternVUMeters)
+	ON_COMMAND(ID_VIEWPLUGNAMES,              &CCtrlPatterns::OnPatternViewPlugNames)
+	ON_COMMAND(ID_NEXTINSTRUMENT,             &CCtrlPatterns::OnNextInstrument)
+	ON_COMMAND(ID_PREVINSTRUMENT,             &CCtrlPatterns::OnPrevInstrument)
+	ON_COMMAND(IDC_PATTERN_FOLLOWSONG,        &CCtrlPatterns::OnFollowSong)
+	ON_COMMAND(ID_PATTERN_CHORDEDIT,          &CCtrlPatterns::OnChordEditor)
+	ON_COMMAND(ID_PATTERN_PROPERTIES,         &CCtrlPatterns::OnPatternProperties)
+	ON_COMMAND(ID_PATTERN_EXPAND,             &CCtrlPatterns::OnPatternExpand)
+	ON_COMMAND(ID_PATTERN_SHRINK,             &CCtrlPatterns::OnPatternShrink)
+	ON_COMMAND(ID_PATTERN_AMPLIFY,            &CCtrlPatterns::OnPatternAmplify)
+	ON_COMMAND(ID_ORDERLIST_NEW,              &CCtrlPatterns::OnPatternNew)
+	ON_COMMAND(ID_ORDERLIST_COPY,             &CCtrlPatterns::OnPatternDuplicate)
+	ON_COMMAND(ID_ORDERLIST_MERGE,            &CCtrlPatterns::OnPatternMerge)
+	ON_COMMAND(ID_PATTERNCOPY,                &CCtrlPatterns::OnPatternCopy)
+	ON_COMMAND(ID_PATTERNPASTE,               &CCtrlPatterns::OnPatternPaste)
+	ON_COMMAND(ID_EDIT_UNDO,                  &CCtrlPatterns::OnEditUndo)
+	ON_COMMAND(ID_PATTERNDETAIL_DROPDOWN,     &CCtrlPatterns::OnDetailSwitch)
+	ON_COMMAND(ID_PATTERNDETAIL_INSTR,        &CCtrlPatterns::OnDetailInstr)
+	ON_COMMAND(ID_PATTERNDETAIL_VOLUME,       &CCtrlPatterns::OnDetailVolume)
+	ON_COMMAND(ID_PATTERNDETAIL_EFFECT,       &CCtrlPatterns::OnDetailEffect)
+	ON_COMMAND(ID_OVERFLOWPASTE,              &CCtrlPatterns::OnToggleOverflowPaste)
+	ON_CBN_DROPDOWN(IDC_COMBO_INSTRUMENT,     &CCtrlPatterns::OnOpenInstrumentDropdown)
 	ON_CBN_SELENDCANCEL(IDC_COMBO_INSTRUMENT, &CCtrlPatterns::OnCancelInstrumentDropdown)
-	ON_CBN_SELENDOK(IDC_COMBO_INSTRUMENT,	&CCtrlPatterns::OnInstrumentChanged)
-	ON_COMMAND(IDC_PATINSTROPLUGGUI,		&CCtrlPatterns::TogglePluginEditor)
-	ON_EN_CHANGE(IDC_EDIT_SPACING,			&CCtrlPatterns::OnSpacingChanged)
-	ON_EN_CHANGE(IDC_EDIT_PATTERNNAME,		&CCtrlPatterns::OnPatternNameChanged)
-	ON_EN_CHANGE(IDC_EDIT_SEQUENCE_NAME,	&CCtrlPatterns::OnSequenceNameChanged)
-	ON_EN_CHANGE(IDC_EDIT_SEQNUM,			&CCtrlPatterns::OnSequenceNumChanged)
-	ON_UPDATE_COMMAND_UI(IDC_PATTERN_RECORD,&CCtrlPatterns::OnUpdateRecord)
-	ON_NOTIFY_EX(TTN_NEEDTEXT, 0, &CCtrlPatterns::OnToolTipText)
+	ON_CBN_SELENDOK(IDC_COMBO_INSTRUMENT,     &CCtrlPatterns::OnInstrumentChanged)
+	ON_COMMAND(IDC_PATINSTROPLUGGUI,          &CCtrlPatterns::TogglePluginEditor)
+	ON_EN_CHANGE(IDC_EDIT_SPACING,            &CCtrlPatterns::OnSpacingChanged)
+	ON_EN_CHANGE(IDC_EDIT_PATTERNNAME,        &CCtrlPatterns::OnPatternNameChanged)
+	ON_EN_CHANGE(IDC_EDIT_SEQUENCE_NAME,      &CCtrlPatterns::OnSequenceNameChanged)
+	ON_EN_CHANGE(IDC_EDIT_SEQNUM,             &CCtrlPatterns::OnSequenceNumChanged)
+	ON_NOTIFY(TBN_DROPDOWN, IDC_TOOLBAR1,     &CCtrlPatterns::OnTbnDropDownToolBar)
+	ON_UPDATE_COMMAND_UI(IDC_PATTERN_RECORD,  &CCtrlPatterns::OnUpdateRecord)
 	//}}AFX_MSG_MAP
 	ON_WM_MOUSEWHEEL()
 END_MESSAGE_MAP()
@@ -111,6 +116,8 @@ ModSequence &CCtrlPatterns::Order() { return m_sndFile.Order(); }
 CCtrlPatterns::CCtrlPatterns(CModControlView &parent, CModDoc &document)
     : CModControlDlg(parent, document), m_OrderList(*this, document)
 {
+	m_BtnPrev.SetAccessibleText(_T("Select Previous Order"));
+	m_BtnNext.SetAccessibleText(_T("Select Next Order"));
 	m_bVUMeters = TrackerSettings::Instance().gbPatternVUMeters;
 	m_bPluginNames = TrackerSettings::Instance().gbPatternPluginNames;
 	m_bRecord = TrackerSettings::Instance().gbPatternRecord;
@@ -122,30 +129,32 @@ BOOL CCtrlPatterns::OnInitDialog()
 	CRect rect, rcOrderList;
 	CMainFrame *pMainFrm = CMainFrame::GetMainFrame();
 	CModControlDlg::OnInitDialog();
-	EnableToolTips();
 
 	if(!pMainFrm)
 		return TRUE;
 	SetRedraw(FALSE);
 	LockControls();
 	// Order List
+	const int cyHScroll = HighDPISupport::GetSystemMetrics(SM_CYHSCROLL, GetDPI());
 	m_BtnNext.GetWindowRect(&rect);
 	ScreenToClient(&rect);
-	auto margins = Util::ScalePixels(4, m_hWnd);
+	auto margins = HighDPISupport::ScalePixels(4, m_hWnd);
 	rcOrderList.left = rect.right + margins;
 	rcOrderList.top = rect.top;
-	rcOrderList.bottom = rect.bottom + GetSystemMetrics(SM_CYHSCROLL);
+	rcOrderList.bottom = rect.bottom + cyHScroll;
 	GetClientRect(&rect);
 	rcOrderList.right = rect.right - margins;
-	m_OrderList.Init(rcOrderList, pMainFrm->GetGUIFont());
+	m_OrderList.Init(rcOrderList);
 	// Toolbar buttons
 	m_ToolBar.Init(CMainFrame::GetMainFrame()->m_PatternIcons, CMainFrame::GetMainFrame()->m_PatternIconsDisabled);
-	m_ToolBar.AddButton(IDC_PATTERN_NEW, TIMAGE_PATTERN_NEW);
+	m_ToolBar.SetExtendedStyle(m_ToolBar.GetExtendedStyle() | TBSTYLE_EX_DRAWDDARROWS);
+	m_ToolBar.AddButton(IDC_PATTERN_NEW, TIMAGE_PATTERN_NEW, TBSTYLE_BUTTON | TBSTYLE_DROPDOWN);
 	m_ToolBar.AddButton(IDC_PATTERN_PLAY, TIMAGE_PATTERN_PLAY);
 	m_ToolBar.AddButton(IDC_PATTERN_PLAYFROMSTART, TIMAGE_PATTERN_RESTART);
 	m_ToolBar.AddButton(IDC_PATTERN_STOP, TIMAGE_PATTERN_STOP);
 	m_ToolBar.AddButton(ID_PATTERN_PLAYROW, TIMAGE_PATTERN_PLAYROW);
 	m_ToolBar.AddButton(IDC_PATTERN_RECORD, TIMAGE_PATTERN_RECORD, TBSTYLE_CHECK, (m_bRecord ? TBSTATE_CHECKED : 0) | TBSTATE_ENABLED);
+	m_ToolBar.AddButton(IDC_METRONOME, TIMAGE_METRONOME, TBSTYLE_CHECK | TBSTYLE_DROPDOWN, (TrackerSettings::Instance().metronomeEnabled ? TBSTATE_CHECKED : 0) | TBSTATE_ENABLED);
 	m_ToolBar.AddButton(ID_SEPARATOR, 0, TBSTYLE_SEP);
 	m_ToolBar.AddButton(ID_PATTERN_VUMETERS, TIMAGE_PATTERN_VUMETERS, TBSTYLE_CHECK, (m_bVUMeters ? TBSTATE_CHECKED : 0) | TBSTATE_ENABLED);
 	m_ToolBar.AddButton(ID_VIEWPLUGNAMES, TIMAGE_PATTERN_PLUGINS, TBSTYLE_CHECK, (m_bPluginNames ? TBSTATE_CHECKED : 0) | TBSTATE_ENABLED);
@@ -160,11 +169,9 @@ BOOL CCtrlPatterns::OnInitDialog()
 	m_ToolBar.AddButton(ID_PATTERN_SHRINK, TIMAGE_PATTERN_SHRINK);
 	//	m_ToolBar.AddButton(ID_PATTERN_AMPLIFY, TIMAGE_SAMPLE_AMPLIFY);
 	m_ToolBar.AddButton(ID_SEPARATOR, 0, TBSTYLE_SEP);
-	m_ToolBar.AddButton(ID_PATTERNDETAIL_LO, TIMAGE_PATTERN_DETAIL_LO, TBSTYLE_CHECK, TBSTATE_ENABLED);
-	m_ToolBar.AddButton(ID_PATTERNDETAIL_MED, TIMAGE_PATTERN_DETAIL_MED, TBSTYLE_CHECK, TBSTATE_ENABLED);
-	m_ToolBar.AddButton(ID_PATTERNDETAIL_HI, TIMAGE_PATTERN_DETAIL_HI, TBSTYLE_CHECK, TBSTATE_ENABLED | TBSTATE_CHECKED);
+	m_ToolBar.AddButton(ID_PATTERNDETAIL_DROPDOWN, TIMAGE_PATTERN_DETAIL, TBSTYLE_BUTTON | TBSTYLE_DROPDOWN);
 	m_ToolBar.AddButton(ID_SEPARATOR, 0, TBSTYLE_SEP);
-	m_ToolBar.AddButton(ID_OVERFLOWPASTE, TIMAGE_PATTERN_OVERFLOWPASTE, TBSTYLE_CHECK, ((TrackerSettings::Instance().m_dwPatternSetup & PATTERN_OVERFLOWPASTE) ? TBSTATE_CHECKED : 0) | TBSTATE_ENABLED);
+	m_ToolBar.AddButton(ID_OVERFLOWPASTE, TIMAGE_PATTERN_OVERFLOWPASTE, TBSTYLE_CHECK, ((TrackerSettings::Instance().patternSetup & PatternSetup::OverflowPaste) ? TBSTATE_CHECKED : 0) | TBSTATE_ENABLED);
 
 	m_EditPatName.SetLimitText(MAX_PATTERNNAME - 1);
 	// Spin controls
@@ -175,7 +182,7 @@ BOOL CCtrlPatterns::OnInitDialog()
 	m_SpinInstrument.SetPos(0);
 
 	SetDlgItemInt(IDC_EDIT_SPACING, TrackerSettings::Instance().gnPatternSpacing);
-	CheckDlgButton(IDC_PATTERN_FOLLOWSONG, !(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_FOLLOWSONGOFF));
+	CheckDlgButton(IDC_PATTERN_FOLLOWSONG, (TrackerSettings::Instance().patternSetup & PatternSetup::FollowSongOffByDefault) ? BST_UNCHECKED : BST_CHECKED);
 
 	m_SpinSequence.SetRange32(1, m_sndFile.Order.GetNumSequences());
 	m_SpinSequence.SetPos(m_sndFile.Order.GetCurrentSequenceIndex() + 1);
@@ -183,17 +190,26 @@ BOOL CCtrlPatterns::OnInitDialog()
 
 	m_OrderList.SetFocus();
 
-	UpdateView(PatternHint().Names().ModType(), NULL);
+	UpdateView(PatternHint().Names().ModType(), nullptr);
 	RecalcLayout();
 
-	m_bInitialized = TRUE;
+	m_initialized = true;
 	UnlockControls();
 
 	SetRedraw(TRUE);
 	return FALSE;
 }
 
+
+void CCtrlPatterns::OnDPIChanged()
+{
+	m_ToolBar.OnDPIChanged();
+	CModControlDlg::OnDPIChanged();
+}
+
+
 Setting<LONG> &CCtrlPatterns::GetSplitPosRef() { return TrackerSettings::Instance().glPatternWindowHeight; }
+
 
 void CCtrlPatterns::RecalcLayout()
 {
@@ -202,11 +218,11 @@ void CCtrlPatterns::RecalcLayout()
 	{
 		CRect rect;
 		int cx, cy, cellcx;
-
+		int cyHScroll = HighDPISupport::GetSystemMetrics(SM_CYHSCROLL, GetDPI());
 		m_BtnNext.GetWindowRect(&rect);
 		ScreenToClient(&rect);
 		cx = -(rect.right + 4);
-		cy = rect.bottom - rect.top + GetSystemMetrics(SM_CYHSCROLL);
+		cy = rect.bottom - rect.top + cyHScroll;
 		GetClientRect(&rect);
 		cx += rect.right - 8;
 		cellcx = m_OrderList.GetFontWidth();
@@ -215,7 +231,7 @@ void CCtrlPatterns::RecalcLayout()
 		cx += 2;
 		if((cx > 0) && (cy > 0))
 		{
-			m_OrderList.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOMOVE | SWP_NOZORDER | SWP_DRAWFRAME);
+			m_OrderList.SetWindowPos(nullptr, 0, 0, cx, cy, SWP_NOMOVE | SWP_NOZORDER | SWP_DRAWFRAME);
 		}
 	}
 }
@@ -265,7 +281,6 @@ void CCtrlPatterns::UpdateView(UpdateHint hint, CObject *pObj)
 	if(hintType[HINT_MPTOPTIONS])
 	{
 		m_ToolBar.UpdateStyle();
-		m_ToolBar.SetState(ID_OVERFLOWPASTE, ((TrackerSettings::Instance().m_dwPatternSetup & PATTERN_OVERFLOWPASTE) ? TBSTATE_CHECKED : 0) | TBSTATE_ENABLED);
 	}
 
 	bool instrPluginsChanged = false;
@@ -428,7 +443,7 @@ LRESULT CCtrlPatterns::OnModCtrlMsg(WPARAM wParam, LPARAM lParam)
 
 	case CTRLMSG_FORCEREFRESH:
 		//refresh GUI
-		m_OrderList.InvalidateRect(NULL, FALSE);
+		m_OrderList.InvalidateRect(nullptr, FALSE);
 		break;
 
 	case CTRLMSG_GETCURRENTORDER:
@@ -443,7 +458,6 @@ LRESULT CCtrlPatterns::OnModCtrlMsg(WPARAM wParam, LPARAM lParam)
 			SendViewMessage(VIEWMSG_FOLLOWSONG, IsDlgButtonChecked(IDC_PATTERN_FOLLOWSONG));
 			SendViewMessage(VIEWMSG_PATTERNLOOP, (m_sndFile.m_PlayState.m_flags[SONG_PATTERNLOOP]) ? TRUE : FALSE);
 			OnSpacingChanged();
-			SendViewMessage(VIEWMSG_SETDETAIL, m_nDetailLevel);
 			SendViewMessage(VIEWMSG_SETRECORD, m_bRecord);
 			SendViewMessage(VIEWMSG_SETVUMETERS, m_bVUMeters);
 			SendViewMessage(VIEWMSG_SETPLUGINNAMES, m_bPluginNames);
@@ -460,10 +474,23 @@ LRESULT CCtrlPatterns::OnModCtrlMsg(WPARAM wParam, LPARAM lParam)
 		break;
 
 	case CTRLMSG_SETRECORD:
-		if (lParam >= 0) m_bRecord = (BOOL)(lParam); else m_bRecord = !m_bRecord;
-		m_ToolBar.SetState(IDC_PATTERN_RECORD, ((m_bRecord) ? TBSTATE_CHECKED : 0)|TBSTATE_ENABLED);
-		TrackerSettings::Instance().gbPatternRecord = (m_bRecord != 0);
+		if(lParam >= 0)
+			m_bRecord = lParam != 0;
+		else
+			m_bRecord = !m_bRecord;
+		m_ToolBar.CheckButton(IDC_PATTERN_RECORD, m_bRecord ? TRUE : FALSE);
+		TrackerSettings::Instance().gbPatternRecord = m_bRecord;
 		SendViewMessage(VIEWMSG_SETRECORD, m_bRecord);
+		break;
+
+	case CTRLMSG_TOGGLE_METRONOME:
+		m_ToolBar.CheckButton(IDC_METRONOME, m_ToolBar.IsButtonChecked(IDC_METRONOME) ? FALSE : TRUE);
+		OnToggleMetronome();
+		break;
+
+	case CTRLMSG_TOGGLE_OVERFLOW_PASTE:
+		m_ToolBar.CheckButton(ID_OVERFLOWPASTE, m_ToolBar.IsButtonChecked(ID_OVERFLOWPASTE) ? FALSE : TRUE);
+		OnToggleOverflowPaste();
 		break;
 
 	case CTRLMSG_PREVORDER:
@@ -474,14 +501,13 @@ LRESULT CCtrlPatterns::OnModCtrlMsg(WPARAM wParam, LPARAM lParam)
 		m_OrderList.SetCurSel(Order().GetNextOrderIgnoringSkips(m_OrderList.GetCurSel(true).firstOrd), true);
 		break;
 
-	//rewbs.customKeys
 	case CTRLMSG_PAT_FOLLOWSONG:
 		// parameters: 0 = turn off, 1 = toggle
 		{
-			UINT state = FALSE;
+			UINT state = BST_UNCHECKED;
 			if(lParam == 1)	// toggle
 			{
-				state = !IsDlgButtonChecked(IDC_PATTERN_FOLLOWSONG);
+				state = (IsDlgButtonChecked(IDC_PATTERN_FOLLOWSONG) == BST_UNCHECKED) ? BST_CHECKED : BST_UNCHECKED;
 			}
 			CheckDlgButton(IDC_PATTERN_FOLLOWSONG, state);
 			OnFollowSong();
@@ -515,6 +541,11 @@ LRESULT CCtrlPatterns::OnModCtrlMsg(WPARAM wParam, LPARAM lParam)
 	case CTRLMSG_PAT_SETSEQUENCE:
 		m_OrderList.SelectSequence(static_cast<SEQUENCEINDEX>(lParam));
 		UpdateView(SequenceHint(static_cast<SEQUENCEINDEX>(lParam)).Names(), nullptr);
+		break;
+
+	case CTRLMSG_PAT_UPDATE_TOOLBAR:
+		m_ToolBar.CheckButton(ID_OVERFLOWPASTE, (TrackerSettings::Instance().patternSetup & PatternSetup::OverflowPaste) ? TRUE : FALSE);
+		m_ToolBar.CheckButton(IDC_METRONOME, TrackerSettings::Instance().metronomeEnabled ? TRUE : FALSE);
 		break;
 
 	default:
@@ -617,7 +648,7 @@ void CCtrlPatterns::OnActivatePage(LPARAM lParam)
 		CChildFrame *pFrame = (CChildFrame *)GetParentFrame();
 
 		// Restore all save pattern state, except pattern number which we might have just set.
-		PATTERNVIEWSTATE &patternViewState = pFrame->GetPatternViewState();
+		PatternViewState &patternViewState = pFrame->GetPatternViewState();
 		if(patternViewState.initialOrder != ORDERINDEX_INVALID)
 		{
 			if(CMainFrame::GetMainFrame()->GetModPlaying() != &m_modDoc)
@@ -706,7 +737,7 @@ void CCtrlPatterns::OnInstrumentChanged()
 	if(n >= 0)
 	{
 		n = static_cast<int>(m_CbnInstrument.GetItemData(n));
-		int nmax = (m_sndFile.m_nInstruments) ? m_sndFile.m_nInstruments : m_sndFile.m_nSamples;
+		int nmax = m_sndFile.GetNumInstruments() ? m_sndFile.GetNumInstruments() : m_sndFile.GetNumSamples();
 		if((n >= 0) && (n <= nmax) && (n != (int)m_nInstrument))
 		{
 			m_nInstrument = static_cast<INSTRUMENTINDEX>(n);
@@ -798,8 +829,8 @@ void CCtrlPatterns::OnPatternNew()
 		m_OrderList.Invalidate(FALSE);
 		SetCurrentPattern(newPat);
 		m_modDoc.SetModified();
-		m_modDoc.UpdateAllViews(NULL, PatternHint(newPat).Names(), this);
-		m_modDoc.UpdateAllViews(NULL, SequenceHint().Data(), this);
+		m_modDoc.UpdateAllViews(nullptr, PatternHint(newPat).Names(), this);
+		m_modDoc.UpdateAllViews(nullptr, SequenceHint().Data(), this);
 		SwitchToView();
 	}
 }
@@ -1027,30 +1058,28 @@ void CCtrlPatterns::OnPatternStop()
 
 void CCtrlPatterns::OnPatternPlay()
 {
-	m_modDoc.OnPatternPlay();
+	if(CMainFrame::GetMainFrame()->GetInputHandler()->ShiftPressed())
+		m_modDoc.OnPatternPlayNoLoop();
+	else
+		m_modDoc.OnPatternPlay();
 	SwitchToView();
 }
 
-//rewbs.playSongFromCursor
-void CCtrlPatterns::OnPatternPlayNoLoop()
-{
-	m_modDoc.OnPatternPlayNoLoop();
-	SwitchToView();
-}
-//end rewbs.playSongFromCursor
 
 void CCtrlPatterns::OnPatternPlayFromStart()
 {
-	m_modDoc.OnPatternRestart();
+	if(CMainFrame::GetMainFrame()->GetInputHandler()->ShiftPressed())
+		m_modDoc.OnPatternRestart(false);
+	else
+		m_modDoc.OnPatternRestart();
 	SwitchToView();
 }
 
 
 void CCtrlPatterns::OnPatternRecord()
 {
-	UINT nState = m_ToolBar.GetState(IDC_PATTERN_RECORD);
-	m_bRecord = ((nState & TBSTATE_CHECKED) != 0);
-	TrackerSettings::Instance().gbPatternRecord = (m_bRecord != 0);
+	m_bRecord = m_ToolBar.IsButtonChecked(IDC_PATTERN_RECORD) != 0;
+	TrackerSettings::Instance().gbPatternRecord = m_bRecord;
 	SendViewMessage(VIEWMSG_SETRECORD, m_bRecord);
 	SwitchToView();
 }
@@ -1058,23 +1087,47 @@ void CCtrlPatterns::OnPatternRecord()
 
 void CCtrlPatterns::OnPatternVUMeters()
 {
-	UINT nState = m_ToolBar.GetState(ID_PATTERN_VUMETERS);
-	m_bVUMeters = ((nState & TBSTATE_CHECKED) != 0);
+	m_bVUMeters = m_ToolBar.IsButtonChecked(ID_PATTERN_VUMETERS) != 0;
 	TrackerSettings::Instance().gbPatternVUMeters = (m_bVUMeters != 0);
 	SendViewMessage(VIEWMSG_SETVUMETERS, m_bVUMeters);
 	SwitchToView();
 }
 
-//rewbs.patPlugName
+
 void CCtrlPatterns::OnPatternViewPlugNames()
 {
-	UINT nState = m_ToolBar.GetState(ID_VIEWPLUGNAMES);
-	m_bPluginNames = ((nState & TBSTATE_CHECKED) != 0);
+	m_bPluginNames = m_ToolBar.IsButtonChecked(ID_VIEWPLUGNAMES) != 0;
 	TrackerSettings::Instance().gbPatternPluginNames = (m_bPluginNames != 0);
 	SendViewMessage(VIEWMSG_SETPLUGINNAMES, m_bPluginNames);
 	SwitchToView();
 }
-//end rewbs.patPlugName
+
+
+void CCtrlPatterns::OnToggleOverflowPaste()
+{
+	TrackerSettings::Instance().patternSetup ^= PatternSetup::OverflowPaste;
+	theApp.PostMessageToAllViews(WM_MOD_CTRLMSG, CTRLMSG_PAT_UPDATE_TOOLBAR);
+	SwitchToView();
+}
+
+
+void CCtrlPatterns::OnToggleMetronome()
+{
+	bool enableMetronome = m_ToolBar.IsButtonChecked(IDC_METRONOME) != 0;
+	TrackerSettings::Instance().metronomeEnabled = enableMetronome;
+	CMainFrame::GetMainFrame()->UpdateMetronomeSamples();
+	theApp.PostMessageToAllViews(WM_MOD_CTRLMSG, CTRLMSG_PAT_UPDATE_TOOLBAR);
+	SwitchToView();
+}
+
+
+void CCtrlPatterns::OnMetronomeSettings()
+{
+	MetronomeSettingsDlg dlg{this};
+	dlg.DoModal();
+	SwitchToView();
+}
+
 
 void CCtrlPatterns::OnPatternProperties()
 {
@@ -1177,7 +1230,7 @@ void CCtrlPatterns::OnPatternNameChanged()
 			{
 				if(m_sndFile.GetType() & (MOD_TYPE_XM | MOD_TYPE_IT | MOD_TYPE_MPT))
 					m_modDoc.SetModified();
-				m_modDoc.UpdateAllViews(NULL, PatternHint(nPat).Names(), this);
+				m_modDoc.UpdateAllViews(nullptr, PatternHint(nPat).Names(), this);
 			}
 		}
 	}
@@ -1207,51 +1260,79 @@ void CCtrlPatterns::OnChordEditor()
 }
 
 
-void CCtrlPatterns::OnDetailLo()
+void CCtrlPatterns::OnTbnDropDownToolBar(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	m_ToolBar.SetState(ID_PATTERNDETAIL_LO, TBSTATE_CHECKED | TBSTATE_ENABLED);
-	if(m_nDetailLevel != PatternCursor::instrColumn)
+	CInputHandler *ih = CMainFrame::GetInputHandler();
+	NMTOOLBAR *pToolBar = reinterpret_cast<NMTOOLBAR *>(pNMHDR);
+	ClientToScreen(&(pToolBar->rcButton));
+	const int offset = HighDPISupport::ScalePixels(4, m_hWnd);  // Compared to the main toolbar, the offset seems to be a bit wrong here...?
+	int x = pToolBar->rcButton.left + offset, y = pToolBar->rcButton.bottom + offset;
+	const auto visibleColumns = std::bitset<PatternCursor::numColumns>{static_cast<unsigned long>(SendViewMessage(VIEWMSG_GETDETAIL))};
+	CMenu menu;
+	switch(pToolBar->iItem)
 	{
-		m_nDetailLevel = PatternCursor::instrColumn;
-		m_ToolBar.SetState(ID_PATTERNDETAIL_MED, TBSTATE_ENABLED);
-		m_ToolBar.SetState(ID_PATTERNDETAIL_HI, TBSTATE_ENABLED);
-		SendViewMessage(VIEWMSG_SETDETAIL, m_nDetailLevel);
+	case IDC_PATTERN_NEW:
+		menu.CreatePopupMenu();
+		menu.AppendMenu(MF_STRING, ID_ORDERLIST_COPY, ih->GetKeyTextFromCommand(kcDuplicatePattern, _T("&Duplicate Pattern")));
+		menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
+		menu.DestroyMenu();
+		break;
+
+	case IDC_METRONOME:
+		menu.CreatePopupMenu();
+		menu.AppendMenu(MF_STRING, ID_METRONOME_SETTINGS, _T("&Metronome Settings"));
+		menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
+		menu.DestroyMenu();
+		break;
+
+	case ID_PATTERNDETAIL_DROPDOWN:
+		menu.CreatePopupMenu();
+		menu.AppendMenu(MF_STRING | (visibleColumns[PatternCursor::instrColumn] ? MF_CHECKED : 0), ID_PATTERNDETAIL_INSTR, ih->GetKeyTextFromCommand(kcToggleVisibilityInstrColumn, _T("Show &Instrument Column")));
+		menu.AppendMenu(MF_STRING | (visibleColumns[PatternCursor::volumeColumn] ? MF_CHECKED : 0), ID_PATTERNDETAIL_VOLUME, ih->GetKeyTextFromCommand(kcToggleVisibilityVolumeColumn, _T("Show &Volume Column")));
+		menu.AppendMenu(MF_STRING | (visibleColumns[PatternCursor::effectColumn] ? MF_CHECKED : 0), ID_PATTERNDETAIL_EFFECT, ih->GetKeyTextFromCommand(kcToggleVisibilityEffectColumn, _T("Show &Effect Column")));
+		menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
+		menu.DestroyMenu();
+		break;
 	}
+	*pResult = 0;
+}
+
+
+void CCtrlPatterns::OnDetailSwitch()
+{
+	// Cycle through all bit combinations
+	auto visibleColumns = std::bitset<PatternCursor::numColumns>{static_cast<unsigned long>(SendViewMessage(VIEWMSG_GETDETAIL) + 1)};
+	visibleColumns.set(PatternCursor::noteColumn);
+	visibleColumns.set(PatternCursor::paramColumn, visibleColumns[PatternCursor::effectColumn]);
+	SendViewMessage(VIEWMSG_SETDETAIL, visibleColumns.to_ulong());
 	SwitchToView();
 }
 
 
-void CCtrlPatterns::OnDetailMed()
+void CCtrlPatterns::OnDetailInstr()
 {
-	m_ToolBar.SetState(ID_PATTERNDETAIL_MED, TBSTATE_CHECKED | TBSTATE_ENABLED);
-	if(m_nDetailLevel != PatternCursor::volumeColumn)
-	{
-		m_nDetailLevel = PatternCursor::volumeColumn;
-		m_ToolBar.SetState(ID_PATTERNDETAIL_LO, TBSTATE_ENABLED);
-		m_ToolBar.SetState(ID_PATTERNDETAIL_HI, TBSTATE_ENABLED);
-		SendViewMessage(VIEWMSG_SETDETAIL, m_nDetailLevel);
-	}
+	auto visibleColumns = std::bitset<PatternCursor::numColumns>{static_cast<unsigned long>(SendViewMessage(VIEWMSG_GETDETAIL))};
+	visibleColumns.flip(PatternCursor::instrColumn);
+	SendViewMessage(VIEWMSG_SETDETAIL, visibleColumns.to_ulong());
 	SwitchToView();
 }
 
 
-void CCtrlPatterns::OnDetailHi()
+void CCtrlPatterns::OnDetailVolume()
 {
-	m_ToolBar.SetState(ID_PATTERNDETAIL_HI, TBSTATE_CHECKED | TBSTATE_ENABLED);
-	if(m_nDetailLevel != PatternCursor::lastColumn)
-	{
-		m_nDetailLevel = PatternCursor::lastColumn;
-		m_ToolBar.SetState(ID_PATTERNDETAIL_LO, TBSTATE_ENABLED);
-		m_ToolBar.SetState(ID_PATTERNDETAIL_MED, TBSTATE_ENABLED);
-		SendViewMessage(VIEWMSG_SETDETAIL, m_nDetailLevel);
-	}
+	auto visibleColumns = std::bitset<PatternCursor::numColumns>{static_cast<unsigned long>(SendViewMessage(VIEWMSG_GETDETAIL))};
+	visibleColumns.flip(PatternCursor::volumeColumn);
+	SendViewMessage(VIEWMSG_SETDETAIL, visibleColumns.to_ulong());
 	SwitchToView();
 }
 
-void CCtrlPatterns::OnToggleOverflowPaste()
+
+void CCtrlPatterns::OnDetailEffect()
 {
-	TrackerSettings::Instance().m_dwPatternSetup ^= PATTERN_OVERFLOWPASTE;
-	UpdateView(UpdateHint().MPTOptions());
+	auto visibleColumns = std::bitset<PatternCursor::numColumns>{static_cast<unsigned long>(SendViewMessage(VIEWMSG_GETDETAIL))};
+	visibleColumns.flip(PatternCursor::effectColumn);
+	visibleColumns.flip(PatternCursor::paramColumn);
+	SendViewMessage(VIEWMSG_SETDETAIL, visibleColumns.to_ulong());
 	SwitchToView();
 }
 
@@ -1291,73 +1372,53 @@ void CCtrlPatterns::OnXButtonUp(UINT nFlags, UINT nButton, CPoint point)
 }
 
 
-BOOL CCtrlPatterns::OnToolTip(UINT /*id*/, NMHDR *pNMHDR, LRESULT * /*pResult*/)
+CString CCtrlPatterns::GetToolTipText(UINT id, HWND) const
 {
-	TOOLTIPTEXT *pTTT = (TOOLTIPTEXT *)pNMHDR;
-	UINT_PTR nID = pNMHDR->idFrom;
-	if(pTTT->uFlags & TTF_IDISHWND)
-	{
-		// idFrom is actually the HWND of the tool
-		nID = ::GetDlgCtrlID((HWND)nID);
-		if(nID)
-		{
-			pTTT->lpszText = MAKEINTRESOURCE(nID);
-			pTTT->hinst = AfxGetResourceHandle();
-			return TRUE;
-		}
-	}
-
-	return FALSE;
-}
-
-
-BOOL CCtrlPatterns::GetToolTipText(UINT id, LPTSTR str)
-{
-	CString fmt;
-	const TCHAR *s = nullptr;
+	CString s;
 	CommandID cmd = kcNull;
 	switch(id)
 	{
 	case IDC_PATTERN_NEW: s = _T("Insert Pattern"); cmd = kcNewPattern; break;
-	case IDC_PATTERN_PLAY: s = _T("Play Pattern"); cmd = kcPlayPatternFromCursor; break;
-	case IDC_PATTERN_PLAYFROMSTART: s = _T("Replay Pattern"); cmd = kcPlayPatternFromStart; break;
+	case IDC_PATTERN_PLAY: s = _T("Play Pattern (Shift-click to play song from cursor)"); cmd = kcPlayPatternFromCursor; break;
+	case IDC_PATTERN_PLAYFROMSTART: s = _T("Replay Pattern (Shift-click to play song from start of pattern)"); cmd = kcPlayPatternFromStart; break;
 	case IDC_PATTERN_STOP: s = _T("Stop"); cmd = kcPauseSong; break;
 	case ID_PATTERN_PLAYROW: s = _T("Play Row"); cmd = kcPatternPlayRow; break;
 	case IDC_PATTERN_RECORD: s = _T("Record"); cmd = kcPatternRecord; break;
+	case IDC_METRONOME: s = _T("Metronome"); cmd = kcToggleMetronome; break;
 	case ID_PATTERN_VUMETERS: s = _T("VU-Meters"); break;
 	case ID_VIEWPLUGNAMES: s = _T("Show Plugins"); break;
 	case ID_PATTERN_CHANNELMANAGER: s = _T("Channel Manager"); cmd = kcViewChannelManager; break;
 	case ID_PATTERN_MIDIMACRO: s = _T("Zxx Macro Configuration"); cmd = kcShowMacroConfig; break;
 	case ID_PATTERN_CHORDEDIT: s = _T("Chord Editor"); cmd = kcChordEditor; break;
 	case ID_EDIT_UNDO:
-		fmt = _T("Undo");
+		s = _T("Undo");
 		if(m_modDoc.GetPatternUndo().CanUndo())
-			fmt += _T(" ") + m_modDoc.GetPatternUndo().GetUndoName();
+			s += _T(" ") + m_modDoc.GetPatternUndo().GetUndoName();
 		cmd = kcEditUndo;
 		break;
 	case ID_PATTERN_PROPERTIES: s = _T("Pattern Properties"); cmd = kcShowPatternProperties; break;
 	case ID_PATTERN_EXPAND: s = _T("Expand Pattern"); break;
 	case ID_PATTERN_SHRINK: s = _T("Shrink Pattern"); break;
-	case ID_PATTERNDETAIL_LO: s = _T("Low Pattern Detail Level"); break;
-	case ID_PATTERNDETAIL_MED: s = _T("Medium Pattern Detail Level"); break;
-	case ID_PATTERNDETAIL_HI: s = _T("High Pattern Detail Level"); break;
+	case ID_PATTERNDETAIL_DROPDOWN: s = _T("Change Pattern Detail Level"); break;
 	case ID_OVERFLOWPASTE: s = _T("Toggle Overflow Paste"); cmd = kcToggleOverflowPaste; break;
 	case IDC_PATTERN_LOOP: s = _T("Toggle Loop Pattern"); cmd = kcChangeLoopStatus; break;
 	case IDC_PATTERN_FOLLOWSONG: s = _T("Toggle Follow Song"); cmd = kcToggleFollowSong; break;
-	default:
-		return FALSE;
+
+	case IDC_SPIN_SEQNUM:
+	case IDC_EDIT_SEQNUM:
+	case IDC_EDIT_SEQUENCE_NAME:
+		if(!GetDlgItem(id)->IsWindowEnabled())
+			s = _T("Multiple sequences are only supported in the MPTM format.");
+		break;
 	}
 
-	if(s != nullptr)
-		fmt = s;
 	if(cmd != kcNull)
 	{
 		auto keyText = CMainFrame::GetInputHandler()->m_activeCommandSet->GetKeyTextFromCommand(cmd, 0);
 		if(!keyText.IsEmpty())
-			fmt += MPT_CFORMAT(" ({})")(keyText);
+			s += MPT_CFORMAT(" ({})")(keyText);
 	}
-	_tcscpy(str, fmt.GetString());
-	return TRUE;
+	return s;
 }
 
 

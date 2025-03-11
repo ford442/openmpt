@@ -100,6 +100,9 @@
     <Filter Include="src\mpt\io_write">
       <UniqueIdentifier>{BE6C5801-AA65-7753-D397-5CD8BFEF565F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\mpt\main">
+      <UniqueIdentifier>{C1DDD503-AD40-65A8-56C6-9D5E4208312B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\mpt\mutex">
       <UniqueIdentifier>{8FBB9C7E-FB7B-18B5-C4B6-613230365D91}</UniqueIdentifier>
     </Filter>
@@ -363,6 +366,9 @@
     <ClInclude Include="..\..\soundlib\MIDIEvents.h">
       <Filter>soundlib</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\soundlib\MIDIMacroParser.h">
+      <Filter>soundlib</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\soundlib\MIDIMacros.h">
       <Filter>soundlib</Filter>
     </ClInclude>
@@ -415,6 +421,9 @@
       <Filter>soundlib</Filter>
     </ClInclude>
     <ClInclude Include="..\..\soundlib\PlayState.h">
+      <Filter>soundlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\soundlib\PlaybackTest.h">
       <Filter>soundlib</Filter>
     </ClInclude>
     <ClInclude Include="..\..\soundlib\Resampler.h">
@@ -487,9 +496,6 @@
       <Filter>soundlib\plugins</Filter>
     </ClInclude>
     <ClInclude Include="..\..\soundlib\plugins\LFOPlugin.h">
-      <Filter>soundlib\plugins</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\soundlib\plugins\OpCodes.h">
       <Filter>soundlib\plugins</Filter>
     </ClInclude>
     <ClInclude Include="..\..\soundlib\plugins\PlugInterface.h">
@@ -924,6 +930,9 @@
     <ClInclude Include="..\..\src\mpt\io_write\buffer.hpp">
       <Filter>src\mpt\io_write</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\main\main.hpp">
+      <Filter>src\mpt\main</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\mutex\mutex.hpp">
       <Filter>src\mpt\mutex</Filter>
     </ClInclude>
@@ -1119,9 +1128,6 @@
     <ClInclude Include="..\..\src\openmpt\soundfile_write\wav_write.hpp">
       <Filter>src\openmpt\soundfile_write</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\test\PlaybackTest.h">
-      <Filter>test</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\test\TestTools.h">
       <Filter>test</Filter>
     </ClInclude>
@@ -1149,12 +1155,6 @@
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\common\Profiler.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\common\mptFileIO.cpp">
-      <Filter>common</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\common\mptFileTemporary.cpp">
       <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\common\mptFileType.cpp">
@@ -1280,6 +1280,9 @@
     <ClCompile Include="..\..\soundlib\Load_far.cpp">
       <Filter>soundlib</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\soundlib\Load_fc.cpp">
+      <Filter>soundlib</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\soundlib\Load_fmt.cpp">
       <Filter>soundlib</Filter>
     </ClCompile>
@@ -1376,10 +1379,16 @@
     <ClCompile Include="..\..\soundlib\Load_symmod.cpp">
       <Filter>soundlib</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\soundlib\Load_tcb.cpp">
+      <Filter>soundlib</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\soundlib\Load_uax.cpp">
       <Filter>soundlib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\soundlib\Load_ult.cpp">
+      <Filter>soundlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\soundlib\Load_unic.cpp">
       <Filter>soundlib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\soundlib\Load_wav.cpp">
@@ -1392,6 +1401,9 @@
       <Filter>soundlib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\soundlib\MIDIEvents.cpp">
+      <Filter>soundlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\soundlib\MIDIMacroParser.cpp">
       <Filter>soundlib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\soundlib\MIDIMacros.cpp">
@@ -1437,6 +1449,9 @@
       <Filter>soundlib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\soundlib\PlayState.cpp">
+      <Filter>soundlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\soundlib\PlaybackTest.cpp">
       <Filter>soundlib</Filter>
     </ClCompile>
     <ClCompile Include="..\..\soundlib\RowVisitor.cpp">
@@ -1585,9 +1600,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\openmpt\soundfile_write\wav_write.cpp">
       <Filter>src\openmpt\soundfile_write</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\test\PlaybackTest.cpp">
-      <Filter>test</Filter>
     </ClCompile>
     <ClCompile Include="..\..\test\TestToolsLib.cpp">
       <Filter>test</Filter>

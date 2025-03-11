@@ -13,8 +13,8 @@
 
 #include "openmpt/all/BuildSettings.hpp"
 
+#include "AccessibleControls.h"
 #include "Globals.h"
-#include "PatternCursor.h"
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -52,7 +52,7 @@ public:
 	COrderList(CCtrlPatterns &parent, CModDoc &document);
 
 public:
-	BOOL Init(const CRect&, HFONT hFont);
+	BOOL Init(const CRect &);
 	void UpdateView(UpdateHint hint, CObject *pObj = nullptr);
 	void InvalidateSelection();
 	PATTERNINDEX GetCurrentPattern() const;
@@ -141,13 +141,14 @@ protected:
 	bool EnsureEditable(ORDERINDEX ord);
 
 	//{{AFX_MSG(COrderList)
+	afx_msg LRESULT OnDPIChangedAfterParent(WPARAM, LPARAM);
 	afx_msg void OnPaint();
 	afx_msg BOOL OnEraseBkgnd(CDC *) { return TRUE; }
 	afx_msg void OnSetFocus(CWnd *);
 	afx_msg void OnKillFocus(CWnd *);
 	afx_msg void OnLButtonDown(UINT, CPoint);
 	afx_msg void OnLButtonDblClk(UINT, CPoint);
-	afx_msg void OnRButtonDown(UINT, CPoint);
+	afx_msg void OnRButtonUp(UINT, CPoint);
 	afx_msg void OnLButtonUp(UINT, CPoint);
 	afx_msg void OnMButtonDown(UINT, CPoint);
 	afx_msg void OnMouseMove(UINT, CPoint);
@@ -192,13 +193,12 @@ class CCtrlPatterns: public CModControlDlg
 	friend class COrderList;
 protected:
 	COrderList m_OrderList;
-	CButton m_BtnPrev, m_BtnNext;
+	AccessibleButton m_BtnPrev, m_BtnNext;
 	CComboBox m_CbnInstrument;
 	CEdit m_EditSpacing, m_EditPatName, m_EditSequence;
 	CSpinButtonCtrl m_SpinInstrument, m_SpinSpacing, m_SpinSequence;
 	CModControlBar m_ToolBar;
 	INSTRUMENTINDEX m_nInstrument = 0;
-	PatternCursor::Columns m_nDetailLevel = PatternCursor::lastColumn;  // Visible Columns
 	bool m_bRecord = false, m_bVUMeters = false, m_bPluginNames = false;
 	bool m_instrDropdownOpen = false;
 
@@ -224,11 +224,13 @@ public:
 	LRESULT OnModCtrlMsg(WPARAM wParam, LPARAM lParam) override;
 	void OnActivatePage(LPARAM) override;
 	void OnDeactivatePage() override;
-	BOOL GetToolTipText(UINT, LPTSTR) override;
+	CString GetToolTipText(UINT id, HWND hwnd) const override;
+	void OnDPIChanged() override;
 	//}}AFX_VIRTUAL
 protected:
 	//{{AFX_MSG(CCtrlPatterns)
-	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar *pScrollBar);
+	afx_msg void OnTbnDropDownToolBar(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnSequenceNext();
 	afx_msg void OnSequencePrev();
 	afx_msg void OnChannelManager();
@@ -239,7 +241,6 @@ protected:
 	afx_msg void OnPatternMerge();
 	afx_msg void OnPatternStop();
 	afx_msg void OnPatternPlay();
-	afx_msg void OnPatternPlayNoLoop();
 	afx_msg void OnPatternPlayRow();
 	afx_msg void OnPatternPlayFromStart();
 	afx_msg void OnPatternRecord();
@@ -251,6 +252,8 @@ protected:
 	afx_msg void OnPatternAmplify();
 	afx_msg void OnPatternCopy();
 	afx_msg void OnPatternPaste();
+	afx_msg void OnToggleMetronome();
+	afx_msg void OnMetronomeSettings();
 	afx_msg void OnFollowSong();
 	afx_msg void OnChangeLoopStatus();
 	// cppcheck-suppress duplInheritedMember
@@ -262,9 +265,10 @@ protected:
 	afx_msg void OnPatternNameChanged();
 	afx_msg void OnSequenceNameChanged();
 	afx_msg void OnChordEditor();
-	afx_msg void OnDetailLo();
-	afx_msg void OnDetailMed();
-	afx_msg void OnDetailHi();
+	afx_msg void OnDetailSwitch();
+	afx_msg void OnDetailInstr();
+	afx_msg void OnDetailVolume();
+	afx_msg void OnDetailEffect();
 	afx_msg void OnEditUndo();
 	afx_msg void OnUpdateRecord(CCmdUI *pCmdUI);
 	afx_msg void TogglePluginEditor();
@@ -280,7 +284,6 @@ private:
 public:
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnXButtonUp(UINT nFlags, UINT nButton, CPoint point);
-	afx_msg BOOL OnToolTip(UINT id, NMHDR *pTTTStruct, LRESULT *pResult);
 };
 
 OPENMPT_NAMESPACE_END

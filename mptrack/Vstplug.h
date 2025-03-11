@@ -37,10 +37,10 @@ class CVstPlugin final : public IMidiPlugin
 {
 protected:
 
-	bool m_maskCrashes;
-	HMODULE m_hLibrary;
+	const bool m_maskCrashes;
+	HMODULE m_hLibrary = nullptr;
 	Vst::AEffect &m_Effect;
-	Vst::ProcessProc m_pProcessFP = nullptr; // Function pointer to AEffect processReplacing if supported, else process.
+	Vst::ProcessProc m_pProcessFP = nullptr;  // Function pointer to AEffect processReplacing if supported, else process.
 
 	double lastBarStartPos = -1.0;
 	uint32 m_nSampleRate;
@@ -51,13 +51,13 @@ protected:
 	bool m_needIdle : 1;
 	bool m_positionChanged : 1;
 
-	VstEventQueue vstEvents;	// MIDI events that should be sent to the plugin
+	VstEventQueue vstEvents;  // MIDI events that should be sent to the plugin
 
-	Vst::VstTimeInfo timeInfo;
+	Vst::VstTimeInfo timeInfo{};
 
 public:
 
-	const bool isBridged : 1;		// True if our built-in plugin bridge is being used.
+	const bool isBridged : 1;  // True if our built-in plugin bridge is being used.
 
 private:
 
@@ -128,7 +128,7 @@ public:
 
 	PlugParamIndex GetNumParameters() const override;
 	PlugParamValue GetParameter(PlugParamIndex nIndex) override;
-	void SetParameter(PlugParamIndex nIndex, PlugParamValue fValue) override;
+	void SetParameter(PlugParamIndex nIndex, PlugParamValue fValue, PlayState * = nullptr, CHANNELINDEX = CHANNELINDEX_INVALID) override;
 
 	CString GetCurrentProgramName() override;
 	void SetCurrentProgramName(const CString &name) override;
@@ -158,14 +158,14 @@ public:
 	void SaveAllParameters() override;
 	void RestoreAllParameters(int32 program) override;
 	void Process(float *pOutL, float *pOutR, uint32 numFrames) override;
-	bool MidiSend(uint32 dwMidiCode) override;
-	bool MidiSysexSend(mpt::const_byte_span sysex) override;
+	using IMixPlugin::MidiSend;
+	bool MidiSend(mpt::const_byte_span midiData) override;
 	void HardAllNotesOff() override;
 	void NotifySongPlaying(bool playing) override;
 
 	void Resume() override;
 	void Suspend() override;
-	void PositionChanged() override { m_positionChanged = true; }
+	void PositionChanged() override;
 
 	// Check whether a VST parameter can be automated
 	bool CanAutomateParameter(PlugParamIndex index);

@@ -61,10 +61,12 @@ CFLAGS += $(CFLAGS_STDC)
 
 CPPFLAGS += -DNOMINMAX
 ifeq ($(MINGW_COMPILER),clang)
+CPPFLAGS += -D_UNICODE
 CXXFLAGS += -municode
 CFLAGS   += -municode
 LDFLAGS  += -mconsole -mthreads
 else
+CPPFLAGS += -D_UNICODE
 CXXFLAGS += -municode -mthreads
 CFLAGS   += -municode -mthreads
 LDFLAGS  += -mconsole
@@ -123,6 +125,8 @@ else
 $(error unknown WINDOWS_VERSION)
 endif
 
+MPT_COMPILER_NOALLOCAH=1
+
 ifneq ($(MINGW_COMPILER),clang)
 # See <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=115049>.
 MPT_COMPILER_NOIPARA=1
@@ -138,10 +142,14 @@ EXESUFFIX=.exe
 SOSUFFIX=.dll
 SOSUFFIXWINDOWS=1
 
+ALLOW_LGPL=0
+
 DYNLINK=0
 SHARED_LIB=1
 STATIC_LIB=0
 SHARED_SONAME=0
+
+ENABLE_DLL=1
 
 ifeq ($(HOST_FLAVOUR),MSYS2)
 
@@ -149,11 +157,19 @@ else
 
 IS_CROSS=1
 
+ifeq ($(ALLOW_LGPL),1)
+LOCAL_ZLIB=1
+LOCAL_MPG123=1
+LOCAL_OGG=1
+LOCAL_VORBIS=1
+else
 NO_ZLIB=1
 NO_MPG123=1
 NO_OGG=1
 NO_VORBIS=1
 NO_VORBISFILE=1
+endif
+
 NO_PORTAUDIO=1
 NO_PORTAUDIOCPP=1
 NO_PULSEAUDIO=1

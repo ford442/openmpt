@@ -68,17 +68,6 @@ OPENMPT_NAMESPACE_BEGIN
 bool SettingCacheCompleteFileBeforeLoading();
 
 
-// -----------------------------------------------------------------------------
-// MODULAR ModInstrument FIELD ACCESS : body content in InstrumentExtensions.cpp
-// -----------------------------------------------------------------------------
-#ifndef MODPLUG_NO_FILESAVE
-void WriteInstrumentHeaderStructOrField(ModInstrument * input, std::ostream &file, uint32 only_this_code = -1 /* -1 for all */, uint16 fixedsize = 0);
-#endif // !MODPLUG_NO_FILESAVE
-bool ReadInstrumentHeaderField(ModInstrument * input, uint32 fcode, uint16 fsize, FileReader &file);
-// --------------------------------------------------------------------------------------------
-// --------------------------------------------------------------------------------------------
-
-
 // Sample decompression routines in format-specific source files
 void AMSUnpack(mpt::const_byte_span source, mpt::byte_span dest, int8 packCharacter);
 uintptr_t DMFUnpack(FileReader &file, uint8 *psample, uint32 maxlen);
@@ -109,14 +98,14 @@ struct PatternCuePoint
 // Return values for GetLength()
 struct GetLengthType
 {
-	double     duration = 0.0;                 // Total time in seconds
-	ROWINDEX   lastRow = ROWINDEX_INVALID;     // Last parsed row (if no target is specified, this is the first row that is parsed twice, i.e. not the *last* played order)
-	ROWINDEX   endRow = ROWINDEX_INVALID;      // Last row before module loops (UNDEFINED if a target is specified)
-	ROWINDEX   startRow = 0;                   // First row of parsed subsong
-	ORDERINDEX lastOrder = ORDERINDEX_INVALID; // Last parsed order (see lastRow remark)
-	ORDERINDEX endOrder = ORDERINDEX_INVALID;  // Last order before module loops (UNDEFINED if a target is specified)
-	ORDERINDEX startOrder = 0;                 // First order of parsed subsong
-	bool       targetReached = false;          // True if the specified order/row combination or duration has been reached while going through the module
+	double     duration = 0.0;                     // Total time in seconds
+	ROWINDEX   restartRow = ROWINDEX_INVALID;      // First row to play after module loops (or last parsed row if target is specified; equal to target if it was found)
+	ROWINDEX   endRow = ROWINDEX_INVALID;          // Last row played before module loops (UNDEFINED if a target is specified)
+	ROWINDEX   startRow = 0;                       // First row of parsed subsong
+	ORDERINDEX restartOrder = ORDERINDEX_INVALID;  // First row to play after module loops (see restartRow remark)
+	ORDERINDEX endOrder = ORDERINDEX_INVALID;      // Last order played before module loops (UNDEFINED if a target is specified)
+	ORDERINDEX startOrder = 0;                     // First order of parsed subsong
+	bool       targetReached = false;              // True if the specified order/row combination or duration has been reached while going through the module
 };
 
 
@@ -403,6 +392,7 @@ struct PlaybackTestSettings
 class CSoundFile
 {
 	friend class GetLengthMemory;
+	friend class MIDIMacroParser;
 
 public:
 #ifdef MODPLUG_TRACKER
@@ -419,7 +409,6 @@ public:
 	//Tuning-->
 public:
 	static std::unique_ptr<CTuning> CreateTuning12TET(const mpt::ustring &name);
-	static CTuning *GetDefaultTuning() {return nullptr;}
 	CTuningCollection& GetTuneSpecificTunings() {return *m_pTuningsTuneSpecific;}
 
 	mpt::ustring GetNoteName(const ModCommand::NOTE note, const INSTRUMENTINDEX inst, const NoteName *noteNames = nullptr) const;
@@ -527,7 +516,7 @@ public:
 
 	ResamplingMode m_nResampling; // Resampling mode (if overriding the globally set resampling)
 	int32 m_nRepeatCount = 0;     // -1 means repeat infinitely.
-	ORDERINDEX m_nMaxOrderPosition;
+	ORDERINDEX m_restartOverridePos = 0, m_maxOrderPosition = 0;
 	std::vector<ModChannelSettings> ChnSettings;  // Initial channels settings
 	CPatternContainer Patterns;
 	ModSequenceSet Order;  // Pattern sequences (order lists)
@@ -745,6 +734,20 @@ public:
 
 protected:
 	void HandleRowTransitionEvents(bool nextPattern);
+
+	const ModSample *m_metronomeMeasure = nullptr;
+	const ModSample *m_metronomeBeat = nullptr;
+	ModChannel m_metronomeChn{};
+
+public:
+	void SetMetronomeSamples(const ModSample *measure, const ModSample *beat)
+	{
+		m_metronomeMeasure = measure;
+		m_metronomeBeat = beat;
+		m_metronomeChn.pModSample = nullptr;
+		m_metronomeChn.pCurrentSample = nullptr;
+	}
+	constexpr bool IsMetronomeEnabled() const noexcept { return m_metronomeMeasure || m_metronomeBeat; }
 #endif  // MODPLUG_TRACKER
 
 public:
@@ -807,6 +810,7 @@ public:
 	static ProbeResult ProbeFileHeaderDSym(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderETX(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderFAR(MemoryFileReader file, const uint64 *pfilesize);
+	static ProbeResult ProbeFileHeaderFC(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderFMT(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderFTM(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderGDM(MemoryFileReader file, const uint64 *pfilesize);
@@ -842,6 +846,8 @@ public:
 	static ProbeResult ProbeFileHeaderSTP(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderSTX(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderSymMOD(MemoryFileReader file, const uint64 *pfilesize);
+	static ProbeResult ProbeFileHeaderTCB(MemoryFileReader file, const uint64 *pfilesize);
+	static ProbeResult ProbeFileHeaderUNIC(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderULT(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderXM(MemoryFileReader file, const uint64 *pfilesize);
 	static ProbeResult ProbeFileHeaderXMF(MemoryFileReader file, const uint64 *pfilesize);
@@ -869,6 +875,7 @@ public:
 	bool ReadDSym(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadETX(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadFAR(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
+	bool ReadFC(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadFMT(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadFTM(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadGDM(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
@@ -904,6 +911,8 @@ public:
 	bool ReadSTP(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadSTX(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadSymMOD(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
+	bool ReadTCB(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
+	bool ReadUNIC(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadULT(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadXM(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
 	bool ReadXMF(FileReader &file, ModLoadingFlags loadFlags = loadCompleteModule);
@@ -927,18 +936,21 @@ public:
 	bool SaveMod(std::ostream &f) const;
 	bool SaveIT(std::ostream &f, const mpt::PathString &filename, bool compatibilityExport = false);
 	uint32 SaveMixPlugins(std::ostream *file=nullptr, bool bUpdate=true);
-	void WriteInstrumentPropertyForAllInstruments(uint32 code,  uint16 size, std::ostream &f, INSTRUMENTINDEX nInstruments) const;
-	void SaveExtendedInstrumentProperties(INSTRUMENTINDEX nInstruments, std::ostream &f) const;
+	void SaveExtendedInstrumentProperties(INSTRUMENTINDEX instr, MODTYPE forceType, std::ostream &f) const;
+	static void SaveExtendedInstrumentProperties(mpt::span<const ModInstrument * const> instruments, MODTYPE forceType, std::ostream &f, bool allInstruments);
 	void SaveExtendedSongProperties(std::ostream &f) const;
 #endif // MODPLUG_NO_FILESAVE
+	static void ReadExtendedInstrumentProperty(mpt::span<ModInstrument *> instruments, const uint32 code, FileReader &file);
 	bool LoadExtendedSongProperties(FileReader &file, bool ignoreChannelCount, bool* pInterpretMptMade = nullptr);
 	void LoadMPTMProperties(FileReader &file, uint16 cwtv);
 
+	static mpt::ustring GetImpulseTrackerVersion(uint16 cwtv, uint16 cmwt);
 	static mpt::ustring GetSchismTrackerVersion(uint16 cwtv, uint32 reserved);
 
-	// Reads extended instrument properties(XM/IT/MPTM).
+	// Reads extended instrument properties(XM/IT/MPTM/ITI/XI).
 	// Returns true if extended instrument properties were found.
-	bool LoadExtendedInstrumentProperties(FileReader &file);
+	bool LoadExtendedInstrumentProperties(FileReader &file) { return LoadExtendedInstrumentProperties(mpt::as_span(Instruments).subspan(1, GetNumInstruments()), file); }
+	static bool LoadExtendedInstrumentProperties(mpt::span<ModInstrument *> instruments, FileReader &file);
 
 	void SetDefaultPlaybackBehaviour(MODTYPE type);
 	static PlayBehaviourSet GetSupportedPlaybackBehaviour(MODTYPE type);
@@ -961,6 +973,7 @@ public:
 	// Real-time sound functions
 	void SuspendPlugins();
 	void ResumePlugins();
+	void UpdatePluginPositions();
 	void StopAllVsti();
 	void RecalculateGainForAllPlugs();
 	void ResetChannels();
@@ -975,6 +988,7 @@ public:
 	samplecount_t ReadOneTick();
 private:
 	void CreateStereoMix(int count);
+	bool MixChannel(int count, ModChannel &chn, CHANNELINDEX channel, bool doMix);
 public:
 	bool FadeSong(uint32 msec);
 private:
@@ -1007,6 +1021,7 @@ public:
 	void SetupNextRow(PlayState &playState, const bool patternLoop) const;
 	CHANNELINDEX GetNNAChannel(CHANNELINDEX nChn) const;
 	CHANNELINDEX CheckNNA(CHANNELINDEX nChn, uint32 instr, int note, bool forceCut);
+	void StopOldNNA(ModChannel &chn, CHANNELINDEX channel);
 	void NoteChange(ModChannel &chn, int note, bool bPorta = false, bool bResetEnv = true, bool bManual = false, CHANNELINDEX channelHint = CHANNELINDEX_INVALID) const;
 	void InstrumentChange(ModChannel &chn, uint32 instr, bool bPorta = false, bool bUpdVol = true, bool bResetEnv = true) const;
 	void ApplyInstrumentPanning(ModChannel &chn, const ModInstrument *instr, const ModSample *smp) const;
@@ -1068,6 +1083,7 @@ protected:
 	void ResetAutoSlides(ModChannel &chn) const;
 	void ProcessAutoSlides(PlayState &playState, CHANNELINDEX channel);
 	void UpdateS3MEffectMemory(ModChannel &chn, ModCommand::PARAM param) const;
+	void PortamentoFC(ModChannel &chn) const;
 	void PortamentoUp(CHANNELINDEX nChn, ModCommand::PARAM param, const bool doFinePortamentoAsRegular);
 	void PortamentoUp(PlayState &playState, CHANNELINDEX nChn, ModCommand::PARAM param, const bool doFinePortamentoAsRegular) const;
 	void PortamentoDown(CHANNELINDEX nChn, ModCommand::PARAM param, const bool doFinePortamentoAsRegular);
@@ -1084,6 +1100,8 @@ protected:
 	int16 CalculateFinetuneTarget(PATTERNINDEX pattern, ROWINDEX row, CHANNELINDEX channel) const;
 	void NoteSlide(ModChannel &chn, uint32 param, bool slideUp, bool retrig) const;
 	std::pair<uint16, bool> GetVolCmdTonePorta(const ModCommand &m, uint32 startTick) const;
+	bool TonePortamentoSharesEffectMemory() const;
+	void InitTonePortamento(ModChannel &chn, uint16 param) const;
 	void TonePortamento(CHANNELINDEX chn, uint16 param);
 	int32 TonePortamento(PlayState &playState, CHANNELINDEX nChn, uint16 param) const;
 	void TonePortamentoWithDuration(ModChannel &chn, uint16 param = uint16_max) const;
@@ -1119,17 +1137,15 @@ protected:
 
 	void ProcessMacroOnChannel(CHANNELINDEX nChn);
 	void ProcessMIDIMacro(PlayState &playState, CHANNELINDEX nChn, bool isSmooth, const MIDIMacroConfigData::Macro &macro, uint8 param = 0, PLUGINDEX plugin = 0);
-	void ParseMIDIMacro(PlayState &playState, CHANNELINDEX nChn, bool isSmooth, const mpt::span<const char> macro, mpt::span<uint8> &out, uint8 param = 0, PLUGINDEX plugin = 0) const;
-	static float CalculateSmoothParamChange(const PlayState &playState, float currentValue, float param);
 	void SendMIDIData(PlayState &playState, CHANNELINDEX nChn, bool isSmooth, const mpt::span<const uint8> macro, PLUGINDEX plugin);
 	void SendMIDINote(CHANNELINDEX chn, uint16 note, uint16 volume, IMixPlugin *plugin = nullptr);
 
 	int SetupChannelFilter(ModChannel &chn, bool bReset, int envModifier = 256) const;
 	int HandleNoteChangeFilter(ModChannel &chn) const;
 
-	void UpdateTimeSignature();
-
 public:
+	static float CalculateSmoothParamChange(const PlayState &playState, float currentValue, float param);
+
 	void DoFreqSlide(ModChannel &chn, int32 &period, int32 amount, bool isTonePorta = false) const;
 
 	// Convert frequency to IT cutoff (0...127)
@@ -1161,6 +1177,11 @@ public:
 	bool UseCombinedPortamentoCommands() const noexcept
 	{
 		return UseCombinedPortamentoCommands(GetType());
+	}
+
+	uint32 GlobalVolumeRange() const noexcept
+	{
+		return !(GetType() & (MOD_TYPE_IT | MOD_TYPE_MPT | MOD_TYPE_IMF | MOD_TYPE_J2B | MOD_TYPE_MID | MOD_TYPE_AMS | MOD_TYPE_DBM | MOD_TYPE_PTM | MOD_TYPE_MDL | MOD_TYPE_DTM)) ? 64 : 128;
 	}
 
 	bool DestroySample(SAMPLEINDEX nSample);
@@ -1259,14 +1280,17 @@ public:
 	void ProcessStereoSeparation(samplecount_t countChunk);
 
 private:
-	PLUGINDEX GetChannelPlugin(const PlayState &playState, CHANNELINDEX nChn, PluginMutePriority respectMutes) const;
+	PLUGINDEX GetChannelPlugin(const ModChannel &channel, CHANNELINDEX nChn, PluginMutePriority respectMutes) const;
 	static PLUGINDEX GetActiveInstrumentPlugin(const ModChannel &chn, PluginMutePriority respectMutes);
 	IMixPlugin *GetChannelInstrumentPlugin(const ModChannel &chn) const;
 
 public:
-	PLUGINDEX GetBestPlugin(const PlayState &playState, CHANNELINDEX nChn, PluginPriority priority, PluginMutePriority respectMutes) const;
+	PLUGINDEX GetBestPlugin(const ModChannel &channel, CHANNELINDEX nChn, PluginPriority priority, PluginMutePriority respectMutes) const;
 
+#if defined(MPT_ENABLE_PLAYBACK_TRACE)
 	PlaybackTest CreatePlaybackTest(PlaybackTestSettings settings);
+#endif // MPT_ENABLE_PLAYBACK_TRACE
+
 };
 
 
@@ -1281,22 +1305,10 @@ inline IMixPlugin* CSoundFile::GetInstrumentPlugin(INSTRUMENTINDEX instr) const 
 #endif // NO_PLUGINS
 
 
-///////////////////////////////////////////////////////////
-// Low-level Mixing functions
-
 #define FADESONGDELAY		100
 
 MPT_CONSTEXPRINLINE int8 MOD2XMFineTune(int v) { return static_cast<int8>(static_cast<uint8>(v) << 4); }
 MPT_CONSTEXPRINLINE int8 XM2MODFineTune(int v) { return static_cast<int8>(static_cast<uint8>(v) >> 4); }
-
-// Read instrument property with 'code' and 'size' from 'file' to instrument 'pIns'.
-void ReadInstrumentExtensionField(ModInstrument* pIns, const uint32 code, const uint16 size, FileReader &file);
-
-// Read instrument property with 'code' from 'file' to instrument 'pIns'.
-void ReadExtendedInstrumentProperty(ModInstrument* pIns, const uint32 code, FileReader &file);
-
-// Read extended instrument properties from 'file' to instrument 'pIns'.
-void ReadExtendedInstrumentProperties(ModInstrument* pIns, FileReader &file);
 
 
 OPENMPT_NAMESPACE_END

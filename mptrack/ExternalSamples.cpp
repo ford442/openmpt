@@ -13,6 +13,7 @@
 #include "FileDialog.h"
 #include "FolderScanner.h"
 #include "Moddoc.h"
+#include "MPTrackUtil.h"
 #include "Reporting.h"
 #include "resource.h"
 #include "TrackerSettings.h"
@@ -51,8 +52,8 @@ BOOL MissingExternalSamplesDlg::OnInitDialog()
 	// Initialize table
 	const CListCtrlEx::Header headers[] =
 	{
-		{ _T("Sample"),				128, LVCFMT_LEFT },
-		{ _T("External Filename"),	308, LVCFMT_LEFT },
+		{ _T("Sample"),            128, LVCFMT_LEFT },
+		{ _T("External Filename"), 308, LVCFMT_LEFT },
 	};
 	m_List.SetHeaders(headers);
 	m_List.SetExtendedStyle(m_List.GetExtendedStyle() | LVS_EX_FULLROWSELECT);
@@ -271,6 +272,8 @@ void ModifiedExternalSamplesDlg::GenerateList()
 
 		if(m_sndFile.GetSample(smp).uFlags[SMP_MODIFIED])
 			status = _T("modified");
+		else if(!m_sndFile.GetSample(smp).HasSampleData())
+			continue;  // Sample was already missing when the file was loaded, nothing we can do here
 		else if(!mpt::native_fs{}.is_file(m_sndFile.GetSamplePath(smp)))
 			status = _T("missing");
 		else

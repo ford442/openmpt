@@ -17,6 +17,7 @@
 #include "DialogBase.h"
 #include "ExceptionHandler.h"
 #include "FileDialog.h"
+#include "FolderScanner.h"
 #include "Globals.h"
 #include "Image.h"
 #include "InputHandler.h"
@@ -28,6 +29,7 @@
 #include "MPTrackWine.h"
 #include "PlugNotFoundDlg.h"
 #include "Reporting.h"
+#include "resource.h"
 #include "TrackerSettings.h"
 #include "UpdateCheck.h"
 #include "WelcomeDialog.h"
@@ -241,7 +243,7 @@ struct AllSoundDeviceComponents
 
 void CTrackApp::OnFileCloseAll()
 {
-	if(!(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_NOCLOSEDIALOG))
+	if(!(TrackerSettings::Instance().patternSetup & PatternSetup::NoCustomCloseDialog))
 	{
 		// Show modified documents window
 		CloseMainDialog dlg;
@@ -288,6 +290,30 @@ std::vector<CModDoc *> CTrackApp::GetOpenDocuments() const
 }
 
 
+void CTrackApp::UpdateAllViews(UpdateHint hint, CObject *pHint)
+{
+	if(auto *pDocTmpl = GetModDocTemplate())
+	{
+		for(auto &doc : *pDocTmpl)
+		{
+			doc->UpdateAllViews(nullptr, hint, pHint);
+		}
+	}
+}
+
+
+void CTrackApp::PostMessageToAllViews(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if(auto *pDocTmpl = GetModDocTemplate())
+	{
+		for(auto &doc : *pDocTmpl)
+		{
+			doc->PostMessageToAllViews(uMsg, wParam, lParam);
+		}
+	}
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 // Command Line options
 
@@ -303,6 +329,13 @@ public:
 #endif
 
 public:
+	CMPTCommandLineInfo()
+	{
+		std::vector<TCHAR> curDir(::GetCurrentDirectory(0, nullptr), _T('\0'));
+		::GetCurrentDirectory(static_cast<DWORD>(curDir.size()), curDir.data());
+		m_workingDir = mpt::PathString::FromNative(curDir.data());
+	}
+
 	void ParseParam(LPCTSTR param, BOOL isFlag, BOOL isLast) override
 	{
 		if(isFlag)
@@ -324,11 +357,14 @@ public:
 #endif
 		} else
 		{
-			m_fileNames.push_back(mpt::PathString::FromNative(param));
+			m_fileNames.push_back(mpt::RelativePathToAbsolute(mpt::PathString::FromNative(param), m_workingDir));
 			if(m_nShellCommand == FileNew) m_nShellCommand = FileOpen;
 		}
 		CCommandLineInfo::ParseParam(param, isFlag, isLast);
 	}
+
+protected:
+	mpt::PathString m_workingDir;
 };
 
 
@@ -619,15 +655,16 @@ MODTYPE CTrackApp::m_nDefaultDocType = MOD_TYPE_IT;
 
 BEGIN_MESSAGE_MAP(CTrackApp, CWinApp)
 	//{{AFX_MSG_MAP(CTrackApp)
-	ON_COMMAND(ID_FILE_NEW,		&CTrackApp::OnFileNew)
-	ON_COMMAND(ID_FILE_NEWMOD,	&CTrackApp::OnFileNewMOD)
-	ON_COMMAND(ID_FILE_NEWS3M,	&CTrackApp::OnFileNewS3M)
-	ON_COMMAND(ID_FILE_NEWXM,	&CTrackApp::OnFileNewXM)
-	ON_COMMAND(ID_FILE_NEWIT,	&CTrackApp::OnFileNewIT)
-	ON_COMMAND(ID_NEW_MPT,		&CTrackApp::OnFileNewMPT)
-	ON_COMMAND(ID_FILE_OPEN,	&CTrackApp::OnFileOpen)
-	ON_COMMAND(ID_FILE_CLOSEALL, &CTrackApp::OnFileCloseAll)
-	ON_COMMAND(ID_APP_ABOUT,	&CTrackApp::OnAppAbout)
+	ON_COMMAND(ID_FILE_NEW,       &CTrackApp::OnFileNew)
+	ON_COMMAND(ID_FILE_NEWMOD,    &CTrackApp::OnFileNewMOD_Amiga)
+	ON_COMMAND(ID_FILE_NEWMOD_PC, &CTrackApp::OnFileNewMOD_PC)
+	ON_COMMAND(ID_FILE_NEWS3M,    &CTrackApp::OnFileNewS3M)
+	ON_COMMAND(ID_FILE_NEWXM,     &CTrackApp::OnFileNewXM)
+	ON_COMMAND(ID_FILE_NEWIT,     &CTrackApp::OnFileNewIT)
+	ON_COMMAND(ID_NEW_MPT,        &CTrackApp::OnFileNewMPT)
+	ON_COMMAND(ID_FILE_OPEN,      &CTrackApp::OnFileOpen)
+	ON_COMMAND(ID_FILE_CLOSEALL,  &CTrackApp::OnFileCloseAll)
+	ON_COMMAND(ID_APP_ABOUT,      &CTrackApp::OnAppAbout)
 	ON_UPDATE_COMMAND_UI(ID_FILE_CLOSEALL, &CTrackApp::OnUpdateAnyDocsOpen)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -768,6 +805,12 @@ CDataRecoveryHandler *CTrackApp::GetDataRecoveryHandler()
 
 	bTriedOnce = TRUE;
 	return m_pDataRecoveryHandler;
+}
+
+
+CDocument *CTrackApp::OpenTemplateFile(const mpt::PathString &file) const
+{
+	return GetModDocTemplate()->OpenTemplateFile(file);
 }
 
 
@@ -997,7 +1040,7 @@ void CTrackApp::SetupPaths(bool overridePortable)
 
 void CTrackApp::CreatePaths()
 {
-	// Create missing diretories
+	// Create missing directories
 	if(!IsPortableMode())
 	{
 		if(!mpt::native_fs{}.is_directory(m_ConfigPath))
@@ -1018,22 +1061,27 @@ void CTrackApp::CreatePaths()
 
 		if(mpt::native_fs{}.is_directory(oldTunings))
 		{
-			const mpt::PathString searchPattern = oldTunings + P_("*.*");
-			WIN32_FIND_DATA FindFileData;
-			HANDLE hFind;
-			hFind = FindFirstFile(searchPattern.AsNative().c_str(), &FindFileData);
-			if(hFind != INVALID_HANDLE_VALUE)
+			FolderScanner scanner{oldTunings, FolderScanner::kOnlyFiles};
+			mpt::PathString fileName;
+			while(scanner.Next(fileName))
 			{
-				do
-				{
-					MoveConfigFile(mpt::PathString::FromNative(FindFileData.cFileName), P_("tunings\\"));
-				} while(FindNextFile(hFind, &FindFileData) != 0);
+				MoveConfigFile(fileName.GetFilename(), P_("tunings\\"));
 			}
-			FindClose(hFind);
 			RemoveDirectory(oldTunings.AsNative().c_str());
 		}
 	}
+}
 
+
+mpt::PathString CTrackApp::GetUserTemplatesPath() const
+{
+	return GetConfigPath() + P_("TemplateModules\\");
+}
+
+
+mpt::PathString CTrackApp::GetExampleSongsPath() const
+{
+	return GetInstallPath() + P_("ExampleSongs\\");
 }
 
 
@@ -1050,7 +1098,7 @@ static bool ProcessorCanRunCurrentBuild()
 	return true;
 }
 
-static bool SystemCanRunCurrentBuild() 
+static bool SystemCanRunCurrentBuild()
 {
 	if(mpt::OS::Windows::IsOriginal())
 	{
@@ -1274,75 +1322,37 @@ BOOL CTrackApp::InitInstanceImpl(CMPTCommandLineInfo &cmdInfo)
 	// requires SetupPaths+CreatePaths called
 	LoadStdProfileSettings(0);
 
-	// Set process priority class
-	#ifndef _DEBUG
-		SetPriorityClass(GetCurrentProcess(), TrackerSettings::Instance().MiscProcessPriorityClass);
-	#endif
+// Set process priority class
+#ifndef _DEBUG
+	SetPriorityClass(GetCurrentProcess(), TrackerSettings::Instance().MiscProcessPriorityClass);
+#endif
 
 	// Dynamic DPI-awareness. Some users might want to disable DPI-awareness because of their DPI-unaware VST plugins.
-	bool setDPI = false;
-	// For Windows 10, Creators Update (1703) and newer
+	switch(TrackerSettings::Instance().dpiAwareness)
 	{
-		mpt::Library user32(mpt::LibraryPath::System(P_("user32")));
-		if (user32.IsValid())
-		{
-			enum MPT_DPI_AWARENESS_CONTEXT
-			{
-				MPT_DPI_AWARENESS_CONTEXT_UNAWARE = -1,
-				MPT_DPI_AWARENESS_CONTEXT_SYSTEM_AWARE = -2,
-				MPT_DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE = -3,
-				MPT_DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4,
-				MPT_DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED = -5, // 1809 update and newer
-			};
-			using PSETPROCESSDPIAWARENESSCONTEXT = BOOL(WINAPI *)(HANDLE);
-			PSETPROCESSDPIAWARENESSCONTEXT SetProcessDpiAwarenessContext = nullptr;
-			if(user32.Bind(SetProcessDpiAwarenessContext, "SetProcessDpiAwarenessContext"))
-			{
-				if (TrackerSettings::Instance().highResUI)
-				{
-					setDPI = (SetProcessDpiAwarenessContext(HANDLE(MPT_DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)) == TRUE);
-				} else
-				{
-					if (SetProcessDpiAwarenessContext(HANDLE(MPT_DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED)) == TRUE)
-						setDPI = true;
-					else
-						setDPI = (SetProcessDpiAwarenessContext(HANDLE(MPT_DPI_AWARENESS_CONTEXT_UNAWARE)) == TRUE);
-				}
-			}
-		}
-	}
-	// For Windows 8.1 and newer
-	if(!setDPI)
-	{
-		mpt::Library shcore(mpt::LibraryPath::System(P_("SHCore")));
-		if(shcore.IsValid())
-		{
-			using PSETPROCESSDPIAWARENESS = HRESULT (WINAPI *)(int);
-			PSETPROCESSDPIAWARENESS SetProcessDPIAwareness = nullptr;
-			if(shcore.Bind(SetProcessDPIAwareness, "SetProcessDpiAwareness"))
-			{
-				setDPI = (SetProcessDPIAwareness(TrackerSettings::Instance().highResUI ? 2 : 0) == S_OK);
-			}
-		}
-	}
-	// For Vista and newer
-	if(!setDPI && TrackerSettings::Instance().highResUI)
-	{
-		mpt::Library user32(mpt::LibraryPath::System(P_("user32")));
-		if(user32.IsValid())
-		{
-			using PSETPROCESSDPIAWARE = BOOL (WINAPI *)();
-			PSETPROCESSDPIAWARE SetProcessDPIAware = nullptr;
-			if(user32.Bind(SetProcessDPIAware, "SetProcessDPIAware"))
-			{
-				SetProcessDPIAware();
-			}
-		}
+	case DPIAwarenessMode::NoDPIAwareness:
+		HighDPISupport::SetDPIAwareness(HighDPISupport::Mode::LowDpi);
+		break;
+	case DPIAwarenessMode::NoDPIAwarenessGDIUpscaled:
+		HighDPISupport::SetDPIAwareness(HighDPISupport::Mode::LowDpiUpscaled);
+		break;
+	case DPIAwarenessMode::SystemDPIAware:
+		HighDPISupport::SetDPIAwareness(HighDPISupport::Mode::HighDpiSystem);
+		break;
+	case DPIAwarenessMode::PerMonitorDPIAware:
+		HighDPISupport::SetDPIAwareness(HighDPISupport::Mode::HighDpiPerMonitor);
+		break;
+	default:
+		// Malformed entry in INI file
+		TrackerSettings::Instance().dpiAwareness = DPIAwarenessMode::PerMonitorDPIAware;
+		HighDPISupport::SetDPIAwareness(HighDPISupport::Mode::HighDpiPerMonitor);
+		break;
 	}
 
 	// create main MDI Frame window
-	CMainFrame* pMainFrame = new CMainFrame();
-	if(!pMainFrame->LoadFrame(IDR_MAINFRAME)) return FALSE;
+	CMainFrame *pMainFrame = new CMainFrame();
+	if(!pMainFrame->LoadFrame(IDR_MAINFRAME))
+		return FALSE;
 	m_pMainWnd = pMainFrame;
 
 	// Show splash screen
@@ -1421,8 +1431,6 @@ BOOL CTrackApp::InitInstanceImpl(CMPTCommandLineInfo &cmdInfo)
 
 	// Initialize CMainFrame
 	pMainFrame->Initialize();
-	InitCommonControls();
-	pMainFrame->m_InputHandler->UpdateMainMenu();
 
 	// Dispatch commands specified on the command line
 	if(cmdInfo.m_nShellCommand == CCommandLineInfo::FileNew)
@@ -1451,6 +1459,7 @@ BOOL CTrackApp::InitInstanceImpl(CMPTCommandLineInfo &cmdInfo)
 		return FALSE;
 	}
 
+	pMainFrame->UpdateDocumentCount();
 	pMainFrame->ShowWindow(m_nCmdShow);
 	pMainFrame->UpdateWindow();
 
@@ -1473,10 +1482,6 @@ BOOL CTrackApp::InitInstanceImpl(CMPTCommandLineInfo &cmdInfo)
 
 	if(TrackerSettings::Instance().FirstRun)
 	{
-		// On high-DPI devices, automatically upscale pattern font
-		FontSetting font = TrackerSettings::Instance().patternFont;
-		font.size = Clamp(Util::GetDPIy(m_pMainWnd->m_hWnd) / 96 - 1, 0, 9);
-		TrackerSettings::Instance().patternFont = font;
 		new WelcomeDlg(m_pMainWnd);
 	} else
 	{
@@ -1697,7 +1702,7 @@ CModDoc *CTrackApp::NewDocument(MODTYPE newType)
 		if(TrackerSettings::Instance().defaultNewFileAction == nfDefaultTemplate && !templateFile.empty())
 		{
 			// Template file can be either a filename inside one of the preset and user TemplateModules folders, or a full path.
-			const mpt::PathString dirs[] = { GetConfigPath() + P_("TemplateModules\\"), GetInstallPath() + P_("TemplateModules\\"), mpt::PathString() };
+			const mpt::PathString dirs[] = { GetUserTemplatesPath(), GetInstallPath() + P_("TemplateModules\\"), mpt::PathString() };
 			for(const auto &dir : dirs)
 			{
 				if(mpt::native_fs{}.is_file(dir + templateFile))
@@ -1807,12 +1812,12 @@ public:
 	DECLARE_MESSAGE_MAP()
 };
 
-BEGIN_MESSAGE_MAP(CSplashScreen, CDialog)
+BEGIN_MESSAGE_MAP(CSplashScreen, DialogBase)
 	ON_WM_PAINT()
 	ON_WM_ERASEBKGND()
 END_MESSAGE_MAP()
 
-static CSplashScreen *gpSplashScreen = NULL;
+static CSplashScreen *gpSplashScreen = nullptr;
 
 static DWORD64 gSplashScreenStartTime = 0;
 
@@ -1834,13 +1839,13 @@ void CSplashScreen::OnPaint()
 	gfx.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
 	gfx.DrawImage(m_Image.get(), 0, 0, rect.right, rect.bottom);
 
-	CDialog::OnPaint();
+	DialogBase::OnPaint();
 }
 
 
 BOOL CSplashScreen::OnInitDialog()
 {
-	CDialog::OnInitDialog();
+	DialogBase::OnInitDialog();
 
 	try
 	{
@@ -1852,8 +1857,8 @@ BOOL CSplashScreen::OnInitDialog()
 
 	CRect rect;
 	GetWindowRect(&rect);
-	const int width = Util::ScalePixels(m_Image->GetWidth(), m_hWnd) / 2;
-	const int height = Util::ScalePixels(m_Image->GetHeight(), m_hWnd) / 2;
+	const int width = HighDPISupport::ScalePixels(m_Image->GetWidth(), m_hWnd) / 2;
+	const int height = HighDPISupport::ScalePixels(m_Image->GetHeight(), m_hWnd) / 2;
 	SetWindowPos(nullptr,
 		rect.left - ((width - rect.Width()) / 2),
 		rect.top - ((height - rect.Height()) / 2),
@@ -2006,10 +2011,9 @@ int DrawTextT(HDC hdc, const char *lpchText, int cchText, LPRECT lprc, UINT form
 }
 
 template<typename Tchar>
-static void DrawButtonRectImpl(HDC hdc, CRect rect, const Tchar *lpszText, bool disabled, bool pushed, DWORD textFlags, uint32 topMargin)
+static void DrawButtonRectImpl(HDC hdc, int lineWidth, HFONT font, CRect rect, const Tchar *text, bool disabled, bool pushed, DWORD textFlags, uint32 topMargin)
 {
-	int width = Util::ScalePixels(1, WindowFromDC(hdc));
-	if(width != 1)
+	if(lineWidth != 1)
 	{
 		// Draw "real" buttons in Hi-DPI mode
 		DrawFrameControl(hdc, rect, DFC_BUTTON, pushed ? (DFCS_PUSHED | DFCS_BUTTONPUSH) : DFCS_BUTTONPUSH);
@@ -2028,35 +2032,46 @@ static void DrawButtonRectImpl(HDC hdc, CRect rect, const Tchar *lpszText, bool 
 		SelectPen(hdc, oldpen);
 	}
 	
-	if(lpszText && lpszText[0])
+	if(text && text[0])
 	{
-		rect.DeflateRect(width, width);
+		rect.DeflateRect(lineWidth, lineWidth);
 		if(pushed)
 		{
-			rect.top += width;
-			rect.left += width;
+			rect.top += lineWidth;
+			rect.left += lineWidth;
 		}
 		::SetTextColor(hdc, GetSysColor(disabled ? COLOR_GRAYTEXT : COLOR_BTNTEXT));
 		::SetBkMode(hdc, TRANSPARENT);
 		rect.top += topMargin;
-		auto oldfont = SelectFont(hdc, CMainFrame::GetGUIFont());
-		DrawTextT(hdc, lpszText, -1, &rect, textFlags | DT_SINGLELINE | DT_NOPREFIX);
-		SelectFont(hdc, oldfont);
+		auto oldFont = SelectFont(hdc, font);
+		DrawTextT(hdc, text, -1, &rect, textFlags | DT_SINGLELINE | DT_NOPREFIX);
+		SelectFont(hdc, oldFont);
 	}
 }
 
 
-void DrawButtonRect(HDC hdc, const RECT *lpRect, LPCSTR lpszText, BOOL bDisabled, BOOL bPushed, DWORD dwFlags, uint32 topMargin)
+void DrawButtonRect(HDC hdc, int lineWidth, const CRect &rect, const char *text, bool disabled, bool pushed, DWORD dwFlags, uint32 topMargin)
 {
-	DrawButtonRectImpl(hdc, *lpRect, lpszText, bDisabled, bPushed, dwFlags, topMargin);
+	DrawButtonRectImpl(hdc, lineWidth, CMainFrame::GetGUIFont(), rect, text, disabled, pushed, dwFlags, topMargin);
 }
 
 
-void DrawButtonRect(HDC hdc, const RECT *lpRect, LPCWSTR lpszText, BOOL bDisabled, BOOL bPushed, DWORD dwFlags, uint32 topMargin)
+void DrawButtonRect(HDC hdc, int lineWidth, const CRect &rect, const wchar_t *text, bool disabled, bool pushed, DWORD dwFlags, uint32 topMargin)
 {
-	DrawButtonRectImpl(hdc, *lpRect, lpszText, bDisabled, bPushed, dwFlags, topMargin);
+	DrawButtonRectImpl(hdc, lineWidth, CMainFrame::GetGUIFont(), rect, text, disabled, pushed, dwFlags, topMargin);
 }
 
+
+void DrawButtonRect(HDC hdc, int lineWidth, HFONT font, const CRect &rect, const char *text, bool disabled, bool pushed, DWORD dwFlags, uint32 topMargin)
+{
+	DrawButtonRectImpl(hdc, lineWidth, font, rect, text, disabled, pushed, dwFlags, topMargin);
+}
+
+
+void DrawButtonRect(HDC hdc, int lineWidth, HFONT font, const CRect &rect, const wchar_t *text, bool disabled, bool pushed, DWORD dwFlags, uint32 topMargin)
+{
+	DrawButtonRectImpl(hdc, lineWidth, font, rect, text, disabled, pushed, dwFlags, topMargin);
+}
 
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -2472,7 +2487,7 @@ bool CTrackApp::OpenURL(const mpt::ustring &url)
 	return OpenURL(mpt::PathString::FromUnicode(url));
 }
 
-bool CTrackApp::OpenURL(const mpt::PathString &lpszURL)
+bool CTrackApp::OpenURL(const mpt::PathString &lpszURL, const mpt::tstring &param)
 {
 	if(!lpszURL.empty() && theApp.m_pMainWnd)
 	{
@@ -2480,14 +2495,22 @@ bool CTrackApp::OpenURL(const mpt::PathString &lpszURL)
 			theApp.m_pMainWnd->m_hWnd,
 			_T("open"),
 			lpszURL.AsNative().c_str(),
-			NULL,
-			NULL,
+			param.empty() ? nullptr : param.c_str(),
+			nullptr,
 			SW_SHOW)) >= 32)
 		{
 			return true;
 		}
 	}
 	return false;
+}
+
+bool CTrackApp::OpenDirectory(const mpt::PathString &directory)
+{
+	if(mpt::native_fs{}.is_file(directory))
+		return OpenURL(P_("explorer.exe"), MPT_TFORMAT("/select,\"{}\"")(directory.AsNative()));
+	else
+		return OpenURL(directory);
 }
 
 
@@ -2543,6 +2566,155 @@ CString CTrackApp::GetFriendlyMIDIPortName(const CString &deviceName, bool isInp
 {
 	return mpt::ToCString(GetFriendlyMIDIPortName(mpt::ToUnicode(deviceName), isInputPort, addDeviceName));
 }
+
+
+bool ValidateMacroString(CEdit &wnd, const std::string_view prevMacro, bool isParametric, bool allowVariables, bool allowMultiline)
+{
+	CString macroStrT;
+	wnd.GetWindowText(macroStrT);
+	std::string macroStr = mpt::ToCharset(mpt::Charset::ASCII, macroStrT);
+
+	bool allowed = true, caseChange = false;
+	for(char &c : macroStr)
+	{
+		if(c >= 'G' && c <= 'Z')  // Potentially an allowed variable; lowercase it
+		{
+			caseChange = true;
+			c = c - 'A' + 'a';
+		}
+
+		if(c == 'k')  // Previously, 'K' was used for MIDI channel
+		{
+			caseChange = true;
+			c = 'c';
+		} else if(c >= 'a' && c <= 'c' && !allowVariables)
+		{
+			caseChange = true;
+			c = c - 'a' + 'A';
+		} else if(c >= 'd' && c <= 'f')  // abc can be variables, but def can be fixed
+		{
+			caseChange = true;
+			c = c - 'a' + 'A';
+		} else if((c >= 'a' && c <= 'c') || c == 'h' || c == 'm' || c == 'n' || c == 'o' || c == 'p' || c == 's' || c == 'u' || c == 'v' || c == 'x' || c == 'y')
+		{
+			if(!allowVariables)
+			{
+				allowed = false;
+				break;
+			}
+		} else if(c == 'z')
+		{
+			if(!isParametric || !allowVariables)
+			{
+				allowed = false;
+				break;
+			}
+		} else if(c == '\r' || c == '\n')
+		{
+			if(!allowMultiline)
+			{
+				allowed = false;
+				break;
+			}
+		} else if(!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || c == ' '))
+		{
+			allowed = false;
+			break;
+		}
+	}
+
+	if(!allowed)
+	{
+		// Replace text and keep cursor position if we just typed in an invalid character
+		if(prevMacro != std::string_view{macroStr})
+		{
+			int start, end;
+			wnd.GetSel(start, end);
+			wnd.SetWindowText(mpt::ToCString(mpt::Charset::ASCII, static_cast<std::string>(prevMacro)));
+			wnd.SetSel(start - 1, end - 1, true);
+			MessageBeep(MB_OK);
+		}
+		return false;
+	} else
+	{
+		if(caseChange)
+		{
+			// Replace text and keep cursor position if there was a case conversion
+			int start, end;
+			wnd.GetSel(start, end);
+			wnd.SetWindowText(mpt::ToCString(mpt::Charset::ASCII, static_cast<std::string>(macroStr)));
+			wnd.SetSel(start, end, true);
+		}
+		return true;
+	}
+}
+
+
+static constexpr std::pair<const mpt::uchar*, const mpt::uchar*> SampleFormats[]
+{
+	{ UL_("Wave Files (*.wav)"), UL_("*.wav") },
+#ifdef MPT_WITH_FLAC
+	{ UL_("FLAC Files (*.flac,*.oga)"), UL_("*.flac;*.oga") },
+#endif  // MPT_WITH_FLAC
+#if defined(MPT_WITH_OPUSFILE)
+	{ UL_("Opus Files (*.opus,*.oga)"), UL_("*.opus;*.oga") },
+#endif  // MPT_WITH_OPUSFILE
+#if defined(MPT_WITH_VORBISFILE) || defined(MPT_WITH_STBVORBIS)
+	{ UL_("Ogg Vorbis Files (*.ogg,*.oga)"), UL_("*.ogg;*.oga") },
+#endif  // VORBIS
+#if defined(MPT_ENABLE_MP3_SAMPLES)
+	{ UL_("MPEG Files (*.mp1,*.mp2,*.mp3)"), UL_("*.mp1;*.mp2;*.mp3") },
+#endif  // MPT_ENABLE_MP3_SAMPLES
+	{ UL_("XI Samples (*.xi)"), UL_("*.xi") },
+	{ UL_("Impulse Tracker Samples (*.its)"), UL_("*.its") },
+	{ UL_("Scream Tracker Samples (*.s3i,*.smp)"), UL_("*.s3i;*.smp") },
+	{ UL_("OPL Instruments (*.sb0,*.sb2,*.sbi)"), UL_("*.sb0;*.sb2;*.sbi") },
+	{ UL_("GF1 Patches (*.pat)"), UL_("*.pat") },
+	{ UL_("Wave64 Files (*.w64)"), UL_("*.w64") },
+	{ UL_("CAF Files (*.wav)"), UL_("*.caf") },
+	{ UL_("AIFF Files (*.aiff,*.8svx)"), UL_("*.aif;*.aiff;*.iff;*.8sv;*.8svx;*.svx") },
+	{ UL_("Sun Audio (*.au,*.snd)"), UL_("*.au;*.snd") },
+	{ UL_("SNES BRR Files (*.brr)"), UL_("*.brr") },
+};
+
+
+mpt::ustring ConstructSampleFormatFileFilter(bool includeRaw)
+{
+	mpt::ustring s = U_("All Samples (*.wav,*.flac,*.xi,*.its,*.s3i,*.sbi,...)|");
+	bool first = true;
+	for (const auto& [name, exts] : SampleFormats)
+	{
+		if (!first)
+			s += U_(";");
+		else
+			first = false;
+		s += exts;
+	}
+#if defined(MPT_WITH_MEDIAFOUNDATION)
+	std::vector<FileType> mediaFoundationTypes = CSoundFile::GetMediaFoundationFileTypes();
+	s += ToFilterOnlyString(mediaFoundationTypes, true).ToUnicode();
+#endif
+	if (includeRaw)
+	{
+		s += U_(";*.raw;*.snd;*.pcm;*.sam");
+	}
+	s += U_("|");
+	for (const auto& [name, exts] : SampleFormats)
+	{
+		s += name + U_("|");
+		s += exts + U_("|");
+	}
+#if defined(MPT_WITH_MEDIAFOUNDATION)
+	s += ToFilterString(mediaFoundationTypes, FileTypeFormatShowExtensions).ToUnicode();
+#endif
+	if (includeRaw)
+	{
+		s += U_("Raw Samples (*.raw,*.snd,*.pcm,*.sam)|*.raw;*.snd;*.pcm;*.sam|");
+	}
+	s += U_("All Files (*.*)|*.*||");
+	return s;
+}
+
 
 
 OPENMPT_NAMESPACE_END

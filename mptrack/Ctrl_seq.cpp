@@ -12,13 +12,14 @@
 #include "stdafx.h"
 #include "Ctrl_pat.h"
 #include "Globals.h"
-#include "Mainfrm.h"
+#include "HighDPISupport.h"
 #include "InputHandler.h"
+#include "Mainfrm.h"
 #include "Moddoc.h"
 #include "Mptrack.h"
-#include "MPTrackUtil.h"
 #include "PatternClipboard.h"
 #include "Reporting.h"
+#include "resource.h"
 #include "TrackerSettings.h"
 #include "WindowMessages.h"
 #include "../soundlib/mod_specifications.h"
@@ -51,7 +52,7 @@ BEGIN_MESSAGE_MAP(COrderList, CWnd)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONDBLCLK()
 	ON_WM_LBUTTONUP()
-	ON_WM_RBUTTONDOWN()
+	ON_WM_RBUTTONUP()
 	ON_WM_MBUTTONDOWN()
 	ON_WM_SETFOCUS()
 	ON_WM_KILLFOCUS()
@@ -85,6 +86,7 @@ BEGIN_MESSAGE_MAP(COrderList, CWnd)
 	ON_COMMAND(ID_QUEUE_AT_ROW_END,           &COrderList::OnQueueAtRowEnd)
 	ON_MESSAGE(WM_MOD_DRAGONDROPPING,         &COrderList::OnDragonDropping)
 	ON_MESSAGE(WM_MOD_KEYCOMMAND,             &COrderList::OnCustomKeyMsg)
+	ON_MESSAGE(WM_DPICHANGED_AFTERPARENT,     &COrderList::OnDPIChangedAfterParent)
 	ON_NOTIFY_EX(TTN_NEEDTEXT, 0,             &COrderList::OnToolTipText)
 
 	ON_COMMAND_RANGE(ID_SEQUENCE_ITEM, ID_SEQUENCE_ITEM + kMaxSequenceActions - 1, &COrderList::OnSelectSequence)
@@ -203,10 +205,10 @@ CRect COrderList::GetRectFromOrder(ORDERINDEX ord) const
 }
 
 
-BOOL COrderList::Init(const CRect &rect, HFONT hFont)
+BOOL COrderList::Init(const CRect &rect)
 {
 	CreateEx(WS_EX_STATICEDGE, NULL, _T(""), WS_CHILD | WS_VISIBLE, rect, &m_pParent, IDC_ORDERLIST);
-	m_hFont = hFont;
+	m_hFont = CMainFrame::GetGUIFont();
 	SendMessage(WM_SETFONT, (WPARAM)m_hFont);
 	SetScrollPos(0);
 	EnableScrollBarCtrl(SB_HORZ, TRUE);
@@ -415,7 +417,7 @@ bool COrderList::SetCurSel(ORDERINDEX sel, bool setPlayPos, bool shiftClick, boo
 		}
 
 		m_pParent.SetCurrentPattern(n);
-	} else if(setPlayPos && !shiftClick && n != Order().GetIgnoreIndex() && n != Order().GetInvalidPatIndex())
+	} else if(setPlayPos && !shiftClick && n != PATTERNINDEX_SKIP && n != PATTERNINDEX_INVALID)
 	{
 		m_pParent.SetCurrentPattern(n);
 	}
@@ -476,7 +478,7 @@ LRESULT COrderList::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 			GetClientRect(clientRect);
 			if(!clientRect.PtInRect(pt))
 				pt = clientRect.CenterPoint();
-			OnRButtonDown(0, pt);
+			OnRButtonUp(0, pt);
 		}
 		return wParam;
 
@@ -578,6 +580,9 @@ LRESULT COrderList::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		OnMergePatterns(); return wParam;
 	case kcNewPattern:
 		OnCreateNewPattern(); return wParam;
+
+	case kcOrderlistStreamExport:
+		OnRenderOrder(); return wParam;
 	}
 
 	return kcNull;
@@ -595,7 +600,7 @@ void COrderList::EnterPatternNum(int enterNum)
 
 	PATTERNINDEX curIndex = Order()[m_nScrollPos];
 	const PATTERNINDEX maxIndex = std::max(PATTERNINDEX(1), sndFile.Patterns.GetNumPatterns()) - 1;
-	const PATTERNINDEX firstInvalid = sndFile.GetModSpecifications().hasIgnoreIndex ? sndFile.Order.GetIgnoreIndex() : sndFile.Order.GetInvalidPatIndex();
+	const PATTERNINDEX firstInvalid = sndFile.GetModSpecifications().hasIgnoreIndex ? PATTERNINDEX_SKIP : PATTERNINDEX_INVALID;
 
 	if(enterNum >= 0 && enterNum <= 9)  // enter 0...9
 	{
@@ -611,7 +616,7 @@ void COrderList::EnterPatternNum(int enterNum)
 	{
 		if(curIndex == 0)
 		{
-			curIndex = sndFile.Order.GetInvalidPatIndex();
+			curIndex = PATTERNINDEX_INVALID;
 		} else if(curIndex > maxIndex && curIndex <= firstInvalid)
 		{
 			curIndex = maxIndex;
@@ -624,7 +629,7 @@ void COrderList::EnterPatternNum(int enterNum)
 		}
 	} else if(enterNum == 11)  // increase pattern index
 	{
-		if(curIndex >= sndFile.Order.GetInvalidPatIndex())
+		if(curIndex >= PATTERNINDEX_INVALID)
 		{
 			curIndex = 0;
 		} else if(curIndex >= maxIndex && curIndex < firstInvalid)
@@ -640,12 +645,10 @@ void COrderList::EnterPatternNum(int enterNum)
 	} else if(enterNum == 12)  // ignore index (+++)
 	{
 		if(sndFile.GetModSpecifications().hasIgnoreIndex)
-		{
-			curIndex = sndFile.Order.GetIgnoreIndex();
-		}
+			curIndex = PATTERNINDEX_SKIP;
 	} else if(enterNum == 13)  // invalid index (---)
 	{
-		curIndex = sndFile.Order.GetInvalidPatIndex();
+		curIndex = PATTERNINDEX_INVALID;
 	}
 	// apply
 	if(curIndex != Order()[m_nScrollPos])
@@ -706,7 +709,7 @@ void COrderList::UpdateInfoText()
 
 	const ORDERINDEX length = order.GetLengthTailTrimmed();
 	CString s;
-	if(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_HEXDISPLAY)
+	if(TrackerSettings::Instance().patternSetup & PatternSetup::RowAndOrderNumbersHex)
 		s.Format(_T("Position %02Xh of %02Xh"), m_nScrollPos, length);
 	else
 		s.Format(_T("Position %u of %u (%02Xh of %02Xh)"), m_nScrollPos, length, m_nScrollPos, length);
@@ -742,9 +745,9 @@ HRESULT COrderList::get_accName(VARIANT, BSTR *pszName)
 			s += _T(", ");
 		first = false;
 		PATTERNINDEX pat = order[o];
-		if(pat == ModSequence::GetIgnoreIndex())
+		if(pat == PATTERNINDEX_SKIP)
 			s += _T(" Skip");
-		else if(pat == ModSequence::GetInvalidPatIndex())
+		else if(pat == PATTERNINDEX_INVALID)
 			s += _T(" Stop");
 		else
 			s += MPT_CFORMAT("Pattern {}")(pat);
@@ -762,6 +765,16 @@ HRESULT COrderList::get_accName(VARIANT, BSTR *pszName)
 
 /////////////////////////////////////////////////////////////////
 // COrderList messages
+
+LRESULT COrderList::OnDPIChangedAfterParent(WPARAM, LPARAM)
+{
+	auto result = Default();
+	m_cxFont = m_cyFont = 0;
+	m_hFont = CMainFrame::GetGUIFont();
+	Invalidate(FALSE);
+	return result;
+}
+
 
 void COrderList::OnPaint()
 {
@@ -793,8 +806,8 @@ void COrderList::OnPaint()
 		dc.SetBkMode(TRANSPARENT);
 		const OrdSelection selection = GetCurSel();
 
-		const int lineWidth1 = Util::ScalePixels(1, m_hWnd);
-		const int lineWidth2 = Util::ScalePixels(2, m_hWnd);
+		const int lineWidth1 = HighDPISupport::ScalePixels(1, m_hWnd);
+		const int lineWidth2 = HighDPISupport::ScalePixels(2, m_hWnd);
 		const bool isFocussed = (::GetFocus() == m_hWnd);
 
 		const auto &order = Order();
@@ -860,9 +873,9 @@ void COrderList::OnPaint()
 			const PATTERNINDEX pat = (ord < order.size()) ? order[ord] : PATTERNINDEX_INVALID;
 			if(ord < maxEntries && (rect.left + m_cxFont - 4) <= rcClient.right)
 			{
-				if(pat == order.GetInvalidPatIndex())
+				if(pat == PATTERNINDEX_INVALID)
 					_tcscpy(s, _T("---"));
-				else if(pat == order.GetIgnoreIndex())
+				else if(pat == PATTERNINDEX_SKIP)
 					_tcscpy(s, _T("+++"));
 				else
 					wsprintf(s, _T("%u"), pat);
@@ -1060,7 +1073,7 @@ void COrderList::OnSelectSequence(UINT nid)
 }
 
 
-void COrderList::OnRButtonDown(UINT nFlags, CPoint pt)
+void COrderList::OnRButtonUp(UINT nFlags, CPoint pt)
 {
 	CRect rect;
 	GetClientRect(&rect);
@@ -1176,7 +1189,7 @@ void COrderList::OnRButtonDown(UINT nFlags, CPoint pt)
 	}
 
 	AppendMenu(hMenu, MF_SEPARATOR, NULL, _T(""));
-	AppendMenu(hMenu, MF_STRING | greyed, ID_ORDERLIST_RENDER, _T("Render to &Wave"));
+	AppendMenu(hMenu, MF_STRING | greyed, ID_ORDERLIST_RENDER, ih->GetKeyTextFromCommand(kcOrderlistStreamExport, _T("Stream E&xport")));
 
 	ClientToScreen(&pt);
 	::TrackPopupMenu(hMenu, TPM_LEFTALIGN | TPM_RIGHTBUTTON, pt.x, pt.y, 0, m_hWnd, NULL);
@@ -1194,7 +1207,7 @@ void COrderList::OnLButtonDblClk(UINT, CPoint)
 	PATTERNINDEX pat = Order()[m_nScrollPos];
 	if(sndFile.Patterns.IsValidPat(pat))
 		m_pParent.SetCurrentPattern(pat);
-	else if(pat != sndFile.Order.GetIgnoreIndex())
+	else if(pat != PATTERNINDEX_SKIP)
 		OnCreateNewPattern();
 }
 
@@ -1296,14 +1309,14 @@ void COrderList::OnInsertSeparatorPattern()
 
 	if(!EnsureEditable(insertPos))
 		return;
-	if(order[insertPos] != order.GetInvalidPatIndex())
+	if(order[insertPos] != PATTERNINDEX_INVALID)
 	{
 		// If we're not inserting at a stop (---) index, we move on by one position.
 		insertPos++;
-		order.insert(insertPos, 1, order.GetIgnoreIndex());
+		order.insert(insertPos, 1, PATTERNINDEX_SKIP);
 	} else
 	{
-		order[insertPos] = order.GetIgnoreIndex();
+		order[insertPos] = PATTERNINDEX_SKIP;
 	}
 
 	InsertUpdatePlaystate(insertPos, insertPos);
@@ -1552,7 +1565,7 @@ void COrderList::QueuePattern(ORDERINDEX order, OrderTransitionMode transitionMo
 	const ORDERINDEX length = Order().GetLength();
 
 	// If this is not a playable order item, find the next valid item.
-	while(order < length && (Order()[order] == sndFile.Order.GetIgnoreIndex() || Order()[order] == sndFile.Order.GetInvalidPatIndex()))
+	while(order < length && (Order()[order] == PATTERNINDEX_SKIP || Order()[order] == PATTERNINDEX_INVALID))
 	{
 		order++;
 	}

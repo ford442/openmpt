@@ -378,6 +378,14 @@ float IMixPlugin::RenderSilence(uint32 numFrames)
 }
 
 
+bool IMixPlugin::MidiSend(uint32 midiCode)
+{
+	std::array<std::byte, 4> midiData;
+	memcpy(midiData.data(), &midiCode, 4);
+	return MidiSend(mpt::as_span(midiData.data(), std::min(static_cast<uint8>(midiData.size()), MIDIEvents::GetEventLength(mpt::byte_cast<uint8>(midiData[0])))));
+}
+
+
 // Get list of plugins to which output is sent. A nullptr indicates master output.
 size_t IMixPlugin::GetOutputPlugList(std::vector<IMixPlugin *> &list)
 {
@@ -634,7 +642,7 @@ bool IMixPlugin::SaveProgram()
 	}
 
 	CString progName = m_Factory.libraryName.ToCString() + _T(" - ") + GetCurrentProgramName();
-	progName = SanitizePathComponent(progName);
+	progName = mpt::SanitizePathComponent(progName);
 
 	FileDialog dlg = SaveFileDialog()
 		.DefaultExtension("fxb")
@@ -995,32 +1003,24 @@ bool IMidiPlugin::IsNotePlaying(uint8 note, CHANNELINDEX trackerChn)
 }
 
 
-void IMidiPlugin::ReceiveMidi(uint32 midiCode)
+void IMidiPlugin::MoveChannel(CHANNELINDEX from, CHANNELINDEX to)
 {
-	ResetSilence();
+	if(from >= std::size(m_MidiCh[GetMidiChannel(from)].noteOnMap[0]) || to >= std::size(m_MidiCh[GetMidiChannel(from)].noteOnMap[0]))
+		return;
 
-	// I think we should only route events to plugins that are explicitely specified as output plugins of the current plugin.
-	// This should probably use GetOutputPlugList here if we ever get to support multiple output plugins.
-	PLUGINDEX receiver;
-	if(m_pMixStruct != nullptr && (receiver = m_pMixStruct->GetOutputPlugin()) != PLUGINDEX_INVALID)
+	for(auto &noteOnMap : m_MidiCh[GetMidiChannel(from)].noteOnMap)
 	{
-		IMixPlugin *plugin = m_SndFile.m_MixPlugins[receiver].pMixPlugin;
-		// Add all events to the plugin's queue.
-		plugin->MidiSend(midiCode);
+		noteOnMap[to] = noteOnMap[from];
+		noteOnMap[from] = 0;
 	}
-
-#ifdef MODPLUG_TRACKER
-	if(m_recordMIDIOut)
-	{
-		// Spam MIDI data to all views
-		::PostMessage(CMainFrame::GetMainFrame()->GetMidiRecordWnd(), WM_MOD_MIDIMSG, midiCode, reinterpret_cast<LPARAM>(this));
-	}
-#endif // MODPLUG_TRACKER
 }
 
 
-void IMidiPlugin::ReceiveSysex(mpt::const_byte_span sysex)
+void IMidiPlugin::ReceiveMidi(mpt::const_byte_span midiData)
 {
+	if(midiData.empty())
+		return;
+
 	ResetSilence();
 
 	// I think we should only route events to plugins that are explicitely specified as output plugins of the current plugin.
@@ -1030,8 +1030,18 @@ void IMidiPlugin::ReceiveSysex(mpt::const_byte_span sysex)
 	{
 		IMixPlugin *plugin = m_SndFile.m_MixPlugins[receiver].pMixPlugin;
 		// Add all events to the plugin's queue.
-		plugin->MidiSysexSend(sysex);
+		plugin->MidiSend(midiData);
 	}
+
+#ifdef MODPLUG_TRACKER
+	if(m_recordMIDIOut && midiData[0] != std::byte{0xF0})
+	{
+		// Spam MIDI data to all views
+		uint32 midiCode = 0;
+		memcpy(&midiCode, midiData.data(), std::min(sizeof(midiCode), midiData.size()));
+		::PostMessage(CMainFrame::GetMainFrame()->GetMidiRecordWnd(), WM_MOD_MIDIMSG, midiCode, reinterpret_cast<LPARAM>(this));
+	}
+#endif  // MODPLUG_TRACKER
 }
 
 

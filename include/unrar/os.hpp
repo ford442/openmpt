@@ -8,12 +8,13 @@
 #define SILENT
 #endif
 
+
 #include <new>
 #include <string>
 #include <vector>
 #include <deque>
 #include <memory> // For automatic pointers.
-
+#include <algorithm>
 
 #ifdef _WIN_ALL
 
@@ -59,6 +60,9 @@
 #include <wincrypt.h>
 #include <wchar.h>
 #include <wctype.h>
+#include <Sddl.h>
+#include <ntsecapi.h>
+
 
 // For WMI requests.
 #include <comdef.h>
@@ -74,10 +78,13 @@
 
 // Use SSE only for x86/x64, not ARM Windows.
 #if !defined(__clang__) // OPENMPT ADDITION
+#if !defined(_M_ARM64EC) // OPENMPT ADDITION
+// MSVC enters an infinite loop when compiling blake2s.cpp in ARM64EC mode with SSE intrinsics enabled. // OPENMPT ADDITION
 #if defined(_M_IX86) || defined(_M_X64)
   #define USE_SSE
   #define SSE_ALIGNMENT 16
 #endif
+#endif // OPENMPT ADDITION
 #endif // OPENMPT ADDITION
 
 #include <stdio.h>

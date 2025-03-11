@@ -27,7 +27,8 @@ using ORDERINDEX = uint16;
 inline constexpr ORDERINDEX ORDERINDEX_INVALID = uint16_max;
 inline constexpr ORDERINDEX ORDERINDEX_MAX = uint16_max - 1;
 using PATTERNINDEX = uint16;
-inline constexpr PATTERNINDEX PATTERNINDEX_INVALID = uint16_max;
+inline constexpr PATTERNINDEX PATTERNINDEX_INVALID = uint16_max;   // "---" in order list
+inline constexpr PATTERNINDEX PATTERNINDEX_SKIP = uint16_max - 1;  // "+++" in order list
 using PLUGINDEX = uint8;
 inline constexpr PLUGINDEX PLUGINDEX_INVALID = uint8_max;
 using SAMPLEINDEX = uint16;
@@ -42,8 +43,12 @@ using SmpLength = uint32;
 
 inline constexpr SmpLength MAX_SAMPLE_LENGTH = 0x10000000; // Sample length in frames. Sample size in bytes can be more than this (= 256 MB).
 
+inline constexpr ROWINDEX MAX_ROWS_PER_MEASURE     = 65536;
+inline constexpr ROWINDEX MAX_ROWS_PER_BEAT        = 65536;
+inline constexpr ROWINDEX DEFAULT_ROWS_PER_BEAT    = 4;
+inline constexpr ROWINDEX DEFAULT_ROWS_PER_MEASURE = 16;
+
 inline constexpr ROWINDEX MAX_PATTERN_ROWS       = 4096;
-inline constexpr ROWINDEX MAX_ROWS_PER_BEAT      = 65536;
 inline constexpr ORDERINDEX MAX_ORDERS           = ORDERINDEX_MAX + 1;
 inline constexpr PATTERNINDEX MAX_PATTERNS       = 4000;
 inline constexpr SAMPLEINDEX MAX_SAMPLES         = 4000;
@@ -52,12 +57,15 @@ inline constexpr PLUGINDEX MAX_MIXPLUGINS        = 250;
 
 inline constexpr SEQUENCEINDEX MAX_SEQUENCES     = 50;
 
-inline constexpr CHANNELINDEX MAX_BASECHANNELS   = 127; // Maximum pattern channels.
+inline constexpr CHANNELINDEX MAX_BASECHANNELS   = 192; // Maximum pattern channels.
 inline constexpr CHANNELINDEX MAX_CHANNELS       = 256; // Maximum number of mixing channels.
 
 enum { FREQ_FRACBITS = 4 }; // Number of fractional bits in return value of CSoundFile::GetFreqFromPeriod()
 
 using samplecount_t = uint32;  // Number of rendered samples
+
+using PlugParamIndex = uint32;
+using PlugParamValue = float;
 
 // String lengths (including trailing null char)
 enum
@@ -103,6 +111,8 @@ enum MODTYPE
 	MOD_TYPE_STP  = 0x8000000,
 	MOD_TYPE_PLM  = 0x10000000,
 	MOD_TYPE_SFX  = 0x20000000,
+
+	MOD_TYPE_MOD_PC = MOD_TYPE_MOD | MOD_TYPE_XM,
 };
 DECLARE_FLAGSET(MODTYPE)
 
@@ -128,6 +138,7 @@ enum class AutoSlideCommand
 	PortamentoDown,
 	FinePortamentoUp,
 	FinePortamentoDown,
+	PortamentoFC,
 	FineVolumeSlideUp,
 	FineVolumeSlideDown,
 	VolumeDownETX,
@@ -274,14 +285,13 @@ enum PlayFlags : uint16
 	SONG_FIRSTTICK       =  0x20,  // Is set when the current tick is the first tick of the row
 	SONG_MPTFILTERMODE   =  0x40,  // Local filter mode (reset filter on each note)
 	SONG_SURROUNDPAN     =  0x80,  // Pan in the rear channels
-	SONG_POSJUMP         = 0x100,  // Position jump encountered (internal flag, do not touch)
-	SONG_BREAKTOROW      = 0x200,  // Break to row command encountered (internal flag, do not touch)
+	SONG_POSJUMP         = 0x100,  // Position jump encountered
+	SONG_BREAKTOROW      = 0x200,  // Break to row command encountered
 	SONG_POSITIONCHANGED = 0x400,  // Report to plugins that we jumped around in the module
 };
 DECLARE_FLAGSET(PlayFlags)
 
 
-// Module flags - contains both song configuration and playback state... Use SONG_FILE_FLAGS and SONG_PLAY_FLAGS distinguish between the two.
 enum SongFlags
 {
 	SONG_FASTPORTAS          =     0x01,  // Portamentos are executed on every tick
@@ -302,6 +312,7 @@ enum SongFlags
 	SONG_AUTO_VIBRATO        =   0x8000,  // Vibrato command is continued automatically
 	SONG_AUTO_TREMOLO        = 0x1'8000,  // Tremolo command is continued automatically
 	SONG_AUTO_VOLSLIDE_STK   = 0x2'0000,  // Automatic volume slide command is interpreted like in STK files (rather than like in STP files)
+	SONG_FORMAT_NO_VOLCOL    = 0x4'0000,  // The original (imported) format has no volume column, so it can be hidden in the pattern editor.
 };
 DECLARE_FLAGSET(SongFlags)
 
@@ -329,7 +340,8 @@ DECLARE_FLAGSET(SongFlags)
 #define SNDMIX_MUTECHNMODE    0x100000 // Notes are not played on muted channels
 
 
-#define MAX_GLOBAL_VOLUME 256u
+inline constexpr uint32 MAX_GLOBAL_VOLUME = 256;
+inline constexpr uint32 MAX_PREAMP = 2000;
 
 // When to execute a position override event
 enum class OrderTransitionMode : uint8
@@ -598,6 +610,12 @@ enum PlayBehaviour
 	kITOffsetWithInstrNumber,       // IT applies offset commands even if just an instrument number without note is present
 	kContinueSampleWithoutInstr,    // FTM: A note without instrument number continues looped samples with the new pitch instead of retriggering them
 	kMIDINotesFromChannelPlugin,    // Behaviour before OpenMPT 1.26: Channel plugin can be used to send MIDI notes
+	kITDoublePortamentoSlides,      // IT only reads parameters once per row, so if two commands sharing effect parameters are found in the two effect columns, they influence each other
+	kS3MIgnoreCombinedFineSlides,   // S3M commands Kxy and Lxy ignore fine slides
+	kFT2AutoVibratoAbortSweep,      // Key-off before auto-vibrato sweep-in is complete resets auto-vibrato depth
+	kLegacyPPQpos,                  // Report fake PPQ position to VST plugins
+	kLegacyPluginNNABehaviour,      // Plugin notes with NNA=continue are affected by note-offs etc.
+	kITCarryAfterNoteOff,           // Envelope Carry continues to function as normal even after note-off
 
 	// Add new play behaviours here.
 

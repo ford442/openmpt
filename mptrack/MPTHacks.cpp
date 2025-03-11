@@ -87,14 +87,14 @@ bool CModDoc::HasMPTHacks(const bool autofix)
 #endif // NO_PLUGINS
 
 	// Check for invalid order items
-	if(!originalSpecs->hasIgnoreIndex && mpt::contains(m_SndFile.Order(), m_SndFile.Order.GetIgnoreIndex()))
+	if(!originalSpecs->hasIgnoreIndex && mpt::contains(m_SndFile.Order(), PATTERNINDEX_SKIP))
 	{
 		foundHacks = true;
 		AddToLog("This format does not support separator (+++) patterns");
 
 		if(autofix)
 		{
-			m_SndFile.Order().RemovePattern(m_SndFile.Order.GetIgnoreIndex());
+			m_SndFile.Order().RemovePattern(PATTERNINDEX_SKIP);
 		}
 	}
 
@@ -105,7 +105,7 @@ bool CModDoc::HasMPTHacks(const bool autofix)
 
 		if(autofix)
 		{
-			m_SndFile.Order().RemovePattern(m_SndFile.Order.GetInvalidPatIndex());
+			m_SndFile.Order().RemovePattern(PATTERNINDEX_INVALID);
 		}
 	}
 
@@ -311,6 +311,7 @@ bool CModDoc::HasMPTHacks(const bool autofix)
 	// Check for instrument extensions
 	foundHere = false;
 	bool foundEnvelopes = false;
+	INSTRUMENTINDEX instrWithTooManySmps = 0;
 	for(INSTRUMENTINDEX i = 1; i <= m_SndFile.GetNumInstruments(); i++)
 	{
 		ModInstrument *instr = m_SndFile.Instruments[i];
@@ -339,6 +340,16 @@ bool CModDoc::HasMPTHacks(const bool autofix)
 				instr->VolEnv.nReleaseNode = instr->PanEnv.nReleaseNode = instr->PitchEnv.nReleaseNode = ENV_RELEASE_NODE_UNSET;
 			}
 		}
+		if((modType & (MOD_TYPE_IT | MOD_TYPE_MPT)) && (instr->nFadeOut % 32u) != 0)
+		{
+			foundHere = foundHacks = true;
+			if(autofix)
+				instr->nFadeOut = ((instr->nFadeOut + 16) / 32) * 32;
+		}
+
+		if(modType == MOD_TYPE_XM && instr->GetSamples().size() > 16)
+			instrWithTooManySmps++;
+
 		// Incompatible envelope shape
 		foundEnvelopes |= FindIncompatibleEnvelopes(instr->VolEnv, autofix);
 		foundEnvelopes |= FindIncompatibleEnvelopes(instr->PanEnv, autofix);
@@ -349,6 +360,8 @@ bool CModDoc::HasMPTHacks(const bool autofix)
 		AddToLog("Found MPT instrument extensions");
 	if(foundEnvelopes)
 		AddToLog("Two envelope points may not share the same tick");
+	if(instrWithTooManySmps)
+		AddToLog(MPT_AFORMAT("{} instruments use too many samples (16 allowed)")(instrWithTooManySmps));
 
 	for(auto &order : m_SndFile.Order)
 	{

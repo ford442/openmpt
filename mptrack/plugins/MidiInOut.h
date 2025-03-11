@@ -28,6 +28,7 @@ class MidiDevice
 public:
 	using ID = decltype(RtMidiIn().getPortCount());
 	static constexpr ID NO_MIDI_DEVICE = ID(-1);
+	static constexpr ID INTERNAL_MIDI_DEVICE = ID(-2);
 
 	RtMidi &stream;
 	std::string name;  // Charset::UTF8
@@ -51,19 +52,20 @@ class MidiInOut final : public IMidiPlugin
 protected:
 	enum : unsigned int
 	{
-		kInputParameter  = 0,
-		kOutputParameter = 1,
+		kMacroParamMin = 0,
+		kMacroParamMax = 999,
 
 		kNumPrograms = 1,
-		kNumParams   = 2,
+		kNumParams = kMacroParamMax + 1,
+		kNumVisibleParams   = 0,
 
-		kNoDevice   = MidiDevice::NO_MIDI_DEVICE,
-		kMaxDevices = 65536,  // Should be a power of 2 to avoid rounding errors.
+		kNoDevice = MidiDevice::NO_MIDI_DEVICE,
+		kInternalDevice = MidiDevice::INTERNAL_MIDI_DEVICE,
 	};
 
 	// MIDI queue entry with small storage optimiziation.
 	// This optimiziation is going to be used for all messages that OpenMPT can send internally,
-	// but SysEx messages received from other plugins may be longer.
+	// but SysEx messages created by this plugin or received from other plugins may be longer.
 	class Message
 	{
 	public:
@@ -89,6 +91,8 @@ protected:
 		Message & operator=(const Message &) = delete;
 
 		Message(double time, unsigned char msg) noexcept : Message(time, &msg, 1) { }
+
+		operator mpt::span<const unsigned char>() const { return mpt::as_span(m_message, m_size); }
 
 		Message(Message &&other) noexcept
 			: m_time(other.m_time)
@@ -122,6 +126,11 @@ protected:
 	std::string m_chunkData;                     // Storage for GetChunk
 	std::deque<Message> m_outQueue;              // Latency-compensated output
 	std::vector<unsigned char> m_bufferedInput;  // For receiving long SysEx messages
+
+	std::vector<uint8> m_initialMidiDump;                          // MIDI dump to send at song start
+	std::vector<std::pair<std::string, float>> m_parameterMacros;  // Macros to automate via plugin parameter mechanism
+	std::vector<uint8> m_parameterMacroScratchSpace;
+
 	mpt::mutex m_mutex;
 	double m_nextClock = 0.0;  // Remaining samples until next MIDI clock tick should be sent
 	double m_latency = 0.0;    // User-adjusted latency in seconds
@@ -133,6 +142,9 @@ protected:
 	MidiDevice m_inputDevice;
 	MidiDevice m_outputDevice;
 	bool m_sendTimingInfo = true;
+	bool m_positionChanged = false;
+	bool m_alwaysSendInitialDump = false;
+	bool m_initialDumpSent = false;
 
 #ifdef MODPLUG_TRACKER
 	CString m_programName;
@@ -142,18 +154,6 @@ public:
 	static IMixPlugin* Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 	MidiInOut(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 	~MidiInOut();
-
-	// Translate a VST parameter to an RtMidi device ID
-	static MidiDevice::ID ParameterToDeviceID(float value)
-	{
-		return static_cast<MidiDevice::ID>(value * static_cast<float>(kMaxDevices)) - 1;
-	}
-
-	// Translate a RtMidi device ID to a VST parameter
-	static float DeviceIDToParameter(MidiDevice::ID index)
-	{
-		return static_cast<float>(index + 1) / static_cast<float>(kMaxDevices);
-	}
 
 	/////////////////////////////////////////////////
 	// Destroy the plugin
@@ -167,7 +167,8 @@ public:
 	void SetCurrentProgram(int32) final { }
 
 	PlugParamIndex GetNumParameters() const final { return kNumParams; }
-	void SetParameter(PlugParamIndex paramindex, PlugParamValue paramvalue) final;
+	PlugParamIndex GetNumVisibleParameters() const final { return kNumVisibleParams; }
+	void SetParameter(PlugParamIndex index, PlugParamValue value, PlayState *playState = nullptr, CHANNELINDEX chn = CHANNELINDEX_INVALID) final;
 	PlugParamValue GetParameter(PlugParamIndex nIndex) final;
 
 	// Save parameters for storing them in a module file
@@ -177,8 +178,8 @@ public:
 	void Process(float *pOutL, float *pOutR, uint32 numFrames) final;
 	// Render silence and return the highest resulting output level
 	float RenderSilence(uint32) final{ return 0; }
-	bool MidiSend(uint32 midiCode) final;
-	bool MidiSysexSend(mpt::const_byte_span sysex) final;
+	using IMixPlugin::MidiSend;
+	bool MidiSend(mpt::const_byte_span midiData) final;
 	void HardAllNotesOff() final;
 	// Modify parameter by given amount. Only needs to be re-implemented if plugin architecture allows this to be performed atomically.
 	void Resume() final;
@@ -215,6 +216,11 @@ public:
 	ChunkData GetChunk(bool isBank) final;
 	void SetChunk(const ChunkData &chunk, bool isBank) final;
 
+	void SetInitialMidiDump(std::vector<uint8> dump);
+	std::vector<uint8> GetInitialMidiDump() const { return m_initialMidiDump; }
+	void SetMacro(size_t index, std::string macro);
+	std::string GetMacro(size_t index) const;
+
 protected:
 	// Open a device for input or output.
 	void OpenDevice(MidiDevice newDevice, bool asInputDevice);
@@ -227,6 +233,8 @@ protected:
 
 	// Calculate the current output timestamp
 	double GetOutputTimestamp() const;
+
+	void SendMessage(mpt::span<const unsigned char> midiMsg);
 };
 
 

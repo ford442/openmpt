@@ -31,7 +31,6 @@
 #define IDD_OPTIONS_EFFECTS             133
 #define IDR_MAINFRAME                   200
 #define IDR_MODULETYPE                  201
-#define IDR_TOOLBARS                    202
 #define ID_PATTERN_CHANNELMANAGER       202
 #define IDR_ENVELOPES                   203
 #define ID_INDICATOR_CPU                203
@@ -57,6 +56,8 @@
 #define IDB_SPLASHSCREEN                307
 #define IDB_ENVTOOLBAR                  308
 #define IDB_SMPTOOLBAR                  309
+#define IDB_NEW_BIG                     310
+#define IDB_OPEN_BIG                    311
 #define IDC_DRAGGING                    350
 #define IDC_NODROP                      351
 #define IDC_NODRAG                      352
@@ -90,15 +91,16 @@
 #define IDD_FIND_RANGE                  503
 #define IDD_MIDI_IO_PLUGIN              504
 #define IDD_CONTROL_GRAPH               507
+#define IDD_QUICKSTART                  508
 #define IDD_SCALE_ENV_POINTS            510
 #define IDD_TUNING                      511
 #define IDD_UPDATE                      512
 #define IDD_MIXSAMPLES                  513
 #define IDS_ERR_TUNING_SERIALISATION    514
 #define IDD_MIDIPARAMCONTROL            515
-#define IDD_MSGBOX_HIDABLE              516
 #define IDD_ADDSILENCE                  517
 #define IDD_OPLEXPORT                   518
+#define IDD_METRONOME_SETTINGS          519
 #define IDD_OPL_PARAMS                  520
 #define IDD_CLEANUP_SONG                521
 #define IDD_CHANNELSETTINGS             522
@@ -660,12 +662,10 @@
 #define IDC_SAVE                        2102
 #define IDC_LOAD                        2103
 #define IDC_KEYREPORT                   2105
-#define IDC_BROWSEKEYCONF               2107
-#define IDC_CLEARLOG                    2107
+#define IDC_GROUPBOX_KEYSETUP           2106
+#define IDC_FINDHOTKEY_LABEL            2107
 #define IDC_NOTESREPEAT                 2108
 #define IDC_REMCHANSLIST                2108
-#define IDC_NOTESREPEAT2                2109
-#define IDC_NONOTESREPEAT               2109
 #define IDC_EFFECTLETTERSIT             2110
 #define IDC_INSVIEWPLG                  2110
 #define IDC_EFFECTLETTERSXM             2111
@@ -728,6 +728,7 @@
 #define IDC_DELPLUGIN                   2239
 #define IDC_AUTOSAVE_USECUSTOMDIR       2245
 #define IDC_BUTTON_MODTYPE2             2246
+#define IDC_VOLUME                      2247
 #define IDC_SLIDER_SAMPLEPREAMP3        2248
 #define IDC_SLIDER_GLOBALVOL            2249
 #define IDC_EDIT_VSTIVOL                2250
@@ -764,6 +765,7 @@
 #define IDC_EDIT_MISC_ACTIONS           2284
 #define IDC_TREE_TUNING                 2292
 #define IDC_PATTERN_FOLLOWSONG          2293
+#define IDC_TEXT_GLOBALVOL              2299
 #define IDC_TEXT_BPM                    2300
 #define IDC_TEXT_RPB                    2301
 #define IDC_SPIN_RPB                    2302
@@ -802,8 +804,6 @@
 #define IDC_EDIT_STRETCHPARAMS          2338
 #define IDC_MIDI_MACRO_CONTROL          2339
 #define IDC_MIDIPLAYPATTERNONMIDIIN     2340
-#define IDC_DONTSHOWAGAIN               2341
-#define IDC_MESSAGETEXT                 2342
 #define IDC_SAMPLE_DCOFFSET             2343
 #define IDC_OPTIONS_DIR_MODS            2344
 #define IDC_OPTIONS_DIR_SAMPS           2345
@@ -851,6 +851,7 @@
 #define IDC_SPIN_ADDSILENCE             2382
 #define IDC_SAMPLE_INITOPL              2383
 #define IDC_RADIO_RESIZETO              2384
+#define IDC_METRONOME                   2385
 #define IDC_CHECK_PATRECORD             2386
 #define IDC_LOAD_COLORSCHEME            2387
 #define IDC_SAVE_COLORSCHEME            2388
@@ -1093,11 +1094,12 @@
 #define ID_SAMPLE_SLICE                 32885
 #define ID_INSTRUMENT_SAMPLEMAP         32886
 #define ID_SAMPLE_MONOCONVERT           32887
+#define ID_PATTERNDETAIL_DROPDOWN       32888
 #define ID_SAMPLE_ZOOMUP                32889
 #define ID_SAMPLE_ZOOMDOWN              32890
-#define ID_PATTERNDETAIL_LO             32891
-#define ID_PATTERNDETAIL_MED            32892
-#define ID_PATTERNDETAIL_HI             32893
+#define ID_PATTERNDETAIL_INSTR          32891
+#define ID_PATTERNDETAIL_VOLUME         32892
+#define ID_PATTERNDETAIL_EFFECT         32893
 #define ID_INSTRUMENT_DUPLICATE         32894
 #define ID_PATTERN_AMPLIFY              32895
 #define ID_MODTREE_MUTE                 32896
@@ -1107,6 +1109,8 @@
 #define ID_PATTERN_VISUALIZE_EFFECT     32900
 #define ID_PATTERN_PLAYNOLOOP           32901
 #define ID_MODTREE_MUTE_ONLY_EFFECTS    32902
+#define ID_REMOVE                       32903
+#define ID_REMOVE_ALL                   32904
 #define ID_PATTERN_OPEN_RANDOMIZER      32905
 #define ID_PATTERN_INTERPOLATE_NOTE     32906
 #define ID_PATTERN_CHNRESET             32907
@@ -1147,6 +1151,8 @@
 // From here: Command range [ID_PLUGSELECT, ID_PLUGSELECT + MAX_MIXPLUGINS]
 #define ID_VSTMACRO_INFO                36002
 #define ID_VSTINPUT_INFO                36003
+#define ID_FILE_NEWMOD_PC               36004
+#define ID_METRONOME_SETTINGS           36005
 #define ID_APPROX_BPM                   36007
 #define ID_FACTORY_MENU                 36008
 #define ID_PLUG_BYPASS                  36009
@@ -1173,6 +1179,16 @@
 #define ID_ADDTUNINGGENERAL             36034
 #define ID_ADDTUNINGGROUPGEOMETRIC      36035
 #define ID_ADDTUNINGGEOMETRIC           36036
+#define ID_MAINBAR_SHOW_OCTAVE          36037
+#define ID_MAINBAR_SHOW_TEMPO           36038
+#define ID_MAINBAR_SHOW_SPEED           36039
+#define ID_MAINBAR_SHOW_ROWSPERBEAT     36040
+#define ID_MAINBAR_SHOW_GLOBALVOLUME    36041
+#define ID_MAINBAR_SHOW_VUMETER         36042
+#define ID_TREEVIEW_ON_LEFT             36043
+#define ID_KEYPRESET_MPT                36044
+#define ID_KEYPRESET_IT                 36045
+#define ID_KEYPRESET_FT2                36046
 #define ID_SELECTINST                   36100
 // From here: Command range [ID_SELECTINST, ID_SELECTINST + MAX_INSTRUMENTS]
 #define ID_PLUG_RECORDAUTOMATION        37003
@@ -1210,7 +1226,6 @@
 #define ID_ENVELOPE_TOGGLERELEASENODE   43154
 #define ID_ENVELOPE_SCALEPOINTS         43155
 #define ID_VIEW_MIDIMAPPING             43156
-#define ID_COPY_ALL_NAMES               43157
 #define ID_PATTERN_DELETEROWGLOBAL      43158
 #define ID_PATTERN_INSERTROWGLOBAL      43159
 #define ID_PATTERN_DELETEALLROWGLOBAL   43160

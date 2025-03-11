@@ -141,7 +141,7 @@ bool CSoundFile::ReadSampleAsInstrument(INSTRUMENTINDEX nInstr, FileReader &file
 	DestroyInstrument(nInstr, doNoDeleteAssociatedSamples);
 	Instruments[nInstr] = pIns;
 
-#if defined(MPT_ENABLE_FILEIO) && defined(MPT_EXTERNAL_SAMPLES)
+#if defined(MPT_EXTERNAL_SAMPLES)
 	SetSamplePath(nSample, file.GetOptionalFileName().value_or(P_("")));
 #endif
 
@@ -559,7 +559,7 @@ bool CSoundFile::ReadWAVSample(SAMPLEINDEX nSample, FileReader &file, bool mayNo
 bool CSoundFile::SaveWAVSample(SAMPLEINDEX nSample, std::ostream &f) const
 {
 	const ModSample &sample = Samples[nSample];
-	if(sample.uFlags[CHN_ADLIB])
+	if(sample.uFlags[CHN_ADLIB] || !sample.HasSampleData())
 		return false;
 
 	mpt::IO::OFile<std::ostream> ff(f);
@@ -843,6 +843,8 @@ bool CSoundFile::ReadW64Sample(SAMPLEINDEX nSample, FileReader &file, bool mayNo
 bool CSoundFile::SaveRAWSample(SAMPLEINDEX nSample, std::ostream &f) const
 {
 	const ModSample &sample = Samples[nSample];
+	if(!sample.HasSampleData())
+		return false;
 	SampleIO(
 		sample.uFlags[CHN_16BIT] ? SampleIO::_16bit : SampleIO::_8bit,
 		sample.uFlags[CHN_STEREO] ? SampleIO::stereoInterleaved : SampleIO::mono,
@@ -1188,6 +1190,8 @@ bool CSoundFile::ReadS3ISample(SAMPLEINDEX nSample, FileReader &file)
 bool CSoundFile::SaveS3ISample(SAMPLEINDEX smp, std::ostream &f) const
 {
 	const ModSample &sample = Samples[smp];
+	if(!sample.uFlags[CHN_ADLIB] && !sample.HasSampleData())
+		return false;
 	S3MSampleHeader sampleHeader{};
 	SmpLength length = sampleHeader.ConvertToS3M(sample);
 	mpt::String::WriteBuf(mpt::String::nullTerminated, sampleHeader.name) = m_szNames[smp];
@@ -1337,7 +1341,7 @@ bool CSoundFile::ReadXIInstrument(INSTRUMENTINDEX nInstr, FileReader &file)
 	}
 
 	// Read MPT crap
-	ReadExtendedInstrumentProperties(pIns, file);
+	LoadExtendedInstrumentProperties(mpt::as_span(&Instruments[nInstr], 1), file);
 	pIns->Convert(MOD_TYPE_XM, GetType());
 	pIns->Sanitize(GetType());
 	return true;
@@ -1356,9 +1360,11 @@ bool CSoundFile::SaveXIInstrument(INSTRUMENTINDEX nInstr, std::ostream &f) const
 
 	// Create file header
 	XIInstrumentHeader header;
-	header.ConvertToXM(*pIns, false);
+	const auto sampleList = header.ConvertToXM(*pIns, false);
+	const auto &samples = sampleList.samples;
+	if(sampleList.tooManySamples)
+		AddToLog(LogInformation, MPT_UFORMAT("This instrument references too many samples, only the first {} will be exported.")(samples.size()));
 
-	const std::vector<SAMPLEINDEX> samples = header.instrument.GetSampleList(*pIns, false);
 	if(samples.size() > 0 && samples[0] <= GetNumSamples())
 	{
 		// Copy over auto-vibrato settings of first sample
@@ -1396,9 +1402,7 @@ bool CSoundFile::SaveXIInstrument(INSTRUMENTINDEX nInstr, std::ostream &f) const
 		}
 	}
 
-	// Write 'MPTX' extension tag
-	mpt::IO::WriteText(f, "XTPM");
-	WriteInstrumentHeaderStructOrField(pIns, f);	// Write full extended header.
+	SaveExtendedInstrumentProperties(nInstr, MOD_TYPE_XM, f);
 
 	return true;
 }
@@ -1612,11 +1616,11 @@ bool CSoundFile::ReadCAFSample(SAMPLEINDEX nSample, FileReader &file, bool mayNo
 		return false;
 	}
 
-	if(!mpt::in_range<uint32>(mpt::saturate_round<int64>(audioFormat.mSampleRate)))
+	if(!mpt::in_range<uint32>(mpt::saturate_round<int64>(audioFormat.mSampleRate.get())))
 	{
 		return false;
 	}
-	uint32 sampleRate = static_cast<uint32>(mpt::saturate_round<int64>(audioFormat.mSampleRate));
+	uint32 sampleRate = static_cast<uint32>(mpt::saturate_round<int64>(audioFormat.mSampleRate.get()));
 	if(sampleRate <= 0)
 	{
 		return false;
@@ -2399,7 +2403,7 @@ bool CSoundFile::ReadITIInstrument(INSTRUMENTINDEX nInstr, FileReader &file)
 	if(file.Seek(extraOffset))
 	{
 		// Read MPT crap
-		ReadExtendedInstrumentProperties(pIns, file);
+		LoadExtendedInstrumentProperties(mpt::as_span(&Instruments[nInstr], 1), file);
 	}
 
 	pIns->Convert(MOD_TYPE_IT, GetType());
@@ -2484,9 +2488,7 @@ bool CSoundFile::SaveITIInstrument(INSTRUMENTINDEX nInstr, std::ostream &f, cons
 	}
 
 	mpt::IO::SeekEnd(f);
-	// Write 'MPTX' extension tag
-	mpt::IO::WriteRaw(f, "XTPM", 4);
-	WriteInstrumentHeaderStructOrField(pIns, f);	// Write full extended header.
+	SaveExtendedInstrumentProperties(nInstr, MOD_TYPE_MPT, f);
 
 	return true;
 }
@@ -2774,7 +2776,7 @@ static uint32 WriteIFFStringChunk(std::ostream &f, IFFChunk::ChunkIdentifiers id
 bool CSoundFile::SaveIFFSample(SAMPLEINDEX smp, std::ostream &f) const
 {
 	const ModSample &sample = Samples[smp];
-	if(sample.uFlags[CHN_ADLIB])
+	if(sample.uFlags[CHN_ADLIB] || !sample.HasSampleData())
 		return false;
 
 	mpt::IO::OFile<std::ostream> ff(f);

@@ -13,6 +13,7 @@
 
 #include "openmpt/all/BuildSettings.hpp"
 
+#include "AccessibleControls.h"
 #include "CDecimalSupport.h"
 #include "Globals.h"
 #include "Undo.h"
@@ -77,7 +78,7 @@ protected:
 	void RemoveDCOffset(bool allSamples);
 
 	void ApplyAmplify(const double amp, const double fadeInStart, const double fadeOutEnd, const bool fadeIn, const bool fadeOut, const Fade::Law fadeLaw);
-	void ApplyResample(SAMPLEINDEX smp, uint32 newRate, ResamplingMode mode, bool ignoreSelection = false, bool updatePatternCommands = false);
+	void ApplyResample(SAMPLEINDEX smp, uint32 newRate, ResamplingMode mode, bool ignoreSelection = false, bool updatePatternCommands = false, bool updatePatternNotes = false);
 
 	SampleSelectionPoints GetSelectionPoints();
 	void SetSelectionPoints(SmpLength nStart, SmpLength nEnd);
@@ -96,8 +97,9 @@ public:
 	void OnDeactivatePage() override;
 	void UpdateView(UpdateHint hint, CObject *pObj = nullptr) override;
 	LRESULT OnModCtrlMsg(WPARAM wParam, LPARAM lParam) override;
-	BOOL GetToolTipText(UINT uId, LPTSTR pszText) override;
+	CString GetToolTipText(UINT uId, HWND hwnd) const override;
 	BOOL PreTranslateMessage(MSG* pMsg) override;
+	void OnDPIChanged() override;
 	//}}AFX_VIRTUAL
 protected:
 	//{{AFX_MSG(CCtrlSamples)

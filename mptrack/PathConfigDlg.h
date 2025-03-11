@@ -11,6 +11,7 @@
 #pragma once
 
 #include "openmpt/all/BuildSettings.hpp"
+#include "AccessibleControls.h"
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -26,10 +27,10 @@ protected:
 
 	void OnOK() override;
 	BOOL OnInitDialog() override;
-	BOOL OnKillActive() override;
 
 	afx_msg void OnAutosaveEnable();
 	afx_msg void OnAutosaveUseOrigDir();
+	afx_msg void OnAutosaveRetention();
 	afx_msg void OnBrowseAutosavePath();
 	afx_msg void OnBrowseSongs();
 	afx_msg void OnBrowseSamples();
@@ -45,6 +46,9 @@ protected:
 	mpt::PathString GetPath(int id);
 
 	DECLARE_MESSAGE_MAP()
+
+	std::array<AccessibleEdit, 3> m_accessibleEdits;
+	std::array<AccessibleButton, 6> m_browseButtons;
 };
 
 OPENMPT_NAMESPACE_END

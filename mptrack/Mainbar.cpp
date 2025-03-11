@@ -10,6 +10,7 @@
 
 #include "stdafx.h"
 #include "Mainbar.h"
+#include "HighDPISupport.h"
 #include "ImageLists.h"
 #include "InputHandler.h"
 #include "Mainfrm.h"
@@ -25,6 +26,20 @@
 
 OPENMPT_NAMESPACE_BEGIN
 
+
+BEGIN_MESSAGE_MAP(COctaveEdit, CEdit)
+	ON_WM_CHAR()
+END_MESSAGE_MAP()
+
+void COctaveEdit::OnChar(UINT nChar, UINT /*nRepCnt*/, UINT /*nFlags*/)
+{
+	if(nChar >= _T('0') + MIN_BASEOCTAVE && nChar <= _T('0') + MAX_BASEOCTAVE)
+		m_owner.SetBaseOctave(nChar - _T('0'));
+	else if(nChar == _T('+') && m_owner.GetBaseOctave() < MAX_BASEOCTAVE)
+		m_owner.SetBaseOctave(m_owner.GetBaseOctave() + 1);
+	else if(nChar == _T('-') && m_owner.GetBaseOctave() > MIN_BASEOCTAVE)
+		m_owner.SetBaseOctave(m_owner.GetBaseOctave() - 1);
+}
 
 /////////////////////////////////////////////////////////////////////
 // CToolBarEx: custom toolbar base class
@@ -44,6 +59,19 @@ void CToolBarEx::SetVertical()
 
 CSize CToolBarEx::CalcDynamicLayout(int nLength, DWORD dwMode)
 {
+	// Make the toolbar go into multiline mode when it's docked
+	if(dwMode & LM_HORZDOCK)
+	{
+		if(auto mainFrm = CMainFrame::GetMainFrame())
+		{
+			CRect rect;
+			mainFrm->GetClientRect(rect);
+			nLength = rect.right;
+			dwMode &= ~LM_HORZDOCK;
+			dwMode |= LM_COMMIT;
+		}
+	}
+
 	CSize sizeResult;
 	// if we're committing set the buttons appropriately
 	if(dwMode & LM_COMMIT)
@@ -86,108 +114,93 @@ CSize CToolBarEx::CalcDynamicLayout(int nLength, DWORD dwMode)
 }
 
 
-BOOL CToolBarEx::EnableControl(CWnd &wnd, UINT nIndex, UINT nHeight)
+void CToolBarEx::UpdateControl(bool show, CWnd &wnd, int index, int id, int height)
 {
-	if(wnd.m_hWnd != NULL)
+	if(show)
 	{
 		CRect rect;
-		GetItemRect(nIndex, rect);
-		if(nHeight)
+		wnd.GetWindowRect(rect);
+		SetButtonInfo(index, id, TBBS_SEPARATOR, rect.Width());
+
+		if(wnd.m_hWnd)
 		{
-			int n = (rect.bottom + rect.top - nHeight) / 2;
-			if(n > rect.top) rect.top = n;
+			GetItemRect(index, rect);
+			if(height)
+			{
+				int n = (rect.bottom + rect.top - height) / 2;
+				if(n > rect.top)
+					rect.top = n;
+			}
+			wnd.SetWindowPos(nullptr, rect.left, rect.top, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
 		}
-		wnd.SetWindowPos(NULL, rect.left, rect.top, 0, 0, SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOCOPYBITS);
-		wnd.ShowWindow(SW_SHOW);
 	}
-	return TRUE;
+	if(wnd.m_hWnd)
+		wnd.ShowWindow(show ? SW_SHOW : SW_HIDE);
+	SetButtonVisibility(index, show);
 }
 
 
-void CToolBarEx::ChangeCtrlStyle(LONG lStyle, BOOL bSetStyle)
+void CToolBarEx::EnableFlatButtons(bool flat)
 {
-	if(m_hWnd)
-	{
-		LONG lStyleOld = GetWindowLong(m_hWnd, GWL_STYLE);
-		if(bSetStyle)
-			lStyleOld |= lStyle;
-		else
-			lStyleOld &= ~lStyle;
-		SetWindowLong(m_hWnd, GWL_STYLE, lStyleOld);
-		SetWindowPos(NULL, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE);
-		Invalidate();
-	}
+	ModifyStyle(flat ? 0 : TBSTYLE_FLAT, flat ? TBSTYLE_FLAT : 0);
+	Invalidate();
 }
 
 
-void CToolBarEx::EnableFlatButtons(BOOL bFlat)
+void CToolBarEx::SetButtonVisibility(int index, bool visible)
 {
-	m_bFlatButtons = bFlat ? true : false;
-	ChangeCtrlStyle(TBSTYLE_FLAT, bFlat);
+	auto style = GetButtonStyle(index);
+	if(visible)
+		style &= ~TBBS_HIDDEN;
+	else
+		style |= TBBS_HIDDEN;
+	SetButtonStyle(index, style);
 }
 
 
 /////////////////////////////////////////////////////////////////////
 // CMainToolBar
 
-#define SCALEWIDTH(x) (Util::ScalePixels(x, m_hWnd))
-#define SCALEHEIGHT(x) (Util::ScalePixels(x, m_hWnd))
+enum ToolbarItemIndex
+{
+	PLAYCMD_INDEX = 10,                             // Play / Pause
+	EDITOCTAVE_INDEX = 13,                          // Base Octave
+	SPINOCTAVE_INDEX = EDITOCTAVE_INDEX + 1,        // Spin Base Octave
+	DIVOCTAVE_INDEX = SPINOCTAVE_INDEX + 1,         // Divider for vertical mode
+	TEMPOTEXT_INDEX = DIVOCTAVE_INDEX + 1,          // Static "Tempo:"
+	EDITTEMPO_INDEX = TEMPOTEXT_INDEX + 1,          // Edit Tempo
+	SPINTEMPO_INDEX = EDITTEMPO_INDEX + 1,          // Spin Tempo
+	DIVTEMPO_INDEX = SPINTEMPO_INDEX + 1,           // Divider for vertical mode
+	SPEEDTEXT_INDEX = DIVTEMPO_INDEX + 1,           // Static "Speed:"
+	EDITSPEED_INDEX = SPEEDTEXT_INDEX + 1,          // Edit Speed
+	SPINSPEED_INDEX = EDITSPEED_INDEX + 1,          // Spin Speed
+	DIVSPEED_INDEX = SPINSPEED_INDEX + 1,           // Divider for vertical mode
+	RPBTEXT_INDEX = DIVSPEED_INDEX + 1,             // Static "Rows/Beat:"
+	EDITRPB_INDEX = RPBTEXT_INDEX + 1,              // Edit Speed
+	SPINRPB_INDEX = EDITRPB_INDEX + 1,              // Spin Speed
+	DIVRPB_INDEX = SPINRPB_INDEX + 1,               // Divider for vertical mode
+	GLOBALVOLTEXT_INDEX = DIVRPB_INDEX + 1,         // Static "Rows/Beat:"
+	EDITGLOBALVOL_INDEX = GLOBALVOLTEXT_INDEX + 1,  // Edit Speed
+	SPINGLOBALVOL_INDEX = EDITGLOBALVOL_INDEX + 1,  // Spin Speed
+	DIVGLOBALVOL_INDEX = SPINGLOBALVOL_INDEX + 1,   // Divider at end
+	DIVVUMETER_INDEX = SPINGLOBALVOL_INDEX + 5,     // Divider before VU Meters
+	VUMETER_INDEX = DIVVUMETER_INDEX + 1,           // VU Meters
+};
 
-// Play Command
-#define PLAYCMD_INDEX		10
-#define TOOLBAR_IMAGE_PAUSE	8
-#define TOOLBAR_IMAGE_PLAY	13
-// Base octave
-#define EDITOCTAVE_INDEX	13
-#define EDITOCTAVE_WIDTH	SCALEWIDTH(55)
-#define EDITOCTAVE_HEIGHT	SCALEHEIGHT(20)
-#define SPINOCTAVE_INDEX	(EDITOCTAVE_INDEX+1)
-#define SPINOCTAVE_WIDTH	SCALEWIDTH(16)
-#define SPINOCTAVE_HEIGHT	(EDITOCTAVE_HEIGHT)
-// Static "Tempo:"
-#define TEMPOTEXT_INDEX		16
-#define TEMPOTEXT_WIDTH		SCALEWIDTH(45)
-#define TEMPOTEXT_HEIGHT	SCALEHEIGHT(20)
-// Edit Tempo
-#define EDITTEMPO_INDEX		(TEMPOTEXT_INDEX+1)
-#define EDITTEMPO_WIDTH		SCALEWIDTH(48)
-#define EDITTEMPO_HEIGHT	SCALEHEIGHT(20)
-// Spin Tempo
-#define SPINTEMPO_INDEX		(EDITTEMPO_INDEX+1)
-#define SPINTEMPO_WIDTH		SCALEWIDTH(16)
-#define SPINTEMPO_HEIGHT	(EDITTEMPO_HEIGHT)
-// Static "Speed:"
-#define SPEEDTEXT_INDEX		20
-#define SPEEDTEXT_WIDTH		SCALEWIDTH(57)
-#define SPEEDTEXT_HEIGHT	(TEMPOTEXT_HEIGHT)
-// Edit Speed
-#define EDITSPEED_INDEX		(SPEEDTEXT_INDEX+1)
-#define EDITSPEED_WIDTH		SCALEWIDTH(28)
-#define EDITSPEED_HEIGHT	(EDITTEMPO_HEIGHT)
-// Spin Speed
-#define SPINSPEED_INDEX		(EDITSPEED_INDEX+1)
-#define SPINSPEED_WIDTH		SCALEWIDTH(16)
-#define SPINSPEED_HEIGHT	(EDITSPEED_HEIGHT)
-// Static "Rows/Beat:"
-#define RPBTEXT_INDEX		24
-#define RPBTEXT_WIDTH		SCALEWIDTH(63)
-#define RPBTEXT_HEIGHT		(TEMPOTEXT_HEIGHT)
-// Edit Speed
-#define EDITRPB_INDEX		(RPBTEXT_INDEX+1)
-#define EDITRPB_WIDTH		SCALEWIDTH(28)
-#define EDITRPB_HEIGHT		(EDITTEMPO_HEIGHT)
-// Spin Speed
-#define SPINRPB_INDEX		(EDITRPB_INDEX+1)
-#define SPINRPB_WIDTH		SCALEWIDTH(16)
-#define SPINRPB_HEIGHT		(EDITRPB_HEIGHT)
-// VU Meters
-#define VUMETER_INDEX		(SPINRPB_INDEX+6)
-#define VUMETER_WIDTH		SCALEWIDTH(255)
-#define VUMETER_HEIGHT		SCALEHEIGHT(19)
+#define TOOLBAR_IMAGE_PAUSE 8
+#define TOOLBAR_IMAGE_PLAY  13
+
+#define SCALEPIXELS(x)      (HighDPISupport::ScalePixels(x, m_hWnd))
+#define TEXTFIELD_HEIGHT    SCALEPIXELS(20)
+#define SPINNER_WIDTH       SCALEPIXELS(16)
+#define SPINNER_HEIGHT      SCALEPIXELS(20)
+#define VUMETER_WIDTH       SCALEPIXELS(255)
+#define VUMETER_HEIGHT      SCALEPIXELS(19)
+#define TREEVIEW_PADDING    SCALEPIXELS(3)
 
 static UINT MainButtons[] =
 {
-	// same order as in the bitmap 'mainbar.bmp'
+	// same order as in the bitmap 'main_toolbar.png'
 	ID_FILE_NEW,
 	ID_FILE_OPEN,
 	ID_FILE_SAVE,
@@ -201,136 +214,87 @@ static UINT MainButtons[] =
 	ID_PLAYER_PAUSE,
 	ID_PLAYER_PLAYFROMSTART,
 		ID_SEPARATOR,
-		ID_SEPARATOR,
-		ID_SEPARATOR,
-		ID_SEPARATOR,
-		ID_SEPARATOR,
-		ID_SEPARATOR,
-		ID_SEPARATOR,
-		ID_SEPARATOR,
-		ID_SEPARATOR,
-		ID_SEPARATOR,
-		ID_SEPARATOR,
-		ID_SEPARATOR,
-
-		ID_SEPARATOR,
-		ID_SEPARATOR,
-		ID_SEPARATOR,
+	ID_SEPARATOR,  // Octave
+	ID_SEPARATOR,
+		ID_SEPARATOR,  // Divider for vertical mode
+	ID_SEPARATOR,  // Tempo
+	ID_SEPARATOR,
+	ID_SEPARATOR,
+		ID_SEPARATOR,  // Divider for vertical mode
+	ID_SEPARATOR,  // Speed
+	ID_SEPARATOR,
+	ID_SEPARATOR,
+		ID_SEPARATOR,  // Divider for vertical mode
+	ID_SEPARATOR,  // Rows Per Beat
+	ID_SEPARATOR,
+	ID_SEPARATOR,
+		ID_SEPARATOR,  // Divider for vertical mode
+	ID_SEPARATOR,  // Global Volume
+	ID_SEPARATOR,
+	ID_SEPARATOR,
 		ID_SEPARATOR,
 	ID_VIEW_OPTIONS,
 	ID_PANIC,
 	ID_UPDATE_AVAILABLE,
-	ID_SEPARATOR,
-		ID_SEPARATOR,	// VU Meter
+		ID_SEPARATOR,
+	ID_SEPARATOR,  // VU Meter
 };
 
 
 enum { MAX_MIDI_DEVICES = 256 };
 
 BEGIN_MESSAGE_MAP(CMainToolBar, CToolBarEx)
+	//{{AFX_MSG_MAP(CMainToolBar)
 	ON_WM_VSCROLL()
 	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXT, 0, 0xFFFF, &CMainToolBar::OnToolTipText)
 	ON_NOTIFY_REFLECT(TBN_DROPDOWN, &CMainToolBar::OnTbnDropDownToolBar)
 	ON_COMMAND_RANGE(ID_SELECT_MIDI_DEVICE, ID_SELECT_MIDI_DEVICE + MAX_MIDI_DEVICES, &CMainToolBar::OnSelectMIDIDevice)
+	ON_MESSAGE(WM_DPICHANGED_AFTERPARENT, &CMainToolBar::OnDPIChangedAfterParent)
+
+	ON_EN_CHANGE(IDC_EDIT_CURRENTSPEED, &CMainToolBar::OnSpeedChanged)
+	ON_EN_CHANGE(IDC_EDIT_CURRENTTEMPO, &CMainToolBar::OnTempoChanged)
+	ON_EN_CHANGE(IDC_EDIT_RPB,          &CMainToolBar::OnRPBChanged)
+	ON_EN_CHANGE(IDC_EDIT_GLOBALVOL,    &CMainToolBar::OnGlobalVolChanged)
+	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 
 
-template<typename TWnd>
-static bool CreateTextWnd(TWnd &wnd, const TCHAR *text, DWORD style, CWnd *parent, UINT id)
-{
-	auto dc = parent->GetDC();
-	auto oldFont = dc->SelectObject(CMainFrame::GetGUIFont());
-	const auto size = dc->GetTextExtent(text);
-	dc->SelectObject(oldFont);
-	parent->ReleaseDC(dc);
-	CRect rect{0, 0, size.cx + Util::ScalePixels(10, *parent), std::max(static_cast<int>(size.cy) + Util::ScalePixels(4, *parent), Util::ScalePixels(20, *parent))};
-	return wnd.Create(text, style, rect, parent, id) != FALSE;
-}
-
 BOOL CMainToolBar::Create(CWnd *parent)
 {
-	CRect rect;
-	DWORD dwStyle = WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_SIZE_DYNAMIC | CBRS_TOOLTIPS | CBRS_FLYBY;
-
-	if(!CToolBar::Create(parent, dwStyle))
+	if(!CToolBar::Create(parent, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_SIZE_DYNAMIC | CBRS_TOOLTIPS | CBRS_FLYBY))
 		return FALSE;
 
-	CDC *dc = GetDC();
-	const auto hFont     = reinterpret_cast<WPARAM>(CMainFrame::GetGUIFont());
-	const double scaling = Util::GetDPIx(m_hWnd) / 96.0;
-	const int imgSize = mpt::saturate_round<int>(16 * scaling), btnSizeX = mpt::saturate_round<int>(23 * scaling), btnSizeY = mpt::saturate_round<int>(22 * scaling);
-	m_ImageList.Create(IDB_MAINBAR, 16, 16, IMGLIST_NUMIMAGES, 1, dc, scaling, false);
-	m_ImageListDisabled.Create(IDB_MAINBAR, 16, 16, IMGLIST_NUMIMAGES, 1, dc, scaling, true);
-	ReleaseDC(dc);
-	GetToolBarCtrl().SetBitmapSize(CSize(imgSize, imgSize));
-	GetToolBarCtrl().SetButtonSize(CSize(btnSizeX, btnSizeY));
-	GetToolBarCtrl().SetImageList(&m_ImageList);
-	GetToolBarCtrl().SetDisabledImageList(&m_ImageListDisabled);
-	SendMessage(WM_SETFONT, hFont, TRUE);
+	SetButtons(MainButtons, static_cast<int>(std::size(MainButtons)));
 
-	if(!SetButtons(MainButtons, mpt::saturate_cast<int>(std::size(MainButtons)))) return FALSE;
+	// Placeholder rect, text width will be determined later
+	CRect rect{0, 0, SPINNER_WIDTH, SPINNER_HEIGHT};
 
-	CRect temp;
-	GetItemRect(0, temp);
-	SetSizes(CSize(temp.Width(), temp.Height()), CSize(imgSize, imgSize));
-
-	// Dropdown menus for New and MIDI buttons
-	LPARAM dwExStyle = GetToolBarCtrl().SendMessage(TB_GETEXTENDEDSTYLE) | TBSTYLE_EX_DRAWDDARROWS;
-	GetToolBarCtrl().SendMessage(TB_SETEXTENDEDSTYLE, 0, dwExStyle);
-	SetButtonStyle(CommandToIndex(ID_FILE_NEW), GetButtonStyle(CommandToIndex(ID_FILE_NEW)) | TBSTYLE_DROPDOWN);
-	SetButtonStyle(CommandToIndex(ID_MIDI_RECORD), GetButtonStyle(CommandToIndex(ID_MIDI_RECORD)) | TBSTYLE_DROPDOWN);
-
-	nCurrentSpeed = 6;
-	nCurrentTempo.Set(125);
-	nCurrentRowsPerBeat = 4;
-	nCurrentOctave = -1;
-
-	// Octave Edit Box
-	if(!CreateTextWnd(m_EditOctave, _T("Octave 9"), WS_CHILD | WS_BORDER | SS_LEFT | SS_CENTERIMAGE, this, IDC_EDIT_BASEOCTAVE)) return FALSE;
-	rect.SetRect(0, 0, SPINOCTAVE_WIDTH, SPINOCTAVE_HEIGHT);
-	m_SpinOctave.Create(WS_CHILD | UDS_ALIGNRIGHT, rect, this, IDC_SPIN_BASEOCTAVE);
-
-	// Tempo Text
-	if(!CreateTextWnd(m_StaticTempo, _T("Tempo:"), WS_CHILD | SS_CENTER | SS_CENTERIMAGE, this, IDC_TEXT_CURRENTTEMPO)) return FALSE;
-	// Tempo EditBox
-	if(!CreateTextWnd(m_EditTempo, _T("999.999"), WS_CHILD | WS_BORDER | SS_LEFT | SS_CENTERIMAGE , this, IDC_EDIT_CURRENTTEMPO)) return FALSE;
-	// Tempo Spin
-	rect.SetRect(0, 0, SPINTEMPO_WIDTH, SPINTEMPO_HEIGHT);
-	m_SpinTempo.Create(WS_CHILD | UDS_ALIGNRIGHT, rect, this, IDC_SPIN_CURRENTTEMPO);
-
-	// Speed Text
-	if(!CreateTextWnd(m_StaticSpeed, _T("Ticks/Row:"), WS_CHILD | SS_CENTER | SS_CENTERIMAGE, this, IDC_TEXT_CURRENTSPEED)) return FALSE;
-	// Speed EditBox
-	if(!CreateTextWnd(m_EditSpeed, _T("999"), WS_CHILD | WS_BORDER | SS_LEFT | SS_CENTERIMAGE , this, IDC_EDIT_CURRENTSPEED)) return FALSE;
-	// Speed Spin
-	rect.SetRect(0, 0, SPINSPEED_WIDTH, SPINSPEED_HEIGHT);
-	m_SpinSpeed.Create(WS_CHILD | UDS_ALIGNRIGHT, rect, this, IDC_SPIN_CURRENTSPEED);
-
-	// Rows per Beat Text
-	if(!CreateTextWnd(m_StaticRowsPerBeat, _T("Rows/Beat:"), WS_CHILD | SS_CENTER | SS_CENTERIMAGE, this, IDC_TEXT_RPB)) return FALSE;
-	// Rows per Beat EditBox
-	if(!CreateTextWnd(m_EditRowsPerBeat, _T("9999"), WS_CHILD | WS_BORDER | SS_LEFT | SS_CENTERIMAGE , this, IDC_EDIT_RPB)) return FALSE;
-	// Rows per Beat Spin
-	rect.SetRect(0, 0, SPINRPB_WIDTH, SPINRPB_HEIGHT);
-	m_SpinRowsPerBeat.Create(WS_CHILD | UDS_ALIGNRIGHT, rect, this, IDC_SPIN_RPB);
+	// Octave
+	m_EditOctave.Create(WS_CHILD | WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL | ES_CENTER, rect, this, IDC_EDIT_BASEOCTAVE);
+	m_SpinOctave.Create(WS_CHILD | UDS_ALIGNRIGHT | UDS_AUTOBUDDY, rect, this, IDC_SPIN_BASEOCTAVE);
+	// Tempo
+	m_StaticTempo.Create(_T("Tempo:"), WS_CHILD | SS_CENTER | SS_CENTERIMAGE, rect, this, IDC_TEXT_CURRENTTEMPO);
+	m_EditTempo.Create(WS_CHILD | WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL | ES_NUMBER, rect, this, IDC_EDIT_CURRENTTEMPO);
+	m_SpinTempo.Create(WS_CHILD | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS, rect, this, IDC_SPIN_CURRENTTEMPO);
+	// Speed
+	m_StaticSpeed.Create(_T("Ticks/Row:"), WS_CHILD | SS_CENTER | SS_CENTERIMAGE, rect, this, IDC_TEXT_CURRENTSPEED);
+	m_EditSpeed.Create(WS_CHILD | WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL | ES_NUMBER, rect, this, IDC_EDIT_CURRENTSPEED);
+	m_SpinSpeed.Create(WS_CHILD | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS, rect, this, IDC_SPIN_CURRENTSPEED);
+	// Rows per Beat
+	m_StaticRowsPerBeat.Create(_T("Rows/Beat:"), WS_CHILD | SS_CENTER | SS_CENTERIMAGE, rect, this, IDC_TEXT_RPB);
+	m_EditRowsPerBeat.Create(WS_CHILD | WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL | ES_NUMBER, rect, this, IDC_EDIT_RPB);
+	m_SpinRowsPerBeat.Create(WS_CHILD | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS, rect, this, IDC_SPIN_RPB);
+	// Global Volume
+	m_StaticGlobalVolume.Create(_T("Global Volume:"), WS_CHILD | SS_CENTER | SS_CENTERIMAGE, rect, this, IDC_TEXT_GLOBALVOL);
+	m_EditGlobalVolume.Create(WS_CHILD | WS_BORDER | WS_TABSTOP | ES_READONLY | ES_AUTOHSCROLL | ES_NUMBER, rect, this, IDC_EDIT_GLOBALVOL);
+	m_SpinGlobalVolume.Create(WS_CHILD | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS, rect, this, IDC_SPIN_GLOBALVOL);
 
 	// VU Meter
 	rect.SetRect(0, 0, VUMETER_WIDTH, VUMETER_HEIGHT);
-	//m_VuMeter.CreateEx(WS_EX_STATICEDGE, "STATIC", "", WS_CHILD | WS_BORDER | SS_NOTIFY, rect, this, IDC_VUMETER);
 	m_VuMeter.Create(_T(""), WS_CHILD | WS_BORDER | SS_NOTIFY, rect, this, IDC_VUMETER);
 
-	// Adjust control styles
-	m_EditOctave.SendMessage(WM_SETFONT, hFont);
-	m_EditOctave.ModifyStyleEx(0, WS_EX_STATICEDGE, SWP_NOACTIVATE);
-	m_StaticTempo.SendMessage(WM_SETFONT, hFont);
-	m_EditTempo.SendMessage(WM_SETFONT, hFont);
-	m_EditTempo.ModifyStyleEx(0, WS_EX_STATICEDGE, SWP_NOACTIVATE);
-	m_StaticSpeed.SendMessage(WM_SETFONT, hFont);
-	m_EditSpeed.SendMessage(WM_SETFONT, hFont);
-	m_EditSpeed.ModifyStyleEx(0, WS_EX_STATICEDGE, SWP_NOACTIVATE);
-	m_StaticRowsPerBeat.SendMessage(WM_SETFONT, hFont);
-	m_EditRowsPerBeat.SendMessage(WM_SETFONT, hFont);
-	m_EditRowsPerBeat.ModifyStyleEx(0, WS_EX_STATICEDGE, SWP_NOACTIVATE);
+	UpdateSizes();
+
 	m_SpinOctave.SetRange(MIN_BASEOCTAVE, MAX_BASEOCTAVE);
 	m_SpinOctave.SetPos(4);
 	m_SpinTempo.SetRange(-1, 1);
@@ -339,6 +303,14 @@ BOOL CMainToolBar::Create(CWnd *parent)
 	m_SpinSpeed.SetPos(0);
 	m_SpinRowsPerBeat.SetRange(-1, 1);
 	m_SpinRowsPerBeat.SetPos(0);
+	m_SpinGlobalVolume.SetRange(-1, 1);
+	m_SpinGlobalVolume.SetPos(0);
+
+	m_EditTempo.AllowNegative(false);
+	m_EditTempo.SetLimitText(9);
+	static_assert(MAX_GLOBAL_VOLUME <= 999);
+	m_EditGlobalVolume.SetLimitText(3);
+
 	// Display everything
 	SetWindowText(_T("Main"));
 	SetBaseOctave(4);
@@ -351,139 +323,200 @@ BOOL CMainToolBar::Create(CWnd *parent)
 }
 
 
-void CMainToolBar::Init(CMainFrame *pMainFrm)
+LRESULT CMainToolBar::OnDPIChangedAfterParent(WPARAM, LPARAM)
 {
-	EnableFlatButtons(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_FLATBUTTONS);
-	SetHorizontal();
-	pMainFrm->DockControlBar(this);
+	auto result = Default();
+	m_font.DeleteObject();
+	UpdateSizes();
+	RefreshToolbar();
+	return result;
 }
 
 
-static int GetWndWidth(const CWnd &wnd)
+void CMainToolBar::RefreshToolbar()
 {
-	CRect rect;
-	wnd.GetClientRect(rect);
-	return rect.right;
+	if(m_bVertical)
+		SetVertical();
+	else
+		SetHorizontal();
+	CMainFrame::GetMainFrame()->RecalcLayout();  // Update bar height (in case of DPI change)
+}
+
+
+void CMainToolBar::UpdateSizes()
+{
+	CDC *dc = GetDC();
+	if(!m_font.m_hObject)
+		HighDPISupport::CreateGUIFont(m_font, m_hWnd);
+	const double scaling = HighDPISupport::GetDpiForWindow(m_hWnd) / 96.0;
+	const int imgSize = HighDPISupport::ScalePixels(16, m_hWnd), btnSizeX = HighDPISupport::ScalePixels(23, m_hWnd), btnSizeY = HighDPISupport::ScalePixels(22, m_hWnd);
+	m_ImageList.Create(IDB_MAINBAR, 16, 16, IMGLIST_NUMIMAGES, 1, dc, scaling, false);
+	m_ImageListDisabled.Create(IDB_MAINBAR, 16, 16, IMGLIST_NUMIMAGES, 1, dc, scaling, true);
+	
+	struct TextWndInfo
+	{
+		CWnd &wnd;
+		const TCHAR *measureText;
+		int toolbarIndex, id;
+	};
+	const TextWndInfo TextWnds[] =
+	{
+		{m_EditOctave,         _T("Octave 9"),       EDITOCTAVE_INDEX,    IDC_EDIT_BASEOCTAVE  },
+		{m_StaticTempo,        _T("Tempo"),          TEMPOTEXT_INDEX,     IDC_TEXT_CURRENTTEMPO},
+		{m_EditTempo,          _T("999.9999"),       EDITTEMPO_INDEX,     IDC_EDIT_CURRENTTEMPO},
+		{m_StaticSpeed,        _T("Ticks/Row:"),     SPEEDTEXT_INDEX,     IDC_TEXT_CURRENTSPEED},
+		{m_EditSpeed,          _T("999"),            EDITSPEED_INDEX,     IDC_EDIT_CURRENTSPEED},
+		{m_StaticRowsPerBeat,  _T("Rows/Beat:"),     RPBTEXT_INDEX,       IDC_TEXT_RPB         },
+		{m_EditRowsPerBeat,    _T("9999"),           EDITRPB_INDEX,       IDC_EDIT_RPB         },
+		{m_StaticGlobalVolume, _T("Global Volume:"), GLOBALVOLTEXT_INDEX, IDC_TEXT_GLOBALVOL   },
+		{m_EditGlobalVolume,   _T("999"),            EDITGLOBALVOL_INDEX, IDC_EDIT_GLOBALVOL   },
+	};
+	
+	auto oldFont = dc->SelectObject(m_font);
+	const int textPaddingX = HighDPISupport::ScalePixels(10, m_hWnd), textPaddingY = HighDPISupport::ScalePixels(4, m_hWnd), textMinHeight = HighDPISupport::ScalePixels(20, m_hWnd);
+	for(auto &info : TextWnds)
+	{
+		info.wnd.SetFont(&m_font, FALSE);
+		const auto size = dc->GetTextExtent(info.measureText);
+		const int width = size.cx + textPaddingX;
+		const int height = std::max(static_cast<int>(size.cy) + textPaddingY, textMinHeight);
+		// For some reason, DeferWindowPos doesn't work here
+		info.wnd.SetWindowPos(nullptr, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOREPOSITION | SWP_NOACTIVATE | SWP_NOCOPYBITS);
+	}
+	dc->SelectObject(oldFont);
+	ReleaseDC(dc);
+
+	GetToolBarCtrl().SetImageList(&m_ImageList);
+	GetToolBarCtrl().SetDisabledImageList(&m_ImageListDisabled);
+	SetFont(&m_font);
+
+	SetSizes(CSize(btnSizeX, btnSizeY), CSize(imgSize, imgSize));
+
+	// Dropdown menus for New and MIDI buttons
+	GetToolBarCtrl().SetExtendedStyle(GetToolBarCtrl().GetExtendedStyle() | TBSTYLE_EX_DRAWDDARROWS);
+	SetButtonStyle(CommandToIndex(ID_FILE_NEW), GetButtonStyle(CommandToIndex(ID_FILE_NEW)) | TBSTYLE_DROPDOWN);
+	SetButtonStyle(CommandToIndex(ID_MIDI_RECORD), GetButtonStyle(CommandToIndex(ID_MIDI_RECORD)) | TBSTYLE_DROPDOWN);
+
+	const int spinnerWidth = SPINNER_WIDTH, spinnerHeight = SPINNER_HEIGHT;
+	m_SpinOctave.SetWindowPos(nullptr, 0, 0, spinnerWidth, spinnerHeight, SWP_NOMOVE | SWP_NOZORDER | SWP_NOREPOSITION | SWP_NOACTIVATE);
+	m_SpinTempo.SetWindowPos(nullptr, 0, 0, spinnerWidth, spinnerHeight, SWP_NOMOVE | SWP_NOZORDER | SWP_NOREPOSITION | SWP_NOACTIVATE);
+	m_SpinSpeed.SetWindowPos(nullptr, 0, 0, spinnerWidth, spinnerHeight, SWP_NOMOVE | SWP_NOZORDER | SWP_NOREPOSITION | SWP_NOACTIVATE);
+	m_SpinRowsPerBeat.SetWindowPos(nullptr, 0, 0, spinnerWidth, spinnerHeight, SWP_NOMOVE | SWP_NOZORDER | SWP_NOREPOSITION | SWP_NOACTIVATE);
+	m_SpinGlobalVolume.SetWindowPos(nullptr, 0, 0, spinnerWidth, spinnerHeight, SWP_NOMOVE | SWP_NOZORDER | SWP_NOREPOSITION | SWP_NOACTIVATE);
+}
+
+
+void CMainToolBar::Init(CMainFrame *pMainFrm)
+{
+	EnableFlatButtons(TrackerSettings::Instance().patternSetup & PatternSetup::FlatToolbarButtons);
+	SetHorizontal();
+	pMainFrm->DockControlBar(this);
 }
 
 
 void CMainToolBar::SetHorizontal()
 {
 	CToolBarEx::SetHorizontal();
-	m_VuMeter.SetOrientation(true);
-	SetButtonInfo(EDITOCTAVE_INDEX, IDC_EDIT_BASEOCTAVE, TBBS_SEPARATOR, GetWndWidth(m_EditOctave));
-	SetButtonInfo(SPINOCTAVE_INDEX, IDC_SPIN_BASEOCTAVE, TBBS_SEPARATOR, SPINOCTAVE_WIDTH);
-	SetButtonInfo(TEMPOTEXT_INDEX, IDC_TEXT_CURRENTTEMPO, TBBS_SEPARATOR, GetWndWidth(m_StaticTempo));
-	SetButtonInfo(EDITTEMPO_INDEX, IDC_EDIT_CURRENTTEMPO, TBBS_SEPARATOR, GetWndWidth(m_EditTempo));
-	SetButtonInfo(SPINTEMPO_INDEX, IDC_SPIN_CURRENTTEMPO, TBBS_SEPARATOR, SPINTEMPO_WIDTH);
-	SetButtonInfo(SPEEDTEXT_INDEX, IDC_TEXT_CURRENTSPEED, TBBS_SEPARATOR, GetWndWidth(m_StaticSpeed));
-	SetButtonInfo(EDITSPEED_INDEX, IDC_EDIT_CURRENTSPEED, TBBS_SEPARATOR, GetWndWidth(m_EditSpeed));
-	SetButtonInfo(SPINSPEED_INDEX, IDC_SPIN_CURRENTSPEED, TBBS_SEPARATOR, SPINSPEED_WIDTH);
-	SetButtonInfo(RPBTEXT_INDEX, IDC_TEXT_RPB, TBBS_SEPARATOR, GetWndWidth(m_StaticRowsPerBeat));
-	SetButtonInfo(EDITRPB_INDEX, IDC_EDIT_RPB, TBBS_SEPARATOR, GetWndWidth(m_EditRowsPerBeat));
-	SetButtonInfo(SPINRPB_INDEX, IDC_SPIN_RPB, TBBS_SEPARATOR, SPINRPB_WIDTH);
-	SetButtonInfo(VUMETER_INDEX, IDC_VUMETER, TBBS_SEPARATOR, VUMETER_WIDTH);
-
-	//SetButtonInfo(SPINSPEED_INDEX+1, IDC_TEXT_BPM, TBBS_SEPARATOR, SPEEDTEXT_WIDTH);
-	// Octave Box
-	EnableControl(m_EditOctave, EDITOCTAVE_INDEX);
-	EnableControl(m_SpinOctave, SPINOCTAVE_INDEX);
-	// Tempo
-	EnableControl(m_StaticTempo, TEMPOTEXT_INDEX, TEMPOTEXT_HEIGHT);
-	EnableControl(m_EditTempo, EDITTEMPO_INDEX, EDITTEMPO_HEIGHT);
-	EnableControl(m_SpinTempo, SPINTEMPO_INDEX, SPINTEMPO_HEIGHT);
-	// Speed
-	EnableControl(m_StaticSpeed, SPEEDTEXT_INDEX, SPEEDTEXT_HEIGHT);
-	EnableControl(m_EditSpeed, EDITSPEED_INDEX, EDITSPEED_HEIGHT);
-	EnableControl(m_SpinSpeed, SPINSPEED_INDEX, SPINSPEED_HEIGHT);
-	// Rows per Beat
-	EnableControl(m_StaticRowsPerBeat, RPBTEXT_INDEX, RPBTEXT_HEIGHT);
-	EnableControl(m_EditRowsPerBeat, EDITRPB_INDEX, EDITRPB_HEIGHT);
-	EnableControl(m_SpinRowsPerBeat, SPINRPB_INDEX, SPINRPB_HEIGHT);
-	EnableControl(m_VuMeter, VUMETER_INDEX, VUMETER_HEIGHT);
+	UpdateControls();
 }
 
 
 void CMainToolBar::SetVertical()
 {
 	CToolBarEx::SetVertical();
-	m_VuMeter.SetOrientation(false);
-	// Change Buttons
-	SetButtonInfo(EDITOCTAVE_INDEX, ID_SEPARATOR, TBBS_SEPARATOR, 1);
-	SetButtonInfo(SPINOCTAVE_INDEX, ID_SEPARATOR, TBBS_SEPARATOR, 1);
-	SetButtonInfo(TEMPOTEXT_INDEX, ID_SEPARATOR, TBBS_SEPARATOR, 1);
-	SetButtonInfo(EDITTEMPO_INDEX, ID_SEPARATOR, TBBS_SEPARATOR, 1);
-	SetButtonInfo(SPINTEMPO_INDEX, ID_SEPARATOR, TBBS_SEPARATOR, 1);
-	SetButtonInfo(SPEEDTEXT_INDEX, ID_SEPARATOR, TBBS_SEPARATOR, 1);
-	SetButtonInfo(EDITSPEED_INDEX, ID_SEPARATOR, TBBS_SEPARATOR, 1);
-	SetButtonInfo(SPINSPEED_INDEX, ID_SEPARATOR, TBBS_SEPARATOR, 1);
-	SetButtonInfo(RPBTEXT_INDEX, ID_SEPARATOR, TBBS_SEPARATOR, 1);
-	SetButtonInfo(EDITRPB_INDEX, ID_SEPARATOR, TBBS_SEPARATOR, 1);
-	SetButtonInfo(SPINRPB_INDEX, ID_SEPARATOR, TBBS_SEPARATOR, 1);
-	SetButtonInfo(VUMETER_INDEX, IDC_VUMETER, TBBS_SEPARATOR, VUMETER_HEIGHT);
+	UpdateControls();
+}
 
-	// Hide Controls
-	if(m_EditOctave.m_hWnd) m_EditOctave.ShowWindow(SW_HIDE);
-	if(m_SpinOctave.m_hWnd) m_SpinOctave.ShowWindow(SW_HIDE);
-	if(m_StaticTempo.m_hWnd) m_StaticTempo.ShowWindow(SW_HIDE);
-	if(m_EditTempo.m_hWnd) m_EditTempo.ShowWindow(SW_HIDE);
-	if(m_SpinTempo.m_hWnd) m_SpinTempo.ShowWindow(SW_HIDE);
-	if(m_StaticSpeed.m_hWnd) m_StaticSpeed.ShowWindow(SW_HIDE);
-	if(m_EditSpeed.m_hWnd) m_EditSpeed.ShowWindow(SW_HIDE);
-	if(m_SpinSpeed.m_hWnd) m_SpinSpeed.ShowWindow(SW_HIDE);
-	if(m_StaticRowsPerBeat.m_hWnd) m_StaticRowsPerBeat.ShowWindow(SW_HIDE);
-	if(m_EditRowsPerBeat.m_hWnd) m_EditRowsPerBeat.ShowWindow(SW_HIDE);
-	if(m_SpinRowsPerBeat.m_hWnd) m_SpinRowsPerBeat.ShowWindow(SW_HIDE);
-	EnableControl(m_VuMeter, VUMETER_INDEX, VUMETER_HEIGHT);
-	//if(m_StaticBPM.m_hWnd) m_StaticBPM.ShowWindow(SW_HIDE);
+
+void CMainToolBar::UpdateControls()
+{
+	const FlagSet<MainToolBarItem> visibleItems = TrackerSettings::Instance().mainToolBarVisibleItems.Get();
+
+	UpdateControl(visibleItems[MainToolBarItem::Octave], m_EditOctave, EDITOCTAVE_INDEX, IDC_EDIT_BASEOCTAVE);
+	UpdateControl(visibleItems[MainToolBarItem::Octave], m_SpinOctave, SPINOCTAVE_INDEX, IDC_SPIN_BASEOCTAVE);
+	SetButtonVisibility(DIVOCTAVE_INDEX, m_bVertical && visibleItems[MainToolBarItem::Octave]);
+
+	UpdateControl(visibleItems[MainToolBarItem::Tempo], m_StaticTempo, TEMPOTEXT_INDEX, IDC_TEXT_CURRENTTEMPO);
+	UpdateControl(visibleItems[MainToolBarItem::Tempo], m_EditTempo, EDITTEMPO_INDEX, IDC_EDIT_CURRENTTEMPO);
+	UpdateControl(visibleItems[MainToolBarItem::Tempo], m_SpinTempo, SPINTEMPO_INDEX, IDC_SPIN_CURRENTTEMPO);
+	SetButtonVisibility(DIVTEMPO_INDEX, m_bVertical && visibleItems[MainToolBarItem::Tempo]);
+
+	UpdateControl(visibleItems[MainToolBarItem::Speed], m_StaticSpeed, SPEEDTEXT_INDEX, IDC_TEXT_CURRENTSPEED);
+	UpdateControl(visibleItems[MainToolBarItem::Speed], m_EditSpeed, EDITSPEED_INDEX, IDC_EDIT_CURRENTSPEED);
+	UpdateControl(visibleItems[MainToolBarItem::Speed], m_SpinSpeed, SPINSPEED_INDEX, IDC_SPIN_CURRENTSPEED);
+	SetButtonVisibility(DIVSPEED_INDEX, m_bVertical && visibleItems[MainToolBarItem::Speed]);
+
+	UpdateControl(visibleItems[MainToolBarItem::RowsPerBeat], m_StaticRowsPerBeat, RPBTEXT_INDEX, IDC_TEXT_RPB);
+	UpdateControl(visibleItems[MainToolBarItem::RowsPerBeat], m_EditRowsPerBeat, EDITRPB_INDEX, IDC_EDIT_RPB);
+	UpdateControl(visibleItems[MainToolBarItem::RowsPerBeat], m_SpinRowsPerBeat, SPINRPB_INDEX, IDC_SPIN_RPB);
+	SetButtonVisibility(DIVRPB_INDEX, m_bVertical && visibleItems[MainToolBarItem::RowsPerBeat]);
+
+	UpdateControl(visibleItems[MainToolBarItem::GlobalVolume], m_StaticGlobalVolume, GLOBALVOLTEXT_INDEX, IDC_TEXT_GLOBALVOL);
+	UpdateControl(visibleItems[MainToolBarItem::GlobalVolume], m_EditGlobalVolume, EDITGLOBALVOL_INDEX, IDC_EDIT_GLOBALVOL);
+	UpdateControl(visibleItems[MainToolBarItem::GlobalVolume], m_SpinGlobalVolume, SPINGLOBALVOL_INDEX, IDC_SPIN_GLOBALVOL);
+	SetButtonVisibility(DIVGLOBALVOL_INDEX, visibleItems.test_any_except(MainToolBarItem::VUMeter));
+
+	SetButtonVisibility(DIVVUMETER_INDEX, visibleItems[MainToolBarItem::VUMeter]);
+	m_VuMeter.SetOrientation(!m_bVertical);
+	if(m_bVertical)
+		m_VuMeter.SetWindowPos(nullptr, 0, 0, VUMETER_HEIGHT, VUMETER_HEIGHT, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+	else
+		m_VuMeter.SetWindowPos(nullptr, 0, 0, VUMETER_WIDTH, VUMETER_HEIGHT, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+	UpdateControl(visibleItems[MainToolBarItem::VUMeter], m_VuMeter, VUMETER_INDEX, IDC_VUMETER, VUMETER_HEIGHT);
+}
+
+
+bool CMainToolBar::ToggleVisibility(MainToolBarItem item)
+{
+	FlagSet<MainToolBarItem> visibleItems = TrackerSettings::Instance().mainToolBarVisibleItems.Get();
+	visibleItems.flip(item);
+	TrackerSettings::Instance().mainToolBarVisibleItems = visibleItems.value().as_enum();
+	RefreshToolbar();
+	return visibleItems[item];
 }
 
 
 UINT CMainToolBar::GetBaseOctave() const
 {
-	if(nCurrentOctave >= MIN_BASEOCTAVE) return (UINT)nCurrentOctave;
+	if(m_currentOctave >= MIN_BASEOCTAVE) return (UINT)m_currentOctave;
 	return 4;
 }
 
 
-BOOL CMainToolBar::SetBaseOctave(UINT nOctave)
+void CMainToolBar::SetBaseOctave(UINT octave)
 {
-	TCHAR s[64];
+	if(octave == static_cast<UINT>(m_currentOctave) || octave < MIN_BASEOCTAVE || octave > MAX_BASEOCTAVE)
+		return;
 
-	if((nOctave < MIN_BASEOCTAVE) || (nOctave > MAX_BASEOCTAVE)) return FALSE;
-	if(nOctave != (UINT)nCurrentOctave)
-	{
-		nCurrentOctave = nOctave;
-		wsprintf(s, _T(" Octave %d"), nOctave);
-		m_EditOctave.SetWindowText(s);
-		m_SpinOctave.SetPos(nOctave);
-	}
-	return TRUE;
+	m_currentOctave = octave;
+	TCHAR s[32];
+	wsprintf(s, _T("Octave %d"), octave);
+	m_EditOctave.SetWindowText(s);
+	m_SpinOctave.SetPos(octave);
 }
 
 
 bool CMainToolBar::ShowUpdateInfo(const CString &newVersion, const CString &infoURL, bool showHighLight)
 {
 	GetToolBarCtrl().SetState(ID_UPDATE_AVAILABLE, TBSTATE_ENABLED);
-	if(m_bVertical)
-		SetVertical();
-	else
-		SetHorizontal();
+	RefreshToolbar();
+
+	// Trying to show the tooltip while the window is minimized hangs the application during TTM_TRACKACTIVATE.
+	if(!showHighLight || CMainFrame::GetMainFrame()->IsIconic())
+		return true;
 
 	CRect rect;
 	GetToolBarCtrl().GetRect(ID_UPDATE_AVAILABLE, &rect);
 	CPoint pt = rect.CenterPoint();
 	ClientToScreen(&pt);
-	CMainFrame::GetMainFrame()->GetWindowRect(rect);
-	LimitMax(pt.x, rect.right);
-
-	if(showHighLight)
+	if(!IsFloating())
 	{
-		return m_tooltip.ShowUpdate(*this, newVersion, infoURL, rect, pt, ID_UPDATE_AVAILABLE);
-	} else
-	{
-		return true;
+		CRect windowRect;
+		CMainFrame::GetMainFrame()->GetWindowRect(windowRect);
+		LimitMax(pt.x, windowRect.right);
 	}
+
+	return m_tooltip.ShowUpdate(*this, newVersion, infoURL, rect, pt, ID_UPDATE_AVAILABLE);
 }
 
 
@@ -495,78 +528,93 @@ void CMainToolBar::RemoveUpdateInfo()
 }
 
 
-BOOL CMainToolBar::SetCurrentSong(CSoundFile *pSndFile)
+static void EnableEdit(CEdit &edit, CSpinButtonCtrl &spin, bool enable)
 {
-	static CSoundFile *sndFile = nullptr;
-	if(pSndFile != sndFile)
-	{
-		sndFile = pSndFile;
-	}
+	// Avoid flicker when enabling / disabling controls
+	edit.SetRedraw(FALSE);
+	if(!enable)
+		edit.SetWindowText(_T("---"));
+	edit.EnableWindow(enable ? TRUE : FALSE);
+	edit.SetReadOnly(enable ? FALSE : TRUE);
+	edit.SetRedraw(TRUE);
+	edit.Invalidate(FALSE);
+	spin.EnableWindow(enable ? TRUE : FALSE);
+}
 
+
+void CMainToolBar::SetCurrentSong(CSoundFile *pSndFile)
+{
 	// Update Info
+	m_updating = true;
+	const CWnd *focus = GetFocus();
+	const FlagSet<MainToolBarItem> visibleItems = TrackerSettings::Instance().mainToolBarVisibleItems.Get();
 	if(pSndFile)
 	{
-		TCHAR s[32];
 		// Update play/pause button
-		if(nCurrentTempo == TEMPO(0, 0)) SetButtonInfo(PLAYCMD_INDEX, ID_PLAYER_PAUSE, TBBS_BUTTON, TOOLBAR_IMAGE_PAUSE);
+		if(m_currentTempo == TEMPO(0, 0))
+			SetButtonInfo(PLAYCMD_INDEX, ID_PLAYER_PAUSE, TBBS_BUTTON, TOOLBAR_IMAGE_PAUSE);
 		// Update Speed
 		int nSpeed = pSndFile->m_PlayState.m_nMusicSpeed;
-		if(nSpeed != nCurrentSpeed)
+		if(nSpeed != m_currentSpeed && focus != &m_EditSpeed && visibleItems[MainToolBarItem::Speed])
 		{
-			CModDoc *modDoc = pSndFile->GetpModDoc();
-			if(modDoc != nullptr)
-			{
-				// Update envelope views if speed has changed
-				modDoc->UpdateAllViews(InstrumentHint().Envelope());
-			}
+			if(m_currentSpeed < 0)
+				EnableEdit(m_EditSpeed, m_SpinSpeed, true);
 
-			if(nCurrentSpeed < 0) m_SpinSpeed.EnableWindow(TRUE);
-			nCurrentSpeed = nSpeed;
-			wsprintf(s, _T("%u"), static_cast<unsigned int>(nCurrentSpeed));
-			m_EditSpeed.SetWindowText(s);
+			m_currentSpeed = nSpeed;
+			SetDlgItemInt(IDC_EDIT_CURRENTSPEED, m_currentSpeed, FALSE);
 		}
 		TEMPO nTempo = pSndFile->m_PlayState.m_nMusicTempo;
-		if(nTempo != nCurrentTempo)
+		if(nTempo != m_currentTempo && focus != &m_EditTempo && visibleItems[MainToolBarItem::Tempo])
 		{
-			if(nCurrentTempo <= TEMPO(0, 0)) m_SpinTempo.EnableWindow(TRUE);
-			nCurrentTempo = nTempo;
-			if(nCurrentTempo.GetFract() == 0)
-				_stprintf(s, _T("%u"), nCurrentTempo.GetInt());
-			else
-				_stprintf(s, _T("%.4f"), nCurrentTempo.ToDouble());
-			m_EditTempo.SetWindowText(s);
+			if(m_currentTempo <= TEMPO(0, 0))
+				EnableEdit(m_EditTempo, m_SpinTempo, true);
+
+			m_currentTempo = nTempo;
+			m_EditTempo.SetTempoValue(m_currentTempo);
 		}
 		int nRowsPerBeat = pSndFile->m_PlayState.m_nCurrentRowsPerBeat;
-		if(nRowsPerBeat != nCurrentRowsPerBeat)
+		if(nRowsPerBeat != m_currentRowsPerBeat && focus != &m_EditRowsPerBeat && visibleItems[MainToolBarItem::RowsPerBeat])
 		{
-			if(nCurrentRowsPerBeat < 0) m_SpinRowsPerBeat.EnableWindow(TRUE);
-			nCurrentRowsPerBeat = nRowsPerBeat;
-			wsprintf(s, _T("%u"), static_cast<unsigned int>(nCurrentRowsPerBeat));
-			m_EditRowsPerBeat.SetWindowText(s);
+			if(m_currentRowsPerBeat < 0)
+				EnableEdit(m_EditRowsPerBeat, m_SpinRowsPerBeat, true);
+
+			m_currentRowsPerBeat = nRowsPerBeat;
+			SetDlgItemInt(IDC_EDIT_RPB, m_currentRowsPerBeat, FALSE);
+		}
+		int globalVol = pSndFile->m_PlayState.m_nGlobalVolume;
+		if(globalVol != m_currentGlobalVolume && focus != &m_EditGlobalVolume && visibleItems[MainToolBarItem::GlobalVolume])
+		{
+			if(m_currentGlobalVolume < 0)
+				EnableEdit(m_EditGlobalVolume, m_SpinGlobalVolume, true);
+
+			m_currentGlobalVolume = globalVol;
+			uint32 displayVolume = Util::muldivr_unsigned(m_currentGlobalVolume, pSndFile->GlobalVolumeRange(), MAX_GLOBAL_VOLUME);
+			SetDlgItemInt(IDC_EDIT_GLOBALVOL, displayVolume, FALSE);
 		}
 	} else
 	{
-		if(nCurrentTempo > TEMPO(0, 0))
+		if(m_currentTempo > TEMPO(0, 0))
 		{
-			nCurrentTempo.Set(0);
-			m_EditTempo.SetWindowText(_T("---"));
-			m_SpinTempo.EnableWindow(FALSE);
+			EnableEdit(m_EditTempo, m_SpinTempo, false);
 			SetButtonInfo(PLAYCMD_INDEX, ID_PLAYER_PLAY, TBBS_BUTTON, TOOLBAR_IMAGE_PLAY);
 		}
-		if(nCurrentSpeed != -1)
-		{
-			nCurrentSpeed = -1;
-			m_EditSpeed.SetWindowText(_T("---"));
-			m_SpinSpeed.EnableWindow(FALSE);
-		}
-		if(nCurrentRowsPerBeat != -1)
-		{
-			nCurrentRowsPerBeat = -1;
-			m_EditRowsPerBeat.SetWindowText(_T("---"));
-			m_SpinRowsPerBeat.EnableWindow(FALSE);
-		}
+		if(m_currentSpeed != -1)
+			EnableEdit(m_EditSpeed, m_SpinSpeed, false);
+		if(m_currentRowsPerBeat != -1)
+			EnableEdit(m_EditRowsPerBeat, m_SpinRowsPerBeat, false);
+		if(m_currentGlobalVolume != -1)
+			EnableEdit(m_EditGlobalVolume, m_SpinGlobalVolume, false);
+
+		m_currentTempo.Set(0);
+		m_currentSpeed = -1;
+		m_currentRowsPerBeat = -1;
+		m_currentGlobalVolume = -1;
 	}
-	return TRUE;
+	// If focus was on a now-disabled input field, move it somewhere else
+	if(focus && !focus->IsWindowEnabled() && focus->GetParent() == this)
+		CMainFrame::GetMainFrame()->SetFocus();
+
+	m_updating = false;
 }
 
 
@@ -575,12 +623,18 @@ void CMainToolBar::OnVScroll(UINT nCode, UINT nPos, CScrollBar *pScrollBar)
 	CMainFrame *pMainFrm;
 
 	CToolBarEx::OnVScroll(nCode, nPos, pScrollBar);
+	// Avoid auto-setting input focus to edit control
+	if(auto *activeView = CMainFrame::GetMainFrame()->GetActiveView(); activeView != nullptr)
+		activeView->SetFocus();
+	else
+		pScrollBar->SetFocus();
+
 	short int oct = (short int)m_SpinOctave.GetPos();
-	if((oct >= MIN_BASEOCTAVE) && ((int)oct != nCurrentOctave))
+	if((oct >= MIN_BASEOCTAVE) && ((int)oct != m_currentOctave))
 	{
 		SetBaseOctave(oct);
 	}
-	if((nCurrentSpeed < 0) || (nCurrentTempo <= TEMPO(0, 0))) return;
+	if((m_currentSpeed < 0) || (m_currentTempo <= TEMPO(0, 0))) return;
 	if((pMainFrm = CMainFrame::GetMainFrame()) != nullptr)
 	{
 		CSoundFile *pSndFile = pMainFrm->GetSoundFilePlaying();
@@ -603,33 +657,101 @@ void CMainToolBar::OnVScroll(UINT nCode, UINT nPos, CScrollBar *pScrollBar)
 				{
 					newTempo = TEMPO(n, 0);
 				}
-				newTempo += nCurrentTempo;
+				newTempo += m_currentTempo;
 				pSndFile->SetTempo(Clamp(newTempo, specs.GetTempoMin(), specs.GetTempoMax()), true);
 				m_SpinTempo.SetPos(0);
 			}
 			if((n = mpt::signum(m_SpinSpeed.GetPos32())) != 0)
 			{
-				pSndFile->m_PlayState.m_nMusicSpeed = Clamp(uint32(nCurrentSpeed + n), specs.speedMin, specs.speedMax);
+				pSndFile->m_PlayState.m_nMusicSpeed = Clamp(uint32(m_currentSpeed + n), specs.speedMin, specs.speedMax);
 				m_SpinSpeed.SetPos(0);
 			}
 			if((n = m_SpinRowsPerBeat.GetPos32()) != 0)
 			{
 				if(n < 0)
 				{
-					if(nCurrentRowsPerBeat > 1)
-						SetRowsPerBeat(nCurrentRowsPerBeat - 1);
-				} else if(static_cast<ROWINDEX>(nCurrentRowsPerBeat) < pSndFile->m_PlayState.m_nCurrentRowsPerMeasure)
+					if(m_currentRowsPerBeat > 1)
+						SetRowsPerBeat(m_currentRowsPerBeat - 1);
+				} else if(static_cast<ROWINDEX>(m_currentRowsPerBeat) < pSndFile->m_PlayState.m_nCurrentRowsPerMeasure)
 				{
-						SetRowsPerBeat(nCurrentRowsPerBeat + 1);
+						SetRowsPerBeat(m_currentRowsPerBeat + 1);
 				}
 				m_SpinRowsPerBeat.SetPos(0);
-
-				// Update pattern editor
-				pMainFrm->PostMessage(WM_MOD_INVALIDATEPATTERNS, HINT_MPTOPTIONS);
+			}
+			if((n = m_SpinGlobalVolume.GetPos32()) != 0)
+			{
+				n = Util::muldiv(n, MAX_GLOBAL_VOLUME, pSndFile->GlobalVolumeRange());
+				pSndFile->m_PlayState.m_nGlobalVolume = Clamp(pSndFile->m_PlayState.m_nGlobalVolume + n, 0, int(MAX_GLOBAL_VOLUME));
+				m_SpinGlobalVolume.SetPos(0);
 			}
 
 			SetCurrentSong(pSndFile);
 		}
+	}
+}
+
+
+void CMainToolBar::OnSpeedChanged()
+{
+	if(CMainFrame *mainFrm = CMainFrame::GetMainFrame(); mainFrm && !m_updating)
+	{
+		BOOL ok = FALSE;
+		uint32 newSpeed = GetDlgItemInt(IDC_EDIT_CURRENTSPEED, &ok, FALSE);
+		CSoundFile *sndFile = mainFrm->GetSoundFilePlaying();
+		if(sndFile && ok)
+		{
+			const auto &specs = sndFile->GetModSpecifications();
+			sndFile->m_PlayState.m_nMusicSpeed = Clamp(newSpeed, specs.speedMin, specs.speedMax);
+		}
+		m_currentSpeed = 0;  // Force display update once focus moves away from this input field
+	}
+}
+
+
+void CMainToolBar::OnTempoChanged()
+{
+	if(CMainFrame *mainFrm = CMainFrame::GetMainFrame(); mainFrm && !m_updating)
+	{
+		TEMPO newTempo = m_EditTempo.GetTempoValue();
+		CSoundFile *sndFile = mainFrm->GetSoundFilePlaying();
+		if(sndFile && m_EditTempo.GetWindowTextLength() > 0)
+		{
+			const auto &specs = sndFile->GetModSpecifications();
+			sndFile->m_PlayState.m_nMusicTempo = Clamp(newTempo, specs.GetTempoMin(), specs.GetTempoMax());
+		}
+		m_currentTempo.Set(0, 1);  // Force display update once focus moves away from this input field
+	}
+}
+
+
+void CMainToolBar::OnRPBChanged()
+{
+	if(CMainFrame *mainFrm = CMainFrame::GetMainFrame(); mainFrm && !m_updating)
+	{
+		BOOL ok = FALSE;
+		uint32 newRPB = GetDlgItemInt(IDC_EDIT_RPB, &ok, FALSE);
+		CSoundFile *sndFile = mainFrm->GetSoundFilePlaying();
+		if(sndFile && ok && newRPB > 0)
+		{
+			SetRowsPerBeat(newRPB);
+		}
+		m_currentRowsPerBeat = -2;  // Force display update once focus moves away from this input field
+	}
+}
+
+
+void CMainToolBar::OnGlobalVolChanged()
+{
+	if(CMainFrame *mainFrm = CMainFrame::GetMainFrame(); mainFrm && !m_updating)
+	{
+		BOOL ok = FALSE;
+		uint32 newGlobalVol = GetDlgItemInt(IDC_EDIT_GLOBALVOL, &ok, FALSE);
+		CSoundFile *sndFile = mainFrm->GetSoundFilePlaying();
+		if(sndFile && ok)
+		{
+			sndFile->m_PlayState.m_nGlobalVolume = Clamp(Util::muldivr_unsigned(newGlobalVol, MAX_GLOBAL_VOLUME, sndFile->GlobalVolumeRange()), uint32(0), MAX_GLOBAL_VOLUME);
+		}
+		m_currentGlobalVolume = -2;  // Force display update once focus moves away from this input field
 	}
 }
 
@@ -644,13 +766,12 @@ void CMainToolBar::OnTbnDropDownToolBar(NMHDR *pNMHDR, LRESULT *pResult)
 	case ID_FILE_NEW:
 		{
 			auto *mainFrm = CMainFrame::GetMainFrame();
-			CMenu *newMenu = mainFrm->GetFileMenu()->GetSubMenu(0);
-			CMenu *templateMenu = mainFrm->GetFileMenu()->GetSubMenu(2);
-			const bool hasTemplates = templateMenu->GetMenuItemID(0) != 0;
-			if(hasTemplates)
+			auto [newMenu, newPos] = CMainFrame::FindMenuItemByCommand(*mainFrm->GetMenu(), ID_FILE_NEWIT);
+			auto [templateMenu, templatePos] = CMainFrame::FindMenuItemByCommand(*mainFrm->GetMenu(), ID_FILE_OPENTEMPLATE);
+			if(templateMenu)
 				newMenu->AppendMenu(MF_POPUP, reinterpret_cast<UINT_PTR>(templateMenu->m_hMenu), _T("&Templates"));
 			newMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, pToolBar->rcButton.left, pToolBar->rcButton.bottom, this);
-			if(hasTemplates)
+			if(templateMenu)
 				newMenu->RemoveMenu(newMenu->GetMenuItemCount() - 1, MF_BYPOSITION);
 		}
 		break;
@@ -692,7 +813,7 @@ void CMainToolBar::OnSelectMIDIDevice(UINT id)
 }
 
 
-void CMainToolBar::SetRowsPerBeat(ROWINDEX nNewRPB)
+void CMainToolBar::SetRowsPerBeat(ROWINDEX newRPB)
 {
 	CMainFrame *pMainFrm = CMainFrame::GetMainFrame();
 	if(pMainFrm == nullptr)
@@ -702,29 +823,41 @@ void CMainToolBar::SetRowsPerBeat(ROWINDEX nNewRPB)
 	if(pModDoc == nullptr || pSndFile == nullptr)
 		return;
 
-	pSndFile->m_PlayState.m_nCurrentRowsPerBeat = nNewRPB;
-	PATTERNINDEX nPat = pSndFile->GetCurrentPattern();
-	if(pSndFile->Patterns[nPat].GetOverrideSignature())
+	CriticalSection cs;
+	PATTERNINDEX pat = pSndFile->GetCurrentPattern();
+	bool modified = false;
+	if(pSndFile->Patterns.IsValidPat(pat) && pSndFile->Patterns[pat].GetOverrideSignature())
 	{
-		if(nNewRPB <= pSndFile->Patterns[nPat].GetRowsPerMeasure())
+		CPattern &pattern = pSndFile->Patterns[pat];
+		if(newRPB <= pattern.GetRowsPerMeasure())
 		{
-			pSndFile->Patterns[nPat].SetSignature(nNewRPB, pSndFile->Patterns[nPat].GetRowsPerMeasure());
-			TempoSwing swing = pSndFile->Patterns[nPat].GetTempoSwing();
+			pattern.SetSignature(newRPB, pattern.GetRowsPerMeasure());
+			TempoSwing swing = pattern.GetTempoSwing();
 			if(!swing.empty())
 			{
-				swing.resize(nNewRPB);
-				pSndFile->Patterns[nPat].SetTempoSwing(swing);
+				swing.resize(newRPB);
+				pattern.SetTempoSwing(swing);
 			}
-			pModDoc->SetModified();
+			modified = true;
 		}
 	} else
 	{
-		if(nNewRPB <= pSndFile->m_nDefaultRowsPerMeasure)
+		if(newRPB <= pSndFile->m_nDefaultRowsPerMeasure)
 		{
-			pSndFile->m_nDefaultRowsPerBeat = nNewRPB;
-			if(!pSndFile->m_tempoSwing.empty()) pSndFile->m_tempoSwing.resize(nNewRPB);
-			pModDoc->SetModified();
+			pSndFile->m_nDefaultRowsPerBeat = newRPB;
+			if(!pSndFile->m_tempoSwing.empty())
+				pSndFile->m_tempoSwing.resize(newRPB);
+			modified = true;
 		}
+	}
+
+	// Update pattern editor
+	if(modified)
+	{
+		pSndFile->m_PlayState.m_nCurrentRowsPerBeat = newRPB;
+		cs.Leave();
+		pModDoc->SetModified();
+		pModDoc->UpdateAllViews(PatternHint().Data());
 	}
 }
 
@@ -816,11 +949,11 @@ LRESULT CModTreeBar::OnInitDialog(WPARAM wParam, LPARAM lParam)
 {
 	LRESULT l = CDialogBar::HandleInitDialog(wParam, lParam);
 	m_pModTreeData = new CModTree(nullptr);
-	if(m_pModTreeData)	m_pModTreeData->SubclassDlgItem(IDC_TREEDATA, this);
+	m_pModTreeData->SubclassDlgItem(IDC_TREEDATA, this);
 	m_pModTree = new CModTree(m_pModTreeData);
-	if(m_pModTree)	m_pModTree->SubclassDlgItem(IDC_TREEVIEW, this);
+	m_pModTree->SubclassDlgItem(IDC_TREEVIEW, this);
 	m_dwStatus = 0;
-	m_sizeDefault.cx = Util::ScalePixels(TrackerSettings::Instance().glTreeWindowWidth, m_hWnd) + 3;
+	m_sizeDefault.cx = HighDPISupport::ScalePixels(TrackerSettings::Instance().glTreeWindowWidth, m_hWnd) + TREEVIEW_PADDING;
 	m_sizeDefault.cy = 32767;
 	return l;
 }
@@ -828,16 +961,10 @@ LRESULT CModTreeBar::OnInitDialog(WPARAM wParam, LPARAM lParam)
 
 CModTreeBar::~CModTreeBar()
 {
-	if(m_pModTree)
-	{
-		delete m_pModTree;
-		m_pModTree = nullptr;
-	}
-	if(m_pModTreeData)
-	{
-		delete m_pModTreeData;
-		m_pModTreeData = nullptr;
-	}
+	delete m_pModTree;
+	m_pModTree = nullptr;
+	delete m_pModTreeData;
+	m_pModTreeData = nullptr;
 }
 
 
@@ -927,39 +1054,44 @@ void CModTreeBar::RecalcLayout()
 		int cytree, cydata, cyavail;
 
 		GetClientRect(&rect);
-		cyavail = rect.Height() - 3;
+		const int padding = TREEVIEW_PADDING;
+		cyavail = rect.Height() - padding;
 		if(cyavail < 0) cyavail = 0;
 		cytree = (cyavail * m_nTreeSplitRatio) >> 8;
 		cydata = cyavail - cytree;
+		auto dwp = ::BeginDeferWindowPos(3);
 		if(m_filterSource == m_pModTree)
 		{
-			int editHeight = Util::ScalePixels(20, m_hWnd);
-			m_pModTree->SetWindowPos(nullptr, 0, 0, rect.Width(), cytree - editHeight, SWP_NOZORDER | SWP_NOACTIVATE);
-			m_pModTreeData->SetWindowPos(nullptr, 0, cytree + 3, rect.Width(), cydata, SWP_NOZORDER | SWP_NOACTIVATE);
-			m_filterEdit.SetWindowPos(m_pModTree, 0, cytree - editHeight, rect.Width(), editHeight, SWP_NOACTIVATE);
+			int editHeight = HighDPISupport::ScalePixels(20, m_hWnd);
+			::DeferWindowPos(dwp, *m_pModTree, nullptr, 0, 0, rect.Width(), cytree - editHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+			::DeferWindowPos(dwp, *m_pModTreeData, nullptr, 0, cytree + padding, rect.Width(), cydata, SWP_NOZORDER | SWP_NOACTIVATE);
+			::DeferWindowPos(dwp, m_filterEdit, *m_pModTree, 0, cytree - editHeight, rect.Width(), editHeight, SWP_NOACTIVATE);
 		} else if(m_filterSource == m_pModTreeData)
 		{
-			int editHeight = Util::ScalePixels(20, m_hWnd);
-			m_pModTree->SetWindowPos(nullptr, 0, 0, rect.Width(), cytree, SWP_NOZORDER | SWP_NOACTIVATE);
-			m_pModTreeData->SetWindowPos(nullptr, 0, cytree + 3, rect.Width(), cydata - editHeight, SWP_NOZORDER | SWP_NOACTIVATE);
-			m_filterEdit.SetWindowPos(m_pModTreeData, 0, cytree + 3 + cydata - editHeight, rect.Width(), editHeight, SWP_NOACTIVATE);
+			int editHeight = HighDPISupport::ScalePixels(20, m_hWnd);
+			::DeferWindowPos(dwp, *m_pModTree, nullptr, 0, 0, rect.Width(), cytree, SWP_NOZORDER | SWP_NOACTIVATE);
+			::DeferWindowPos(dwp, *m_pModTreeData, nullptr, 0, cytree + padding, rect.Width(), cydata - editHeight, SWP_NOZORDER | SWP_NOACTIVATE);
+			::DeferWindowPos(dwp, m_filterEdit, *m_pModTreeData, 0, cytree + padding + cydata - editHeight, rect.Width(), editHeight, SWP_NOACTIVATE);
 		} else
 		{
-			m_pModTree->SetWindowPos(nullptr, 0, 0, rect.Width(), cytree, SWP_NOZORDER | SWP_NOACTIVATE);
-			m_pModTreeData->SetWindowPos(nullptr, 0, cytree + 3, rect.Width(), cydata, SWP_NOZORDER | SWP_NOACTIVATE);
+			::DeferWindowPos(dwp, *m_pModTree, nullptr, 0, 0, rect.Width(), cytree, SWP_NOZORDER | SWP_NOACTIVATE);
+			::DeferWindowPos(dwp, *m_pModTreeData, nullptr, 0, cytree + padding, rect.Width(), cydata, SWP_NOZORDER | SWP_NOACTIVATE);
 		}
+		::EndDeferWindowPos(dwp);
 	}
 }
 
 
 CSize CModTreeBar::CalcFixedLayout(BOOL, BOOL)
 {
-	int width = Util::ScalePixels(TrackerSettings::Instance().glTreeWindowWidth, m_hWnd);
+	int width = HighDPISupport::ScalePixels(TrackerSettings::Instance().glTreeWindowWidth, m_hWnd);
 	CSize sz;
 	m_sizeDefault.cx = width;
 	m_sizeDefault.cy = 32767;
-	sz.cx = width + 3;
-	if(sz.cx < 4) sz.cx = 4;
+	const int padding = TREEVIEW_PADDING;
+	sz.cx = width + padding;
+	if(sz.cx < padding + 1)
+		sz.cx = padding + 1;
 	sz.cy = 32767;
 	return sz;
 }
@@ -968,6 +1100,7 @@ CSize CModTreeBar::CalcFixedLayout(BOOL, BOOL)
 void CModTreeBar::DoMouseMove(CPoint pt)
 {
 	CRect rect;
+	GetClientRect(&rect);
 
 	if((m_dwStatus & (MTB_CAPTURE|MTB_DRAGGING)) && (::GetCapture() != m_hWnd))
 	{
@@ -979,27 +1112,32 @@ void CModTreeBar::DoMouseMove(CPoint pt)
 		{
 			if(m_pModTree)
 			{
-				m_pModTree->GetWindowRect(&rect);
-				pt.y += rect.Height();
+				CRect windowRect;
+				m_pModTree->GetWindowRect(&windowRect);
+				pt.y += windowRect.Height();
 			}
-			GetClientRect(&rect);
 			pt.y -= ptDragging.y;
-			if(pt.y < 0) pt.y = 0;
-			if(pt.y > rect.Height()) pt.y = rect.Height();
-			if((!(m_dwStatus & MTB_TRACKER)) || (pt.y != (int)m_nTrackPos))
+			pt.y = std::clamp(static_cast<int>(pt.y), 0, rect.Height());
+			if((!(m_dwStatus & MTB_TRACKER)) || (pt.y != static_cast<int>(m_nTrackPos)))
 			{
-				if(m_dwStatus & MTB_TRACKER) OnInvertTracker(m_nTrackPos);
+				if(m_dwStatus & MTB_TRACKER)
+					OnInvertTracker(m_nTrackPos);
 				m_nTrackPos = pt.y;
 				OnInvertTracker(m_nTrackPos);
 				m_dwStatus |= MTB_TRACKER;
 			}
 		} else
 		{
-			pt.x -= ptDragging.x - m_cxOriginal + 3;
-			if(pt.x < 0) pt.x = 0;
-			if((!(m_dwStatus & MTB_TRACKER)) || (pt.x != (int)m_nTrackPos))
+			pt.x -= ptDragging.x;
+			if(BarOnLeft())
+				pt.x += (m_cxOriginal - TREEVIEW_PADDING);
+			else
+				pt.x = m_cxOriginal - pt.x;
+			pt.x = std::max(pt.x, LONG(0));
+			if((!(m_dwStatus & MTB_TRACKER)) || (pt.x != static_cast<int>(m_nTrackPos)))
 			{
-				if(m_dwStatus & MTB_TRACKER) OnInvertTracker(m_nTrackPos);
+				if(m_dwStatus & MTB_TRACKER)
+					OnInvertTracker(m_nTrackPos);
 				m_nTrackPos = pt.x;
 				OnInvertTracker(m_nTrackPos);
 				m_dwStatus |= MTB_TRACKER;
@@ -1009,9 +1147,17 @@ void CModTreeBar::DoMouseMove(CPoint pt)
 	{
 		UINT nCursor = 0;
 
-		GetClientRect(&rect);
-		rect.left = rect.right - 2;
-		rect.right = rect.left + 5;
+		const int padding = TREEVIEW_PADDING;
+		const int extraPadding = HighDPISupport::ScalePixels(2, m_hWnd);
+		if(BarOnLeft())
+		{
+			rect.left = rect.right - extraPadding;
+			rect.right = rect.left + padding + extraPadding;
+		} else
+		{
+			rect.left -= extraPadding;
+			rect.right = rect.left + padding + extraPadding;
+		}
 		if(rect.PtInRect(pt))
 		{
 			nCursor = AFX_IDC_HSPLITBAR;
@@ -1021,8 +1167,8 @@ void CModTreeBar::DoMouseMove(CPoint pt)
 			m_pModTree->GetWindowRect(&rect);
 			rect.right = rect.Width();
 			rect.left = 0;
-			rect.top = rect.Height()-1;
-			rect.bottom = rect.top + 5;
+			rect.top = rect.Height() - extraPadding;
+			rect.bottom = rect.top + padding + extraPadding;
 			if(rect.PtInRect(pt))
 			{
 				nCursor = AFX_IDC_VSPLITBAR;
@@ -1031,19 +1177,21 @@ void CModTreeBar::DoMouseMove(CPoint pt)
 		if(nCursor)
 		{
 			UINT nDir = (nCursor == AFX_IDC_VSPLITBAR) ? MTB_VERTICAL : 0;
-			BOOL bLoad = FALSE;
+			bool load = false;
 			if(!(m_dwStatus & MTB_CAPTURE))
 			{
 				m_dwStatus |= MTB_CAPTURE;
 				SetCapture();
-				bLoad = TRUE;
+				load = true;
 			} else
 			{
-				if(nDir != (m_dwStatus & MTB_VERTICAL)) bLoad = TRUE;
+				if(nDir != (m_dwStatus & MTB_VERTICAL))
+					load = true;
 			}
 			m_dwStatus &= ~MTB_VERTICAL;
 			m_dwStatus |= nDir;
-			if(bLoad) SetCursor(theApp.LoadCursor(nCursor));
+			if(load)
+				SetCursor(theApp.LoadCursor(nCursor));
 		} else
 		{
 			if(m_dwStatus & MTB_CAPTURE)
@@ -1084,26 +1232,27 @@ void CModTreeBar::DoLButtonUp()
 			OnInvertTracker(m_nTrackPos);
 			m_dwStatus &= ~MTB_TRACKER;
 		}
+		const int padding = TREEVIEW_PADDING;
 		if(m_dwStatus & MTB_VERTICAL)
 		{
 			GetClientRect(&rect);
-			int cyavail = rect.Height() - 3;
-			if(cyavail < 4) cyavail = 4;
-			int ratio = (m_nTrackPos << 8) / cyavail;
-			if(ratio < 0) ratio = 0;
-			if(ratio > 256) ratio = 256;
+			int cyavail = rect.Height() - padding;
+			if(cyavail < padding + 1)
+				cyavail = padding + 1;
+			int ratio = std::clamp(static_cast<int>(m_nTrackPos * 256) / cyavail, 0, 256);
 			m_nTreeSplitRatio = ratio;
 			TrackerSettings::Instance().glTreeSplitRatio = ratio;
 			RecalcLayout();
 		} else
 		{
 			GetWindowRect(&rect);
-			m_nTrackPos += 3;
-			if(m_nTrackPos < 4) m_nTrackPos = 4;
+			m_nTrackPos += padding;
+			if(m_nTrackPos < static_cast<UINT>(padding + 1))
+				m_nTrackPos = padding + 1;
 			CMainFrame *pMainFrm = CMainFrame::GetMainFrame();
 			if((m_nTrackPos != (UINT)rect.Width()) && (pMainFrm))
 			{
-				TrackerSettings::Instance().glTreeWindowWidth = Util::ScalePixelsInv(m_nTrackPos - 3, m_hWnd);
+				TrackerSettings::Instance().glTreeWindowWidth = HighDPISupport::ScalePixelsInv(m_nTrackPos - padding, m_hWnd);
 				m_sizeDefault.cx = m_nTrackPos;
 				m_sizeDefault.cy = 32767;
 				pMainFrm->RecalcLayout();
@@ -1138,14 +1287,18 @@ void CModTreeBar::OnInvertTracker(UINT x)
 		CRect rect;
 
 		GetClientRect(&rect);
+		const int padding = TREEVIEW_PADDING + 1;
 		if(m_dwStatus & MTB_VERTICAL)
 		{
 			rect.top = x;
-			rect.bottom = rect.top + 4;
+			rect.bottom = rect.top + padding;
 		} else
 		{
-			rect.left = x;
-			rect.right = rect.left + 4;
+			if(BarOnLeft())
+				rect.left = x;
+			else
+				rect.left = rect.right - x;
+			rect.right = rect.left + padding;
 		}
 		ClientToScreen(&rect);
 		pMainFrm->ScreenToClient(&rect);
@@ -1154,11 +1307,11 @@ void CModTreeBar::OnInvertTracker(UINT x)
 		CDC* pDC = pMainFrm->GetDC();
 		// invert the brush pattern (looks just like frame window sizing)
 		CBrush* pBrush = CDC::GetHalftoneBrush();
-		HBRUSH hOldBrush = NULL;
-		if(pBrush != NULL)
+		HBRUSH hOldBrush = nullptr;
+		if(pBrush != nullptr)
 			hOldBrush = (HBRUSH)SelectObject(pDC->m_hDC, pBrush->m_hObject);
 		pDC->PatBlt(rect.left, rect.top, rect.Width(), rect.Height(), PATINVERT);
-		if(hOldBrush != NULL)
+		if(hOldBrush != nullptr)
 			SelectObject(pDC->m_hDC, hOldBrush);
 		ReleaseDC(pDC);
 	}
@@ -1189,6 +1342,13 @@ void CModTreeBar::UpdatePlayPos(CModDoc *pModDoc, Notification *pNotify)
 }
 
 
+void CModTreeBar::SetBarOnLeft(const bool left)
+{
+	SetBarStyle(left ? CBRS_LEFT : CBRS_RIGHT);
+	SetWindowPos(nullptr, 0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER | SWP_NOSIZE | SWP_FRAMECHANGED | SWP_DRAWFRAME);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CModTreeBar message handlers
 
@@ -1197,8 +1357,11 @@ void CModTreeBar::OnNcCalcSize(BOOL bCalcValidRects, NCCALCSIZE_PARAMS* lpncsp)
 	CDialogBar::OnNcCalcSize(bCalcValidRects, lpncsp);
 	if(lpncsp)
 	{
-		lpncsp->rgrc[0].right -= 3;
-		if(lpncsp->rgrc[0].right < lpncsp->rgrc[0].left) lpncsp->rgrc[0].right = lpncsp->rgrc[0].left;
+		if(BarOnLeft())
+			lpncsp->rgrc[0].right -= TREEVIEW_PADDING;
+		else
+			lpncsp->rgrc[0].left += TREEVIEW_PADDING;
+		lpncsp->rgrc[0].right = std::max(lpncsp->rgrc[0].left, lpncsp->rgrc[0].right);
 	}
 }
 
@@ -1208,9 +1371,13 @@ LRESULT CModTreeBar::OnNcHitTest(CPoint point)
 	CRect rect;
 
 	GetWindowRect(&rect);
-	rect.DeflateRect(1,1);
-	rect.right -= 3;
-	if(!rect.PtInRect(point)) return HTBORDER;
+	rect.DeflateRect(1, 1);
+	if(BarOnLeft())
+		rect.right -= TREEVIEW_PADDING;
+	else
+		rect.left += TREEVIEW_PADDING;
+	if(!rect.PtInRect(point))
+		return HTBORDER;
 	return CDialogBar::OnNcHitTest(point);
 }
 
@@ -1224,8 +1391,12 @@ void CModTreeBar::OnNcPaint()
 	// Assumes there is no other non-client items
 	rect.right -= rect.left;
 	rect.bottom -= rect.top;
+	rect.left = 0;
 	rect.top = 0;
-	rect.left = rect.right - 3;
+	if(BarOnLeft())
+		rect.left = rect.right - TREEVIEW_PADDING;
+	else
+		rect.right = rect.left + TREEVIEW_PADDING;
 	if((rect.left < rect.right) && (rect.top < rect.bottom))
 	{
 		CDC *pDC = GetWindowDC();
@@ -1303,7 +1474,7 @@ void CModTreeBar::StartTreeFilter(CModTree &source)
 	{
 		CRect rect;
 		GetClientRect(rect);
-		rect.bottom = Util::ScalePixels(20, m_hWnd);
+		rect.bottom = HighDPISupport::ScalePixels(20, m_hWnd);
 
 		m_pModTree->GetItemRect(m_pModTree->GetFirstVisibleItem(), rect, FALSE);
 		m_filterEdit.Create(WS_VISIBLE | WS_CHILD | WS_BORDER | WS_TABSTOP | ES_LEFT | ES_AUTOHSCROLL, rect, this, IDC_EDIT1);
@@ -1534,17 +1705,17 @@ void CStereoVU::DrawVuMeter(CDC &dc, const CRect &rect, int index, bool redraw)
 		const int cy = std::max(1, rect.Height());
 		int v = (vu * cy) >> 8;
 
-		for(int ry = rect.bottom - 1; ry > rect.top; ry -= 2)
+		for(int ry = rect.bottom - 1; ry >= rect.top; ry -= 2)
 		{
 			const int y0 = rect.bottom - ry;
 			int pen = Clamp((y0 * NUM_VUMETER_PENS) / cy, 0, NUM_VUMETER_PENS - 1);
-			const bool last = (ry == rect.top + 1);
+			const bool last = (ry <= rect.top + 1);
 
 			// Darken everything above volume, unless it's the clip indicator
 			if(v <= y0 && (!last || !clip))
 				pen += NUM_VUMETER_PENS;
 
-			bool draw = redraw || (v < lastV[index] && v<=ry && ry<=lastV[index]) || (lastV[index] < v && lastV[index]<=ry && ry<=v);
+			bool draw = redraw || (v < lastV[index] && v<=y0 && y0<=lastV[index]) || (lastV[index] < v && lastV[index]<=y0 && y0<=v);
 			draw = draw || (last && clip != lastClip[index]);
 			if(draw) dc.FillSolidRect(rect.left, ry, rect.Width(), 1, CMainFrame::gcolrefVuMeter[pen]);
 			if(last) lastClip[index] = clip;

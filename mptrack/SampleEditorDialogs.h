@@ -15,7 +15,6 @@
 
 #include "CDecimalSupport.h"
 #include "DialogBase.h"
-#include "resource.h"
 #include "../common/FileReaderFwd.h"
 #include "../soundlib/SampleIO.h"
 #include "../tracklib/FadeLaws.h"
@@ -51,11 +50,12 @@ public:
 protected:
 	void DoDataExchange(CDataExchange* pDX) override;
 	BOOL OnInitDialog() override;
+	void OnDPIChanged() override;
 	void OnOK() override;
 	void OnDestroy();
 
-	afx_msg void EnableFadeIn() { if(!m_locked) CheckDlgButton(IDC_CHECK1, BST_CHECKED); }
-	afx_msg void EnableFadeOut() { if(!m_locked) CheckDlgButton(IDC_CHECK2, BST_CHECKED); }
+	afx_msg void EnableFadeIn();
+	afx_msg void EnableFadeOut();
 
 	DECLARE_MESSAGE_MAP()
 };
@@ -87,9 +87,7 @@ public:
 	void SetOffset(SmpLength offset) { m_offset = offset; }
 
 public:
-	CRawSampleDlg(FileReader &file, CWnd *parent = nullptr)
-		: DialogBase(IDD_LOADRAWSAMPLE, parent)
-		, m_file(file) {}
+	CRawSampleDlg(FileReader &file, CWnd *parent = nullptr);
 
 protected:
 	void DoDataExchange(CDataExchange *pDX) override;
@@ -163,7 +161,7 @@ protected:
 	CSpinButtonCtrl m_SpinSegments;
 
 public:
-	CSampleGridDlg(CWnd *parent, SmpLength nSegments, SmpLength nMaxSegments) : DialogBase(IDD_SAMPLE_GRID_SIZE, parent) { m_nSegments = nSegments; m_nMaxSegments = nMaxSegments; };
+	CSampleGridDlg(CWnd *parent, SmpLength nSegments, SmpLength nMaxSegments);
 
 protected:
 	void DoDataExchange(CDataExchange* pDX) override;
@@ -193,9 +191,7 @@ protected:
 	bool m_editLocked = true;
 
 public:
-	CSampleXFadeDlg(CWnd *parent, ModSample &sample)
-	    : DialogBase(IDD_SAMPLE_XFADE, parent)
-	    , m_sample(sample) {}
+	CSampleXFadeDlg(CWnd *parent, ModSample &sample);
 
 	SmpLength PercentToSamples(uint32 percent) const { return Util::muldivr_unsigned(percent, m_loopLength, 100000); }
 	uint32 SamplesToPercent(SmpLength samples) const { return Util::muldivr_unsigned(samples, 100000, m_loopLength); }
@@ -204,11 +200,12 @@ protected:
 	void DoDataExchange(CDataExchange* pDX) override;
 	BOOL OnInitDialog() override;
 	void OnOK() override;
+	CString GetToolTipText(UINT id, HWND hwnd) const override;
 
 	afx_msg void OnLoopTypeChanged();
 	afx_msg void OnFadeLengthChanged();
 	afx_msg void OnHScroll(UINT, UINT, CScrollBar *);
-	afx_msg BOOL OnToolTipText(UINT, NMHDR *pNMHDR, LRESULT *pResult);
+
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -229,23 +226,26 @@ public:
 protected:
 	ResamplingMode m_srcMode;
 	uint32 m_frequency;
-	bool m_resampleAll;
+	const bool m_resampleAll;
+	const bool m_allowAdjustNotes;
 	static uint32 m_lastFrequency;
 	static ResamplingOption m_lastChoice;
-	static bool m_updatePatterns;
+	static bool m_updatePatternCommands;
+	static bool m_updatePatternNotes;
 
 public:
-	CResamplingDlg(CWnd *parent, uint32 frequency, ResamplingMode srcMode, bool resampleAll) : DialogBase(IDD_RESAMPLE, parent), m_srcMode(srcMode), m_frequency(frequency), m_resampleAll(resampleAll) { };
+	CResamplingDlg(CWnd *parent, uint32 frequency, ResamplingMode srcMode, bool resampleAll, bool allowAdjustNotes);
 	uint32 GetFrequency() const { return m_frequency; }
 	ResamplingMode GetFilter() const { return m_srcMode; }
 	static ResamplingOption GetResamplingOption() { return m_lastChoice; }
-	static bool UpdatePatternCommands() { return m_updatePatterns; }
+	static bool UpdatePatternCommands() { return m_updatePatternCommands; }
+	static bool UpdatePatternNotes() { return m_updatePatternNotes; }
 
 protected:
 	BOOL OnInitDialog() override;
 	void OnOK() override;
 
-	afx_msg void OnFocusEdit() { CheckRadioButton(IDC_RADIO1, IDC_RADIO3, IDC_RADIO3); }
+	afx_msg void OnFocusEdit();
 
 	DECLARE_MESSAGE_MAP()
 };

@@ -11,19 +11,22 @@
 
 #include "stdafx.h"
 #include "View_smp.h"
-#include "ChannelManagerDlg.h"
 #include "Childfrm.h"
 #include "Clipboard.h"
 #include "Ctrl_smp.h"
+#include "dlg_misc.h"  // CInputDlg
 #include "Dlsbank.h"
 #include "Globals.h"
+#include "HighDPISupport.h"
 #include "ImageLists.h"
 #include "InputHandler.h"
 #include "Mainfrm.h"
 #include "Moddoc.h"
 #include "Mptrack.h"
+#include "MPTrackUtil.h"
 #include "OPLInstrDlg.h"
 #include "Reporting.h"
+#include "resource.h"
 #include "SampleEditorDialogs.h"
 #include "WindowMessages.h"
 #include "../common/FileReader.h"
@@ -45,16 +48,16 @@ OPENMPT_NAMESPACE_BEGIN
 
 
 // Non-client toolbar
-#define SMP_LEFTBAR_CY    Util::ScalePixels(29, m_hWnd)
-#define SMP_LEFTBAR_CXSEP Util::ScalePixels(14, m_hWnd)
-#define SMP_LEFTBAR_CXSPC Util::ScalePixels(3, m_hWnd)
-#define SMP_LEFTBAR_CXBTN Util::ScalePixels(24, m_hWnd)
-#define SMP_LEFTBAR_CYBTN Util::ScalePixels(22, m_hWnd)
+#define SMP_LEFTBAR_CY    HighDPISupport::ScalePixels(29, m_hWnd)
+#define SMP_LEFTBAR_CXSEP HighDPISupport::ScalePixels(14, m_hWnd)
+#define SMP_LEFTBAR_CXSPC HighDPISupport::ScalePixels(3, m_hWnd)
+#define SMP_LEFTBAR_CXBTN HighDPISupport::ScalePixels(24, m_hWnd)
+#define SMP_LEFTBAR_CYBTN HighDPISupport::ScalePixels(22, m_hWnd)
 static constexpr int TIMELINE_HEIGHT = 26;
 
 static int TimelineHeight(HWND hwnd)
 {
-	auto height = Util::ScalePixels(TIMELINE_HEIGHT, hwnd);
+	auto height = HighDPISupport::ScalePixels(TIMELINE_HEIGHT, hwnd);
 	if(height % 2)
 		height++;  // Avoid weird-looking triangles if timeline is scaled to odd height
 	return height;
@@ -101,7 +104,7 @@ BEGIN_MESSAGE_MAP(CViewSample, CModScrollView)
 	ON_WM_NCLBUTTONDOWN()
 	ON_WM_NCLBUTTONUP()
 	ON_WM_NCLBUTTONDBLCLK()
-	ON_WM_RBUTTONDOWN()
+	ON_WM_RBUTTONUP()
 	ON_WM_CHAR()
 	ON_WM_DROPFILES()
 	ON_WM_MOUSEWHEEL()
@@ -166,7 +169,6 @@ CViewSample::CViewSample()
 {
 	MemsetZero(m_NcButtonState);
 	m_dwNotifyPos.fill(Notification::PosInvalid);
-	m_bmpEnvBar.Create(&CMainFrame::GetMainFrame()->m_SampleIcons);
 }
 
 
@@ -278,7 +280,7 @@ void CViewSample::UpdateScrollSize(int newZoom, bool forceRefresh, SmpLength cen
 		return;
 
 	const TimelineFormat format = TrackerSettings::Instance().sampleEditorTimelineFormat;
-	double timelineInterval = MulDiv(150, m_nDPIx, 96);  // Timeline interval should be around 150 pixels
+	double timelineInterval = MulDiv(150, m_dpi, 96);  // Timeline interval should be around 150 pixels
 	if(m_nZoom > 0)
 		timelineInterval *= 1 << (m_nZoom - 1);
 	else if(m_nZoom < 0)
@@ -294,7 +296,7 @@ void CViewSample::UpdateScrollSize(int newZoom, bool forceRefresh, SmpLength cen
 	m_timelineUnit = mpt::saturate_round<int>(std::log(static_cast<double>(timelineInterval)) / std::log(power));
 	if(m_timelineUnit < 1)
 		m_timelineUnit = 0;
-	m_timelineUnit = mpt::saturate_cast<int>(std::pow(power, m_timelineUnit));
+	m_timelineUnit = mpt::saturate_trunc<int>(std::pow(power, m_timelineUnit));
 	timelineInterval = std::max(1.0, std::round(timelineInterval / m_timelineUnit)) * m_timelineUnit;
 	if(format == TimelineFormat::Seconds)
 		timelineInterval *= sampleRate / 1000.0;
@@ -660,7 +662,7 @@ std::pair<CViewSample::HitTestItem, SmpLength> CViewSample::PointToItem(CPoint p
 	const bool inTimeline = point.y < m_timelineHeight;
 	if(m_dwEndSel > m_dwBeginSel && !inTimeline && !m_dwStatus[SMPSTATUS_DRAWING])
 	{
-		const int margin = Util::ScalePixels(5, m_hWnd);
+		const int margin = HighDPISupport::ScalePixels(5, m_hWnd);
 		if(HitTest(point.x, SampleToScreen(m_dwBeginSel), margin, margin, m_timelineHeight, m_rcClient.bottom, rect))
 			return {HitTestItem::SelectionStart, m_dwBeginSel};
 		if(HitTest(point.x, SampleToScreen(m_dwEndSel), margin, margin, m_timelineHeight, m_rcClient.bottom, rect))
@@ -727,7 +729,7 @@ LRESULT CViewSample::OnModViewMsg(WPARAM wParam, LPARAM lParam)
 	case VIEWMSG_LOADSTATE:
 		if (lParam)
 		{
-			SAMPLEVIEWSTATE *pState = (SAMPLEVIEWSTATE *)lParam;
+			SampleViewState *pState = (SampleViewState *)lParam;
 			if (pState->nSample == m_nSample)
 			{
 				SetCurSel(pState->dwBeginSel, pState->dwEndSel);
@@ -741,7 +743,7 @@ LRESULT CViewSample::OnModViewMsg(WPARAM wParam, LPARAM lParam)
 	case VIEWMSG_SAVESTATE:
 		if (lParam)
 		{
-			SAMPLEVIEWSTATE *pState = (SAMPLEVIEWSTATE *)lParam;
+			SampleViewState *pState = (SampleViewState *)lParam;
 			pState->dwScrollPos = m_nScrollPosX;
 			pState->dwBeginSel = m_dwBeginSel;
 			pState->dwEndSel = m_dwEndSel;
@@ -999,10 +1001,10 @@ void CViewSample::OnDraw(CDC *pDC)
 
 	const CRect rcClient = m_rcClient;
 	CRect rect, rc;
-	const SmpLength smpScrollPos = ScrollPosToSamplePos();
 	const auto &colors = TrackerSettings::Instance().rgbCustomColors;
 	const CSoundFile &sndFile = pModDoc->GetSoundFile();
 	const ModSample &sample = sndFile.GetSample((m_nSample <= sndFile.GetNumSamples()) ? m_nSample : 0);
+	const SmpLength smpScrollPos = std::min(ScrollPosToSamplePos(), sample.nLength);
 	if(sample.uFlags[CHN_ADLIB])
 	{
 		CModScrollView::OnDraw(pDC);
@@ -1020,7 +1022,8 @@ void CViewSample::OnDraw(CDC *pDC)
 
 		NONCLIENTMETRICS metrics;
 		metrics.cbSize = sizeof(metrics);
-		SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(metrics), &metrics, 0);
+		metrics.cbSize = sizeof(metrics);
+		HighDPISupport::SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(metrics), &metrics, 0, m_hWnd);
 		metrics.lfMessageFont.lfHeight = mpt::saturate_round<int>(metrics.lfMessageFont.lfHeight * 0.8);
 		metrics.lfMessageFont.lfWidth = mpt::saturate_round<int>(metrics.lfMessageFont.lfWidth * 0.8);
 		m_timelineFont.DeleteObject();
@@ -1060,7 +1063,7 @@ void CViewSample::OnDraw(CDC *pDC)
 		{
 			rc = timeline;
 			const auto sampleRate = sample.GetSampleRate(sndFile.GetType());
-			const int textOffset = Util::ScalePixels(4, m_hWnd);
+			const int textOffset = HighDPISupport::ScalePixels(4, m_hWnd);
 			mpt::tstring text;
 			for(int x = -(SampleToScreen(ScrollPosToSamplePos(), true) % m_timelineInterval); x < m_rcClient.right + m_timelineInterval; x += m_timelineInterval)
 			{
@@ -1381,30 +1384,10 @@ LRESULT CViewSample::OnPlayerNotify(Notification *pnotify)
 			if(m_nZoom != 0 && TrackerSettings::Instance().m_followSamplePlayCursor != FollowSamplePlayCursor::DoNotFollow)
 			{
 				// Scroll sample into view if it's not in the visible range
-				size_t count = 0;
-				SmpLength scrollToPos = 0;
-				bool backwards = false;
-				const auto &playChns = GetDocument()->GetSoundFile().m_PlayState.Chn;
-				for(CHANNELINDEX chn = 0; chn < MAX_CHANNELS; chn++)
+				const CHANNELINDEX previewChannel = GetPreviewChannel();
+				if(previewChannel != CHANNELINDEX_INVALID)
 				{
-					if(m_dwNotifyPos[chn] == Notification::PosInvalid)
-						continue;
-
-					// Only update based on notes triggered by this view
-					if(!playChns[chn].isPreviewNote)
-						continue;
-					if(!ModCommand::IsNote(playChns[chn].nNewNote) || m_noteChannel[playChns[chn].nNewNote - NOTE_MIN] != chn)
-						continue;
-
-					count++;
-					if(count > 1)
-						break;
-
-					scrollToPos = m_dwNotifyPos[chn];
-					backwards = playChns[chn].dwFlags[CHN_PINGPONGFLAG];
-				}
-				if(count == 1)
-				{
+					const SmpLength scrollToPos = m_dwNotifyPos[previewChannel];
 					const auto screenPos = SampleToScreen(scrollToPos);
 					const bool alwaysCenter = (TrackerSettings::Instance().m_followSamplePlayCursor == FollowSamplePlayCursor::FollowCentered);
 					if(alwaysCenter || screenPos < m_rcClient.left || screenPos >= m_rcClient.right)
@@ -1412,7 +1395,7 @@ LRESULT CViewSample::OnPlayerNotify(Notification *pnotify)
 						ScrollTarget target = ScrollTarget::Left;
 						if(alwaysCenter)
 							target = ScrollTarget::Center;
-						else if(backwards)
+						else if(GetDocument()->GetSoundFile().m_PlayState.Chn[previewChannel].dwFlags[CHN_PINGPONGFLAG])  // TODO: this should be taken via notification, not directly from player state
 							target = ScrollTarget::Right;
 						ScrollToSample(scrollToPos, true, target);
 					}
@@ -1425,6 +1408,31 @@ LRESULT CViewSample::OnPlayerNotify(Notification *pnotify)
 		}
 	}
 	return 0;
+}
+
+
+CHANNELINDEX CViewSample::GetPreviewChannel() const
+{
+	size_t count = 0;
+	CHANNELINDEX channel = CHANNELINDEX_INVALID;
+	const auto &playChns = GetDocument()->GetSoundFile().m_PlayState.Chn;
+	for(CHANNELINDEX chn = 0; chn < MAX_CHANNELS; chn++)
+	{
+		if(m_dwNotifyPos[chn] == Notification::PosInvalid)
+			continue;
+
+		// Only update based on notes triggered by this view
+		if(!playChns[chn].isPreviewNote)
+			continue;
+		if(!ModCommand::IsNote(playChns[chn].nNewNote) || m_noteChannel[playChns[chn].nNewNote - NOTE_MIN] != chn)
+			continue;
+
+		count++;
+		if(count > 1)
+			return CHANNELINDEX_INVALID;
+		channel = chn;
+	}
+	return channel;
 }
 
 
@@ -1485,6 +1493,7 @@ void CViewSample::DrawNcButton(CDC *pDC, UINT nBtn)
 	COLORREF crFc = GetSysColor(COLOR_3DFACE);
 	COLORREF c1, c2;
 
+	const bool flat = (TrackerSettings::Instance().patternSetup & PatternSetup::FlatToolbarButtons);
 	if(GetNcButtonRect(nBtn, rect))
 	{
 		DWORD dwStyle = m_NcButtonState[nBtn];
@@ -1492,24 +1501,24 @@ void CViewSample::DrawNcButton(CDC *pDC, UINT nBtn)
 		int xofs = 0, yofs = 0, nImage = 0;
 
 		c1 = c2 = c3 = c4 = crFc;
-		if (!(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_FLATBUTTONS))
+		if(!flat)
 		{
 			c1 = c3 = crHi;
 			c2 = crDk;
 			c4 = RGB(0,0,0);
 		}
-		if (dwStyle & (NCBTNS_PUSHED|NCBTNS_CHECKED))
+		if(dwStyle & (NCBTNS_PUSHED | NCBTNS_CHECKED))
 		{
 			c1 = crDk;
 			c2 = crHi;
-			if (!(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_FLATBUTTONS))
+			if(!flat)
 			{
 				c4 = crHi;
 				c3 = (dwStyle & NCBTNS_PUSHED) ? RGB(0,0,0) : crDk;
 			}
 			xofs = yofs = 1;
 		} else
-		if ((dwStyle & NCBTNS_MOUSEOVER) && (TrackerSettings::Instance().m_dwPatternSetup & PATTERN_FLATBUTTONS))
+		if((dwStyle & NCBTNS_MOUSEOVER) && flat)
 		{
 			c1 = crHi;
 			c2 = crDk;
@@ -1528,12 +1537,13 @@ void CViewSample::DrawNcButton(CDC *pDC, UINT nBtn)
 		pDC->FillSolidRect(&rect, crFc);
 		rect.left += xofs;
 		rect.top += yofs;
-		if (dwStyle & NCBTNS_CHECKED) m_bmpEnvBar.Draw(pDC, SIMAGE_CHECKED, rect.TopLeft(), ILD_NORMAL);
-		m_bmpEnvBar.Draw(pDC, nImage, rect.TopLeft(), ILD_NORMAL);
+		if(dwStyle & NCBTNS_CHECKED)
+			CMainFrame::GetMainFrame()->m_SampleIcons.Draw(pDC, SIMAGE_CHECKED, rect.TopLeft(), ILD_NORMAL);
+		CMainFrame::GetMainFrame()->m_SampleIcons.Draw(pDC, nImage, rect.TopLeft(), ILD_NORMAL);
 	} else
 	{
 		c1 = c2 = crFc;
-		if (TrackerSettings::Instance().m_dwPatternSetup & PATTERN_FLATBUTTONS)
+		if(flat)
 		{
 			c1 = crDk;
 			c2 = crHi;
@@ -1666,20 +1676,19 @@ void CViewSample::ScrollToPosition(int x)    // logical coordinates
 }
 
 
-template<class T, class uT>
+template<class T>
 T CViewSample::GetSampleValueFromPoint(const ModSample &smp, const CPoint &point) const
 {
-	static_assert(sizeof(T) == sizeof(uT) && sizeof(T) <= 2);
+	static_assert(sizeof(T) < sizeof(int));
 	const int channelHeight = (m_rcClient.Height() - m_timelineHeight) / smp.GetNumChannels();
-	int yPos = point.y - m_drawChannel * channelHeight - m_timelineHeight;
+	const int yPos = point.y - m_drawChannel * channelHeight - m_timelineHeight;
 
-	int value = std::numeric_limits<T>::max() - std::numeric_limits<uT>::max() * yPos / channelHeight;
-	Limit(value, std::numeric_limits<T>::min(), std::numeric_limits<T>::max());
-	return static_cast<T>(value);
+	const int value = std::numeric_limits<T>::max() - (std::numeric_limits<T>::max() - std::numeric_limits<T>::min()) * yPos / channelHeight;
+	return mpt::saturate_cast<T>(value);
 }
 
 
-template<class T, class uT>
+template<class T>
 void CViewSample::SetInitialDrawPoint(ModSample &smp, const CPoint &point)
 {
 	if(m_rcClient.Height() >= m_timelineHeight)
@@ -1689,24 +1698,29 @@ void CViewSample::SetInitialDrawPoint(ModSample &smp, const CPoint &point)
 	Limit(m_drawChannel, 0, (int)smp.GetNumChannels() - 1);
 
 	T *data = static_cast<T *>(smp.samplev()) + m_drawChannel;
-	data[m_dwEndDrag * smp.GetNumChannels()] = GetSampleValueFromPoint<T, uT>(smp, point);
+	data[m_dwEndDrag * smp.GetNumChannels()] = GetSampleValueFromPoint<T>(smp, point);
 }
 
 
-template<class T, class uT>
+template<class T>
 void CViewSample::SetSampleData(ModSample &smp, const CPoint &point, const SmpLength old)
 {
-	T *data = static_cast<T *>(smp.samplev()) + m_drawChannel + old * smp.GetNumChannels();
-	const int oldvalue = *data;
-	const int value = GetSampleValueFromPoint<T, uT>(smp, point);
-	const int inc = (m_dwEndDrag > old ? 1 : -1);
-	const int ptrInc = inc * smp.GetNumChannels();
-
-	for(SmpLength i = old; i != m_dwEndDrag; i += inc, data += ptrInc)
+	SmpLength x1 = old, x2 = m_dwEndDrag;
+	T *data = static_cast<T *>(smp.samplev()) + m_drawChannel + x1 * smp.GetNumChannels();
+	T v1 = *data, v2 = GetSampleValueFromPoint<T>(smp, point);
+	if(x1 > x2)
 	{
-		*data = static_cast<T>(static_cast<double>(oldvalue) + (value - oldvalue) * (static_cast<double>(i - old) / static_cast<double>(m_dwEndDrag - old)));
+		data -= (x1 - x2) * smp.GetNumChannels();
+		std::swap(x1, x2);
+		std::swap(v1, v2);
 	}
-	*data = static_cast<T>(value);
+
+	const uint8 ptrInc = smp.GetNumChannels();
+	for(SmpLength length = x2 - x1, remain = length; remain != 0; remain--, data += ptrInc)
+	{
+		*data = static_cast<T>(v2 + Util::muldivr(v1 - v2, remain, length));
+	}
+	*data = v2;
 }
 
 
@@ -1822,7 +1836,7 @@ void CViewSample::OnMouseMove(UINT flags, CPoint point)
 			x = ScreenToSample(point.x);
 		} else if(m_fineDrag)
 		{
-			x = m_startDragValue + (point.x - m_startDragPoint.x) / Util::ScalePixels(2, m_hWnd);
+			x = m_startDragValue + (point.x - m_startDragPoint.x) / HighDPISupport::ScalePixels(2, m_hWnd);
 		} else if(dragItemIsInWaveform && (m_nZoom < 0 || (m_nZoom == 0 && sample.nLength < static_cast<SmpLength>(m_rcClient.Width()))))
 		{
 			// Don't adjust selection to mouse down point when zooming into the sample
@@ -1844,9 +1858,11 @@ void CViewSample::OnMouseMove(UINT flags, CPoint point)
 			m_startDragValue = ScreenToSample(point.x);
 		}
 
+		const bool moveLoop = (flags & MK_CONTROL);
 		bool update = false;
 		SmpLength *updateLoopPoint = nullptr;
 		const char *updateLoopDesc = nullptr;
+		SmpLength loopLength = 0;
 		switch(m_dragItem)
 		{
 		case HitTestItem::SelectionStart:
@@ -1859,28 +1875,50 @@ void CViewSample::OnMouseMove(UINT flags, CPoint point)
 			}
 			break;
 		case HitTestItem::LoopStart:
-			if(x < sample.nLoopEnd)
+			if(moveLoop)
+			{
+				updateLoopPoint = &sample.nLoopStart;
+				updateLoopDesc = "Move Loop";
+				loopLength = sample.nLoopEnd - sample.nLoopStart;
+			} else if(x < sample.nLoopEnd)
 			{
 				updateLoopPoint = &sample.nLoopStart;
 				updateLoopDesc = "Set Loop Start";
 			}
 			break;
 		case HitTestItem::LoopEnd:
-			if(x > sample.nLoopStart)
+			if(moveLoop)
+			{
+				updateLoopPoint = &sample.nLoopStart;
+				updateLoopDesc = "Move Loop";
+				loopLength = sample.nLoopEnd - sample.nLoopStart;
+				x = (x > loopLength) ? x - loopLength : 0;
+			} else if(x > sample.nLoopStart)
 			{
 				updateLoopPoint = &sample.nLoopEnd;
 				updateLoopDesc = "Set Loop End";
 			}
 			break;
 		case HitTestItem::SustainStart:
-			if(x < sample.nSustainEnd)
+			if(moveLoop)
+			{
+				updateLoopPoint = &sample.nSustainStart;
+				updateLoopDesc = "Move Sustain Loop";
+				loopLength = sample.nSustainEnd - sample.nSustainStart;
+			} else if(x < sample.nSustainEnd)
 			{
 				updateLoopPoint = &sample.nSustainStart;
 				updateLoopDesc = "Set Sustain Start";
 			}
 			break;
 		case HitTestItem::SustainEnd:
-			if(x > sample.nSustainStart)
+			if(moveLoop)
+			{
+				updateLoopPoint = &sample.nSustainStart;
+				updateLoopDesc = "Move Loop";
+				loopLength = sample.nSustainEnd - sample.nSustainStart;
+				x = (x > loopLength) ? x - loopLength : 0;
+			} else if(x > sample.nSustainStart)
 			{
 				updateLoopPoint = &sample.nSustainEnd;
 				updateLoopDesc = "Set Sustain End";
@@ -1896,6 +1934,9 @@ void CViewSample::OnMouseMove(UINT flags, CPoint point)
 			break;
 		}
 
+		if(loopLength)
+			LimitMax(x, sample.nLength - loopLength);
+
 		if(updateLoopPoint && updateLoopDesc && *updateLoopPoint != x)
 		{
 			if(!m_dragPreparedUndo)
@@ -1903,6 +1944,10 @@ void CViewSample::OnMouseMove(UINT flags, CPoint point)
 			m_dragPreparedUndo = true;
 			update = true;
 			*updateLoopPoint = x;
+			if(loopLength && updateLoopPoint == &sample.nLoopStart)
+				sample.nLoopEnd = sample.nLoopStart + loopLength;
+			else if(loopLength && updateLoopPoint == &sample.nSustainStart)
+				sample.nSustainEnd = sample.nSustainStart + loopLength;
 			sample.PrecomputeLoops(sndFile, true);
 			SetModified(SampleHint().Info(), true, false);
 		}
@@ -1925,9 +1970,9 @@ void CViewSample::OnMouseMove(UINT flags, CPoint point)
 
 				LimitMax(old, sample.nLength);
 				if(sample.GetElementarySampleSize() == 2)
-					SetSampleData<int16, uint16>(sample, point, old);
+					SetSampleData<int16>(sample, point, old);
 				else if(sample.GetElementarySampleSize() == 1)
-					SetSampleData<int8, uint8>(sample, point, old);
+					SetSampleData<int8>(sample, point, old);
 
 				sample.PrecomputeLoops(sndFile, false);
 
@@ -2026,9 +2071,9 @@ void CViewSample::OnLButtonDown(UINT flags, CPoint point)
 		m_lastDrawPoint = point;
 		pModDoc->GetSampleUndo().PrepareUndo(m_nSample, sundo_replace, "Draw Sample");
 		if(sample.GetElementarySampleSize() == 2)
-			SetInitialDrawPoint<int16, uint16>(sample, point);
+			SetInitialDrawPoint<int16>(sample, point);
 		else if(sample.GetElementarySampleSize() == 1)
-			SetInitialDrawPoint<int8, uint8>(sample, point);
+			SetInitialDrawPoint<int8>(sample, point);
 
 		sndFile.GetSample(m_nSample).PrecomputeLoops(sndFile, false);
 
@@ -2037,7 +2082,7 @@ void CViewSample::OnLButtonDown(UINT flags, CPoint point)
 	} else
 	{
 		// ctrl + click = play from cursor pos
-		if(flags & MK_CONTROL)
+		if((flags & MK_CONTROL) && point.y >= m_timelineHeight)
 			PlayNote(NOTE_MIDDLEC, ScreenToSample(point.x));
 	}
 }
@@ -2154,7 +2199,7 @@ void CViewSample::OnLButtonDblClk(UINT, CPoint pt)
 }
 
 
-void CViewSample::OnRButtonDown(UINT, CPoint pt)
+void CViewSample::OnRButtonUp(UINT, CPoint pt)
 {
 	CModDoc *pModDoc = GetDocument();
 	if(pModDoc)
@@ -3672,7 +3717,7 @@ LRESULT CViewSample::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 
 	switch(wParam)
 	{
-		case kcContextMenu: OnRButtonDown(0, CPoint(0, TimelineHeight(m_hWnd))); return wParam;
+		case kcContextMenu: OnRButtonUp(0, CPoint(0, TimelineHeight(m_hWnd))); return wParam;
 
 		case kcSampleTrim:			TrimSample(false); return wParam;
 		case kcSampleTrimToLoopEnd:	TrimSample(true); return wParam;
@@ -3814,15 +3859,35 @@ LRESULT CViewSample::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		}
 	} else if(wParam >= kcStartSampleCues && wParam <= kcEndSampleCues)
 	{
-		const ModSample &sample = sndFile.GetSample(m_nSample);
-		SmpLength offset = sample.cues[wParam - kcStartSampleCues];
-		if(offset < sample.nLength)
-			PlayNote(NOTE_MIDDLEC, offset);
+		PlayOrSetCuePoint(wParam - kcStartSampleCues);
 		return wParam;
 	}
 
 	// Pass on to ctrl_smp
 	return GetControlDlg()->SendMessage(WM_MOD_KEYCOMMAND, wParam, lParam);
+}
+
+
+void CViewSample::PlayOrSetCuePoint(size_t cue)
+{
+	CModDoc *modDoc = GetDocument();
+	if(modDoc == nullptr)
+		return;
+	CSoundFile &sndFile = modDoc->GetSoundFile();
+	ModSample &sample = sndFile.GetSample(m_nSample);
+	SmpLength offset = sample.cues[cue];
+	if(offset < sample.nLength)
+	{
+		PlayNote(NOTE_MIDDLEC, offset);
+		return;
+	}
+
+	const CHANNELINDEX previewChannel = GetPreviewChannel();
+	if(previewChannel == CHANNELINDEX_INVALID)
+		return;
+	modDoc->GetSampleUndo().PrepareUndo(m_nSample, sundo_none, "Set Cue Point");
+	sample.cues[cue] = m_dwNotifyPos[previewChannel];
+	SetModified(SampleHint().Info(), true, false);
 }
 
 

@@ -16,6 +16,7 @@
 #include "dlg_misc.h"
 #include "FileDialog.h"
 #include "Globals.h"
+#include "HighDPISupport.h"
 #include "ImageLists.h"
 #include "InputHandler.h"
 #include "Mainfrm.h"
@@ -24,6 +25,7 @@
 #include "ProgressDialog.h"
 #include "PSRatioCalc.h"
 #include "Reporting.h"
+#include "resource.h"
 #include "SampleEditorDialogs.h"
 #include "TrackerSettings.h"
 #include "View_smp.h"
@@ -181,6 +183,7 @@ CCtrlSamples::CCtrlSamples(CModControlView &parent, CModDoc &document)
 	: CModControlDlg(parent, document)
 {
 	m_nLockCount = 1;
+	m_EditTimeStretchRatio.SetAccessibleSuffix(_T("%"));
 }
 
 
@@ -206,7 +209,7 @@ void CCtrlSamples::OnEditFocus()
 BOOL CCtrlSamples::OnInitDialog()
 {
 	CModControlDlg::OnInitDialog();
-	m_bInitialized = FALSE;
+	m_initialized = false;
 	SetRedraw(FALSE);
 
 	// Zoom Selection
@@ -301,6 +304,14 @@ BOOL CCtrlSamples::OnInitDialog()
 }
 
 
+void CCtrlSamples::OnDPIChanged()
+{
+	m_ToolBar1.OnDPIChanged();
+	m_ToolBar2.OnDPIChanged();
+	CModControlDlg::OnDPIChanged();
+}
+
+
 Setting<LONG> &CCtrlSamples::GetSplitPosRef() { return TrackerSettings::Instance().glSampleWindowHeight; }
 
 
@@ -385,7 +396,7 @@ void CCtrlSamples::OnActivatePage(LPARAM lParam)
 	}
 
 	CChildFrame *pFrame = (CChildFrame *)GetParentFrame();
-	SAMPLEVIEWSTATE &sampleState = pFrame->GetSampleViewState();
+	SampleViewState &sampleState = pFrame->GetSampleViewState();
 	if(sampleState.initialSample != 0)
 	{
 		m_nSample = sampleState.initialSample;
@@ -395,8 +406,10 @@ void CCtrlSamples::OnActivatePage(LPARAM lParam)
 	SetCurrentSample((lParam > 0) ? ((SAMPLEINDEX)lParam) : m_nSample);
 
 	// Initial Update
-	if (!m_bInitialized) UpdateView(SampleHint(m_nSample).Info().ModType(), NULL);
-	if (m_hWndView) PostViewMessage(VIEWMSG_LOADSTATE, (LPARAM)&sampleState);
+	if(!m_initialized)
+		UpdateView(SampleHint(m_nSample).Info().ModType(), nullptr);
+	if(m_hWndView)
+		PostViewMessage(VIEWMSG_LOADSTATE, (LPARAM)&sampleState);
 	SwitchToView();
 
 	// Combo boxes randomly disappear without this... why?
@@ -520,12 +533,12 @@ LRESULT CCtrlSamples::OnModCtrlMsg(WPARAM wParam, LPARAM lParam)
 }
 
 
-BOOL CCtrlSamples::GetToolTipText(UINT uId, LPTSTR pszText)
+CString CCtrlSamples::GetToolTipText(UINT uId, HWND) const
 {
-	if ((pszText) && (uId))
+	CString s;
+	if(uId)
 	{
 		UINT val = GetDlgItemInt(uId);
-		const TCHAR *s = nullptr;
 		CommandID cmd = kcNull;
 		switch(uId)
 		{
@@ -549,19 +562,19 @@ BOOL CCtrlSamples::GetToolTipText(UINT uId, LPTSTR pszText)
 		case IDC_EDIT8:
 			// Volume to dB
 			if(IsOPLInstrument())
-				_tcscpy(pszText, (mpt::tfmt::fix((static_cast<int32>(val) - 64) * 0.75, 2) + _T(" dB")).c_str());
+				s = mpt::cfmt::fix((static_cast<int32>(val) - 64) * 0.75, 2) + _T(" dB");
 			else
-				_tcscpy(pszText, CModDoc::LinearToDecibels(val, 64.0));
-			return TRUE;
+				s = CModDoc::LinearToDecibels(val, 64.0);
+			break;
 
 		case IDC_EDIT9:
 			// Panning
 			if(m_nSample)
 			{
 				const ModSample &sample = m_sndFile.GetSample(m_nSample);
-				_tcscpy(pszText, CModDoc::PanningToString(sample.nPan, 128));
+				s = CModDoc::PanningToString(sample.nPan, 128);
 			}
-			return TRUE;
+			break;
 
 		case IDC_EDIT5:
 		case IDC_SPIN5:
@@ -573,14 +586,12 @@ BOOL CCtrlSamples::GetToolTipText(UINT uId, LPTSTR pszText)
 				if(sample.uFlags[CHN_ADLIB])
 				{
 					// Translate to actual note frequency
-					_tcscpy(pszText, MPT_TFORMAT("{}Hz")(mpt::tfmt::flt(freqHz * (261.625 / 8363.0), 6)).c_str());
-					return TRUE;
+					s = MPT_CFORMAT("{}Hz")(mpt::tfmt::flt(freqHz * (261.625 / 8363.0), 6));
 				}
 				if(m_sndFile.UseFinetuneAndTranspose())
 				{
 					// Transpose + Finetune to Frequency
-					_tcscpy(pszText, MPT_TFORMAT("{}Hz")(freqHz).c_str());
-					return TRUE;
+					s = MPT_CFORMAT("{}Hz")(freqHz);
 				}
 			}
 			break;
@@ -608,35 +619,33 @@ BOOL CCtrlSamples::GetToolTipText(UINT uId, LPTSTR pszText)
 					ticks = val;
 				}
 				if(ticks >= 0)
-					_stprintf(pszText, _T("%d ticks"), ticks);
+					s = MPT_CFORMAT("{} ticks")(ticks);
 				else
-					_tcscpy(pszText, _T("No Vibrato"));
+					s = _T("No Vibrato");
 			}
-			return TRUE;
+			break;
 		case IDC_EDIT15:
 			// Vibrato Depth
 			if(!(m_sndFile.GetType() & (MOD_TYPE_IT | MOD_TYPE_MPT | MOD_TYPE_XM)))
-				_tcscpy(pszText, _T("Only available in IT / MPTM / XM format"));
+				s = _T("Only available in IT / MPTM / XM format");
 			else
-				_stprintf(pszText, _T("%u cents"), Util::muldivr_unsigned(val, 100, 64));
-			return TRUE;
+				s = MPT_CFORMAT("{} cents")(Util::muldivr_unsigned(val, 100, 64));
+			break;
 		case IDC_EDIT16:
 			// Vibrato Rate
 			if(!(m_sndFile.GetType() & (MOD_TYPE_IT | MOD_TYPE_MPT | MOD_TYPE_XM)))
 			{
 				s = _T("Only available in IT / MPTM / XM format");
-				break;
 			} else if(val == 0)
 			{
 				s = _T("Stopped");
-				break;
 			} else
 			{
 				const double ticksPerCycle = 256.0 / val;
 				const uint32 ticksPerBeat = std::max(1u, m_sndFile.m_PlayState.m_nCurrentRowsPerBeat * m_sndFile.m_PlayState.m_nMusicSpeed);
-				_stprintf(pszText, _T("%.2f beats per cycle (%.2f ticks)"), ticksPerCycle / ticksPerBeat, ticksPerCycle);
+				s = MPT_CFORMAT("{} beats per cycle ({} ticks)")(mpt::cfmt::flt(ticksPerCycle / ticksPerBeat, 3), mpt::cfmt::flt(ticksPerCycle, 3));
 			}
-			return TRUE;
+			break;
 
 		case IDC_CHECK1:
 		case IDC_EDIT3:
@@ -655,19 +664,14 @@ BOOL CCtrlSamples::GetToolTipText(UINT uId, LPTSTR pszText)
 			s = _T("Keep a reference to the original waveform instead of saving it in the module.");
 			break;
 		}
-		if(s != nullptr)
+		if(cmd != kcNull)
 		{
-			_tcscpy(pszText, s);
-			if(cmd != kcNull)
-			{
-				auto keyText = CMainFrame::GetInputHandler()->m_activeCommandSet->GetKeyTextFromCommand(cmd, 0);
-				if (!keyText.IsEmpty())
-					_tcscat(pszText, MPT_TFORMAT(" ({})")(keyText).c_str());
-			}
-			return TRUE;
+			auto keyText = CMainFrame::GetInputHandler()->m_activeCommandSet->GetKeyTextFromCommand(cmd, 0);
+			if (!keyText.IsEmpty())
+				s += MPT_CFORMAT(" ({})")(keyText);
 		}
 	}
-	return FALSE;
+	return s;
 }
 
 
@@ -682,7 +686,8 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 
 	const SampleHint sampleHint = hint.ToType<SampleHint>();
 	FlagSet<HintType> hintType = sampleHint.GetType();
-	if (!m_bInitialized) hintType.set(HINT_MODTYPE);
+	if(!m_initialized)
+		hintType.set(HINT_MODTYPE);
 	if(!hintType[HINT_SMPNAMES | HINT_SAMPLEINFO | HINT_MODTYPE]) return;
 
 	const SAMPLEINDEX updateSmp = sampleHint.GetSample();
@@ -913,10 +918,10 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 		GetDlgItem(IDC_CHECK2)->EnableWindow((m_sndFile.SampleHasPath(m_nSample) && m_sndFile.GetType() == MOD_TYPE_MPT) ? TRUE : FALSE);
 	}
 
-	if (!m_bInitialized)
+	if(!m_initialized)
 	{
 		// First update
-		m_bInitialized = TRUE;
+		m_initialized = true;
 		UnlockControls();
 	}
 
@@ -1133,36 +1138,30 @@ void CCtrlSamples::OnTbnDropDownToolBar(NMHDR *pNMHDR, LRESULT *pResult)
 	CInputHandler *ih = CMainFrame::GetInputHandler();
 	NMTOOLBAR *pToolBar = reinterpret_cast<NMTOOLBAR *>(pNMHDR);
 	ClientToScreen(&(pToolBar->rcButton)); // TrackPopupMenu uses screen coords
-	const int offset = Util::ScalePixels(4, m_hWnd);	// Compared to the main toolbar, the offset seems to be a bit wrong here...?
+	const int offset = HighDPISupport::ScalePixels(4, m_hWnd);  // Compared to the main toolbar, the offset seems to be a bit wrong here...?
 	int x = pToolBar->rcButton.left + offset, y = pToolBar->rcButton.bottom + offset;
 	CMenu menu;
 	switch(pToolBar->iItem)
 	{
 	case IDC_SAMPLE_NEW:
-		{
-			menu.CreatePopupMenu();
-			menu.AppendMenu(MF_STRING, IDC_SAMPLE_DUPLICATE, ih->GetKeyTextFromCommand(kcSampleDuplicate, m_sndFile.GetSample(m_nSample).uFlags[CHN_ADLIB] ? _T("&Duplicate Instrument") : _T("&Duplicate Sample")));
-			menu.AppendMenu(MF_STRING | (m_sndFile.SupportsOPL() ? 0 : MF_DISABLED), IDC_SAMPLE_INITOPL, ih->GetKeyTextFromCommand(kcSampleInitializeOPL, _T("Initialize &OPL Instrument")));
-			menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
-			menu.DestroyMenu();
-		}
+		menu.CreatePopupMenu();
+		menu.AppendMenu(MF_STRING, IDC_SAMPLE_DUPLICATE, ih->GetKeyTextFromCommand(kcSampleDuplicate, m_sndFile.GetSample(m_nSample).uFlags[CHN_ADLIB] ? _T("&Duplicate Instrument") : _T("&Duplicate Sample")));
+		menu.AppendMenu(MF_STRING | (m_sndFile.SupportsOPL() ? 0 : MF_DISABLED), IDC_SAMPLE_INITOPL, ih->GetKeyTextFromCommand(kcSampleInitializeOPL, _T("Initialize &OPL Instrument")));
+		menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
+		menu.DestroyMenu();
 		break;
 	case IDC_SAMPLE_OPEN:
-		{
-			menu.CreatePopupMenu();
-			menu.AppendMenu(MF_STRING, IDC_SAMPLE_OPENKNOWN, ih->GetKeyTextFromCommand(kcSampleLoad, _T("Import &Sample...")));
-			menu.AppendMenu(MF_STRING, IDC_SAMPLE_OPENRAW, ih->GetKeyTextFromCommand(kcSampleLoadRaw, _T("Import &Raw Sample...")));
-			menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
-			menu.DestroyMenu();
-		}
+		menu.CreatePopupMenu();
+		menu.AppendMenu(MF_STRING, IDC_SAMPLE_OPENKNOWN, ih->GetKeyTextFromCommand(kcSampleLoad, _T("Import &Sample...")));
+		menu.AppendMenu(MF_STRING, IDC_SAMPLE_OPENRAW, ih->GetKeyTextFromCommand(kcSampleLoadRaw, _T("Import &Raw Sample...")));
+		menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
+		menu.DestroyMenu();
 		break;
 	case IDC_SAMPLE_SAVEAS:
-		{
-			menu.CreatePopupMenu();
-			menu.AppendMenu(MF_STRING, IDC_SAVE_ALL, _T("Save &All..."));
-			menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
-			menu.DestroyMenu();
-		}
+		menu.CreatePopupMenu();
+		menu.AppendMenu(MF_STRING, IDC_SAVE_ALL, _T("Save &All..."));
+		menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, this);
+		menu.DestroyMenu();
 		break;
 	}
 	*pResult = 0;
@@ -1215,80 +1214,13 @@ bool CCtrlSamples::InsertSample(bool duplicate, int8 *confirm)
 }
 
 
-static constexpr std::pair<const mpt::uchar *, const mpt::uchar *> SampleFormats[]
-{
-	{ UL_("Wave Files (*.wav)"), UL_("*.wav") },
-#ifdef MPT_WITH_FLAC
-	{ UL_("FLAC Files (*.flac,*.oga)"), UL_("*.flac;*.oga") },
-#endif // MPT_WITH_FLAC
-#if defined(MPT_WITH_OPUSFILE)
-	{ UL_("Opus Files (*.opus,*.oga)"), UL_("*.opus;*.oga") },
-#endif // MPT_WITH_OPUSFILE
-#if defined(MPT_WITH_VORBISFILE) || defined(MPT_WITH_STBVORBIS)
-	{ UL_("Ogg Vorbis Files (*.ogg,*.oga)"), UL_("*.ogg;*.oga") },
-#endif // VORBIS
-#if defined(MPT_ENABLE_MP3_SAMPLES)
-	{ UL_("MPEG Files (*.mp1,*.mp2,*.mp3)"), UL_("*.mp1;*.mp2;*.mp3") },
-#endif // MPT_ENABLE_MP3_SAMPLES
-	{ UL_("XI Samples (*.xi)"), UL_("*.xi") },
-	{ UL_("Impulse Tracker Samples (*.its)"), UL_("*.its") },
-	{ UL_("Scream Tracker Samples (*.s3i,*.smp)"), UL_("*.s3i;*.smp") },
-	{ UL_("OPL Instruments (*.sb0,*.sb2,*.sbi)"), UL_("*.sb0;*.sb2;*.sbi") },
-	{ UL_("GF1 Patches (*.pat)"), UL_("*.pat") },
-	{ UL_("Wave64 Files (*.w64)"), UL_("*.w64") },
-	{ UL_("CAF Files (*.wav)"), UL_("*.caf") },
-	{ UL_("AIFF Files (*.aiff,*.8svx)"), UL_("*.aif;*.aiff;*.iff;*.8sv;*.8svx;*.svx") },
-	{ UL_("Sun Audio (*.au,*.snd)"), UL_("*.au;*.snd") },
-	{ UL_("SNES BRR Files (*.brr)"), UL_("*.brr") },
-};
-
-
-static mpt::ustring ConstructFileFilter(bool includeRaw)
-{
-	mpt::ustring s = U_("All Samples (*.wav,*.flac,*.xi,*.its,*.s3i,*.sbi,...)|");
-	bool first = true;
-	for(const auto &[name, exts] : SampleFormats)
-	{
-		if(!first)
-			s += U_(";");
-		else
-			first = false;
-		s += exts;
-	}
-#if defined(MPT_WITH_MEDIAFOUNDATION)
-	std::vector<FileType> mediaFoundationTypes = CSoundFile::GetMediaFoundationFileTypes();
-	s += ToFilterOnlyString(mediaFoundationTypes, true).ToUnicode();
-#endif
-	if(includeRaw)
-	{
-		s += U_(";*.raw;*.snd;*.pcm;*.sam");
-	}
-	s += U_("|");
-	for(const auto &[name, exts] : SampleFormats)
-	{
-		s += name + U_("|");
-		s += exts + U_("|");
-	}
-#if defined(MPT_WITH_MEDIAFOUNDATION)
-	s += ToFilterString(mediaFoundationTypes, FileTypeFormatShowExtensions).ToUnicode();
-#endif
-	if(includeRaw)
-	{
-		s += U_("Raw Samples (*.raw,*.snd,*.pcm,*.sam)|*.raw;*.snd;*.pcm;*.sam|");
-	}
-	s += U_("All Files (*.*)|*.*||");
-	return s;
-}
-
-
 void CCtrlSamples::OnSampleOpen()
 {
 	static int nLastIndex = 0;
-	std::vector<FileType> mediaFoundationTypes = CSoundFile::GetMediaFoundationFileTypes();
 	FileDialog dlg = OpenFileDialog()
 		.AllowMultiSelect()
 		.EnableAudioPreview()
-		.ExtensionFilter(ConstructFileFilter(true))
+		.ExtensionFilter(ConstructSampleFormatFileFilter(true))
 		.WorkingDirectory(TrackerSettings::Instance().PathSamples.GetWorkingDir())
 		.FilterIndex(&nLastIndex);
 	if(!dlg.Show(this)) return;
@@ -1303,11 +1235,10 @@ void CCtrlSamples::OnSampleOpen()
 void CCtrlSamples::OnSampleOpenKnown()
 {
 	static int nLastIndex = 0;
-	std::vector<FileType> mediaFoundationTypes = CSoundFile::GetMediaFoundationFileTypes();
 	FileDialog dlg = OpenFileDialog()
 		.AllowMultiSelect()
 		.EnableAudioPreview()
-		.ExtensionFilter(ConstructFileFilter(false))
+		.ExtensionFilter(ConstructSampleFormatFileFilter(false))
 		.WorkingDirectory(TrackerSettings::Instance().PathSamples.GetWorkingDir())
 		.FilterIndex(&nLastIndex);
 	if(!dlg.Show(this)) return;
@@ -1463,7 +1394,6 @@ void CCtrlSamples::SaveSample(bool doBatchSave)
 	const auto numberFmt = mpt::format_simple_spec<mpt::ustring>().Dec().FillNul().Width(1 + static_cast<int>(std::log10(maxSmp)));
 
 	bool ok = false;
-	CString sampleName, sampleFilename;
 
 	for(SAMPLEINDEX smp = minSmp; smp <= maxSmp; smp++)
 	{
@@ -1475,15 +1405,15 @@ void CCtrlSamples::SaveSample(bool doBatchSave)
 			fileName = dlg.GetFirstFile();
 			if(doBatchSave)
 			{
-				sampleName = mpt::ToCString(m_sndFile.GetCharsetInternal(), (!m_sndFile.m_szNames[smp].empty()) ? std::string(m_sndFile.m_szNames[smp]) : "untitled");
-				sampleFilename = mpt::ToCString(m_sndFile.GetCharsetInternal(), (!sample.filename.empty()) ? sample.GetFilename() : m_sndFile.m_szNames[smp]);
-				sampleName = SanitizePathComponent(sampleName);
-				sampleFilename = SanitizePathComponent(sampleFilename);
+				mpt::ustring sampleName = mpt::ToUnicode(m_sndFile.GetCharsetInternal(), (!m_sndFile.m_szNames[smp].empty()) ? std::string(m_sndFile.m_szNames[smp]) : "untitled");
+				mpt::ustring sampleFilename = mpt::ToUnicode(m_sndFile.GetCharsetInternal(), (!sample.filename.empty()) ? sample.GetFilename() : m_sndFile.m_szNames[smp]);
+				sampleName = mpt::SanitizePathComponent(sampleName);
+				sampleFilename = mpt::SanitizePathComponent(sampleFilename);
 
 				mpt::ustring fileNameU = fileName.ToUnicode();
 				fileNameU = mpt::replace(fileNameU, U_("%sample_number%"), mpt::ufmt::fmt(smp, numberFmt));
-				fileNameU = mpt::replace(fileNameU, U_("%sample_filename%"), mpt::ToUnicode(sampleFilename));
-				fileNameU = mpt::replace(fileNameU, U_("%sample_name%"), mpt::ToUnicode(sampleName));
+				fileNameU = mpt::replace(fileNameU, U_("%sample_filename%"), sampleFilename);
+				fileNameU = mpt::replace(fileNameU, U_("%sample_name%"), sampleName);
 				fileName = mpt::PathString::FromUnicode(fileNameU);
 
 				// Need to enforce S3I for Adlib samples
@@ -1792,7 +1722,7 @@ void CCtrlSamples::OnResample()
 	}
 	
 	const uint32 oldRate = sample.GetSampleRate(m_sndFile.GetType());
-	CResamplingDlg dlg(this, oldRate, TrackerSettings::Instance().sampleEditorDefaultResampler, first != last);
+	CResamplingDlg dlg(this, oldRate, TrackerSettings::Instance().sampleEditorDefaultResampler, first != last, m_sndFile.GetBestSaveFormat() == MOD_TYPE_MOD);
 	if(dlg.DoModal() != IDOK)
 		return;
 	
@@ -1807,12 +1737,12 @@ void CCtrlSamples::OnResample()
 			newFreq = sampleFreq / 2;
 		else if(newFreq == sampleFreq)
 			continue;
-		ApplyResample(smp, newFreq, dlg.GetFilter(), first != last, dlg.UpdatePatternCommands());
+		ApplyResample(smp, newFreq, dlg.GetFilter(), first != last, dlg.UpdatePatternCommands(), dlg.UpdatePatternNotes());
 	}
 }
 
 
-void CCtrlSamples::ApplyResample(SAMPLEINDEX smp, uint32 newRate, ResamplingMode mode, bool ignoreSelection, bool updatePatternCommands)
+void CCtrlSamples::ApplyResample(SAMPLEINDEX smp, uint32 newRate, ResamplingMode mode, bool ignoreSelection, bool updatePatternCommands, bool updatePatternNotes)
 {
 	BeginWaitCursor();
 
@@ -1847,7 +1777,7 @@ void CCtrlSamples::ApplyResample(SAMPLEINDEX smp, uint32 newRate, ResamplingMode
 	{
 		m_modDoc.PrepareUndoForAllPatterns(false, "Resample (Adjust Offsets)");
 	};
-	SmpLength newSelEnd = SampleEdit::Resample(sample, selection.nStart, selection.nEnd, newRate, mode, m_sndFile, updatePatternCommands, prepareSampleUndoFunc, preparePatternUndoFunc);
+	SmpLength newSelEnd = SampleEdit::Resample(sample, selection.nStart, selection.nEnd, newRate, mode, m_sndFile, updatePatternCommands, updatePatternNotes, prepareSampleUndoFunc, preparePatternUndoFunc);
 	if(!newSelEnd)
 	{
 		MessageBeep(MB_ICONWARNING);
@@ -1856,7 +1786,7 @@ void CCtrlSamples::ApplyResample(SAMPLEINDEX smp, uint32 newRate, ResamplingMode
 	}
 
 	SetModified(smp, SampleHint().Info().Data(), smp == m_nSample, true);
-	if(updatePatternCommands)
+	if(updatePatternCommands || updatePatternNotes)
 	{
 		m_modDoc.UpdateAllViews(nullptr, PatternHint().Data(), this);
 	}
@@ -2509,99 +2439,29 @@ void CCtrlSamples::OnSustainPointsChanged()
 }
 
 
-#define SMPLOOP_ACCURACY	7	// 5%
-#define BIDILOOP_ACCURACY	2	// 5%
-
-
-bool MPT_LoopCheck(int sstart0, int sstart1, int send0, int send1)
-{
-	int dse0 = send0 - sstart0;
-	if ((dse0 < -SMPLOOP_ACCURACY) || (dse0 > SMPLOOP_ACCURACY)) return false;
-	int dse1 = send1 - sstart1;
-	if ((dse1 < -SMPLOOP_ACCURACY) || (dse1 > SMPLOOP_ACCURACY)) return false;
-	int dstart = sstart1 - sstart0;
-	int dend = send1 - send0;
-	if (!dstart) dstart = dend >> 7;
-	if (!dend) dend = dstart >> 7;
-	if ((dstart ^ dend) < 0) return false;
-	int delta = dend - dstart;
-	return ((delta > -SMPLOOP_ACCURACY) && (delta < SMPLOOP_ACCURACY));
-}
-
-
-bool MPT_BidiEndCheck(int spos0, int spos1, int spos2)
-{
-	int delta0 = spos1 - spos0;
-	int delta1 = spos2 - spos1;
-	int delta2 = spos2 - spos0;
-	if (!delta0) delta0 = delta1 >> 7;
-	if (!delta1) delta1 = delta0 >> 7;
-	if ((delta1 ^ delta0) < 0) return false;
-	return ((delta0 >= -1) && (delta0 <= 0) && (delta1 >= -1) && (delta1 <= 0) && (delta2 >= -1) && (delta2 <= 0));
-}
-
-
-bool MPT_BidiStartCheck(int spos0, int spos1, int spos2)
-{
-	int delta1 = spos1 - spos0;
-	int delta0 = spos2 - spos1;
-	int delta2 = spos2 - spos0;
-	if (!delta0) delta0 = delta1 >> 7;
-	if (!delta1) delta1 = delta0 >> 7;
-	if ((delta1 ^ delta0) < 0) return false;
-	return ((delta0 >= -1) && (delta0 <= 0) && (delta1 > -1) && (delta1 <= 0) && (delta2 >= -1) && (delta2 <= 0));
-}
-
-
-
 void CCtrlSamples::OnVScroll(UINT nCode, UINT, CScrollBar *scrollBar)
 {
-	TCHAR s[256];
+	TCHAR s[32];
 	if(IsLocked()) return;
 	ModSample &sample = m_sndFile.GetSample(m_nSample);
-	const uint8 *pSample = mpt::byte_cast<const uint8 *>(sample.sampleb());
-	const uint32 inc = sample.GetBytesPerSample();
-	SmpLength i;
-	int pos;
+	const bool moveLoop = CMainFrame::GetInputHandler()->CtrlPressed();
 	bool redraw = false;
 	static CScrollBar *lastScrollbar = nullptr;
 
 	LockControls();
-	if ((!sample.nLength) || (!pSample)) goto NoSample;
-	if (sample.uFlags[CHN_16BIT])
-	{
-		pSample++;
-	}
 	// Loop Start
-	if ((pos = m_SpinLoopStart.GetPos32()) != 0 && sample.nLoopEnd > 0)
+	if(int pos = m_SpinLoopStart.GetPos32(); pos != 0 && sample.nLoopEnd > 0 && sample.HasSampleData())
 	{
-		bool bOk = false;
-		const uint8 *p = pSample + sample.nLoopStart * inc;
-		int find0 = (int)pSample[sample.nLoopEnd*inc-inc];
-		int find1 = (int)pSample[sample.nLoopEnd*inc];
-		// Find Next LoopStart Point
-		if (pos > 0)
+		if(SmpLength i = SampleEdit::FindLoopStart(sample, false, pos > 0, moveLoop); i < sample.nLength)
 		{
-			for (i = sample.nLoopStart + 1; i + 16 < sample.nLoopEnd; i++)
+			if(!m_startedEdit && lastScrollbar != scrollBar)
+				PrepareUndo(moveLoop ? "Move Loop" : "Set Loop Start");
+			if(moveLoop)
 			{
-				p += inc;
-				bOk = sample.uFlags[CHN_PINGPONGLOOP] ? MPT_BidiStartCheck(p[0], p[inc], p[inc*2]) : MPT_LoopCheck(find0, find1, p[0], p[inc]);
-				if (bOk) break;
+				sample.nLoopEnd = i + (sample.nLoopEnd - sample.nLoopStart);
+				wsprintf(s, _T("%u"), sample.nLoopEnd);
+				m_EditLoopEnd.SetWindowText(s);
 			}
-		} else
-		// Find Prev LoopStart Point
-		{
-			for (i = sample.nLoopStart; i; )
-			{
-				i--;
-				p -= inc;
-				bOk = sample.uFlags[CHN_PINGPONGLOOP] ? MPT_BidiStartCheck(p[0], p[inc], p[inc*2]) : MPT_LoopCheck(find0, find1, p[0], p[inc]);
-				if (bOk) break;
-			}
-		}
-		if (bOk)
-		{
-			if(!m_startedEdit && lastScrollbar != scrollBar) PrepareUndo("Set Loop Start");
 			sample.nLoopStart = i;
 			wsprintf(s, _T("%u"), sample.nLoopStart);
 			m_EditLoopStart.SetWindowText(s);
@@ -2611,34 +2471,18 @@ void CCtrlSamples::OnVScroll(UINT nCode, UINT, CScrollBar *scrollBar)
 		m_SpinLoopStart.SetPos(0);
 	}
 	// Loop End
-	if ((pos = m_SpinLoopEnd.GetPos32()) != 0)
+	if(int pos = m_SpinLoopEnd.GetPos32(); pos != 0 && sample.HasSampleData())
 	{
-		bool bOk = false;
-		const uint8 *p = pSample + sample.nLoopEnd * inc;
-		int find0 = (int)pSample[sample.nLoopStart*inc];
-		int find1 = (int)pSample[sample.nLoopStart*inc+inc];
-		// Find Next LoopEnd Point
-		if (pos > 0)
+		if(SmpLength i = SampleEdit::FindLoopEnd(sample, false, pos > 0, moveLoop); i > 0)
 		{
-			for (i = sample.nLoopEnd + 1; i <= sample.nLength; i++, p += inc)
+			if(!m_startedEdit && lastScrollbar != scrollBar)
+				PrepareUndo(moveLoop ? "Move Loop" : "Set Loop End");
+			if(moveLoop)
 			{
-				bOk = sample.uFlags[CHN_PINGPONGLOOP] ? MPT_BidiEndCheck(p[0], p[inc], p[inc*2]) : MPT_LoopCheck(find0, find1, p[0], p[inc]);
-				if (bOk) break;
+				sample.nLoopStart = i - (sample.nLoopEnd - sample.nLoopStart);
+				wsprintf(s, _T("%u"), sample.nLoopStart);
+				m_EditLoopStart.SetWindowText(s);
 			}
-		} else
-		// Find Prev LoopEnd Point
-		{
-			for (i = sample.nLoopEnd; i > sample.nLoopStart + 16; )
-			{
-				i--;
-				p -= inc;
-				bOk = sample.uFlags[CHN_PINGPONGLOOP] ? MPT_BidiEndCheck(p[0], p[inc], p[inc*2]) : MPT_LoopCheck(find0, find1, p[0], p[inc]);
-				if (bOk) break;
-			}
-		}
-		if (bOk)
-		{
-			if(!m_startedEdit && lastScrollbar != scrollBar) PrepareUndo("Set Loop End");
 			sample.nLoopEnd = i;
 			wsprintf(s, _T("%u"), sample.nLoopEnd);
 			m_EditLoopEnd.SetWindowText(s);
@@ -2648,35 +2492,18 @@ void CCtrlSamples::OnVScroll(UINT nCode, UINT, CScrollBar *scrollBar)
 		m_SpinLoopEnd.SetPos(0);
 	}
 	// Sustain Loop Start
-	if ((pos = m_SpinSustainStart.GetPos32()) != 0 && sample.nSustainEnd > 0)
+	if(int pos = m_SpinSustainStart.GetPos32(); pos != 0 && sample.nSustainEnd > 0 && sample.HasSampleData())
 	{
-		bool bOk = false;
-		const uint8 *p = pSample + sample.nSustainStart * inc;
-		int find0 = (int)pSample[sample.nSustainEnd*inc-inc];
-		int find1 = (int)pSample[sample.nSustainEnd*inc];
-		// Find Next Sustain LoopStart Point
-		if (pos > 0)
+		if(SmpLength i = SampleEdit::FindLoopStart(sample, true, pos > 0, moveLoop); i < sample.nLength)
 		{
-			for (i = sample.nSustainStart + 1; i + 16 < sample.nSustainEnd; i++)
+			if(!m_startedEdit && lastScrollbar != scrollBar)
+				PrepareUndo(moveLoop ? "Move Sustain Loop" : "Set Sustain Loop Start");
+			if(moveLoop)
 			{
-				p += inc;
-				bOk = sample.uFlags[CHN_PINGPONGSUSTAIN] ? MPT_BidiStartCheck(p[0], p[inc], p[inc*2]) : MPT_LoopCheck(find0, find1, p[0], p[inc]);
-				if (bOk) break;
+				sample.nSustainEnd = i + (sample.nSustainEnd - sample.nSustainStart);
+				wsprintf(s, _T("%u"), sample.nSustainEnd);
+				m_EditSustainEnd.SetWindowText(s);
 			}
-		} else
-		// Find Prev Sustain LoopStart Point
-		{
-			for (i = sample.nSustainStart; i; )
-			{
-				i--;
-				p -= inc;
-				bOk = sample.uFlags[CHN_PINGPONGSUSTAIN] ? MPT_BidiStartCheck(p[0], p[inc], p[inc*2]) : MPT_LoopCheck(find0, find1, p[0], p[inc]);
-				if (bOk) break;
-			}
-		}
-		if (bOk)
-		{
-			if(!m_startedEdit && lastScrollbar != scrollBar) PrepareUndo("Set Sustain Loop Start");
 			sample.nSustainStart = i;
 			wsprintf(s, _T("%u"), sample.nSustainStart);
 			m_EditSustainStart.SetWindowText(s);
@@ -2686,34 +2513,18 @@ void CCtrlSamples::OnVScroll(UINT nCode, UINT, CScrollBar *scrollBar)
 		m_SpinSustainStart.SetPos(0);
 	}
 	// Sustain Loop End
-	if ((pos = m_SpinSustainEnd.GetPos32()) != 0)
+	if(int pos = m_SpinSustainEnd.GetPos32(); pos != 0 && sample.HasSampleData())
 	{
-		bool bOk = false;
-		const uint8 *p = pSample + sample.nSustainEnd * inc;
-		int find0 = (int)pSample[sample.nSustainStart*inc];
-		int find1 = (int)pSample[sample.nSustainStart*inc+inc];
-		// Find Next LoopEnd Point
-		if (pos > 0)
+		if(SmpLength i = SampleEdit::FindLoopEnd(sample, true, pos > 0, moveLoop); i > 0)
 		{
-			for (i = sample.nSustainEnd + 1; i + 1 < sample.nLength; i++, p += inc)
+			if(!m_startedEdit && lastScrollbar != scrollBar)
+				PrepareUndo(moveLoop ? "Move Sustain Loop" : "Set Sustain Loop End");
+			if(moveLoop)
 			{
-				bOk = sample.uFlags[CHN_PINGPONGSUSTAIN] ? MPT_BidiEndCheck(p[0], p[inc], p[inc*2]) : MPT_LoopCheck(find0, find1, p[0], p[inc]);
-				if (bOk) break;
+				sample.nSustainStart = i - (sample.nSustainEnd - sample.nSustainStart);
+				wsprintf(s, _T("%u"), sample.nSustainStart);
+				m_EditSustainStart.SetWindowText(s);
 			}
-		} else
-		// Find Prev LoopEnd Point
-		{
-			for (i = sample.nSustainEnd; i > sample.nSustainStart + 16; )
-			{
-				i--;
-				p -= inc;
-				bOk = sample.uFlags[CHN_PINGPONGSUSTAIN] ? MPT_BidiEndCheck(p[0], p[inc], p[inc*2]) : MPT_LoopCheck(find0, find1, p[0], p[inc]);
-				if (bOk) break;
-			}
-		}
-		if (bOk)
-		{
-			if(!m_startedEdit && lastScrollbar != scrollBar) PrepareUndo("Set Sustain Loop End");
 			sample.nSustainEnd = i;
 			wsprintf(s, _T("%u"), sample.nSustainEnd);
 			m_EditSustainEnd.SetWindowText(s);
@@ -2722,9 +2533,8 @@ void CCtrlSamples::OnVScroll(UINT nCode, UINT, CScrollBar *scrollBar)
 		}
 		m_SpinSustainEnd.SetPos(0);
 	}
-NoSample:
 	// FineTune / C-5 Speed
-	if ((pos = m_SpinFineTune.GetPos32()) != 0)
+	if(int pos = m_SpinFineTune.GetPos32(); pos != 0)
 	{
 		if(!m_startedEdit && lastScrollbar != scrollBar)
 			PrepareUndo("Finetune");
@@ -2858,7 +2668,7 @@ LRESULT CCtrlSamples::OnCustomKeyMsg(WPARAM wParam, LPARAM /*lParam*/)
 CCtrlSamples::SampleSelectionPoints CCtrlSamples::GetSelectionPoints()
 {
 	SampleSelectionPoints points;
-	SAMPLEVIEWSTATE viewstate{};
+	SampleViewState viewstate{};
 	const ModSample &sample = m_sndFile.GetSample(m_nSample);
 
 	SendViewMessage(VIEWMSG_SAVESTATE, reinterpret_cast<LPARAM>(&viewstate));
@@ -2885,7 +2695,7 @@ void CCtrlSamples::SetSelectionPoints(SmpLength nStart, SmpLength nEnd)
 	Limit(nStart, SmpLength(0), sample.nLength);
 	Limit(nEnd, SmpLength(0), sample.nLength);
 
-	SAMPLEVIEWSTATE viewstate{};
+	SampleViewState viewstate{};
 	SendViewMessage(VIEWMSG_SAVESTATE, reinterpret_cast<LPARAM>(&viewstate));
 
 	viewstate.dwBeginSel = nStart;
@@ -2931,8 +2741,7 @@ void CCtrlSamples::OnXFade()
 	CSampleXFadeDlg dlg(this, sample);
 	if(dlg.DoModal() == IDOK)
 	{
-		const SmpLength loopStart = dlg.m_useSustainLoop ? sample.nSustainStart: sample.nLoopStart;
-		const SmpLength loopEnd = dlg.m_useSustainLoop ? sample.nSustainEnd: sample.nLoopEnd;
+		const auto [loopStart, loopEnd] = dlg.m_useSustainLoop ? sample.GetSustainLoop() : sample.GetLoop();
 		const SmpLength maxSamples = std::min({ sample.nLength, loopStart, loopEnd / 2 });
 		SmpLength fadeSamples = dlg.PercentToSamples(dlg.m_fadeLength);
 		LimitMax(fadeSamples, maxSamples);

@@ -20,7 +20,28 @@ class DialogBase : public CDialog
 public:
 	using CDialog::CDialog;
 
+	BOOL OnInitDialog() override;
 	BOOL PreTranslateMessage(MSG *pMsg) override;
+	INT_PTR OnToolHitTest(CPoint point, TOOLINFO *pTI) const override;
+
+	static bool HandleGlobalKeyMessage(const MSG &msg);
+
+	int GetDPI() const { return m_dpi; }
+
+protected:
+	virtual void OnDPIChanged() {}
+	void UpdateDPI();
+
+	virtual CString GetToolTipText(UINT /*id*/, HWND /*hwnd*/) const { return {}; }
+
+	afx_msg LRESULT OnDPIChanged(WPARAM, LPARAM);
+	afx_msg BOOL OnToolTipText(UINT, NMHDR *pNMHDR, LRESULT *pResult);
+
+	DECLARE_MESSAGE_MAP()
+
+private:
+	CString m_tooltipText;
+	int m_dpi = 0;
 };
 
 OPENMPT_NAMESPACE_END

@@ -152,20 +152,6 @@ void InstrumentEnvelope::Sanitize(uint8 maxValue)
 }
 
 
-ModInstrument::ModInstrument(SAMPLEINDEX sample)
-{
-	SetCutoff(0, false);
-	SetResonance(0, false);
-
-	pitchToTempoLock.Set(0);
-
-	pTuning = CSoundFile::GetDefaultTuning();
-
-	AssignSample(sample);
-	ResetNoteMap();
-}
-
-
 // Translate instrument properties between two given formats.
 void ModInstrument::Convert(MODTYPE fromType, MODTYPE toType)
 {
@@ -227,10 +213,11 @@ void ModInstrument::Convert(MODTYPE fromType, MODTYPE toType)
 		}
 	}
 
-	// Limit fadeout length for IT
+	// Limit fadeout length and precision for IT
 	if(toType & MOD_TYPE_IT)
 	{
 		LimitMax(nFadeOut, 8192u);
+		nFadeOut = ((nFadeOut + 16) / 32) * 32;
 	}
 
 	// MPT-specific features - remove instrument tunings, Pitch/Tempo Lock, cutoff / resonance swing and filter mode for other formats

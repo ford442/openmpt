@@ -94,12 +94,12 @@ CommandID CInputHandler::SendCommands(CWnd *wnd, const KeyMapRange &cmd)
 
 CommandID CInputHandler::KeyEvent(const InputTargetContext context, const KeyboardEvent &event, CWnd *pSourceWnd)
 {
-	if(InterceptSpecialKeys(event.key, event.flags, false))
-		return kcDummyShortcut;
 	if(IsKeyPressHandledByTextBox(event.key, ::GetFocus()))
 		return kcNull;
 
 	KeyMapRange cmd = m_keyMap.equal_range(KeyCombination(context, GetModifierMask(), event.key, event.keyEventType));
+	if(cmd.first != cmd.second && InterceptSpecialKeys(event))
+		return kcDummyShortcut;
 
 	if(pSourceWnd == nullptr)
 		pSourceWnd = m_pMainFrm;	// By default, send command message to main frame.
@@ -108,17 +108,16 @@ CommandID CInputHandler::KeyEvent(const InputTargetContext context, const Keyboa
 
 
 // Feature: use Windows keys as modifier keys, intercept special keys
-bool CInputHandler::InterceptSpecialKeys(UINT nChar, UINT nFlags, bool generateMsg)
+bool CInputHandler::InterceptSpecialKeys(const KeyboardEvent &event)
 {
-	KeyEventType keyEventType = GetKeyEventType(HIWORD(nFlags));
 	enum { VK_NonExistentKey = VK_F24+1 };
 
-	if(nChar == VK_NonExistentKey)
+	if(event.key == VK_NonExistentKey)
 	{
 		return true;
-	} else if(m_bInterceptWindowsKeys && (nChar == VK_LWIN || nChar == VK_RWIN))
+	} else if(m_bInterceptWindowsKeys && (event.key == VK_LWIN || event.key == VK_RWIN))
 	{
-		if(keyEventType == kKeyEventDown)
+		if(event.keyEventType == kKeyEventDown)
 		{
 			INPUT inp[2];
 			inp[0].type = inp[1].type = INPUT_KEYBOARD;
@@ -132,22 +131,22 @@ bool CInputHandler::InterceptSpecialKeys(UINT nChar, UINT nFlags, bool generateM
 		}
 	}
 
-	if((nChar == VK_NUMLOCK && m_bInterceptNumLock)
-		|| (nChar == VK_CAPITAL && m_bInterceptCapsLock)
-		|| (nChar == VK_SCROLL && m_bInterceptScrollLock))
+	if((event.key == VK_NUMLOCK && m_bInterceptNumLock)
+		|| (event.key == VK_CAPITAL && m_bInterceptCapsLock)
+		|| (event.key == VK_SCROLL && m_bInterceptScrollLock))
 	{
 		if(GetMessageExtraInfo() == 0xC0FFEE)
 		{
 			SetMessageExtraInfo(0);
 			return true;
-		} else if(keyEventType == kKeyEventDown && generateMsg)
+		} else if(event.keyEventType == kKeyEventDown)
 		{
 			// Prevent keys from lighting up by simulating a second press.
 			INPUT inp[2];
 			inp[0].type = inp[1].type = INPUT_KEYBOARD;
 			inp[0].ki.time = inp[1].ki.time = 0;
 			inp[0].ki.dwExtraInfo = inp[1].ki.dwExtraInfo = 0xC0FFEE;
-			inp[0].ki.wVk = inp[1].ki.wVk = static_cast<WORD>(nChar);
+			inp[0].ki.wVk = inp[1].ki.wVk = static_cast<WORD>(event.key);
 			inp[0].ki.wScan = inp[1].ki.wScan = 0;
 			inp[0].ki.dwFlags = KEYEVENTF_KEYUP;
 			inp[1].ki.dwFlags = 0;
@@ -345,6 +344,8 @@ FlagSet<Modifiers> CInputHandler::GetModifierMask()
 {
 	BYTE keyStates[256];
 	FlagSet<Modifiers> modifierMask = ModNone;
+	if(GetActiveWindow() == nullptr)
+		return modifierMask;
 	if(!GetKeyboardState(keyStates))
 		return modifierMask;
 
@@ -386,22 +387,23 @@ CString CInputHandler::GetMenuText(UINT id) const
 {
 	static constexpr std::tuple<UINT, CommandID, const TCHAR *> MenuItems[] =
 	{
-		{ ID_FILE_NEW,            kcFileNew,           _T("&New") },
-		{ ID_FILE_OPEN,           kcFileOpen,          _T("&Open...") },
-		{ ID_FILE_OPENTEMPLATE,   kcNull,              _T("Open &Template") },
-		{ ID_FILE_CLOSE,          kcFileClose,         _T("&Close") },
-		{ ID_FILE_CLOSEALL,       kcFileCloseAll,      _T("C&lose All") },
-		{ ID_FILE_APPENDMODULE,   kcFileAppend,        _T("Appen&d Module...") },
-		{ ID_FILE_SAVE,           kcFileSave,          _T("&Save") },
-		{ ID_FILE_SAVE_AS,        kcFileSaveAs,        _T("Save &As...") },
-		{ ID_FILE_SAVE_COPY,      kcFileSaveCopy,      _T("Save Cop&y...") },
-		{ ID_FILE_SAVEASTEMPLATE, kcFileSaveTemplate,  _T("Sa&ve as Template") },
-		{ ID_FILE_SAVEASWAVE,     kcFileSaveAsWave,    _T("Stream Export (&WAV, FLAC, MP3, etc.)...") },
-		{ ID_FILE_SAVEMIDI,       kcFileSaveMidi,      _T("Export as M&IDI...") },
-		{ ID_FILE_SAVEOPL,        kcFileSaveOPL,       _T("Export O&PL Register Dump...") },
-		{ ID_FILE_SAVECOMPAT,     kcFileExportCompat,  _T("Compatibility &Export...") },
-		{ ID_IMPORT_MIDILIB,      kcFileImportMidiLib, _T("Import &MIDI Library...") },
-		{ ID_ADD_SOUNDBANK,       kcFileAddSoundBank,  _T("Add Sound &Bank...") },
+		{ ID_FILE_NEW,                      kcFileNew,           _T("&New") },
+		{ ID_FILE_OPEN,                     kcFileOpen,          _T("&Open...") },
+		{ ID_FILE_OPENTEMPLATE,             kcNull,              _T("Open &Template") },
+		{ ID_FILE_OPENTEMPLATE_LASTINRANGE, kcFileOpenTemplate,  _T("&Browse...") },
+		{ ID_FILE_CLOSE,                    kcFileClose,         _T("&Close") },
+		{ ID_FILE_CLOSEALL,                 kcFileCloseAll,      _T("C&lose All") },
+		{ ID_FILE_APPENDMODULE,             kcFileAppend,        _T("Appen&d Module...") },
+		{ ID_FILE_SAVE,                     kcFileSave,          _T("&Save") },
+		{ ID_FILE_SAVE_AS,                  kcFileSaveAs,        _T("Save &As...") },
+		{ ID_FILE_SAVE_COPY,                kcFileSaveCopy,      _T("Save Cop&y...") },
+		{ ID_FILE_SAVEASTEMPLATE,           kcFileSaveTemplate,  _T("Sa&ve as Template") },
+		{ ID_FILE_SAVEASWAVE,               kcFileSaveAsWave,    _T("Stream Export (&WAV, FLAC, MP3, etc.)...") },
+		{ ID_FILE_SAVEMIDI,                 kcFileSaveMidi,      _T("Export as M&IDI...") },
+		{ ID_FILE_SAVEOPL,                  kcFileSaveOPL,       _T("Export O&PL Register Dump...") },
+		{ ID_FILE_SAVECOMPAT,               kcFileExportCompat,  _T("Compatibility &Export...") },
+		{ ID_IMPORT_MIDILIB,                kcFileImportMidiLib, _T("Import &MIDI Library...") },
+		{ ID_ADD_SOUNDBANK,                 kcFileAddSoundBank,  _T("Add Sound &Bank...") },
 
 		{ ID_PLAYER_PLAY,          kcPlayPauseSong,      _T("Pause / &Resume") },
 		{ ID_PLAYER_PLAYFROMSTART, kcPlaySongFromStart,  _T("&Play from Start") },
@@ -434,8 +436,8 @@ CString CInputHandler::GetMenuText(UINT id) const
 		{ ID_VIEW_INSTRUMENTS,    kcViewInstruments,        _T("&Instruments") },
 		{ ID_VIEW_COMMENTS,       kcViewComments,           _T("&Comments") },
 		{ ID_VIEW_OPTIONS,        kcViewOptions,            _T("S&etup") },
-		{ ID_VIEW_TOOLBAR,        kcViewMain,               _T("&Main") },
-		{ IDD_TREEVIEW,           kcViewTree,               _T("&Tree") },
+		{ ID_VIEW_TOOLBAR,        kcViewMain,               _T("Show &Main Toolbar") },
+		{ IDD_TREEVIEW,           kcViewTree,               _T("Show &Tree View") },
 		{ ID_PLUGIN_SETUP,        kcViewAddPlugin,          _T("Pl&ugin Manager") },
 		{ ID_CHANNEL_MANAGER,     kcViewChannelManager,     _T("Ch&annel Manager") },
 		{ ID_CLIPBOARD_MANAGER,   kcToggleClipboardManager, _T("C&lipboard Manager") },
@@ -472,8 +474,10 @@ void CInputHandler::UpdateMainMenu()
 	static constexpr int MenuItems[] =
 	{
 		ID_FILE_OPEN,
+		ID_FILE_OPENTEMPLATE_LASTINRANGE,
 		ID_FILE_APPENDMODULE,
 		ID_FILE_CLOSE,
+		ID_FILE_CLOSEALL,
 		ID_FILE_SAVE,
 		ID_FILE_SAVE_AS,
 		ID_FILE_SAVEASWAVE,
@@ -529,7 +533,7 @@ void CInputHandler::UpdateMainMenu()
 }
 
 
-void CInputHandler::SetNewCommandSet(const CCommandSet *newSet)
+void CInputHandler::SetNewCommandSet(const CCommandSet &newSet)
 {
 	m_activeCommandSet->Copy(newSet);
 	m_activeCommandSet->GenKeyMap(m_keyMap);

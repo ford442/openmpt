@@ -23,6 +23,8 @@
 
 OPENMPT_NAMESPACE_BEGIN
 
+enum CommandID : int;
+
 class CModDoc;
 class CEditCommand;
 class CEffectVis;
@@ -65,50 +67,6 @@ public:
 inline constexpr ROWINDEX MAX_SPACING = MAX_PATTERN_ROWS;
 
 
-// Struct for controlling selection clearing. This is used to define which data fields should be cleared.
-struct RowMask
-{
-	bool note : 1;
-	bool instrument : 1;
-	bool volume : 1;
-	bool command : 1;
-	bool parameter : 1;
-
-	// Default row mask (all rows are selected)
-	RowMask()
-	{
-		note = instrument = volume = command = parameter = true;
-	};
-
-	// Construct mask from list
-	RowMask(bool n, bool i, bool v, bool c, bool p)
-	{
-		note = n;
-		instrument = i;
-		volume = v;
-		command = c;
-		parameter = p;
-	}
-
-	// Construct mask from column index
-	RowMask(const PatternCursor &cursor)
-	{
-		const PatternCursor::Columns column = cursor.GetColumnType();
-
-		note = (column == PatternCursor::noteColumn);
-		instrument = (column == PatternCursor::instrColumn);
-		volume = (column == PatternCursor::volumeColumn);
-		command = (column == PatternCursor::effectColumn);
-		parameter = (column == PatternCursor::paramColumn);
-	}
-
-	void Clear()
-	{
-		note = instrument = volume = command = parameter = false;
-	}
-};
-
-
 struct PatternEditPos
 {
 	ROWINDEX row = ROWINDEX_INVALID;
@@ -128,7 +86,6 @@ public:
 	enum PatternStatus
 	{
 		psMouseDragSelect    = 0x01,     // Creating a selection using the mouse
-		psKeyboardDragSelect = 0x02,     // Creating a selection using shortcuts
 		psFocussed           = 0x04,     // Is the pattern editor focussed
 		psFollowSong         = 0x08,     // Does the cursor follow playback
 		psRecordingEnabled   = 0x10,     // Recording enabled
@@ -163,7 +120,7 @@ protected:
 	CEditCommand *m_pEditWnd = nullptr;
 	CSize m_szHeader, m_szPluginHeader, m_szCell;
 	CRect m_oldClient;
-	UINT m_nMidRow, m_nSpacing, m_nAccelChar, m_nLastPlayedRow, m_nLastPlayedOrder;
+	uint32 m_nMidRow, m_nSpacing, m_nLastPlayedRow, m_nLastPlayedOrder;
 	FlagSet<PatternStatus> m_Status;
 	ROWINDEX m_nPlayRow, m_nNextPlayRow;
 	uint32 m_nPlayTick, m_nTicksOnRow;
@@ -173,7 +130,7 @@ protected:
 
 	int m_nXScroll = 0, m_nYScroll = 0;
 	int m_ledWidth = 0, m_ledHeight = 0;
-	PatternCursor::Columns m_nDetailLevel = PatternCursor::lastColumn;  // Visible Columns
+	std::bitset<PatternCursor::numColumns> m_visibleColumns;
 
 	// Cursor and selection positions
 	PatternCursor m_Cursor;               // Current cursor position in pattern.
@@ -212,19 +169,24 @@ protected:
 	std::array<std::vector<uint32>, 16> m_midiSustainBuffer;
 	std::bitset<16> m_midiSustainActive;
 
-	std::array<uint16, MAX_BASECHANNELS> ChnVUMeters;
-	std::array<uint16, MAX_BASECHANNELS> OldVUMeters;
+	struct ChannelState
+	{
+		uint16 vuMeter = 0;
+		uint16 vuMeterOld = 0;
+		std::pair<PLUGINDEX, PlugParamIndex> previousPCevent = {PLUGINDEX_INVALID, 0};
+		ModCommand::NOTE previousNote = NOTE_NONE;
+		uint8 selectedCols = 0;
+	};
 
+	std::vector<ChannelState> m_chnState;
 	std::bitset<128> m_baPlayingNote;
 	CModDoc::NoteToChannelMap m_noteChannel;  // Note -> Preview channel assignment
-	std::array<ModCommand::NOTE, 10> m_octaveKeyMemory;
-	std::array<ModCommand::NOTE, MAX_BASECHANNELS> m_previousNote;
-	std::array<std::pair<PLUGINDEX, PlugParamIndex>, MAX_BASECHANNELS> m_previousPCevent;  // For multichannel recording
+	std::array<ModCommand::NOTE, (NOTE_MAX - NOTE_MIN + 12) / 12> m_octaveKeyMemory;
 	std::array<uint8, NOTE_MAX + NOTE_MIN> m_activeNoteChannel;
 	std::array<uint8, NOTE_MAX + NOTE_MIN> m_splitActiveNoteChannel;
 	static constexpr uint8 NOTE_CHANNEL_MAP_INVALID = 0xFF;
-	static_assert(MAX_BASECHANNELS <= std::numeric_limits<decltype(m_activeNoteChannel)::value_type>::max());
-	static_assert(MAX_BASECHANNELS <= NOTE_CHANNEL_MAP_INVALID);
+	static_assert(MAX_BASECHANNELS - 1 <= std::numeric_limits<decltype(m_activeNoteChannel)::value_type>::max());
+	static_assert(MAX_BASECHANNELS - 1 < NOTE_CHANNEL_MAP_INVALID);
 
 public:
 	std::unique_ptr<CEffectVis> m_pEffectVis;
@@ -242,12 +204,15 @@ public:
 
 	void SetModified(bool updateAllViews = true);
 
+	bool IsSelectionPressed() const;
+
 	bool UpdateSizes();
 	void UpdateScrollSize();
 	void UpdateScrollPos();
 	void UpdateIndicator(bool updateAccessibility = true);
 	void UpdateXInfoText();
 	void UpdateColors();
+	void UpdateVisibileColumns(std::bitset<PatternCursor::numColumns> visibleColumns);
 
 	CString GetCursorDescription() const;
 
@@ -324,7 +289,7 @@ public:
 	void OnDropSelection();
 
 public:
-	void DrawPatternData(HDC hdc, PATTERNINDEX nPattern, bool selEnable, bool isPlaying, ROWINDEX startRow, ROWINDEX numRows, CHANNELINDEX startChan, CRect &rcClient, int *pypaint);
+	void DrawPatternData(HDC hdc, const int lineWidth, PATTERNINDEX nPattern, bool selEnable, bool isPlaying, ROWINDEX startRow, ROWINDEX numRows, CHANNELINDEX startChan, CRect &rcClient, int *pypaint);
 	void DrawLetter(int x, int y, char letter, int sizex = 10, int ofsx = 0);
 	void DrawLetter(int x, int y, wchar_t letter, int sizex = 10, int ofsx = 0);
 #if MPT_CXX_AT_LEAST(20)
@@ -332,13 +297,13 @@ public:
 #endif
 	void DrawNote(int x, int y, UINT note, CTuning *pTuning = nullptr);
 	void DrawInstrument(int x, int y, UINT instr);
-	void DrawVolumeCommand(int x, int y, const ModCommand &mc, bool drawDefaultVolume);
+	void DrawVolumeCommand(int x, int y, const ModCommand &mc, std::optional<int> defaultVolume, bool hex);
 	void DrawChannelVUMeter(HDC hdc, int x, int y, UINT nChn);
 	void UpdateAllVUMeters(Notification *pnotify);
 	void DrawDragSel(HDC hdc);
 	void OnDrawDragSel();
-	// True if default volume should be drawn for a given cell.
-	static bool DrawDefaultVolume(const ModCommand *m) { return (TrackerSettings::Instance().m_dwPatternSetup & PATTERN_SHOWDEFAULTVOLUME) && m->volcmd == VOLCMD_NONE && m->command != CMD_VOLUME && m->command != CMD_VOLUME8 && m->instr != 0 && m->IsNote(); }
+	// Returns result of GetDefaultVolume if default volume should be drawn, std::nullopt otherwise
+	std::optional<int> DrawDefaultVolume(const ModCommand &m) const;
 
 	void CursorJump(int distance, bool snap);
 
@@ -349,12 +314,12 @@ public:
 	void TempEnterIns(int val);
 	void TempEnterOctave(int val);
 	void TempStopOctave(int val);
-	void TempEnterVol(int v);
+	void TempEnterVol(CommandID cmd);
 	void TempEnterFX(ModCommand::COMMAND c, int v = -1);
 	void TempEnterFXparam(int v);
 	void EnterAftertouch(ModCommand::NOTE note, int atValue);
 
-	int GetDefaultVolume(const ModCommand &m, ModCommand::INSTR lastInstr = 0) const;
+	std::optional<int> GetDefaultVolume(const ModCommand &m, ModCommand::INSTR lastInstr = 0) const;
 	int GetBaseNote() const;
 	ModCommand::NOTE GetNoteWithBaseOctave(int note) const;
 
@@ -365,8 +330,8 @@ public:
 	PATTERNINDEX GetPrevPattern() const;
 	PATTERNINDEX GetNextPattern() const;
 
-	void SetSpacing(int n);
-	void OnClearField(const RowMask &mask, bool step, bool ITStyle = false);
+	void SetSpacing(uint32 n);
+	void OnClearField(const std::bitset<PatternCursor::numColumns> mask, bool step, bool ITStyle = false);
 	void SetSelectionInstrument(const INSTRUMENTINDEX instr, bool setEmptyInstrument);
 
 	void FindInstrument();
@@ -387,6 +352,7 @@ public:
 	//{{AFX_VIRTUAL(CViewPattern)
 	void OnDraw(CDC *) override;
 	void OnInitialUpdate() override;
+	void OnDPIChanged() override;
 	BOOL OnScrollBy(CSize sizeScroll, BOOL bDoScroll = TRUE) override;
 	BOOL PreTranslateMessage(MSG *pMsg) override;
 	void UpdateView(UpdateHint hint, CObject *pObj = nullptr) override;
@@ -422,7 +388,7 @@ protected:
 	afx_msg void OnEditPasteFlood() { ExecutePaste(PatternClipboard::pmPasteFlood); };
 	afx_msg void OnEditPushForwardPaste() { ExecutePaste(PatternClipboard::pmPushForward); };
 
-	afx_msg void OnClearSelection(bool ITStyle = false, RowMask sb = RowMask());
+	afx_msg void OnClearSelection(bool ITStyle = false, std::bitset<PatternCursor::numColumns> sb = std::bitset<PatternCursor::numColumns>{}.set());
 	afx_msg void OnGrowSelection();
 	afx_msg void OnShrinkSelection();
 	afx_msg void OnEditSelectAll();
@@ -456,9 +422,9 @@ protected:
 	afx_msg void OnSplitPattern();
 	afx_msg void OnPatternStep();
 	afx_msg void OnSwitchToOrderList();
-	afx_msg void OnPrevInstrument() { PostCtrlMessage(CTRLMSG_PAT_PREVINSTRUMENT); }
-	afx_msg void OnNextInstrument() { PostCtrlMessage(CTRLMSG_PAT_NEXTINSTRUMENT); }
-	afx_msg void OnPatternRecord() { PostCtrlMessage(CTRLMSG_SETRECORD, -1); }
+	afx_msg void OnPrevInstrument();
+	afx_msg void OnNextInstrument();
+	afx_msg void OnPatternRecord();
 	afx_msg void OnInterpolateVolume() { Interpolate(PatternCursor::volumeColumn); }
 	afx_msg void OnInterpolateEffect() { Interpolate(PatternCursor::effectColumn); }
 	afx_msg void OnInterpolateNote() { Interpolate(PatternCursor::noteColumn); }
@@ -487,8 +453,6 @@ protected:
 	afx_msg void OnUpdateUndo(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateRedo(CCmdUI *pCmdUI);
 	afx_msg void OnSelectPlugin(UINT nID);
-	// cppcheck-suppress duplInheritedMember
-	afx_msg LRESULT OnUpdatePosition(WPARAM nOrd, LPARAM nRow);
 	afx_msg LRESULT OnMidiMsg(WPARAM, LPARAM);
 	afx_msg LRESULT OnRecordPlugParamChange(WPARAM, LPARAM);
 	afx_msg LRESULT OnCustomKeyMsg(WPARAM, LPARAM);
@@ -502,10 +466,6 @@ protected:
 	afx_msg void OnLockPatternRows();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-
-
-public:
-	afx_msg void OnInitMenu(CMenu *pMenu);
 
 private:
 	// Copy&Paste
@@ -573,9 +533,6 @@ private:
 
 	void DragChannel(CHANNELINDEX source, CHANNELINDEX target, CHANNELINDEX numChannels, bool duplicate);
 
-public:
-	afx_msg void OnRButtonDblClk(UINT nFlags, CPoint point);
-
 private:
 	void TogglePendingMute(CHANNELINDEX nChn);
 	void PendingSoloChn(CHANNELINDEX first, CHANNELINDEX last);
@@ -588,6 +545,8 @@ private:
 	void StopPreview(ROWINDEX row, CHANNELINDEX channel);
 
 	void CreateVUMeterBitmap();
+
+	PatternCursor::Columns LastVisibleColumn() const noexcept;
 
 public:
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);

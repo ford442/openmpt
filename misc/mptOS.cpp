@@ -14,6 +14,7 @@
 #include "mpt/binary/hex.hpp"
 #include "mpt/format/join.hpp"
 #include "mpt/library/library.hpp"
+#include "mpt/osinfo/windows_version.hpp"
 #include "mpt/parse/split.hpp"
 #include "mpt/path/native_path.hpp"
 
@@ -197,6 +198,108 @@ static constexpr OSArchitecture architectures [] = {
 };
 
 
+struct MachineArchitecture
+{
+	USHORT ImageFileMachine;
+	Architecture Host;
+};
+static constexpr MachineArchitecture machinearchitectures [] = {
+#ifdef IMAGE_FILE_MACHINE_UNKNOWN
+	{ IMAGE_FILE_MACHINE_UNKNOWN    , Architecture::unknown },
+#endif
+#ifdef IMAGE_FILE_MACHINE_TARGET_HOST
+	{ IMAGE_FILE_MACHINE_TARGET_HOST, Architecture::unknown },
+#endif
+#ifdef IMAGE_FILE_MACHINE_I386
+	{ IMAGE_FILE_MACHINE_I386       , Architecture::x86     },
+#endif
+#ifdef IMAGE_FILE_MACHINE_R3000
+	{ IMAGE_FILE_MACHINE_R3000      , Architecture::mips    },
+#endif
+#ifdef IMAGE_FILE_MACHINE_R4000
+	{ IMAGE_FILE_MACHINE_R4000      , Architecture::mips    },
+#endif
+#ifdef IMAGE_FILE_MACHINE_R10000
+	{ IMAGE_FILE_MACHINE_R10000     , Architecture::mips    },
+#endif
+#ifdef IMAGE_FILE_MACHINE_WCEMIPSV2
+	{ IMAGE_FILE_MACHINE_WCEMIPSV2  , Architecture::mips    },
+#endif
+#ifdef IMAGE_FILE_MACHINE_ALPHA
+	{ IMAGE_FILE_MACHINE_ALPHA      , Architecture::alpha   },
+#endif
+#ifdef IMAGE_FILE_MACHINE_SH3
+	{ IMAGE_FILE_MACHINE_SH3        , Architecture::shx     },
+#endif
+#ifdef IMAGE_FILE_MACHINE_SH3DSP
+	{ IMAGE_FILE_MACHINE_SH3DSP     , Architecture::shx     },
+#endif
+#ifdef IMAGE_FILE_MACHINE_SH3E
+	{ IMAGE_FILE_MACHINE_SH3E       , Architecture::shx     },
+#endif
+#ifdef IMAGE_FILE_MACHINE_SH4
+	{ IMAGE_FILE_MACHINE_SH4        , Architecture::shx     },
+#endif
+#ifdef IMAGE_FILE_MACHINE_SH5
+	{ IMAGE_FILE_MACHINE_SH5        , Architecture::shx     },
+#endif
+#ifdef IMAGE_FILE_MACHINE_ARM
+	{ IMAGE_FILE_MACHINE_ARM        , Architecture::arm     },
+#endif
+#ifdef IMAGE_FILE_MACHINE_THUMB
+	{ IMAGE_FILE_MACHINE_THUMB      , Architecture::arm     },
+#endif
+#ifdef IMAGE_FILE_MACHINE_ARMNT
+	{ IMAGE_FILE_MACHINE_ARMNT      , Architecture::arm     },
+#endif
+#ifdef IMAGE_FILE_MACHINE_AM33
+	{ IMAGE_FILE_MACHINE_AM33       , Architecture::unknown },
+#endif
+#ifdef IMAGE_FILE_MACHINE_POWERPC
+	{ IMAGE_FILE_MACHINE_POWERPC    , Architecture::ppc     },
+#endif
+#ifdef IMAGE_FILE_MACHINE_POWERPCFP
+	{ IMAGE_FILE_MACHINE_POWERPCFP  , Architecture::ppc     },
+#endif
+#ifdef IMAGE_FILE_MACHINE_MIPS16
+	{ IMAGE_FILE_MACHINE_MIPS16     , Architecture::unknown },
+#endif
+#ifdef IMAGE_FILE_MACHINE_ALPHA64
+	{ IMAGE_FILE_MACHINE_ALPHA64    , Architecture::alpha64 },
+#endif
+#ifdef IMAGE_FILE_MACHINE_MIPSFPU
+	{ IMAGE_FILE_MACHINE_MIPSFPU    , Architecture::mips    },
+#endif
+#ifdef IMAGE_FILE_MACHINE_MIPSFPU16
+	{ IMAGE_FILE_MACHINE_MIPSFPU16  , Architecture::unknown },
+#endif
+#ifdef IMAGE_FILE_MACHINE_AXP64
+	{ IMAGE_FILE_MACHINE_AXP64      , Architecture::alpha64 },
+#endif
+#ifdef IMAGE_FILE_MACHINE_TRICORE
+	{ IMAGE_FILE_MACHINE_TRICORE    , Architecture::unknown },
+#endif
+#ifdef IMAGE_FILE_MACHINE_CEF
+	{ IMAGE_FILE_MACHINE_CEF        , Architecture::unknown },
+#endif
+#ifdef IMAGE_FILE_MACHINE_EBC
+	{ IMAGE_FILE_MACHINE_EBC        , Architecture::unknown },
+#endif
+#ifdef IMAGE_FILE_MACHINE_AMD64
+	{ IMAGE_FILE_MACHINE_AMD64      , Architecture::amd64   },
+#endif
+#ifdef IMAGE_FILE_MACHINE_M32R
+	{ IMAGE_FILE_MACHINE_M32R       , Architecture::unknown },
+#endif
+#ifdef IMAGE_FILE_MACHINE_ARM64
+	{ IMAGE_FILE_MACHINE_ARM64      , Architecture::arm64   },
+#endif
+#ifdef IMAGE_FILE_MACHINE_CEE
+	{ IMAGE_FILE_MACHINE_CEE        , Architecture::unknown }
+#endif
+};
+
+
 struct HostArchitecture
 {
 	Architecture Host;
@@ -272,6 +375,32 @@ mpt::ustring Name(Architecture arch)
 Architecture GetHostArchitecture() noexcept
 {
 	SYSTEM_INFO systemInfo = {};
+	mpt::osinfo::windows::Version WindowsVersion = mpt::osinfo::windows::Version::Current();
+	if(WindowsVersion.IsAtLeast(mpt::osinfo::windows::Version(mpt::osinfo::windows::Version::Win10, mpt::osinfo::windows::Version::ServicePack(0, 0), 16299, 0))) {
+		std::optional<mpt::library> kernel32{mpt::library::load({ mpt::library::path_search::system, mpt::library::path_prefix::none, MPT_NATIVE_PATH("kernel32.dll"), mpt::library::path_suffix::none })};
+		if(kernel32.has_value())
+		{
+			BOOL (WINAPI * fIsWow64Process2)(HANDLE hProcess, USHORT *pProcessMachine, USHORT *pNativeMachine) = NULL;
+			if(kernel32->bind(fIsWow64Process2, "IsWow64Process2"))
+			{
+				USHORT ProcessMachine = 0;
+				USHORT NativeMachine = 0;
+				if(fIsWow64Process2(GetCurrentProcess(), &ProcessMachine, &NativeMachine) != FALSE)
+				{
+					for(const auto &arch : machinearchitectures)
+					{
+						if(NativeMachine == arch.ImageFileMachine)
+						{
+							if(arch.Host != Architecture::unknown)
+							{
+								return arch.Host;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	GetNativeSystemInfo(&systemInfo);
 	for(const auto &arch : architectures)
 	{

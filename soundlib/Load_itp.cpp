@@ -222,12 +222,10 @@ bool CSoundFile::ReadITP(FileReader &file, ModLoadingFlags loadFlags)
 	m_MidiCfg.Sanitize();
 
 	// Song Instruments
-	m_nInstruments = static_cast<INSTRUMENTINDEX>(file.ReadUint32LE());
-	if(m_nInstruments >= MAX_INSTRUMENTS)
-	{
-		m_nInstruments = 0;
+	if(uint32 numIns = file.ReadUint32LE(); numIns < MAX_INSTRUMENTS)
+		m_nInstruments = static_cast<INSTRUMENTINDEX>(numIns);
+	else
 		return false;
-	}
 
 	// Instruments' paths
 	if(version <= 0x102)
@@ -256,7 +254,7 @@ bool CSoundFile::ReadITP(FileReader &file, ModLoadingFlags loadFlags)
 #ifdef MODPLUG_TRACKER
 		if(const auto fileName = file.GetOptionalFileName(); fileName.has_value())
 		{
-			instrPaths[ins] = mpt::AbsolutePathToRelative(instrPaths[ins], fileName->GetDirectoryWithDrive());
+			instrPaths[ins] = mpt::RelativePathToAbsolute(instrPaths[ins], fileName->GetDirectoryWithDrive());
 		} else if(GetpModDoc() != nullptr)
 		{
 			instrPaths[ins] = mpt::RelativePathToAbsolute(instrPaths[ins], GetpModDoc()->GetPathNameMpt().GetDirectoryWithDrive());
@@ -304,15 +302,13 @@ bool CSoundFile::ReadITP(FileReader &file, ModLoadingFlags loadFlags)
 
 		// Pattern data
 		size_t numCommands = GetNumChannels() * numRows;
-
 		if(patternChunk.CanRead(sizeof(ITPModCommand) * numCommands))
 		{
-			ModCommand *target = Patterns[pat].GetpModCommand(0, 0);
-			while(numCommands-- != 0)
+			for(ModCommand &m : Patterns[pat])
 			{
 				ITPModCommand data;
 				patternChunk.ReadStruct(data);
-				*(target++) = data;
+				m = data;
 			}
 		}
 	}
@@ -325,7 +321,7 @@ bool CSoundFile::ReadITP(FileReader &file, ModLoadingFlags loadFlags)
 
 	// Read number of embedded samples - at most as many as there are real samples in a valid file
 	uint32 embeddedSamples = file.ReadUint32LE();
-	if(embeddedSamples > m_nSamples)
+	if(embeddedSamples > GetNumSamples())
 	{
 		return false;
 	}
@@ -389,7 +385,7 @@ bool CSoundFile::ReadITP(FileReader &file, ModLoadingFlags loadFlags)
 				ins++;
 			} else
 			{
-				ReadExtendedInstrumentProperty(Instruments[ins], code, file);
+				ReadExtendedInstrumentProperty(mpt::as_span(&Instruments[ins], 1), code, file);
 			}
 
 			code = file.ReadUint32LE();

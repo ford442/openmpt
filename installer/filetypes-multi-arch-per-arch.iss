@@ -60,6 +60,7 @@ Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssoc
 Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".dtm"; ValueData: {#OpenMPTFile}; Components: {#Component}
 Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".etx"; ValueData: {#OpenMPTFile}; Components: {#Component}
 Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".far"; ValueData: {#OpenMPTFile}; Components: {#Component}
+Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".fc"; ValueData: {#OpenMPTFile}; Components: {#Component}
 Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".fmt"; ValueData: {#OpenMPTFile}; Components: {#Component}
 Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".fst"; ValueData: {#OpenMPTFile}; Components: {#Component}
 Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ftm"; ValueData: {#OpenMPTFile}; Components: {#Component}
@@ -97,6 +98,7 @@ Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssoc
 Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".symmod"; ValueData: {#OpenMPTFile}; Components: {#Component}
 Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".ult"; ValueData: {#OpenMPTFile}; Components: {#Component}
 Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".umx"; ValueData: {#OpenMPTFile}; Components: {#Component}
+Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".unic"; ValueData: {#OpenMPTFile}; Components: {#Component}
 Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".wow"; ValueData: {#OpenMPTFile}; Components: {#Component}
 Root: HKA; Subkey: "SOFTWARE\Clients\Media\{#OpenMPTarch}\Capabilities\FileAssociations"; ValueType: string; ValueName: ".xmf"; ValueData: {#OpenMPTFile}; Components: {#Component}
 

@@ -12,7 +12,6 @@
 
 #include "openmpt/all/BuildSettings.hpp"
 
-#include "MPTrackUtil.h"
 #include "../common/mptRandom.h"
 #include "../misc/mptMutex.h"
 #include "../soundlib/MIDIMacros.h"
@@ -25,6 +24,7 @@ OPENMPT_NAMESPACE_BEGIN
 class CModDoc;
 class CModDocTemplate;
 class CVstPluginManager;
+struct UpdateHint;
 namespace SoundDevice
 {
 class Manager;
@@ -176,11 +176,17 @@ public:
 	~CTrackApp();
 
 	CDataRecoveryHandler *GetDataRecoveryHandler() override;
+
+	CModDoc *NewDocument(MODTYPE newType = MOD_TYPE_NONE);
+	CDocument *OpenTemplateFile(const mpt::PathString &file) const;
 	void AddToRecentFileList(LPCTSTR lpszPathName) override;
 	void AddToRecentFileList(const mpt::PathString &path);
 	/// Removes item from MRU-list; most recent item has index zero.
 	void RemoveMruItem(const size_t item);
 	void RemoveMruItem(const mpt::PathString &path);
+
+	int GetOpenDocumentCount() const;
+	std::vector<CModDoc *> GetOpenDocuments() const;
 
 public:
 	bool IsMultiArchInstall() const { return m_InstallPath == m_InstallBinArchPath; }
@@ -204,16 +210,16 @@ public:
 	static bool OpenURL(const std::string &url);  // UTF8
 	static bool OpenURL(const CString &url);
 	static bool OpenURL(const mpt::ustring &url);
-	static bool OpenURL(const mpt::PathString &lpszURL);
+	static bool OpenURL(const mpt::PathString &lpszURL, const mpt::tstring &param = {});
 	static bool OpenFile(const mpt::PathString &file) { return OpenURL(file); };
-	static bool OpenDirectory(const mpt::PathString &directory) { return OpenURL(directory); };
+	static bool OpenDirectory(const mpt::PathString &directory);
 
 	// Retrieve the user-supplied MIDI port name for a MIDI input or output port.
 	mpt::ustring GetFriendlyMIDIPortName(const mpt::ustring &deviceName, bool isInputPort, bool addDeviceName = true);
 	CString GetFriendlyMIDIPortName(const CString &deviceName, bool isInputPort, bool addDeviceName = true);
 
-	int GetOpenDocumentCount() const;
-	std::vector<CModDoc *> GetOpenDocuments() const;
+	void UpdateAllViews(UpdateHint hint, CObject *pHint = nullptr);
+	void PostMessageToAllViews(UINT uMsg, WPARAM wParam = 0, LPARAM lParam = 0);
 
 public:
 	inline mpt::recursive_mutex_with_lock_count &GetGlobalMutexRef() { return m_GlobalMutex; }
@@ -289,6 +295,8 @@ public:
 
 	/// Returns path to config folder including trailing '\'.
 	mpt::PathString GetConfigPath() const { return m_ConfigPath; }
+	mpt::PathString GetUserTemplatesPath() const;
+	mpt::PathString GetExampleSongsPath() const;
 	void SetupPaths(bool overridePortable);
 	void CreatePaths();
 
@@ -309,10 +317,9 @@ public:
 	static CString GetResamplingModeName(ResamplingMode mode, int length, bool addTaps);
 
 	// Overrides
-public:
+protected:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CTrackApp)
-public:
 	BOOL InitInstance() override;
 	BOOL InitInstanceEarly(CMPTCommandLineInfo &cmdInfo);
 	BOOL InitInstanceLate(CMPTCommandLineInfo &cmdInfo);
@@ -327,10 +334,9 @@ public:
 	// Implementation
 
 	//{{AFX_MSG(CTrackApp)
-	CModDoc *NewDocument(MODTYPE newType = MOD_TYPE_NONE);
-
 	afx_msg void OnFileNew() { NewDocument(); }
-	afx_msg void OnFileNewMOD() { NewDocument(MOD_TYPE_MOD); }
+	afx_msg void OnFileNewMOD_Amiga() { NewDocument(MOD_TYPE_MOD); }
+	afx_msg void OnFileNewMOD_PC() { NewDocument(MOD_TYPE_MOD_PC); }
 	afx_msg void OnFileNewS3M() { NewDocument(MOD_TYPE_S3M); }
 	afx_msg void OnFileNewXM() { NewDocument(MOD_TYPE_XM); }
 	afx_msg void OnFileNewIT() { NewDocument(MOD_TYPE_IT); }
@@ -345,7 +351,6 @@ public:
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 
-protected:
 	size_t AddScannedDLSBanks();
 
 	void InitializeDXPlugins();
@@ -414,8 +419,10 @@ RGBQUAD rgb2quad(COLORREF c);
 // Other bitmap functions
 int DrawTextT(HDC hdc, const wchar_t *lpchText, int cchText, LPRECT lprc, UINT format);
 int DrawTextT(HDC hdc, const char *lpchText, int cchText, LPRECT lprc, UINT format);
-void DrawButtonRect(HDC hdc, const RECT *lpRect, LPCSTR lpszText = nullptr, BOOL bDisabled = FALSE, BOOL bPushed = FALSE, DWORD dwFlags = (DT_CENTER | DT_VCENTER), uint32 topMargin = 0);
-void DrawButtonRect(HDC hdc, const RECT *lpRect, LPCWSTR lpszText = nullptr, BOOL bDisabled = FALSE, BOOL bPushed = FALSE, DWORD dwFlags = (DT_CENTER | DT_VCENTER), uint32 topMargin = 0);
+void DrawButtonRect(HDC hdc, int lineWidth, const CRect &rect, const char *text = nullptr, bool disabled = false, bool pushed = false, DWORD dwFlags = (DT_CENTER | DT_VCENTER), uint32 topMargin = 0);
+void DrawButtonRect(HDC hdc, int lineWidth, const CRect &rect, const wchar_t *text = nullptr, bool disabled = false, bool pushed = false, DWORD dwFlags = (DT_CENTER | DT_VCENTER), uint32 topMargin = 0);
+void DrawButtonRect(HDC hdc, int lineWidth, HFONT font, const CRect &rect, const char *text = nullptr, bool disabled = false, bool pushed = false, DWORD dwFlags = (DT_CENTER | DT_VCENTER), uint32 topMargin = 0);
+void DrawButtonRect(HDC hdc, int lineWidth, HFONT font, const CRect &rect, const wchar_t *text = nullptr, bool disabled = false, bool pushed = false, DWORD dwFlags = (DT_CENTER | DT_VCENTER), uint32 topMargin = 0);
 
 // Misc functions
 void ErrorBox(UINT nStringID, CWnd *p = nullptr);
@@ -436,6 +443,10 @@ CString GetWindowTextString(const CWnd &wnd);
 mpt::ustring GetWindowTextUnicode(const CWnd &wnd);
 
 CString FormatFileSize(uint64 fileSize);
+
+bool ValidateMacroString(CEdit &wnd, const std::string_view prevMacro, bool isParametric, bool allowVariables, bool allowMultiline);
+
+mpt::ustring ConstructSampleFormatFileFilter(bool includeRaw);
 
 
 ///////////////////////////////////////////////////

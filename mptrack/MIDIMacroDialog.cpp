@@ -10,6 +10,7 @@
 
 #include "stdafx.h"
 #include "MIDIMacroDialog.h"
+#include "HighDPISupport.h"
 #include "Mptrack.h"
 #include "Reporting.h"
 #include "resource.h"
@@ -72,46 +73,56 @@ BOOL CMidiMacroSetup::OnInitDialog()
 	m_EditZxx.SetLimitText(kMacroLength - 1);
 
 	// Parametered macro selection
+	m_CbnSFx.SetRedraw(FALSE);
 	for(int i = 0; i < 16; i++)
 	{
 		s.Format(_T("%d (SF%X)"), i, i);
 		m_CbnSFx.AddString(s);
 	}
+	m_CbnSFx.SetRedraw(TRUE);
+	m_CbnSFx.SetCurSel(0);
 
 	// Parametered macro presets
-	m_CbnSFx.SetCurSel(0);
+	m_CbnSFxPreset.SetRedraw(FALSE);
 	for(int i = 0; i < kSFxMax; i++)
 	{
 		m_CbnSFxPreset.SetItemData(m_CbnSFxPreset.AddString(m_MidiCfg.GetParameteredMacroName(static_cast<ParameteredMacro>(i))), i);
 	}
+	m_CbnSFxPreset.SetRedraw(TRUE);
 	OnSFxChanged();
 
 	// MIDI CC selection box
+	m_CbnMacroCC.SetRedraw(FALSE);
 	for (int cc = MIDIEvents::MIDICC_start; cc <= MIDIEvents::MIDICC_end; cc++)
 	{
 		s.Format(_T("CC %02d "), cc);
 		s += mpt::ToCString(mpt::Charset::UTF8, MIDIEvents::MidiCCNames[cc]);
 		m_CbnMacroCC.SetItemData(m_CbnMacroCC.AddString(s), cc);
 	}
+	m_CbnMacroCC.SetRedraw(TRUE);
 
 	// Z80...ZFF box
+	m_CbnZxx.SetRedraw(FALSE);
 	for(int zxx = 0x80; zxx <= 0xFF; zxx++)
 	{
 		s.Format(_T("Z%02X"), zxx);
 		m_CbnZxx.AddString(s);
 	}
+	m_CbnZxx.SetRedraw(TRUE);
+	m_CbnZxx.SetCurSel(0);
 
 	// Fixed macro presets
-	m_CbnZxx.SetCurSel(0);
+	m_CbnZxxPreset.SetRedraw(FALSE);
 	for(int i = 0; i < kZxxMax; i++)
 	{
 		m_CbnZxxPreset.SetItemData(m_CbnZxxPreset.AddString(m_MidiCfg.GetFixedMacroName(static_cast<FixedMacro>(i))), i);
 	}
+	m_CbnZxxPreset.SetRedraw(TRUE);
 	m_CbnZxxPreset.SetCurSel(m_MidiCfg.GetFixedMacroType());
 
 	UpdateDialog();
 
-	auto ScalePixels = [&](auto x) { return Util::ScalePixels(x, m_hWnd); };
+	auto ScalePixels = [&](auto x) { return HighDPISupport::ScalePixels(x, m_hWnd); };
 	int offsetx = ScalePixels(19), offsety = ScalePixels(30), separatorx = ScalePixels(4), separatory = ScalePixels(2);
 	int height = ScalePixels(18), widthMacro = ScalePixels(30), widthVal = ScalePixels(179), widthType = ScalePixels(135), widthBtn = ScalePixels(70);
 
@@ -302,7 +313,7 @@ void CMidiMacroSetup::OnSFxEditChanged()
 	UINT sfx = m_CbnSFx.GetCurSel();
 	if(sfx < m_MidiCfg.SFx.size())
 	{
-		if(ValidateMacroString(m_EditSFx, m_MidiCfg.SFx[sfx], true))
+		if(ValidateMacroString(m_EditSFx, m_MidiCfg.SFx[sfx], true, true, false))
 		{
 			CString s;
 			m_EditSFx.GetWindowText(s);
@@ -322,7 +333,7 @@ void CMidiMacroSetup::OnZxxEditChanged()
 	UINT zxx = m_CbnZxx.GetCurSel();
 	if(zxx < m_MidiCfg.Zxx.size())
 	{
-		if(ValidateMacroString(m_EditZxx, m_MidiCfg.Zxx[zxx], false))
+		if(ValidateMacroString(m_EditZxx, m_MidiCfg.Zxx[zxx], false, true, false))
 		{
 			CString s;
 			m_EditZxx.GetWindowText(s);
@@ -349,7 +360,7 @@ void CMidiMacroSetup::OnViewAllParams(UINT id)
 	for(PLUGINDEX plug = 0; plug < MAX_MIXPLUGINS; plug++)
 	{
 		IMixPlugin *pVstPlugin = m_SndFile.m_MixPlugins[plug].pMixPlugin;
-		if(pVstPlugin && param < pVstPlugin->GetNumParameters())
+		if(pVstPlugin && param < pVstPlugin->GetNumVisibleParameters())
 		{
 			plugName = mpt::ToCString(m_SndFile.m_MixPlugins[plug].GetName());
 			message.AppendFormat(_T("FX%d: "), plug + 1);
@@ -434,64 +445,6 @@ void CMidiMacroSetup::ToggleBoxes(UINT sfxPreset, UINT sfx)
 	} else
 	{
 		m_CbnMacroCC.EnableWindow(FALSE);
-	}
-}
-
-
-bool CMidiMacroSetup::ValidateMacroString(CEdit &wnd, const MIDIMacroConfig::Macro &prevMacro, bool isParametric)
-{
-	CString macroStrT;
-	wnd.GetWindowText(macroStrT);
-	std::string macroStr = mpt::ToCharset(mpt::Charset::ASCII, macroStrT);
-
-	bool allowed = true, caseChange = false;
-	for(char &c : macroStr)
-	{
-		if(c == 'k' || c == 'K')  // Previously, 'K' was used for MIDI channel
-		{
-			caseChange = true;
-			c = 'c';
-		} else if(c >= 'd' && c <= 'f')  // abc have special meanings, but def can be fixed
-		{
-			caseChange = true;
-			c = c - 'a' + 'A';
-		} else if(c == 'M' || c == 'N' || c == 'O' || c == 'P' || c == 'S' || c == 'U' || c == 'V' || c == 'X' || c == 'Y' || c == 'Z')
-		{
-			caseChange = true;
-			c = c - 'A' + 'a';
-		} else if(!(
-			(c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'c') ||
-			(c == 'h' || c == 'm' || c == 'n' || c == 'o' || c == 'p' || c == 's' ||c == 'u' || c == 'v' || c == 'x' || c == 'y' || c == ' ') ||
-			(c == 'z' && isParametric)))
-		{
-			allowed = false;
-			break;
-		}
-	}
-
-	if(!allowed)
-	{
-		// Replace text and keep cursor position if we just typed in an invalid character
-		if(prevMacro != std::string_view{macroStr})
-		{
-			int start, end;
-			wnd.GetSel(start, end);
-			wnd.SetWindowText(mpt::ToCString(mpt::Charset::ASCII, static_cast<std::string>(prevMacro)));
-			wnd.SetSel(start - 1, end - 1, true);
-			MessageBeep(MB_OK);
-		}
-		return false;
-	} else
-	{
-		if(caseChange)
-		{
-			// Replace text and keep cursor position if there was a case conversion
-			int start, end;
-			wnd.GetSel(start, end);
-			wnd.SetWindowText(mpt::ToCString(mpt::Charset::ASCII, static_cast<std::string>(macroStr)));
-			wnd.SetSel(start, end, true);
-		}
-		return true;
 	}
 }
 

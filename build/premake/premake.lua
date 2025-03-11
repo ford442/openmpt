@@ -67,6 +67,56 @@ require('vstudio')
 
 
 
+premake.ARM64EC = "ARM64EC"
+
+premake.api.unregister("architecture")
+
+premake.api.register {
+	name = "architecture",
+	scope = "config",
+	kind = "string",
+	allowed = {
+		"universal",
+		premake.X86,
+		premake.X86_64,
+		premake.ARM,
+		premake.ARM64,
+		premake.ARM64EC,
+	},
+	aliases = {
+		i386  = premake.X86,
+		amd64 = premake.X86_64,
+		x32   = premake.X86,
+		x64   = premake.X86_64,
+	},
+}
+
+premake.vstudio.vs200x_architectures =
+{
+	win32   = "x86",
+	x86     = "x86",
+	x86_64  = "x64",
+	ARM     = "ARM",
+	ARM64   = "ARM64",
+	ARM64EC = "ARM64EC",
+}
+
+function premake.vstudio.vc2010.windowsSDKDesktopARM64ECSupport(cfg)
+	if cfg.system == premake.WINDOWS then
+		if cfg.architecture == premake.ARM64EC then
+			premake.w('<WindowsSDKDesktopARM64Support>true</WindowsSDKDesktopARM64Support>')
+		end
+	end
+end
+
+premake.override(premake.vstudio.vc2010.elements, "configurationProperties", function(base, prj)
+	local calls = base(prj)
+	table.insertafter(calls, premake.vstudio.vc2010.windowsSDKDesktopARMSupport, premake.vstudio.vc2010.windowsSDKDesktopARM64ECSupport)
+	return calls
+end)
+
+
+
 premake.api.register {
 	name = "spectremitigations",
 	scope = "config",
@@ -152,7 +202,15 @@ mpt_projectpathname = _ACTION .. _OPTIONS["windows-version"]
 mpt_bindirsuffix = _OPTIONS["windows-version"]
 
 if _OPTIONS["windows-version"] == "win10" then
-	allplatforms = { "x86", "x86_64", "arm", "arm64" }
+	if _OPTIONS["clang"] then
+		allplatforms = { "x86", "x86_64", "arm", "arm64" }
+	else
+		if _OPTIONS["windows-family"] == "uwp" then
+			allplatforms = { "x86", "x86_64", "arm", "arm64" }
+		else
+			allplatforms = { "x86", "x86_64", "arm", "arm64", "arm64ec" }
+		end
+	end
 elseif _OPTIONS["windows-version"] == "win81" then
 	allplatforms = { "x86", "x86_64", "arm" }
 elseif _OPTIONS["windows-version"] == "win8" then

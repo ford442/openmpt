@@ -18,8 +18,10 @@
 #include "Mainfrm.h"
 #include "Mptrack.h"
 #include "Reporting.h"
+#include "resource.h"
 #include "VstPresets.h"
 #include "Vstplug.h"
+#include "WindowMessages.h"
 #include "../common/FileReader.h"
 #include "../common/mptStringBuffer.h"
 #include "../soundlib/Sndfile.h"
@@ -65,7 +67,7 @@ CAbstractVstEditor::WindowSizeAdjuster::~WindowSizeAdjuster()
 
 UINT CAbstractVstEditor::m_clipboardFormat = RegisterClipboardFormat(_T("VST Preset Data"));
 
-BEGIN_MESSAGE_MAP(CAbstractVstEditor, DialogBase)
+BEGIN_MESSAGE_MAP(CAbstractVstEditor, ResizableDialog)
 	ON_WM_CLOSE()
 	ON_WM_INITMENU()
 	ON_WM_MENUSELECT()
@@ -114,14 +116,14 @@ CAbstractVstEditor::~CAbstractVstEditor()
 
 void CAbstractVstEditor::PostNcDestroy()
 {
-	DialogBase::PostNcDestroy();
+	ResizableDialog::PostNcDestroy();
 	delete this;
 }
 
 
 void CAbstractVstEditor::OnNcLButtonDblClk(UINT nHitTest, CPoint point)
 {
-	DialogBase::OnNcLButtonDblClk(nHitTest, point);
+	ResizableDialog::OnNcLButtonDblClk(nHitTest, point);
 	// Double click on title bar = reduce plugin window to non-client area
 	if(nHitTest == HTCAPTION)
 	{
@@ -137,7 +139,8 @@ void CAbstractVstEditor::OnNcLButtonDblClk(UINT nHitTest, CPoint point)
 		m_clientHeight = -m_clientHeight;
 		int rcHeight = rcWnd.Height() + m_clientHeight;
 
-		SetWindowPos(NULL, 0, 0,
+		EnableAutoLayout(!m_isMinimized);
+		SetWindowPos(nullptr, 0, 0,
 			rcWnd.Width(), rcHeight,
 			SWP_NOZORDER | SWP_NOMOVE);
 	}
@@ -146,7 +149,7 @@ void CAbstractVstEditor::OnNcLButtonDblClk(UINT nHitTest, CPoint point)
 
 void CAbstractVstEditor::OnActivate(UINT nState, CWnd *pWndOther, BOOL bMinimized)
 {
-	DialogBase::OnActivate(nState, pWndOther, bMinimized);
+	ResizableDialog::OnActivate(nState, pWndOther, bMinimized);
 	if(nState != WA_INACTIVE) CMainFrame::GetMainFrame()->SetMidiRecordWnd(GetSafeHwnd());
 }
 
@@ -238,6 +241,7 @@ void CAbstractVstEditor::OnPasteParameters()
 			{
 				pModDoc->SetModified();
 			}
+			WindowSizeAdjuster adjuster(*this);
 			UpdatePresetField();
 		} else
 		{
@@ -256,7 +260,7 @@ void CAbstractVstEditor::OnRandomizePreset()
 	{
 		randomFactor = dlg.resultAsDouble;
 		PlugParamValue factor = PlugParamValue(randomFactor / 100.0);
-		PlugParamIndex numParams = m_VstPlugin.GetNumParameters();
+		PlugParamIndex numParams = m_VstPlugin.GetNumVisibleParameters();
 		for(PlugParamIndex p = 0; p < numParams; p++)
 		{
 			PlugParamValue val = m_VstPlugin.GetParameter(p);
@@ -343,7 +347,6 @@ void CAbstractVstEditor::UpdatePresetField()
 	}
 
 	DrawMenuBar();
-
 }
 
 
@@ -445,11 +448,11 @@ BOOL CAbstractVstEditor::PreTranslateMessage(MSG *msg)
 	if(msg && HandleKeyMessage(*msg))
 		return TRUE;
 
-	return DialogBase::PreTranslateMessage(msg);
+	return ResizableDialog::PreTranslateMessage(msg);
 }
 
 
-bool CAbstractVstEditor::HandleKeyMessage(MSG &msg)
+bool CAbstractVstEditor::HandleKeyMessage(MSG &msg, bool handleGlobal)
 {
 	if(m_VstPlugin.m_passKeypressesToPlug)
 		return false;
@@ -464,6 +467,9 @@ bool CAbstractVstEditor::HandleKeyMessage(MSG &msg)
 
 	// If we successfully mapped to a command and plug does not listen for keypresses, no need to pass message on.
 	if(ih->KeyEvent(kCtxVSTGUI, event, this) != kcNull)
+		return true;
+
+	if(handleGlobal && HandleGlobalKeyMessage(msg))
 		return true;
 
 	// Don't forward key repeats if plug does not listen for keypresses

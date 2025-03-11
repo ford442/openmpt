@@ -18,6 +18,7 @@
 #include "Mptrack.h"
 #include "ProgressDialog.h"
 #include "Reporting.h"
+#include "resource.h"
 #include "TrackerSettings.h"
 #include "WindowMessages.h"
 #include "../common/misc_util.h"
@@ -32,6 +33,7 @@
 #include "mpt/fs/fs.hpp"
 #include "mpt/io/io.hpp"
 #include "mpt/io/io_stdstream.hpp"
+#include "mpt/io_file/fstream.hpp"
 #include "mpt/io_file/inputfile.hpp"
 #include "mpt/io_file/outputfile.hpp"
 #include "mpt/io_file_read/inputfile_filecursor.hpp"
@@ -1248,7 +1250,7 @@ public:
 					std::array<std::byte, 512/8> expected;
 					std::copy(binhash.begin(), binhash.end(), expected.begin());
 					mpt::crypto::hash::SHA512 hash;
-					mpt::ifstream f(updateFilename, std::ios::binary);
+					mpt::IO::ifstream f(updateFilename, std::ios::binary);
 					f.imbue(std::locale::classic());
 					f.exceptions(std::ios::badbit);
 					while(!mpt::IO::IsEof(f))
@@ -1643,6 +1645,8 @@ void CUpdateSetupDlg::OnShowStatisticsData(NMHDR * /*pNMHDR*/, LRESULT * /*pResu
 	statistics += UL_("\n");
 
 	{
+		statistics += U_("User-Agent: ") + Version::Current().GetOpenMPTVersionString() + UL_("\n");
+		statistics += UL_("\n");
 		statistics += U_("GET ") + settings.apiURL + MPT_UFORMAT("update/{}")(GetChannelName(static_cast<UpdateChannel>(settings.channel))) + UL_("\n");
 		statistics += UL_("\n");
 		std::vector<mpt::ustring> keyAnchors = TrackerSettings::Instance().UpdateSigningKeysRootAnchors;
@@ -1656,6 +1660,8 @@ void CUpdateSetupDlg::OnShowStatisticsData(NMHDR * /*pNMHDR*/, LRESULT * /*pResu
 	if(settings.sendStatistics)
 	{
 		statistics += U_("Statistics:") + UL_("\n");
+		statistics += UL_("\n");
+		statistics += U_("User-Agent: ") + Version::Current().GetOpenMPTVersionString() + UL_("\n");
 		statistics += UL_("\n");
 		if(settings.statisticsUUID.IsValid())
 		{

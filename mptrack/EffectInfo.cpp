@@ -133,6 +133,7 @@ static constexpr MPTEffectInfo gFXInfo[] =
 	{CMD_AUTO_PORTADOWN, 0, 0, 0, MOD_TYPE_NONE, _T("Automatic Portamento Down")},
 	{CMD_AUTO_PORTAUP_FINE, 0, 0, 0, MOD_TYPE_NONE, _T("Automatic Fine Portamento Up")},
 	{CMD_AUTO_PORTADOWN_FINE, 0, 0, 0, MOD_TYPE_NONE, _T("Automatic Fine Portamento Down")},
+	{CMD_AUTO_PORTAMENTO_FC, 0, 0, 0, MOD_TYPE_NONE, _T("Automatic Portamento (Future Composer)")},
 	{CMD_TONEPORTA_DURATION, 0, 0, 0, MOD_TYPE_NONE, _T("Tone Portamento with Duration")},
 	{CMD_VOLUMEDOWN_DURATION, 0, 0, 0, MOD_TYPE_NONE, _T("Channel Volume Down with Duration")},
 	{CMD_VOLUMEDOWN_ETX, 0, 0, 0, MOD_TYPE_NONE, _T("ETX Volume Slide Down")},
@@ -679,7 +680,7 @@ bool EffectInfo::GetEffectNameEx(CString &pszName, const ModCommand &m, uint32 p
 			if(chn != CHANNELINDEX_INVALID)
 			{
 				const uint8 macroIndex = sndFile.m_PlayState.Chn[chn].nActiveMacro;
-				const PLUGINDEX plugin = sndFile.GetBestPlugin(sndFile.m_PlayState, chn, PrioritiseChannel, EvenIfMuted) - 1;
+				const PLUGINDEX plugin = sndFile.GetBestPlugin(sndFile.m_PlayState.Chn[chn], chn, PrioritiseChannel, EvenIfMuted) - 1;
 				IMixPlugin *pPlugin = (plugin < MAX_MIXPLUGINS ? sndFile.m_MixPlugins[plugin].pMixPlugin : nullptr);
 				pszName.Format(_T("SFx MIDI Macro z=%d (SF%X: %s)"), param, macroIndex, sndFile.m_MidiCfg.GetParameteredMacroName(macroIndex, pPlugin).GetString());
 			} else
@@ -917,7 +918,7 @@ bool EffectInfo::GetEffectNameEx(CString &pszName, const ModCommand &m, uint32 p
 								if((param & 0x0F) == 0)
 									s = _T("Stop");
 								else
-									s.Format(_T("Speed %d"), param & 0x0F);
+									s.Format(_T("Speed %d (%d)"), param & 0x0F, ModEFxTable[param & 0x0F]);
 							} else
 							{
 								// macro
@@ -1025,10 +1026,17 @@ bool EffectInfo::GetVolCmdInfo(UINT ndx, CString *s, ModCommand::VOL *prangeMin,
 }
 
 
-bool EffectInfo::GetVolCmdParamInfo(const ModCommand &m, CString *s) const
+bool EffectInfo::GetVolCmdParamInfo(const ModCommand &m, CString *s, bool hex) const
 {
-	if(s == nullptr) return false;
+	if(s == nullptr)
+		return false;
 	s->Empty();
+
+	CString volume;
+	if(hex)
+		volume = mpt::cfmt::HEX(m.vol);
+	else
+		volume = mpt::cfmt::dec(m.vol);
 
 	switch(m.volcmd)
 	{
@@ -1042,9 +1050,8 @@ bool EffectInfo::GetVolCmdParamInfo(const ModCommand &m, CString *s) const
 	case VOLCMD_FINEVOLDOWN:
 		if(m.vol > 0 || sndFile.GetType() == MOD_TYPE_XM)
 		{
-			s->Format(_T("%c%u"),
-				(m.volcmd == VOLCMD_VOLSLIDEUP || m.volcmd == VOLCMD_FINEVOLUP) ? _T('+') : _T('-'),
-				m.vol);
+			*s = ((m.volcmd == VOLCMD_VOLSLIDEUP || m.volcmd == VOLCMD_FINEVOLUP) ? _T('+') : _T('-'))
+				+ volume;
 		} else
 		{
 			*s = _T("continue");
@@ -1067,8 +1074,8 @@ bool EffectInfo::GetVolCmdParamInfo(const ModCommand &m, CString *s) const
 				if(sndFile.GetType() != MOD_TYPE_XM) param = ImpulseTrackerPortaVolCmd[m.vol & 0x0F];
 				else param = m.vol << 4;
 			}
-			s->Format(_T("%u (%c%02X)"),
-				m.vol,
+			*s = volume;
+			s->AppendFormat(_T(" (%c%02X)"),
 				sndFile.GetModSpecifications().GetEffectLetter(cmd),
 				param);
 		} else
@@ -1105,14 +1112,20 @@ bool EffectInfo::GetVolCmdParamInfo(const ModCommand &m, CString *s) const
 		break;
 
 	case VOLCMD_PLAYCONTROL:
-		if(m.vol == 0)
-			*s = _T("Pause Playback");
-		else if(m.vol == 1)
-			*s = _T("Continue Playback");
+		switch(m.vol)
+		{
+		case 0: *s = _T("Pause Playback"); break;
+		case 1: *s = _T("Continue Playback"); break;
+		case 2: *s = _T("Play Forward"); break;
+		case 3: *s = _T("Play Backward"); break;
+		case 4: *s = _T("Switch Play Direction"); break;
+		case 5: *s = _T("Store Offset"); break;
+		case 6: *s = _T("Play From Offset"); break;
+		default: *s = _T("unused"); break;
+		}
 		break;
-
 	default:
-		s->Format(_T("%u"), m.vol);
+		*s = volume;
 		break;
 	}
 	return true;

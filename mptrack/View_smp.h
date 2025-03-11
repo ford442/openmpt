@@ -65,7 +65,6 @@ protected:
 	};
 
 	std::unique_ptr<OPLInstrDlg> m_oplEditor;
-	CImageList m_bmpEnvBar;
 	CRect m_rcClient;
 	CDC m_offScreenDC, m_waveformDC;
 	CBitmap m_offScreenBitmap, m_waveformBitmap;
@@ -132,15 +131,15 @@ protected:
 	void DoPaste(PasteMode pasteMode);
 
 	// Sets sample data on sample draw.
-	template<class T, class uT>
+	template<class T>
 	void SetSampleData(ModSample &smp, const CPoint &point, const SmpLength old);
 
 	// Sets initial draw point on sample draw.
-	template<class T, class uT>
+	template<class T>
 	void SetInitialDrawPoint(ModSample &smp, const CPoint &point);
 
 	// Returns sample value corresponding given point in the sample view.
-	template<class T, class uT>
+	template<class T>
 	T GetSampleValueFromPoint(const ModSample &smp, const CPoint &point) const;
 
 	int GetZoomLevel(SmpLength length) const;
@@ -157,6 +156,11 @@ protected:
 	int CalcScroll(int &currentPos, int amount, int style, int bar);
 
 	SmpLength SnapToGrid(const SmpLength pos) const;
+
+	// Returns index of preview channel if exactly one one is being previewed, CHANNELINDEX_INVALID otherwise.
+	CHANNELINDEX GetPreviewChannel() const;
+	
+	void PlayOrSetCuePoint(size_t cue);
 
 public:
 	//{{AFX_VIRTUAL(CViewSample)
@@ -188,7 +192,7 @@ protected:
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
-	afx_msg void OnRButtonDown(UINT, CPoint);
+	afx_msg void OnRButtonUp(UINT, CPoint);
 	afx_msg void OnMouseMove(UINT, CPoint);
 	afx_msg BOOL OnSetCursor(CWnd *pWnd, UINT nHitTest, UINT message);
 	afx_msg void OnEditSelectAll();

@@ -22,6 +22,7 @@
 #include "mpt/io/base.hpp"
 #include "mpt/io/io.hpp"
 #include "mpt/io/io_stdstream.hpp"
+#include "mpt/io_file/fstream.hpp"
 #include "mpt/io_file/outputfile.hpp"
 #include "mpt/parse/parse.hpp"
 #include "mpt/string/utility.hpp"
@@ -45,7 +46,7 @@ using NOTEINDEXTYPE = Tuning::NOTEINDEXTYPE;
 
 // CTuningDialog dialog
 CTuningDialog::CTuningDialog(CWnd* pParent, INSTRUMENTINDEX inst, CSoundFile &csf)
-	: DialogBase(IDD_TUNING, pParent)
+	: ResizableDialog(IDD_TUNING, pParent)
 	, m_sndFile(csf)
 	, m_TreeCtrlTuning(this)
 	, m_TreeItemTuningItemMap(s_notFoundItemTree, s_notFoundItemTuning)
@@ -152,7 +153,7 @@ void CTuningDialog::DeleteTreeItem(CTuningCollection* pTC)
 
 BOOL CTuningDialog::OnInitDialog()
 {
-	DialogBase::OnInitDialog();
+	ResizableDialog::OnInitDialog();
 
 	m_EditRatioPeriod.SubclassDlgItem(IDC_EDIT_RATIOPERIOD, this);
 	m_EditRatio.SubclassDlgItem(IDC_EDIT_RATIOVALUE, this);
@@ -348,7 +349,7 @@ void CTuningDialog::UpdateView(const int updateMask)
 
 void CTuningDialog::DoDataExchange(CDataExchange* pDX)
 {
-	DialogBase::DoDataExchange(pDX);
+	ResizableDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_STATICRATIOMAP, m_RatioMapWnd);
 	DDX_Control(pDX, IDC_COMBO_TTYPE, m_CombobTuningType);
 	DDX_Control(pDX, IDC_EDIT_STEPS, m_EditSteps);
@@ -366,7 +367,7 @@ void CTuningDialog::DoDataExchange(CDataExchange* pDX)
 
 
 
-BEGIN_MESSAGE_MAP(CTuningDialog, DialogBase)
+BEGIN_MESSAGE_MAP(CTuningDialog, ResizableDialog)
 	ON_EN_CHANGE(IDC_EDIT_STEPS, &CTuningDialog::OnEnChangeEditSteps)
 	ON_EN_CHANGE(IDC_EDIT_RATIOPERIOD, &CTuningDialog::OnEnChangeEditRatioperiod)
 	ON_EN_CHANGE(IDC_EDIT_NOTENAME, &CTuningDialog::OnEnChangeEditNotename)
@@ -689,10 +690,10 @@ void CTuningDialog::OnBnClickedButtonExport()
 			}
 			mpt::ustring fileNameW = fileName.ToUnicode();
 			mpt::ustring numberW = mpt::ufmt::fmt(i + 1, numberFmt);
-			numberW = SanitizePathComponent(numberW);
+			numberW = mpt::SanitizePathComponent(numberW);
 			fileNameW = mpt::replace(fileNameW, U_("%tuning_number%"), numberW);
 			mpt::ustring nameW = mpt::ToUnicode(tuningName);
-			nameW = SanitizePathComponent(nameW);
+			nameW = mpt::SanitizePathComponent(nameW);
 			fileNameW = mpt::replace(fileNameW, U_("%tuning_name%"), nameW);
 			fileName = mpt::PathString::FromUnicode(fileNameW);
 
@@ -792,7 +793,7 @@ void CTuningDialog::OnBnClickedButtonImport()
 		const bool bIsScl = (mpt::PathCompareNoCase(fileExt, P_(".scl")) == 0);
 		//const bool bIsTc = (mpt::PathCompareNoCase(fileExt, mpt::PathString::FromUTF8(CTuningCollection::s_FileExtension)) == 0);
 
-		mpt::ifstream fin(file, std::ios::binary);
+		mpt::IO::ifstream fin(file, std::ios::binary);
 
 		// "HSCT", 0x01, 0x00, 0x00, 0x00
 		const uint8 magicTColdV1 [] = {  'H', 'S', 'C', 'T',0x01,0x00,0x00,0x00                          };
@@ -1452,7 +1453,7 @@ void CTuningDialog::OnOK()
 	if(GetKeyState(VK_RETURN) <= -127 && GetFocus() != GetDlgItem(IDOK))
 		return;
 	else
-		DialogBase::OnOK();
+		ResizableDialog::OnOK();
 }
 
 
@@ -1557,7 +1558,7 @@ CTuningDialog::EnSclImport CTuningDialog::ImportScl(const mpt::PathString &filen
 {
 	MPT_ASSERT(result == nullptr);
 	result = nullptr;
-	mpt::ifstream iStrm(filename, std::ios::in | std::ios::binary);
+	mpt::IO::ifstream iStrm(filename, std::ios::in | std::ios::binary);
 	if(!iStrm)
 	{
 		return enSclImportFailUnableToOpenFile;

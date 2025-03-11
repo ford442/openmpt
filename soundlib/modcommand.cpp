@@ -33,8 +33,8 @@ static constexpr EffectType effectTypes[] =
 	EffectType::Pitch,  EffectType::Pitch,   EffectType::Normal, EffectType::Normal,
 	EffectType::Normal, EffectType::Normal,  EffectType::Volume, EffectType::Normal,
 	EffectType::Normal, EffectType::Volume,  EffectType::Pitch,  EffectType::Pitch,
-	EffectType::Pitch,  EffectType::Pitch,   EffectType::Pitch,  EffectType::Volume,
-	EffectType::Volume,
+	EffectType::Pitch,  EffectType::Pitch,   EffectType::Pitch,  EffectType::Pitch,
+	EffectType::Volume, EffectType::Volume,
 };
 
 static_assert(std::size(effectTypes) == MAX_EFFECTS);
@@ -963,6 +963,7 @@ bool ModCommand::IsAnyPitchSlide() const
 	case CMD_AUTO_PORTADOWN:
 	case CMD_AUTO_PORTAUP_FINE:
 	case CMD_AUTO_PORTADOWN_FINE:
+	case CMD_AUTO_PORTAMENTO_FC:
 	case CMD_TONEPORTA_DURATION:
 		return true;
 	case CMD_MODCMDEX:
@@ -1009,6 +1010,7 @@ bool ModCommand::IsContinousCommand(const CSoundFile &sndFile) const
 	case CMD_AUTO_PORTADOWN:
 	case CMD_AUTO_PORTAUP_FINE:
 	case CMD_AUTO_PORTADOWN_FINE:
+	case CMD_AUTO_PORTAMENTO_FC:
 		return true;
 	case CMD_PORTAMENTOUP:
 	case CMD_PORTAMENTODOWN:
@@ -1190,6 +1192,7 @@ size_t ModCommand::GetEffectWeight(COMMAND cmd)
 		CMD_NOTESLIDEDOWNRETRIG,
 		CMD_NOTESLIDEDOWN,
 		CMD_PORTAMENTOUP,
+		CMD_AUTO_PORTAMENTO_FC,
 		CMD_AUTO_PORTAUP_FINE,
 		CMD_AUTO_PORTAUP,
 		CMD_PORTAMENTODOWN,
@@ -1391,7 +1394,7 @@ bool ModCommand::CombineEffects(EffectCommand &eff1, uint8 &param1, EffectComman
 }
 
 
-std::pair<EffectCommand, ModCommand::PARAM> ModCommand::FillInTwoCommands(EffectCommand effect1, uint8 param1, EffectCommand effect2, uint8 param2)
+std::pair<EffectCommand, ModCommand::PARAM> ModCommand::FillInTwoCommands(EffectCommand effect1, uint8 param1, EffectCommand effect2, uint8 param2, bool allowLowResOffset)
 {
 	if(effect1 == effect2)
 	{
@@ -1447,6 +1450,12 @@ std::pair<EffectCommand, ModCommand::PARAM> ModCommand::FillInTwoCommands(Effect
 	{
 		std::swap(effect1, effect2);
 		std::swap(param1, param2);
+	}
+	if(effect2 == CMD_OFFSET && (allowLowResOffset || param2 == 0))
+	{
+		SetVolumeCommand(VOLCMD_OFFSET, static_cast<ModCommand::VOL>(param2 ? std::max(param2 * 9 / 255, 1) : 0));
+		SetEffectCommand(effect1, param1);
+		return {CMD_NONE, ModCommand::PARAM(0)};
 	}
 	SetVolumeCommand(VOLCMD_NONE, 0);
 	SetEffectCommand(effect2, param2);

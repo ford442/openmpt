@@ -13,9 +13,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { version: '10.0', deps: sys   }
-          - { version: '10.0', deps: local }
-          - { version: '10.0', deps: small }
+          - { version: '10.1', deps: sys   }
+          - { version: '10.1', deps: local }
+          - { version: '10.1', deps: small }
           - { version: '9.4' , deps: sys   }
           - { version: '9.4' , deps: local }
           - { version: '9.4' , deps: small }
@@ -24,13 +24,13 @@ jobs:
       group: ${{github.ref}}-${{github.workflow}}-${{matrix.version}}-${{matrix.deps}}
       cancel-in-progress: true
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
     - name: Checkout
       uses: actions/checkout@v4
     - name: Startup VM
-      uses: cross-platform-actions/action@v0.25.0
+      uses: cross-platform-actions/action@v0.27.0
       with:
         architecture: x86_64
         memory: 4G
@@ -41,7 +41,7 @@ jobs:
         shutdown_vm: false
         run: true
     - name: Install dependencies
-      uses: cross-platform-actions/action@v0.25.0
+      uses: cross-platform-actions/action@v0.27.0
       with:
         architecture: x86_64
         memory: 4G
@@ -53,13 +53,13 @@ jobs:
         run: |
           sudo pkgin -y update
           sudo pkgin -y full-upgrade
-          sudo pkgin -y install subversion-base p5-subversion py311-subversion ruby32-subversion git p5-XML-XPath mawk
+          sudo pkgin -y install subversion-base git p5-XML-XPath mawk
           sudo pkgin -y install gmake pkgconf
           sudo pkgin -y install mpg123 libogg libvorbis flac libsndfile pulseaudio portaudio SDL2
           sudo pkgin -y install autoconf autoconf-archive automake libtool libltdl
           sudo pkgin -y install doxygen help2man
     - name: Build
-      uses: cross-platform-actions/action@v0.25.0
+      uses: cross-platform-actions/action@v0.27.0
       with:
         architecture: x86_64
         memory: 4G
@@ -71,7 +71,7 @@ jobs:
         run: |
           gmake -j4 STRICT=1 VERBOSE=1 ${{ (matrix.deps == 'sys') && 'AUTO_DEPS=1' || (matrix.deps == 'local') && 'LOCAL_ZLIB=1 LOCAL_MPG123=1 LOCAL_OGG=1 LOCAL_VORBIS=1 NO_PORTAUDIO=1 NO_PORTAUDIOCPP=1 NO_PULSEAUDIO=1 NO_SDL2=1 NO_FLAC=1 NO_SNDFILE=1' || 'NO_ZLIB=1 NO_MPG123=1 NO_OGG=1 NO_VORBIS=1 NO_VORBISFILE=1 NO_PORTAUDIO=1 NO_PORTAUDIOCPP=1 NO_PULSEAUDIO=1 NO_SDL2=1 NO_FLAC=1 NO_SNDFILE=1' }}
     - name: Test
-      uses: cross-platform-actions/action@v0.25.0
+      uses: cross-platform-actions/action@v0.27.0
       with:
         architecture: x86_64
         memory: 4G
@@ -83,7 +83,7 @@ jobs:
         run: |
           gmake -j4 STRICT=1 VERBOSE=1 ${{ (matrix.deps == 'sys') && 'AUTO_DEPS=1' || (matrix.deps == 'local') && 'LOCAL_ZLIB=1 LOCAL_MPG123=1 LOCAL_OGG=1 LOCAL_VORBIS=1 NO_PORTAUDIO=1 NO_PORTAUDIOCPP=1 NO_PULSEAUDIO=1 NO_SDL2=1 NO_FLAC=1 NO_SNDFILE=1' || 'NO_ZLIB=1 NO_MPG123=1 NO_OGG=1 NO_VORBIS=1 NO_VORBISFILE=1 NO_PORTAUDIO=1 NO_PORTAUDIOCPP=1 NO_PULSEAUDIO=1 NO_SDL2=1 NO_FLAC=1 NO_SNDFILE=1' }} check
     - name: Shutdown VM
-      uses: cross-platform-actions/action@v0.25.0
+      uses: cross-platform-actions/action@v0.27.0
       with:
         architecture: x86_64
         memory: 4G

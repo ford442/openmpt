@@ -11,12 +11,16 @@
 #pragma once
 
 #include "openmpt/all/BuildSettings.hpp"
+#include "CDecimalSupport.h"
 #include "CImageListEx.h"
 #include "UpdateHints.h"
 #include "UpdateToolTip.h"
 #include "../soundlib/Snd_defs.h"
 
 OPENMPT_NAMESPACE_BEGIN
+
+enum class MainToolBarItem : uint8;
+class CMainToolBar;
 
 class CStereoVU: public CStatic
 {
@@ -44,6 +48,19 @@ protected:
 	DECLARE_MESSAGE_MAP();
 };
 
+class COctaveEdit : public CEdit
+{
+public:
+	COctaveEdit(CMainToolBar &owner) : m_owner{owner} { }
+
+protected:
+	afx_msg void OnChar(UINT nChar, UINT nRepCnt, UINT nFlags);
+
+	DECLARE_MESSAGE_MAP()
+
+	CMainToolBar &m_owner;
+};
+
 #define MIN_BASEOCTAVE		0
 #define MAX_BASEOCTAVE		8
 
@@ -56,16 +73,16 @@ struct Notification;
 class CToolBarEx: public CToolBar
 {
 protected:
-	bool m_bVertical = false, m_bFlatButtons = false;
+	bool m_bVertical = false;
 
 public:
 	CToolBarEx() {}
 	~CToolBarEx() override {}
 
 public:
-	BOOL EnableControl(CWnd &wnd, UINT nIndex, UINT nHeight=0);
-	void ChangeCtrlStyle(LONG lStyle, BOOL bSetStyle);
-	void EnableFlatButtons(BOOL bFlat);
+	void UpdateControl(bool show, CWnd &wnd, int index, int id, int height = 0);
+	void EnableFlatButtons(bool flat);
+	void SetButtonVisibility(int index, bool visible);
 
 public:
 	//{{AFX_VIRTUAL(CToolBarEx)
@@ -81,16 +98,20 @@ class CMainToolBar: public CToolBarEx
 protected:
 	UpdateToolTip m_tooltip;
 	CImageListEx m_ImageList, m_ImageListDisabled;
-	CStatic m_EditTempo, m_EditSpeed, m_EditOctave, m_EditRowsPerBeat;
-	CStatic m_StaticTempo, m_StaticSpeed, m_StaticRowsPerBeat;
-	CSpinButtonCtrl m_SpinTempo, m_SpinSpeed, m_SpinOctave, m_SpinRowsPerBeat;
-	int nCurrentSpeed = 0, nCurrentOctave = 0, nCurrentRowsPerBeat = 0;
-	TEMPO nCurrentTempo;
+	CFont m_font;
+	COctaveEdit m_EditOctave;
+	CNumberEdit m_EditTempo;
+	CEdit m_EditSpeed, m_EditRowsPerBeat, m_EditGlobalVolume;
+	CStatic m_StaticTempo, m_StaticSpeed, m_StaticRowsPerBeat, m_StaticGlobalVolume;
+	CSpinButtonCtrl m_SpinTempo, m_SpinSpeed, m_SpinOctave, m_SpinRowsPerBeat, m_SpinGlobalVolume;
+	int m_currentSpeed = 0, m_currentOctave = -1, m_currentRowsPerBeat = 0, m_currentGlobalVolume = 0;
+	TEMPO m_currentTempo{1, 0};
+	bool m_updating = false;
 public:
 	CStereoVU m_VuMeter;
 
 public:
-	CMainToolBar() = default;
+	CMainToolBar() : m_EditOctave{*this} { }
 
 protected:
 	void SetRowsPerBeat(ROWINDEX nNewRPB);
@@ -112,18 +133,31 @@ public:
 #endif // MPT_COMPILER_CLANG
 	void Init(CMainFrame *);
 	UINT GetBaseOctave() const;
-	BOOL SetBaseOctave(UINT nOctave);
-	BOOL SetCurrentSong(CSoundFile *pModDoc);
+	void SetBaseOctave(UINT nOctave);
+	void SetCurrentSong(CSoundFile *pModDoc);
 
 	bool ShowUpdateInfo(const CString &newVersion, const CString &infoURL, bool showHighLight);
 	void RemoveUpdateInfo();
 
+	bool ToggleVisibility(MainToolBarItem item);
+
 protected:
+	void RefreshToolbar();
+	void UpdateSizes();
+	void UpdateControls();
+
 	//{{AFX_MSG(CMainToolBar)
+	afx_msg LRESULT OnDPIChangedAfterParent(WPARAM, LPARAM);
 	afx_msg void OnVScroll(UINT, UINT, CScrollBar *);
 	afx_msg void OnTbnDropDownToolBar(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg BOOL OnToolTipText(UINT, NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnSelectMIDIDevice(UINT id);
+
+	afx_msg void OnSpeedChanged();
+	afx_msg void OnTempoChanged();
+	afx_msg void OnRPBChanged();
+	afx_msg void OnGlobalVolChanged();
+
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };
@@ -176,6 +210,9 @@ public:
 	bool SetTreeSoundfile(FileReader &file);
 
 	void StartTreeFilter(CModTree &source);
+
+	void SetBarOnLeft(const bool left);
+	bool BarOnLeft() { return (GetBarStyle() & CBRS_ALIGN_LEFT); }
 
 protected:
 	//{{AFX_VIRTUAL(CModTreeBar)

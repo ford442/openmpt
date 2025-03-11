@@ -35,6 +35,7 @@ Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; V
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".dtm"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".etx"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".far"; ValueData: ""
+Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".fc"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".fmt"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".fst"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".ftm"; ValueData: ""
@@ -72,6 +73,7 @@ Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; V
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".symmod"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".ult"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".umx"; ValueData: ""
+Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".unic"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".wow"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".xmf"; ValueData: ""
 

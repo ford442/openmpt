@@ -99,6 +99,9 @@ void CSoundFile::InitPlayer(bool bReset)
 #ifndef NO_DSP
 	m_BitCrush.Initialize(bReset, m_MixerSettings.gdwMixingFreq);
 #endif
+#ifdef MODPLUG_TRACKER
+	m_metronomeChn.pCurrentSample = nullptr;
+#endif
 	if(m_opl)
 	{
 		m_opl->Initialize(m_MixerSettings.gdwMixingFreq);
@@ -225,7 +228,6 @@ samplecount_t CSoundFile::Read(samplecount_t count, IAudioTarget &target, IAudio
 
 	while(!m_PlayState.m_flags[SONG_ENDREACHED] && countToRender > 0)
 	{
-
 		// Update Channel Data
 		if(!m_PlayState.m_nBufferCount)
 		{
@@ -253,12 +255,6 @@ samplecount_t CSoundFile::Read(samplecount_t count, IAudioTarget &target, IAudio
 			} else
 			{
 				// No new pattern data
-				#ifdef MODPLUG_TRACKER
-					if((m_nMaxOrderPosition) && (m_PlayState.m_nCurrentOrder >= m_nMaxOrderPosition))
-					{
-						m_PlayState.m_flags.set(SONG_ENDREACHED);
-					}
-				#endif // MODPLUG_TRACKER
 				if(IsRenderingToDisc())
 				{
 					// Disable song fade when rendering or when requested in libopenmpt.
@@ -346,6 +342,15 @@ samplecount_t CSoundFile::Read(samplecount_t count, IAudioTarget &target, IAudio
 			ProcessDSP(countChunk);
 		}
 
+#ifdef MODPLUG_TRACKER
+		// Metronome needs to be mixed last, so that it is not affected by global volume, plugins, DSP effects, etc...
+		// It will still be visible on VU Meters though, which is not optimal.
+		if(IsMetronomeEnabled())
+		{
+			MixChannel(countChunk, m_metronomeChn, CHANNELINDEX_INVALID, true);
+		}
+#endif  // MODPLUG_TRACKER
+
 		if(m_MixerSettings.gnChannels == 4)
 		{
 			InterleaveFrontRear(MixSoundBuffer, MixRearBuffer, countChunk);
@@ -363,6 +368,9 @@ samplecount_t CSoundFile::Read(samplecount_t count, IAudioTarget &target, IAudio
 		countToRender -= countChunk;
 		m_PlayState.m_nBufferCount -= countChunk;
 		m_PlayState.m_lTotalSampleCount += countChunk;
+		const ROWINDEX rowsPerBeat = m_PlayState.m_nCurrentRowsPerBeat ? m_PlayState.m_nCurrentRowsPerBeat : DEFAULT_ROWS_PER_BEAT;
+		if(!m_PlayState.m_nBufferCount && !m_PlayState.m_flags[SONG_PAUSED])
+			m_PlayState.m_ppqPosFract += 1.0 / (rowsPerBeat * m_PlayState.TicksOnRow());
 
 #ifdef MODPLUG_TRACKER
 		if(IsRenderingToDisc())
@@ -452,29 +460,32 @@ bool CSoundFile::ProcessRow()
 		{
 			m_PlayState.m_nCurrentOrder = m_lockOrderStart;
 		}
-#else
-		MPT_UNUSED_VARIABLE(patternTransition);
 #endif // MODPLUG_TRACKER
+
+		m_PlayState.UpdatePPQ(patternTransition);
 
 		// Check if pattern is valid
 		if(!m_PlayState.m_flags[SONG_PATTERNLOOP])
 		{
-			m_PlayState.m_nPattern = (m_PlayState.m_nCurrentOrder < Order().size()) ? Order()[m_PlayState.m_nCurrentOrder] : Order.GetInvalidPatIndex();
-			if (m_PlayState.m_nPattern < Patterns.Size() && !Patterns[m_PlayState.m_nPattern].IsValid()) m_PlayState.m_nPattern = Order.GetIgnoreIndex();
-			while (m_PlayState.m_nPattern >= Patterns.Size())
+			const size_t songEnd = m_maxOrderPosition ? m_maxOrderPosition : Order().size();
+			m_PlayState.m_nPattern = (m_PlayState.m_nCurrentOrder < songEnd) ? Order()[m_PlayState.m_nCurrentOrder] : PATTERNINDEX_INVALID;
+			if(m_PlayState.m_nPattern < Patterns.Size() && !Patterns[m_PlayState.m_nPattern].IsValid())
+				m_PlayState.m_nPattern = PATTERNINDEX_SKIP;
+
+			while(m_PlayState.m_nPattern >= Patterns.Size())
 			{
 				// End of song?
-				if ((m_PlayState.m_nPattern == Order.GetInvalidPatIndex()) || (m_PlayState.m_nCurrentOrder >= Order().size()))
+				if ((m_PlayState.m_nPattern == PATTERNINDEX_INVALID) || (m_PlayState.m_nCurrentOrder >= songEnd))
 				{
-					ORDERINDEX restartPosOverride = Order().GetRestartPos();
-					if(restartPosOverride == 0 && m_PlayState.m_nCurrentOrder <= Order().size() && m_PlayState.m_nCurrentOrder > 0)
+					ORDERINDEX restartPosOverride = m_maxOrderPosition ? m_restartOverridePos : Order().GetRestartPos();
+					if(restartPosOverride == 0 && m_PlayState.m_nCurrentOrder <= songEnd && m_PlayState.m_nCurrentOrder > 0)
 					{
 						// Subtune detection. Subtunes are separated by "---" order items, so if we're in a
 						// subtune and there's no restart position, we go to the first order of the subtune
 						// (i.e. the first order after the previous "---" item)
 						for(ORDERINDEX ord = m_PlayState.m_nCurrentOrder - 1; ord > 0; ord--)
 						{
-							if(Order()[ord] == Order.GetInvalidPatIndex())
+							if(Order()[ord] == PATTERNINDEX_INVALID)
 							{
 								// Jump back to first order of this subtune
 								restartPosOverride = ord + 1;
@@ -485,7 +496,7 @@ bool CSoundFile::ProcessRow()
 
 					// If channel resetting is disabled in MPT, we will emulate a pattern break (and we always do it if we're not in MPT)
 #ifdef MODPLUG_TRACKER
-					if(!(TrackerSettings::Instance().m_dwPatternSetup & PATTERN_RESETCHANNELS))
+					if(!(TrackerSettings::Instance().patternSetup & PatternSetup::ResetChannelsOnLoop))
 #endif // MODPLUG_TRACKER
 					{
 						m_PlayState.m_flags.set(SONG_BREAKTOROW);
@@ -536,7 +547,7 @@ bool CSoundFile::ProcessRow()
 					m_PlayState.m_nCurrentOrder = restartPosOverride;
 					m_PlayState.m_flags.reset(SONG_BREAKTOROW);
 					//If restart pos points to +++, move along
-					while(m_PlayState.m_nCurrentOrder < Order().size() && Order()[m_PlayState.m_nCurrentOrder] == Order.GetIgnoreIndex())
+					while(m_PlayState.m_nCurrentOrder < Order().size() && Order()[m_PlayState.m_nCurrentOrder] == PATTERNINDEX_SKIP)
 					{
 						m_PlayState.m_nCurrentOrder++;
 					}
@@ -555,16 +566,12 @@ bool CSoundFile::ProcessRow()
 				if (m_PlayState.m_nCurrentOrder < Order().size())
 					m_PlayState.m_nPattern = Order()[m_PlayState.m_nCurrentOrder];
 				else
-					m_PlayState.m_nPattern = Order.GetInvalidPatIndex();
+					m_PlayState.m_nPattern = PATTERNINDEX_INVALID;
 
 				if (m_PlayState.m_nPattern < Patterns.Size() && !Patterns[m_PlayState.m_nPattern].IsValid())
-					m_PlayState.m_nPattern = Order.GetIgnoreIndex();
+					m_PlayState.m_nPattern = PATTERNINDEX_SKIP;
 			}
 			m_PlayState.m_nNextOrder = m_PlayState.m_nCurrentOrder;
-
-#ifdef MODPLUG_TRACKER
-			if ((m_nMaxOrderPosition) && (m_PlayState.m_nCurrentOrder >= m_nMaxOrderPosition)) return false;
-#endif // MODPLUG_TRACKER
 		}
 
 		// Weird stuff?
@@ -601,7 +608,7 @@ bool CSoundFile::ProcessRow()
 				{
 					for(const auto &t : GetLength(eNoAdjust, GetLengthTarget(true)))
 					{
-						if(t.lastOrder == m_PlayState.m_nCurrentOrder && t.lastRow == m_PlayState.m_nRow)
+						if(t.restartOrder == m_PlayState.m_nCurrentOrder && t.restartRow == m_PlayState.m_nRow)
 						{
 							isReallyAtEnd = true;
 							break;
@@ -719,7 +726,7 @@ bool CSoundFile::ProcessRow()
 		}
 
 		// Now that we know which pattern we're on, we can update time signatures (global or pattern-specific)
-		UpdateTimeSignature();
+		m_PlayState.UpdateTimeSignature(*this);
 
 		if(ignoreRow)
 		{
@@ -1843,28 +1850,45 @@ void CSoundFile::ProcessSampleAutoVibrato(ModChannel &chn, int32 &period, Tuning
 					vdelta += Util::muldiv(period, fineUpTable[l & 0x03], 0x10000) - period;
 				}
 			}
-			period = (period + vdelta) / 256;
-			nPeriodFrac = vdelta & 0xFF;
+			if(Util::MaxValueOfType(period) - period >= vdelta)
+			{
+				period = (period + vdelta) / 256;
+				nPeriodFrac = vdelta & 0xFF;
+			} else
+			{
+				period = Util::MaxValueOfType(period) / 256;
+				nPeriodFrac = 0;
+			}
 		} else
 		{
 			// MPT's autovibrato code
+			int32 autoVibDepth = chn.nAutoVibDepth;
+			const int32 fullDepth = pSmp->nVibDepth * 256u;
 			if (pSmp->nVibSweep == 0 && !(GetType() & (MOD_TYPE_IT | MOD_TYPE_MPT)))
 			{
-				chn.nAutoVibDepth = pSmp->nVibDepth * 256;
+				autoVibDepth = fullDepth;
 			} else
 			{
 				// Calculate current autovibrato depth using vibsweep
-				if (GetType() & (MOD_TYPE_IT | MOD_TYPE_MPT))
+				if(GetType() & (MOD_TYPE_IT | MOD_TYPE_MPT))
 				{
-					chn.nAutoVibDepth += pSmp->nVibSweep * 2u;
+					autoVibDepth += pSmp->nVibSweep * 2u;
+					LimitMax(autoVibDepth, fullDepth);
+					chn.nAutoVibDepth = autoVibDepth;
 				} else
 				{
-					if(!chn.dwFlags[CHN_KEYOFF])
+					if(!chn.dwFlags[CHN_KEYOFF] && autoVibDepth <= fullDepth)
 					{
-						chn.nAutoVibDepth += (pSmp->nVibDepth * 256u) / pSmp->nVibSweep;
+						autoVibDepth += fullDepth / pSmp->nVibSweep;
+						chn.nAutoVibDepth = autoVibDepth;
 					}
+					// FT2 compatibility: Key-off before auto-vibrato sweep-in is complete resets auto-vibrato depth
+					// Test case: AutoVibratoSweepKeyOff.xm
+					if(autoVibDepth > fullDepth)
+						autoVibDepth = fullDepth;
+					else if(chn.dwFlags[CHN_KEYOFF] && m_playBehaviour[kFT2AutoVibratoAbortSweep])
+						autoVibDepth = fullDepth / pSmp->nVibSweep;
 				}
-				LimitMax(chn.nAutoVibDepth, static_cast<int>(pSmp->nVibDepth * 256u));
 			}
 			chn.nAutoVibPos += pSmp->nVibRate;
 			int vdelta;
@@ -1896,7 +1920,7 @@ void CSoundFile::ProcessSampleAutoVibrato(ModChannel &chn, int32 &period, Tuning
 					vdelta = (-ITSinusTable[(chn.nAutoVibPos + 192) & 0xFF] + 64) / 2;
 				}
 			}
-			int n = (vdelta * chn.nAutoVibDepth) / 256;
+			int n = (vdelta * autoVibDepth) / 256;
 
 			if(hasTuning)
 			{
@@ -2155,6 +2179,9 @@ bool CSoundFile::ReadNote()
 			chn.nLength = 0;
 			chn.nROfs = chn.nLOfs = 0;
 		}
+		// Increment age of NNA channels
+		if(chn.nMasterChn && nChn < GetNumChannels() && chn.nnaChannelAge < Util::MaxValueOfType(chn.nnaChannelAge))
+			chn.nnaChannelAge++;
 		// Check for unused channel
 		if(chn.dwFlags[CHN_MUTE] || (nChn >= GetNumChannels() && !chn.nLength))
 		{
@@ -2181,6 +2208,8 @@ bool CSoundFile::ReadNote()
 
 		// Calc Frequency
 		int32 period = 0;
+
+		chn.synthState.NextTick(m_PlayState, nChn, *this);
 
 		// Also process envelopes etc. when there's a plugin on this channel, for possible fake automation using volume and pan data.
 		// We only care about master channels, though, since automation only "happens" on them.
@@ -2354,7 +2383,7 @@ bool CSoundFile::ReadNote()
 
 		if(samplePlaying)
 		{
-			chn.synthState.NextTick(m_PlayState, nChn, period, *this);
+			chn.synthState.ApplyChannelState(chn, period, *this);
 			m_PlayState.m_globalScriptState.ApplyChannelState(m_PlayState, nChn, period, *this);
 
 			int nPeriodFrac = 0;
@@ -2630,7 +2659,7 @@ void CSoundFile::ProcessMidiOut(CHANNELINDEX nChn)
 	}
 
 	// Check instrument plugins
-	const PLUGINDEX nPlugin = GetBestPlugin(m_PlayState, nChn, PrioritiseInstrument, RespectMutes);
+	const PLUGINDEX nPlugin = GetBestPlugin(chn, nChn, PrioritiseInstrument, RespectMutes);
 	IMixPlugin *pPlugin = nullptr;
 	if(nPlugin > 0 && nPlugin <= MAX_MIXPLUGINS)
 	{
@@ -2713,7 +2742,7 @@ void CSoundFile::ProcessMidiOut(CHANNELINDEX nChn)
 				break;
 			default:
 				break;
-		}
+		}		
 	}
 }
 
@@ -2731,14 +2760,14 @@ MPT_FORCEINLINE void ApplyGlobalVolumeWithRamping(int32 *SoundBuffer, int32 *Rea
 		{
 			// Ramping required
 			m_lHighResRampingGlobalVolume += step;
-			                          SoundBuffer[0] = Util::muldiv(SoundBuffer[0], m_lHighResRampingGlobalVolume, MAX_GLOBAL_VOLUME << VOLUMERAMPPRECISION);
+			                       SoundBuffer[0] = Util::muldiv(SoundBuffer[0], m_lHighResRampingGlobalVolume, MAX_GLOBAL_VOLUME << VOLUMERAMPPRECISION);
 			if constexpr(isStereo) SoundBuffer[1] = Util::muldiv(SoundBuffer[1], m_lHighResRampingGlobalVolume, MAX_GLOBAL_VOLUME << VOLUMERAMPPRECISION);
 			if constexpr(hasRear)  RearBuffer[0]  = Util::muldiv(RearBuffer[0] , m_lHighResRampingGlobalVolume, MAX_GLOBAL_VOLUME << VOLUMERAMPPRECISION); else MPT_UNUSED_VARIABLE(RearBuffer);
 			if constexpr(hasRear)  RearBuffer[1]  = Util::muldiv(RearBuffer[1] , m_lHighResRampingGlobalVolume, MAX_GLOBAL_VOLUME << VOLUMERAMPPRECISION); else MPT_UNUSED_VARIABLE(RearBuffer);
 			m_nSamplesToGlobalVolRampDest--;
 		} else
 		{
-			                          SoundBuffer[0] = Util::muldiv(SoundBuffer[0], m_nGlobalVolume, MAX_GLOBAL_VOLUME);
+			                       SoundBuffer[0] = Util::muldiv(SoundBuffer[0], m_nGlobalVolume, MAX_GLOBAL_VOLUME);
 			if constexpr(isStereo) SoundBuffer[1] = Util::muldiv(SoundBuffer[1], m_nGlobalVolume, MAX_GLOBAL_VOLUME);
 			if constexpr(hasRear)  RearBuffer[0]  = Util::muldiv(RearBuffer[0] , m_nGlobalVolume, MAX_GLOBAL_VOLUME); else MPT_UNUSED_VARIABLE(RearBuffer);
 			if constexpr(hasRear)  RearBuffer[1]  = Util::muldiv(RearBuffer[1] , m_nGlobalVolume, MAX_GLOBAL_VOLUME); else MPT_UNUSED_VARIABLE(RearBuffer);

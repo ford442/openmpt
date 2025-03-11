@@ -51,9 +51,12 @@
 #  XMP_OPENMPT=0       Build xmp-openmpt (XMPlay plugin)
 #  SHARED_SONAME=1     Set SONAME of shared library
 #  DEBUG=0             Build debug binaries without optimization and with symbols
-#  OPTIMIZE=vectorize  -O3
+#  OPTIMIZE=default    vectorize
+#           vectorize  -O3
 #           speed      -O2
-#           size       -Os/-Oz
+#           size       -Os
+#           extrasize  -Oz
+#           some       -O1
 #           test       -Og
 #           debug      -O0
 #           none
@@ -144,18 +147,41 @@ all:
 INFO       = @echo
 SILENT     = @
 VERYSILENT = @
-
+define PRINT_TRACE
+endef
+define PRINT_DEBUG
+endef
+define PRINT_INFO
+$(info $1)
+endef
 
 ifeq ($(VERBOSE),2)
 INFO       = @true
 SILENT     = 
 VERYSILENT = 
+define PRINT_TRACE
+$(info $1)
+endef
+define PRINT_DEBUG
+$(info $1)
+endef
+define PRINT_INFO
+$(info $1)
+endef
 endif
 
 ifeq ($(VERBOSE),1)
 INFO       = @true
 SILENT     = 
 VERYSILENT = @
+define PRINT_TRACE
+endef
+define PRINT_DEBUG
+$(info $1)
+endef
+define PRINT_INFO
+$(info $1)
+endef
 endif
 
 
@@ -163,8 +189,13 @@ ifeq ($(QUIET),1)
 INFO       = @true
 SILENT     = @
 VERYSILENT = @
+define PRINT_TRACE
+endef
+define PRINT_DEBUG
+endef
+define PRINT_INFO
+endef
 endif
-
 
 # general settings
 
@@ -175,7 +206,7 @@ EXAMPLES=1
 FUZZ=0
 SHARED_SONAME=1
 DEBUG=0
-OPTIMIZE=vectorize
+OPTIMIZE=default
 OPTIMIZE_LTO=0
 OPTIMIZE_FASTMATH=0
 TEST=1
@@ -256,6 +287,27 @@ NUMTHREADS:=$(shell nproc)
 
 else ifeq ($(OS),Windows_NT)
 
+ifeq ($(shell uname -o),Cygwin)
+
+HOST=unix
+HOST_FLAVOUR=CYGWIN
+
+TOOLCHAIN_SUFFIX=
+
+CPPCHECK = cppcheck
+
+MKDIR_P = mkdir -p
+RM = rm -f
+RMTREE = rm -rf
+INSTALL = install
+INSTALL_MAKE_DIR = install -d
+INSTALL_DIR = cp -r -v
+FIXPATH = $1
+
+NUMTHREADS:=$(NUMBER_OF_PROCESSORS)
+
+else
+
 HOST=windows
 HOST_FLAVOUR=
 
@@ -272,6 +324,8 @@ INSTALL_DIR = echo install
 FIXPATH = $(subst /,\,$1)
 
 NUMTHREADS:=$(NUMBER_OF_PROCESSORS)
+
+endif
 
 else
 
@@ -316,6 +370,50 @@ else
 NUMTHREADS:=1
 endif
 
+endif
+
+
+# tar
+
+ifeq ($(findstring Darwin,$(UNAME_S)),Darwin)
+TAR_C=tar -c --format pax -f
+else ifeq ($(findstring OpenBSD,$(UNAME_S)),OpenBSD)
+UNAME_R:=$(shell uname -r)
+ifeq ($(findstring 1.,$(UNAME_R)),1.)
+TAR_C=tar -c -N
+else ifeq ($(findstring 1.,$(UNAME_R)),1.)
+TAR_C=tar -c -N
+else ifeq ($(findstring 2.,$(UNAME_R)),2.)
+TAR_C=tar -c -N
+else ifeq ($(findstring 3.,$(UNAME_R)),3.)
+TAR_C=tar -c -N
+else ifeq ($(findstring 4.,$(UNAME_R)),4.)
+TAR_C=tar -c -N
+else ifeq ($(findstring 5.,$(UNAME_R)),5.)
+TAR_C=tar -c -N
+else ifeq ($(findstring 6.,$(UNAME_R)),6.)
+TAR_C=tar -c -N
+else ifeq ($(findstring 7.0,$(UNAME_R)),7.0)
+TAR_C=tar -c -N
+else ifeq ($(findstring 7.1,$(UNAME_R)),7.1)
+TAR_C=tar -c -N
+else ifeq ($(findstring 7.2,$(UNAME_R)),7.2)
+TAR_C=tar -c -N
+else ifeq ($(findstring 7.3,$(UNAME_R)),7.3)
+TAR_C=tar -c -N
+else ifeq ($(findstring 7.4,$(UNAME_R)),7.4)
+TAR_C=tar -c -N
+else ifeq ($(findstring 7.5,$(UNAME_R)),7.5)
+TAR_C=tar -c -N
+else
+TAR_C=tar -c -F pax -N
+endif
+else ifeq ($(findstring BSD,$(UNAME_S)),BSD)
+TAR_C=tar -c --format pax --numeric-owner --uname "" --gname "" --uid 0 --gid 0
+else
+# GNU
+TAR_C=tar -c --format=pax --numeric-owner --owner=0 --group=0
+#TAR_C=tar -c 
 endif
 
 
@@ -439,15 +537,56 @@ CXXFLAGS += -g
 CFLAGS   += -g
 else ifeq ($(OPTIMIZE),debug)
 CPPFLAGS += 
-CXXFLAGS += -O0 -fno-omit-frame-pointer
-CFLAGS   += -O0 -fno-omit-frame-pointer
+ifneq ($(MPT_COMPILER_NO_O),1)
+CXXFLAGS += -O0
+CFLAGS   += -O0
+endif
+CXXFLAGS += -fno-omit-frame-pointer
+CFLAGS   += -fno-omit-frame-pointer
 else ifeq ($(OPTIMIZE),test)
 CPPFLAGS += 
-CXXFLAGS += -Og -fno-omit-frame-pointer
-CFLAGS   += -Og -fno-omit-frame-pointer
+ifneq ($(MPT_COMPILER_NO_O),1)
+CXXFLAGS += -Og
+CFLAGS   += -Og
+endif
+CXXFLAGS += -fno-omit-frame-pointer
+CFLAGS   += -fno-omit-frame-pointer
+else ifeq ($(OPTIMIZE),some)
+ifneq ($(MPT_COMPILER_NO_O),1)
+CXXFLAGS += -O1
+CFLAGS   += -O1
+endif
+CXXFLAGS +=
+CFLAGS   += -fno-strict-aliasing
+ifneq ($(MPT_COMPILER_NOSECTIONS),1)
+CXXFLAGS += -ffunction-sections -fdata-sections
+CFLAGS   += -ffunction-sections -fdata-sections
+endif
+ifneq ($(MPT_COMPILER_NOGCSECTIONS),1)
+LDFLAGS  += -Wl,--gc-sections
+endif
+else ifeq ($(OPTIMIZE),extrasize)
+ifneq ($(MPT_COMPILER_NO_O),1)
+CXXFLAGS += -Oz
+CFLAGS   += -Oz
+endif
+CXXFLAGS +=
+CFLAGS   += -fno-strict-aliasing
+LDFLAGS  += 
+ifneq ($(MPT_COMPILER_NOSECTIONS),1)
+CXXFLAGS += -ffunction-sections -fdata-sections
+CFLAGS   += -ffunction-sections -fdata-sections
+endif
+ifneq ($(MPT_COMPILER_NOGCSECTIONS),1)
+LDFLAGS  += -Wl,--gc-sections
+endif
 else ifeq ($(OPTIMIZE),size)
+ifneq ($(MPT_COMPILER_NO_O),1)
 CXXFLAGS += -Os
-CFLAGS   += -Os -fno-strict-aliasing
+CFLAGS   += -Os
+endif
+CXXFLAGS +=
+CFLAGS   += -fno-strict-aliasing
 LDFLAGS  += 
 ifneq ($(MPT_COMPILER_NOSECTIONS),1)
 CXXFLAGS += -ffunction-sections -fdata-sections
@@ -457,8 +596,12 @@ ifneq ($(MPT_COMPILER_NOGCSECTIONS),1)
 LDFLAGS  += -Wl,--gc-sections
 endif
 else ifeq ($(OPTIMIZE),speed)
+ifneq ($(MPT_COMPILER_NO_O),1)
 CXXFLAGS += -O2
-CFLAGS   += -O2 -fno-strict-aliasing
+CFLAGS   += -O2
+endif
+CXXFLAGS +=
+CFLAGS   += -fno-strict-aliasing
 ifneq ($(MPT_COMPILER_NOSECTIONS),1)
 CXXFLAGS += -ffunction-sections -fdata-sections
 CFLAGS   += -ffunction-sections -fdata-sections
@@ -467,8 +610,26 @@ ifneq ($(MPT_COMPILER_NOGCSECTIONS),1)
 LDFLAGS  += -Wl,--gc-sections
 endif
 else ifeq ($(OPTIMIZE),vectorize)
+ifneq ($(MPT_COMPILER_NO_O),1)
 CXXFLAGS += -O3
-CFLAGS   += -O3 -fno-strict-aliasing
+CFLAGS   += -O3
+endif
+CXXFLAGS +=
+CFLAGS   += -fno-strict-aliasing
+ifneq ($(MPT_COMPILER_NOSECTIONS),1)
+CXXFLAGS += -ffunction-sections -fdata-sections
+CFLAGS   += -ffunction-sections -fdata-sections
+endif
+ifneq ($(MPT_COMPILER_NOGCSECTIONS),1)
+LDFLAGS  += -Wl,--gc-sections
+endif
+else ifeq ($(OPTIMIZE),default)
+ifneq ($(MPT_COMPILER_NO_O),1)
+CXXFLAGS += -O3
+CFLAGS   += -O3
+endif
+CXXFLAGS +=
+CFLAGS   += -fno-strict-aliasing
 ifneq ($(MPT_COMPILER_NOSECTIONS),1)
 CXXFLAGS += -ffunction-sections -fdata-sections
 CFLAGS   += -ffunction-sections -fdata-sections
@@ -608,6 +769,9 @@ CXXFLAGS += -Wall -Wextra -Wpedantic $(CXXFLAGS_WARNINGS)
 CFLAGS   += -Wall -Wextra -Wpedantic $(CFLAGS_WARNINGS)
 LDFLAGS  += $(LDFLAGS_WARNINGS)
 
+CXXFLAGS += $(OVERWRITE_CXXFLAGS)
+CFLAGS   += $(OVERWRITE_CFLAGS)
+
 endif
 
 ifeq ($(STRICT),1)
@@ -642,7 +806,9 @@ ifeq ($(HACK_ARCHIVE_SUPPORT),1)
 NO_ZLIB:=1
 endif
 
+$(call PRINT_TRACE,[DEP] zlib)
 ifeq ($(LOCAL_ZLIB),1)
+$(call PRINT_INFO,[DEP] zlib: local)
 CPPFLAGS_ZLIB := -DMPT_WITH_ZLIB
 LDFLAGS_ZLIB  :=
 LDLIBS_ZLIB   :=
@@ -671,14 +837,18 @@ ALL_DEPENDS += $(ZLIB_DEPENDS)
 OBJECTS_ZLIB = $(ZLIB_OBJECTS)
 else
 ifeq ($(NO_ZLIB),1)
+$(call PRINT_INFO,[DEP] zlib: disabled)
 else
 #LDLIBS   += -lz
+$(call PRINT_DEBUG,[DEP] zlib: checking pkg-config ...)
 ifeq ($(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --exists zlib && echo yes),yes)
+$(call PRINT_INFO,[DEP] zlib: pkg-config/zlib)
 CPPFLAGS_ZLIB := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --cflags-only-I zlib ) -DMPT_WITH_ZLIB
 LDFLAGS_ZLIB  := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-L   zlib ) $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-other zlib )
 LDLIBS_ZLIB   := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-l   zlib )
 PC_REQUIRES_ZLIB := zlib
 else
+$(call PRINT_INFO,[DEP] zlib: no)
 ifeq ($(FORCE_DEPS),1)
 $(error zlib not found)
 else
@@ -689,14 +859,16 @@ endif
 endif
 endif
 
+$(call PRINT_TRACE,[DEP] mpg123)
 ifeq ($(LOCAL_MPG123),1)
+$(call PRINT_INFO,[DEP] mpg123: local)
 
 ifeq ($(ENABLE_DXE),1)
 
 CPPFLAGS_MPG123 := -DMPT_WITH_MPG123 -DMPG123_NO_LARGENAME
 LDFLAGS_MPG123  := 
 LDLIBS_MPG123   :=
-CPPFLAGS_MPG123 += -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/makefile/
+CPPFLAGS_MPG123 += -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/generic/
 MPG123_SOURCES := 
 MPG123_SOURCES += include/mpg123/src/compat/compat.c
 MPG123_SOURCES += include/mpg123/src/compat/compat_str.c
@@ -730,8 +902,8 @@ ALL_OBJECTS += $(MPG123_OBJECTS)
 ALL_DEPENDS += $(MPG123_DEPENDS)
 include/mpg123/src/compat/%.mpg123$(FLAVOUR_O).o : CFLAGS+=$(CFLAGS_SILENT) -DOPT_GENERIC
 include/mpg123/src/libmpg123/%.mpg123$(FLAVOUR_O).o : CFLAGS+=$(CFLAGS_SILENT) -DOPT_GENERIC
-include/mpg123/src/compat/%.mpg123$(FLAVOUR_O).o : CPPFLAGS:= -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/makefile/ $(CPPFLAGS)
-include/mpg123/src/libmpg123/%.mpg123$(FLAVOUR_O).o : CPPFLAGS:= -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/makefile/ $(CPPFLAGS)
+include/mpg123/src/compat/%.mpg123$(FLAVOUR_O).o : CPPFLAGS:= -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/generic/ $(CPPFLAGS)
+include/mpg123/src/libmpg123/%.mpg123$(FLAVOUR_O).o : CPPFLAGS:= -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/generic/ $(CPPFLAGS)
 LIBS_MPG123 = bin/$(FLAVOUR_DIR)mpg123.a
 
 bin/$(FLAVOUR_DIR)mpg123.a: $(MPG123_OBJECTS)
@@ -746,12 +918,67 @@ ifeq ($(SHARED_SONAME),1)
 	$(SILENT)ln -sf $(MPG123_SONAME) bin/$(FLAVOUR_DIR)mpg123$(SOSUFFIX)
 endif
 
+else ifeq ($(ENABLE_DLL),1)
+
+CPPFLAGS_MPG123 := -DMPT_WITH_MPG123 -DMPG123_NO_LARGENAME
+LDFLAGS_MPG123  :=
+LDLIBS_MPG123   :=
+CPPFLAGS_MPG123 += -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/generic/
+MPG123_SOURCES :=
+MPG123_SOURCES += include/mpg123/src/compat/compat.c
+MPG123_SOURCES += include/mpg123/src/compat/compat_str.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/dct64.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/equalizer.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/feature.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/format.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/frame.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/icy.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/icy2utf8.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/id3.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/index.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/layer1.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/layer2.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/layer3.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/lfs_wrap.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/libmpg123.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/ntom.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/optimize.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/parse.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/readers.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/stringbuf.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/synth.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/synth_8bit.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/synth_real.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/synth_s32.c
+MPG123_SOURCES += include/mpg123/src/libmpg123/tabinit.c
+MPG123_OBJECTS += $(MPG123_SOURCES:.c=.mpg123$(FLAVOUR_O).o)
+MPG123_DEPENDS = $(MPG123_OBJECTS:$(FLAVOUR_O).o=$(FLAVOUR_O).d)
+ALL_OBJECTS += $(MPG123_OBJECTS)
+ALL_DEPENDS += $(MPG123_DEPENDS)
+include/mpg123/src/compat/%.mpg123$(FLAVOUR_O).o : CFLAGS+=$(CFLAGS_SILENT) -DOPT_GENERIC
+include/mpg123/src/libmpg123/%.mpg123$(FLAVOUR_O).o : CFLAGS+=$(CFLAGS_SILENT) -DOPT_GENERIC
+include/mpg123/src/compat/%.mpg123$(FLAVOUR_O).o : CPPFLAGS:= -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/generic/ $(CPPFLAGS)
+include/mpg123/src/libmpg123/%.mpg123$(FLAVOUR_O).o : CPPFLAGS:= -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/generic/ $(CPPFLAGS)
+LIBS_MPG123 = bin/$(FLAVOUR_DIR)mpg123$(SOSUFFIX)
+
+bin/$(FLAVOUR_DIR)mpg123$(SOSUFFIX): $(MPG123_OBJECTS)
+	$(INFO) [LD] $@
+ifeq ($(NO_SHARED_LINKER_FLAG),1)
+	$(SILENT)$(LINK.cc) -shared $(MPG123_LDFLAGS) $(SO_LDFLAGS) $^ -o $@
+else
+	$(SILENT)$(LINK.cc) -shared $(MPG123_LDFLAGS) $(SO_LDFLAGS) $^ -o $@
+endif
+ifeq ($(SHARED_SONAME),1)
+	$(SILENT)mv bin/$(FLAVOUR_DIR)mpg123$(SOSUFFIX) bin/$(FLAVOUR_DIR)$(MPG123_SONAME)
+	$(SILENT)ln -sf $(MPG123_SONAME) bin/$(FLAVOUR_DIR)mpg123$(SOSUFFIX)
+endif
+
 else
 
 CPPFLAGS_MPG123 := -DMPT_WITH_MPG123 -DMPG123_NO_LARGENAME
 LDFLAGS_MPG123  :=
 LDLIBS_MPG123   := 
-CPPFLAGS_MPG123 += -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/makefile/
+CPPFLAGS_MPG123 += -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/generic/
 MPG123_SOURCES := 
 MPG123_SOURCES += include/mpg123/src/compat/compat.c
 MPG123_SOURCES += include/mpg123/src/compat/compat_str.c
@@ -781,8 +1008,8 @@ MPG123_SOURCES += include/mpg123/src/libmpg123/synth_s32.c
 MPG123_SOURCES += include/mpg123/src/libmpg123/tabinit.c
 include/mpg123/src/compat/%.mpg123$(FLAVOUR_O).o : CFLAGS+=$(CFLAGS_SILENT) -DOPT_GENERIC
 include/mpg123/src/libmpg123/%.mpg123$(FLAVOUR_O).o : CFLAGS+=$(CFLAGS_SILENT) -DOPT_GENERIC
-include/mpg123/src/compat/%.mpg123$(FLAVOUR_O).o : CPPFLAGS:= -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/makefile/ $(CPPFLAGS)
-include/mpg123/src/libmpg123/%.mpg123$(FLAVOUR_O).o : CPPFLAGS:= -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/makefile/ $(CPPFLAGS)
+include/mpg123/src/compat/%.mpg123$(FLAVOUR_O).o : CPPFLAGS:= -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/generic/ $(CPPFLAGS)
+include/mpg123/src/libmpg123/%.mpg123$(FLAVOUR_O).o : CPPFLAGS:= -Iinclude/mpg123/src/include/ -Iinclude/mpg123/ports/generic/ $(CPPFLAGS)
 MPG123_OBJECTS = $(MPG123_SOURCES:.c=.mpg123$(FLAVOUR_O).o)
 MPG123_DEPENDS = $(MPG123_OBJECTS:$(FLAVOUR_O).o=$(FLAVOUR_O).d)
 ALL_OBJECTS += $(MPG123_OBJECTS)
@@ -793,14 +1020,18 @@ endif
 
 else
 ifeq ($(NO_MPG123),1)
+$(call PRINT_INFO,[DEP] mpg123: disabled)
 else
 #LDLIBS   += -lmpg123
+$(call PRINT_DEBUG,[DEP] mpg123: checking pkg-config ...)
 ifeq ($(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --exists 'libmpg123 >= 1.14.0' && echo yes),yes)
+$(call PRINT_INFO,[DEP] mpg123: pkg-config/mpg123)
 CPPFLAGS_MPG123 := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --cflags-only-I 'libmpg123 >= 1.14.0' ) -DMPT_WITH_MPG123
 LDFLAGS_MPG123  := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-L   'libmpg123 >= 1.14.0' ) $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-other 'libmpg123 >= 1.14.0' )
 LDLIBS_MPG123   := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-l   'libmpg123 >= 1.14.0' )
 PC_REQUIRES_MPG123 := libmpg123
 else
+$(call PRINT_INFO,[DEP] mpg123: no)
 ifeq ($(FORCE_DEPS),1)
 $(error mpg123 not found)
 else
@@ -811,7 +1042,9 @@ endif
 endif
 endif
 
+$(call PRINT_TRACE,[DEP] ogg)
 ifeq ($(LOCAL_OGG),1)
+$(call PRINT_INFO,[DEP] ogg: local)
 CPPFLAGS_OGG := -DMPT_WITH_OGG
 LDFLAGS_OGG  := 
 LDLIBS_OGG   := 
@@ -827,14 +1060,18 @@ ALL_DEPENDS += $(OGG_DEPENDS)
 OBJECTS_OGG = $(OGG_OBJECTS)
 else
 ifeq ($(NO_OGG),1)
+$(call PRINT_INFO,[DEP] ogg: disabled)
 else
 #LDLIBS   += -logg
+$(call PRINT_DEBUG,[DEP] ogg: checking pkg-config ...)
 ifeq ($(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --exists ogg && echo yes),yes)
+$(call PRINT_INFO,[DEP] ogg: pkg-config/ogg)
 CPPFLAGS_OGG := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --cflags-only-I ogg ) -DMPT_WITH_OGG
 LDFLAGS_OGG  := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-L   ogg ) $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-other ogg )
 LDLIBS_OGG   := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-l   ogg )
 PC_REQUIRES_OGG := ogg
 else
+$(call PRINT_INFO,[DEP] ogg: no)
 ifeq ($(FORCE_DEPS),1)
 $(error ogg not found)
 else
@@ -845,7 +1082,9 @@ endif
 endif
 endif
 
+$(call PRINT_TRACE,[DEP] vorbis)
 ifeq ($(LOCAL_VORBIS),1)
+$(call PRINT_INFO,[DEP] vorbis: local)
 CPPFLAGS_VORBIS := -DMPT_WITH_VORBIS
 LDFLAGS_VORBIS  := 
 LDLIBS_VORBIS   := 
@@ -884,14 +1123,18 @@ ALL_DEPENDS += $(VORBIS_DEPENDS)
 OBJECTS_VORBIS = $(VORBIS_OBJECTS)
 else
 ifeq ($(NO_VORBIS),1)
+$(call PRINT_INFO,[DEP] vorbis: disabled)
 else
 #LDLIBS   += -lvorbis
+$(call PRINT_DEBUG,[DEP] vorbis: checking pkg-config ...)
 ifeq ($(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --exists vorbis && echo yes),yes)
+$(call PRINT_INFO,[DEP] vorbis: pkg-config/vorbis)
 CPPFLAGS_VORBIS := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --cflags-only-I vorbis ) -DMPT_WITH_VORBIS
 LDFLAGS_VORBIS  := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-L   vorbis ) $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-other vorbis )
 LDLIBS_VORBIS   := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-l   vorbis )
 PC_REQUIRES_VORBIS := vorbis
 else
+$(call PRINT_INFO,[DEP] vorbis: no)
 ifeq ($(FORCE_DEPS),1)
 $(error vorbis not found)
 else
@@ -902,20 +1145,26 @@ endif
 endif
 endif
 
+$(call PRINT_TRACE,[DEP] vorbisfile)
 ifeq ($(LOCAL_VORBIS),1)
+$(call PRINT_INFO,[DEP] vorbisfile: local)
 CPPFLAGS_VORBISFILE := -DMPT_WITH_VORBISFILE
 LDFLAGS_VORBISFILE  := 
 LDLIBS_VORBISFILE   := 
 else
 ifeq ($(NO_VORBISFILE),1)
+$(call PRINT_INFO,[DEP] vorbisfile: disabled)
 else
 #LDLIBS   += -lvorbisfile
+$(call PRINT_DEBUG,[DEP] vorbisfile: checking pkg-config ...)
 ifeq ($(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --exists vorbisfile && echo yes),yes)
+$(call PRINT_INFO,[DEP] vorbisfile: pkg-config/vorbisfile)
 CPPFLAGS_VORBISFILE := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --cflags-only-I vorbisfile ) -DMPT_WITH_VORBISFILE
 LDFLAGS_VORBISFILE  := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-L   vorbisfile ) $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-other vorbisfile )
 LDLIBS_VORBISFILE   := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-l   vorbisfile )
 PC_REQUIRES_VORBISFILE := vorbisfile
 else
+$(call PRINT_INFO,[DEP] vorbisfile: no)
 ifeq ($(FORCE_DEPS),1)
 $(error vorbisfile not found)
 else
@@ -926,14 +1175,19 @@ endif
 endif
 endif
 
+$(call PRINT_TRACE,[DEP] SDL2)
 ifeq ($(NO_SDL2),1)
+$(call PRINT_INFO,[DEP] SDL2: disabled)
 else
 #LDLIBS   += -lsdl2
+$(call PRINT_DEBUG,[DEP] SDL2: checking pkg-config ...)
 ifeq ($(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --exists 'sdl2 >= 2.0.4' && echo yes),yes)
+$(call PRINT_INFO,[DEP] SDL2: pkg-config/sdl2)
 CPPFLAGS_SDL2 := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --cflags-only-I 'sdl2 >= 2.0.4' ) -DMPT_WITH_SDL2
 LDFLAGS_SDL2  := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-L   'sdl2 >= 2.0.4' ) $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-other 'sdl2 >= 2.0.4' )
 LDLIBS_SDL2   := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-l   'sdl2 >= 2.0.4' )
 else
+$(call PRINT_INFO,[DEP] SDL2: no)
 ifeq ($(FORCE_DEPS),1)
 $(error sdl2 not found)
 else
@@ -943,14 +1197,19 @@ NO_SDL2:=1
 endif
 endif
 
+$(call PRINT_TRACE,[DEP] PortAudio)
 ifeq ($(NO_PORTAUDIO),1)
+$(call PRINT_INFO,[DEP] PortAudio: disabled)
 else
 #LDLIBS   += -lportaudio
+$(call PRINT_DEBUG,[DEP] PortAudio: checking pkg-config ...)
 ifeq ($(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --exists portaudio-2.0 && echo yes),yes)
+$(call PRINT_INFO,[DEP] PortAudio: pkg-config/portaudio-2.0)
 CPPFLAGS_PORTAUDIO := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --cflags-only-I portaudio-2.0 ) -DMPT_WITH_PORTAUDIO
 LDFLAGS_PORTAUDIO  := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-L   portaudio-2.0 ) $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-other portaudio-2.0 )
 LDLIBS_PORTAUDIO   := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-l   portaudio-2.0 )
 else
+$(call PRINT_INFO,[DEP] PortAudio: no)
 ifeq ($(FORCE_DEPS),1)
 $(error portaudio not found)
 else
@@ -960,14 +1219,19 @@ NO_PORTAUDIO:=1
 endif
 endif
 
+$(call PRINT_TRACE,[DEP] PortAudio-C++)
 ifeq ($(NO_PORTAUDIOCPP),1)
+$(call PRINT_INFO,[DEP] PortAudio-C++: disabled)
 else
 #LDLIBS   += -lportaudiocpp
+$(call PRINT_DEBUG,[DEP] PortAudio-C++: checking pkg-config ...)
 ifeq ($(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --exists portaudiocpp && echo yes),yes)
+$(call PRINT_INFO,[DEP] PortAudio-C++: pkg-config/portaudiocpp)
 CPPFLAGS_PORTAUDIOCPP := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --cflags-only-I portaudiocpp ) -DMPT_WITH_PORTAUDIOCPP
 LDFLAGS_PORTAUDIOCPP  := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-L   portaudiocpp ) $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-other portaudiocpp )
 LDLIBS_PORTAUDIOCPP   := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-l   portaudiocpp )
 else
+$(call PRINT_INFO,[DEP] PortAudio-C++: no)
 ifeq ($(FORCE_DEPS),1)
 $(error portaudiocpp not found)
 else
@@ -977,14 +1241,20 @@ NO_PORTAUDIOCPP:=1
 endif
 endif
 
+$(call PRINT_TRACE,[DEP] PulseAudio)
 ifeq ($(NO_PULSEAUDIO),1)
+$(call PRINT_INFO,[DEP] PulseAudio: disabled)
 else
 #LDLIBS   += -lpulse-simple
+$(call PRINT_DEBUG,[DEP] PulseAudio: checking pkg-config ...)
 ifeq ($(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --exists libpulse libpulse-simple && echo yes),yes)
+$(call PRINT_INFO,[DEP] PulseAudio: pkg-config/libpulse)
+$(call PRINT_INFO,[DEP] PulseAudio: pkg-config/libpulse-simple)
 CPPFLAGS_PULSEAUDIO := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --cflags-only-I libpulse libpulse-simple ) -DMPT_WITH_PULSEAUDIO
 LDFLAGS_PULSEAUDIO  := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-L   libpulse libpulse-simple ) $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-other libpulse libpulse-simple )
 LDLIBS_PULSEAUDIO   := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-l   libpulse libpulse-simple )
 else
+$(call PRINT_INFO,[DEP] PulseAudio: no)
 ifeq ($(FORCE_DEPS),1)
 $(error pulseaudio not found)
 else
@@ -994,14 +1264,19 @@ NO_PULSEAUDIO:=1
 endif
 endif
 
+$(call PRINT_TRACE,[DEP] FLAC)
 ifeq ($(NO_FLAC),1)
+$(call PRINT_INFO,[DEP] FLAC: disabled)
 else
 #LDLIBS   += -lFLAC
+$(call PRINT_DEBUG,[DEP] FLAC: checking pkg-config ...)
 ifeq ($(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --exists 'flac >= 1.3.0' && echo yes),yes)
+$(call PRINT_INFO,[DEP] FLAC: pkg-config/flac)
 CPPFLAGS_FLAC := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --cflags-only-I 'flac >= 1.3.0' ) -DMPT_WITH_FLAC
 LDFLAGS_FLAC  := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-L   'flac >= 1.3.0' ) $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-other 'flac >= 1.3.0' )
 LDLIBS_FLAC   := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-l   'flac >= 1.3.0' )
 else
+$(call PRINT_INFO,[DEP] FLAC: no)
 ifeq ($(FORCE_DEPS),1)
 $(error flac not found)
 else
@@ -1011,14 +1286,19 @@ NO_FLAC:=1
 endif
 endif
 
+$(call PRINT_TRACE,[DEP] sndfile)
 ifeq ($(NO_SNDFILE),1)
+$(call PRINT_INFO,[DEP] sndfile: disabled)
 else
 #LDLIBS   += -lsndfile
+$(call PRINT_DEBUG,[DEP] sndfile: checking pkg-config ...)
 ifeq ($(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --exists sndfile && echo yes),yes)
+$(call PRINT_INFO,[DEP] sndfile: pkg-config/sndfile)
 CPPFLAGS_SNDFILE := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --cflags-only-I   sndfile ) -DMPT_WITH_SNDFILE
 LDFLAGS_SNDFILE  := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-L     sndfile ) $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-other sndfile )
 LDLIBS_SNDFILE   := $(shell $(PKG_CONFIG)$(TOOLCHAIN_SUFFIX) --libs-only-l     sndfile )
 else
+$(call PRINT_INFO,[DEP] sndfile: no)
 ifeq ($(FORCE_DEPS),1)
 $(error sndfile not found)
 else
@@ -1028,7 +1308,9 @@ NO_SNDFILE:=1
 endif
 endif
 
+$(call PRINT_TRACE,[DEP] Allegro-4.2)
 ifeq ($(USE_ALLEGRO42),1)
+$(call PRINT_INFO,[DEP] Allegro-4.2: local)
 
 CPPFLAGS_ALLEGRO42 := -Iinclude/allegro42/include -DALLEGRO_HAVE_STDINT_H -DLONG_LONG="long long" -DMPT_WITH_ALLEGRO42
 LDFLAGS_ALLEGRO42 :=
@@ -1041,6 +1323,8 @@ include/allegro42/lib/djgpp/liballeg.a:
 
 MISC_OUTPUTS += include/allegro42/lib/djgpp/liballeg.a
 
+else
+$(call PRINT_INFO,[DEP] Allegro-4.2: disabled)
 endif
 
 
@@ -1074,11 +1358,11 @@ CPPCHECK_FLAGS += --suppress=uninitMemberVar
 CPPCHECK_FLAGS += $(CPPFLAGS)
 CPPFLAGS += $(CPPFLAGS_ZLIB) $(CPPFLAGS_MPG123) $(CPPFLAGS_OGG) $(CPPFLAGS_VORBIS) $(CPPFLAGS_VORBISFILE)
 LDFLAGS += $(LDFLAGS_ZLIB) $(LDFLAGS_MPG123) $(LDFLAGS_OGG) $(LDFLAGS_VORBIS) $(LDFLAGS_VORBISFILE)
-LDLIBS += $(LDLIBS_ZLIB) $(LDLIBS_MPG123) $(LDLIBS_OGG) $(LDLIBS_VORBIS) $(LDLIBS_VORBISFILE)
+LDLIBS += $(LDLIBS_ZLIB) $(LDLIBS_MPG123) $(LDLIBS_OGG) $(LDLIBS_VORBIS) $(LDLIBS_VORBISFILE) $(LDLIBS_PLATFORM)
 
 CPPFLAGS_OPENMPT123 += $(CPPFLAGS_SDL2) $(CPPFLAGS_PORTAUDIO) $(CPPFLAGS_PULSEAUDIO) $(CPPFLAGS_FLAC) $(CPPFLAGS_SNDFILE) $(CPPFLAGS_ALLEGRO42)
 LDFLAGS_OPENMPT123  += $(LDFLAGS_SDL2) $(LDFLAGS_PORTAUDIO) $(LDFLAGS_PULSEAUDIO) $(LDFLAGS_FLAC) $(LDFLAGS_SNDFILE) $(LDFLAGS_ALLEGRO42)
-LDLIBS_OPENMPT123   += $(LDLIBS_SDL2) $(LDLIBS_PORTAUDIO) $(LDLIBS_PULSEAUDIO) $(LDLIBS_FLAC) $(LDLIBS_SNDFILE) $(LDLIBS_ALLEGRO42)
+LDLIBS_OPENMPT123   += $(LDLIBS_SDL2) $(LDLIBS_PORTAUDIO) $(LDLIBS_PULSEAUDIO) $(LDLIBS_FLAC) $(LDLIBS_SNDFILE) $(LDLIBS_ALLEGRO42) $(LDLIBS_PLATFORM)
 
 
 %: %$(FLAVOUR_O).o
@@ -1385,6 +1669,7 @@ ALL_DEPENDS += $(OPENMPT123_DEPENDS)
 
 LIBOPENMPTTEST_CXX_SOURCES += \
  libopenmpt/libopenmpt_test/libopenmpt_test.cpp \
+ $(sort $(wildcard libopenmpt/*.cpp)) \
  $(SOUNDLIB_CXX_SOURCES) \
  $(SOUNDLIB_TEST_CXX_SOURCES) \
  test/mpt_tests_base.cpp \
@@ -1488,6 +1773,9 @@ ifeq ($(SHARED_SONAME),1)
 LIBOPENMPT_LDFLAGS += -Wl,-soname,$(LIBOPENMPT_SONAME)
 endif
 
+MISC_OUTPUTS += bin/distversion
+MISC_OUTPUTS += bin/distversion-pure
+MISC_OUTPUTS += bin/distversion-tarball
 MISC_OUTPUTS += bin/$(FLAVOUR_DIR)empty.cpp
 MISC_OUTPUTS += bin/$(FLAVOUR_DIR)empty.out
 MISC_OUTPUTS += bin/$(FLAVOUR_DIR)openmpt123$(EXESUFFIX).norpath
@@ -1687,7 +1975,7 @@ bin/$(FLAVOUR_DIR)dist-tar.tar: bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIB
 	cd bin/$(FLAVOUR_DIR)dist-tar/ && rm -rf libopenmpt
 	cd bin/$(FLAVOUR_DIR)dist-tar/ && mkdir -p libopenmpt/src.makefile/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/$(FLAVOUR_DIR)dist-tar/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar.gz libopenmpt/src.makefile/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/$(FLAVOUR_DIR)dist-tar/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-tar.tar libopenmpt
+	cd bin/$(FLAVOUR_DIR)dist-tar/ && $(TAR_C) -v -f ../dist-tar.tar libopenmpt
 
 .PHONY: dist-zip
 dist-zip: bin/$(FLAVOUR_DIR)dist-zip.tar
@@ -1697,7 +1985,7 @@ bin/$(FLAVOUR_DIR)dist-zip.tar: bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIB
 	cd bin/$(FLAVOUR_DIR)dist-zip/ && rm -rf libopenmpt
 	cd bin/$(FLAVOUR_DIR)dist-zip/ && mkdir -p libopenmpt/src.msvc/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/$(FLAVOUR_DIR)dist-zip/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip libopenmpt/src.msvc/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/$(FLAVOUR_DIR)dist-zip/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-zip.tar libopenmpt
+	cd bin/$(FLAVOUR_DIR)dist-zip/ && $(TAR_C) -v -f ../dist-zip.tar libopenmpt
 
 .PHONY: dist-doc
 dist-doc: bin/$(FLAVOUR_DIR)dist-doc.tar
@@ -1707,7 +1995,7 @@ bin/$(FLAVOUR_DIR)dist-doc.tar: bin/$(FLAVOUR_DIR)dist-doc/libopenmpt-$(DIST_LIB
 	cd bin/$(FLAVOUR_DIR)dist-doc/ && rm -rf libopenmpt
 	cd bin/$(FLAVOUR_DIR)dist-doc/ && mkdir -p libopenmpt/doc/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/$(FLAVOUR_DIR)dist-doc/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc.tar.gz libopenmpt/doc/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/$(FLAVOUR_DIR)dist-doc/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-doc.tar libopenmpt
+	cd bin/$(FLAVOUR_DIR)dist-doc/ && $(TAR_C) -v -f ../dist-doc.tar libopenmpt
 
 .PHONY: dist-js
 dist-js: bin/$(FLAVOUR_DIR)dist-js.tar
@@ -1717,7 +2005,7 @@ bin/$(FLAVOUR_DIR)dist-js.tar: bin/$(FLAVOUR_DIR)dist-js/libopenmpt-$(DIST_LIBOP
 	cd bin/$(FLAVOUR_DIR)dist-js/ && rm -rf libopenmpt
 	cd bin/$(FLAVOUR_DIR)dist-js/ && mkdir -p libopenmpt/dev.js/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/$(FLAVOUR_DIR)dist-js/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).dev.js.tar.gz libopenmpt/dev.js/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/$(FLAVOUR_DIR)dist-js/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-js.tar libopenmpt
+	cd bin/$(FLAVOUR_DIR)dist-js/ && $(TAR_C) -v -f ../dist-js.tar libopenmpt
 
 .PHONY: dist-dos
 dist-dos: bin/$(FLAVOUR_DIR)dist-dos.tar
@@ -1727,7 +2015,7 @@ bin/$(FLAVOUR_DIR)dist-dos.tar: bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIB
 	cd bin/$(FLAVOUR_DIR)dist-dos/ && rm -rf libopenmpt
 	cd bin/$(FLAVOUR_DIR)dist-dos/ && mkdir -p libopenmpt/bin.dos/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/$(FLAVOUR_DIR)dist-dos/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.dos.zip libopenmpt/bin.dos/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/$(FLAVOUR_DIR)dist-dos/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-dos.tar libopenmpt
+	cd bin/$(FLAVOUR_DIR)dist-dos/ && $(TAR_C) -v -f ../dist-dos.tar libopenmpt
 
 .PHONY: dist-retro-win98
 dist-retro-win98: bin/$(FLAVOUR_DIR)dist-retro-win98.tar
@@ -1737,7 +2025,7 @@ bin/$(FLAVOUR_DIR)dist-retro-win98.tar: bin/$(FLAVOUR_DIR)dist-retro-win98/libop
 	cd bin/$(FLAVOUR_DIR)dist-retro-win98/ && rm -rf libopenmpt
 	cd bin/$(FLAVOUR_DIR)dist-retro-win98/ && mkdir -p libopenmpt/bin.retro.win98/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/$(FLAVOUR_DIR)dist-retro-win98/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win98.zip libopenmpt/bin.retro.win98/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/$(FLAVOUR_DIR)dist-retro-win98/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-retro-win98.tar libopenmpt
+	cd bin/$(FLAVOUR_DIR)dist-retro-win98/ && $(TAR_C) -v -f ../dist-retro-win98.tar libopenmpt
 
 .PHONY: dist-retro-win95
 dist-retro-win95: bin/$(FLAVOUR_DIR)dist-retro-win95.tar
@@ -1747,7 +2035,7 @@ bin/$(FLAVOUR_DIR)dist-retro-win95.tar: bin/$(FLAVOUR_DIR)dist-retro-win95/libop
 	cd bin/$(FLAVOUR_DIR)dist-retro-win95/ && rm -rf libopenmpt
 	cd bin/$(FLAVOUR_DIR)dist-retro-win95/ && mkdir -p libopenmpt/bin.retro.win95/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
 	cd bin/$(FLAVOUR_DIR)dist-retro-win95/ && cp libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.retro.win95.zip libopenmpt/bin.retro.win95/$(DIST_LIBOPENMPT_TARBALL_VERSION)/
-	cd bin/$(FLAVOUR_DIR)dist-retro-win95/ && tar cv --numeric-owner --owner=0 --group=0 -f ../dist-retro-win95.tar libopenmpt
+	cd bin/$(FLAVOUR_DIR)dist-retro-win95/ && $(TAR_C) -v -f ../dist-retro-win95.tar libopenmpt
 
 .PHONY: bin/$(FLAVOUR_DIR)dist.mk
 bin/$(FLAVOUR_DIR)dist.mk:
@@ -1779,7 +2067,7 @@ bin/$(FLAVOUR_DIR)dist-doc/libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc.tar: docs
 	rm -rf bin/$(FLAVOUR_DIR)dist-doc/libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc
 	mkdir -p bin/$(FLAVOUR_DIR)dist-doc/libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc
 	cp -Rv bin/$(FLAVOUR_DIR)docs/html bin/$(FLAVOUR_DIR)dist-doc/libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc/docs
-	cd bin/$(FLAVOUR_DIR)dist-doc/ && tar cv --numeric-owner --owner=0 --group=0 libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc > libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc.tar
+	cd bin/$(FLAVOUR_DIR)dist-doc/ && $(TAR_C) -v libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc > libopenmpt-$(DIST_LIBOPENMPT_VERSION).doc.tar
 
 .PHONY: bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar
 bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar: bin/$(FLAVOUR_DIR)dist.mk bin/$(FLAVOUR_DIR)svn_version_dist.h
@@ -1835,6 +2123,7 @@ bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar: b
 	svn export ./src/mpt/io_write                 bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_write
 	#svn export ./src/mpt/json                     bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/json
 	#svn export ./src/mpt/library                  bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/library
+	svn export ./src/mpt/main                     bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/main
 	svn export ./src/mpt/mutex                    bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/mutex
 	svn export ./src/mpt/out_of_memory            bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/out_of_memory
 	svn export ./src/mpt/osinfo                   bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/osinfo
@@ -1869,7 +2158,7 @@ bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar: b
 	svn export ./include/stb_vorbis               bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/include/stb_vorbis
 	cp bin/$(FLAVOUR_DIR)dist.mk                  bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/dist.mk
 	cp bin/$(FLAVOUR_DIR)svn_version_dist.h       bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/build/svn_version/svn_version.h
-	cd bin/$(FLAVOUR_DIR)dist-tar/ && tar cv --numeric-owner --owner=0 --group=0 libopenmpt-$(DIST_LIBOPENMPT_VERSION) > libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar
+	cd bin/$(FLAVOUR_DIR)dist-tar/ && $(TAR_C) -v libopenmpt-$(DIST_LIBOPENMPT_VERSION) > libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar
 
 .PHONY: bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip
 bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip: bin/$(FLAVOUR_DIR)dist.mk bin/$(FLAVOUR_DIR)svn_version_dist.h
@@ -1935,6 +2224,7 @@ bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip: bin/$
 	svn export ./src/mpt/io_write                 bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io_write                 --native-eol CRLF
 	#svn export ./src/mpt/json                     bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/json                     --native-eol CRLF
 	#svn export ./src/mpt/library                  bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/library                  --native-eol CRLF
+	svn export ./src/mpt/main                     bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/main                     --native-eol CRLF
 	svn export ./src/mpt/mutex                    bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/mutex                    --native-eol CRLF
 	svn export ./src/mpt/out_of_memory            bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/out_of_memory            --native-eol CRLF
 	svn export ./src/mpt/osinfo                   bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/osinfo                   --native-eol CRLF
@@ -2008,7 +2298,7 @@ bin/$(FLAVOUR_DIR)dist-js/libopenmpt-$(DIST_LIBOPENMPT_VERSION).dev.js.tar:
 	cp bin/$(FLAVOUR_DIR)stage/wasm/libopenmpt.wasm     bin/$(FLAVOUR_DIR)dist-js/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/bin/$(FLAVOUR_DIR)wasm/libopenmpt.wasm
 	mkdir -p                                            bin/$(FLAVOUR_DIR)dist-js/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/bin/$(FLAVOUR_DIR)js
 	cp bin/$(FLAVOUR_DIR)stage/js/libopenmpt.js         bin/$(FLAVOUR_DIR)dist-js/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/bin/$(FLAVOUR_DIR)js/libopenmpt.js
-	cd bin/$(FLAVOUR_DIR)dist-js/ && tar cv --numeric-owner --owner=0 --group=0 libopenmpt-$(DIST_LIBOPENMPT_VERSION) > libopenmpt-$(DIST_LIBOPENMPT_VERSION).dev.js.tar
+	cd bin/$(FLAVOUR_DIR)dist-js/ && $(TAR_C) -v libopenmpt-$(DIST_LIBOPENMPT_VERSION) > libopenmpt-$(DIST_LIBOPENMPT_VERSION).dev.js.tar
 
 .PHONY: bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.dos.zip
 bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION).bin.dos.zip:
@@ -2031,6 +2321,11 @@ else
 	svn export ./include/miniz/miniz.c                  bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/LICENSES/MINIZ.TXT    --native-eol CRLF
 	svn export ./include/stb_vorbis/stb_vorbis.c        bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/LICENSES/STBVORB.TXT  --native-eol CRLF
 endif
+	mkdir -p                                            bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/LICENSES/DJGPP
+	cp $(shell dirname $(shell which i386-pc-msdosdjgpp-gcc))/../license/copying     bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/LICENSES/DJGPP/COPYING
+	cp $(shell dirname $(shell which i386-pc-msdosdjgpp-gcc))/../license/copying.dj  bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/LICENSES/DJGPP/COPYING.DJ
+	cp $(shell dirname $(shell which i386-pc-msdosdjgpp-gcc))/../license/copying.lib bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/LICENSES/DJGPP/COPYING.LIB
+	cp $(shell dirname $(shell which i386-pc-msdosdjgpp-gcc))/../license/source.txt  bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/LICENSES/DJGPP/SOURCE.TXT
 	mkdir -p                                            bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/SRC
 	cp build/externals/csdpmi7s.zip                     bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/SRC/CSDPMI7S.ZIP
 	mkdir -p                                            bin/$(FLAVOUR_DIR)dist-dos/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/BIN
@@ -2309,12 +2604,12 @@ clean-dist:
 
 .PHONY: distversion
 distversion:
-	$(SILENT)echo "$(DIST_LIBOPENMPT_VERSION)"
+	$(SILENT)echo "$(DIST_LIBOPENMPT_VERSION)" > bin/distversion
 
 .PHONY: distversion-pure
 distversion-pure:
-	$(SILENT)echo "$(DIST_LIBOPENMPT_VERSION_PURE)"
+	$(SILENT)echo "$(DIST_LIBOPENMPT_VERSION_PURE)" > bin/distversion-pure
 
 .PHONY: distversion-tarball
 distversion-tarball:
-	$(SILENT)echo "$(DIST_LIBOPENMPT_TARBALL_VERSION)"
+	$(SILENT)echo "$(DIST_LIBOPENMPT_TARBALL_VERSION)" > bin/distversion-tarball

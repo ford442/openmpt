@@ -11,6 +11,7 @@
 #pragma once
 
 #include "openmpt/all/BuildSettings.hpp"
+#include "AccessibleControls.h"
 #include "ColorPickerButton.h"
 #include "TrackerSettings.h"
 
@@ -22,10 +23,11 @@ class COptionsColors : public CPropertyPage
 {
 protected:
 	std::array<COLORREF, MAX_MODCOLORS> CustomColors;
-	CComboBox m_ComboItem, m_ComboFont, m_ComboPreset;
+	CComboBox m_ComboDPIAwareness, m_ComboItem, m_ComboFont, m_ComboPreset;
 	ColorPickerButton m_BtnColor[3];
 	CButton m_BtnPreview;
-	CSpinButtonCtrl m_ColorSpin;
+	CSpinButtonCtrl m_ColorSpin, m_spinRowsPerBeat, m_spinRowsPerMeasure;
+	AccessibleEdit m_rpbEdit, m_rpmEdit;
 	CStatic m_TxtColor[3];
 	MODPLUGDIB *m_pPreviewDib = nullptr;
 	FontSetting patternFont, commentFont;
@@ -50,6 +52,7 @@ protected:
 	afx_msg void OnUpdateDialog();
 	afx_msg void OnDrawItem(int nIdCtl, LPDRAWITEMSTRUCT lpdis);
 	afx_msg void OnColorSelChanged();
+	afx_msg void OnHighlightsChanged();
 	afx_msg void OnSettingsChanged();
 	afx_msg void OnSelectColor1() { SelectColor(0); }
 	afx_msg void OnSelectColor2() { SelectColor(1); }

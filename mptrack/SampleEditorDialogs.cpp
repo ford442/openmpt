@@ -11,8 +11,8 @@
 
 #include "stdafx.h"
 #include "SampleEditorDialogs.h"
+#include "HighDPISupport.h"
 #include "Mptrack.h"
-#include "MPTrackUtil.h"
 #include "Reporting.h"
 #include "resource.h"
 #include "../common/misc_util.h"
@@ -87,21 +87,45 @@ BOOL CAmpDlg::OnInitDialog()
 		{ _T("Quarter Sine"), Fade::kQuarterSine },
 		{ _T("Half Sine"),    Fade::kHalfSine },
 	};
-	// Create icons for fade laws
-	const int cx = Util::ScalePixels(16, m_hWnd);
-	const int cy = Util::ScalePixels(16, m_hWnd);
-	const int imgWidth = cx * static_cast<int>(std::size(fadeLaws));
-	m_list.Create(cx, cy, ILC_COLOR32 | ILC_MASK, 0, 1);
-	std::vector<COLORREF> bits(imgWidth * cy, RGB(255, 0, 255));
-	const COLORREF col = GetSysColor(COLOR_WINDOWTEXT);
-	for(int i = 0, baseX = 0; i < static_cast<int>(std::size(fadeLaws)); i++, baseX += cx)
+
+	// Add fade laws to list
+	COMBOBOXEXITEM cbi;
+	MemsetZero(cbi);
+	cbi.mask = CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM;
+	for(int i = 0; i < static_cast<int>(std::size(fadeLaws)); i++)
 	{
-		Fade::Func fadeFunc = Fade::GetFadeFunc(fadeLaws[i].id);
-		int oldVal = cy - 1;
-		for(int x = 0; x < cx; x++)
+		cbi.iItem = i;
+		cbi.pszText = const_cast<LPTSTR>(fadeLaws[i].name);
+		cbi.iImage = cbi.iSelectedImage = i;
+		cbi.lParam = fadeLaws[i].id;
+		m_fadeBox.InsertItem(&cbi);
+		if(fadeLaws[i].id == m_settings.fadeLaw) m_fadeBox.SetCurSel(i);
+	}
+
+	OnDPIChanged();
+
+	m_locked = false;
+
+	return TRUE;
+}
+
+
+void CAmpDlg::OnDPIChanged()
+{
+	// Create icons for fade laws
+	const int items = m_fadeBox.GetCount();
+	const int iconSize = HighDPISupport::ScalePixels(16, m_hWnd);
+	const int imgWidth = iconSize * items;
+	std::vector<COLORREF> bits(imgWidth * iconSize, RGB(255, 0, 255));
+	const COLORREF col = GetSysColor(COLOR_WINDOWTEXT);
+	for(int i = 0, baseX = 0; i < items; i++, baseX += iconSize)
+	{
+		Fade::Func fadeFunc = Fade::GetFadeFunc(static_cast<Fade::Law>(m_fadeBox.GetItemData(i)));
+		int oldVal = iconSize - 1;
+		for(int x = 0; x < iconSize; x++)
 		{
-			int val = cy - 1 - mpt::saturate_round<int>(cy * fadeFunc(static_cast<double>(x) / cx));
-			Limit(val, 0, cy - 1);
+			int val = iconSize - 1 - mpt::saturate_round<int>(iconSize * fadeFunc(static_cast<double>(x) / iconSize));
+			Limit(val, 0, iconSize - 1);
 			if(oldVal > val && x > 0)
 			{
 				int dy = (oldVal - val) / 2;
@@ -119,28 +143,12 @@ BOOL CAmpDlg::OnInitDialog()
 		}
 	}
 	CBitmap bitmap;
-	bitmap.CreateBitmap(cx * static_cast<int>(std::size(fadeLaws)), cy, 1, 32, bits.data());
+	bitmap.CreateBitmap(imgWidth, iconSize, 1, 32, bits.data());
+	m_list.DeleteImageList();
+	m_list.Create(iconSize, iconSize, ILC_COLOR32 | ILC_MASK, 0, 1);
 	m_list.Add(&bitmap, RGB(255, 0, 255));
 	bitmap.DeleteObject();
 	m_fadeBox.SetImageList(&m_list);
-
-	// Add fade laws to list
-	COMBOBOXEXITEM cbi;
-	MemsetZero(cbi);
-	cbi.mask = CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_TEXT | CBEIF_LPARAM;
-	for(int i = 0; i < static_cast<int>(std::size(fadeLaws)); i++)
-	{
-		cbi.iItem = i;
-		cbi.pszText = const_cast<LPTSTR>(fadeLaws[i].name);
-		cbi.iImage = cbi.iSelectedImage = i;
-		cbi.lParam = fadeLaws[i].id;
-		m_fadeBox.InsertItem(&cbi);
-		if(fadeLaws[i].id == m_settings.fadeLaw) m_fadeBox.SetCurSel(i);
-	}
-
-	m_locked = false;
-
-	return TRUE;
 }
 
 
@@ -159,6 +167,20 @@ void CAmpDlg::OnOK()
 	m_settings.fadeOut = (IsDlgButtonChecked(IDC_CHECK2) != BST_UNCHECKED);
 	m_settings.fadeLaw = static_cast<Fade::Law>(m_fadeBox.GetItemData(m_fadeBox.GetCurSel()));
 	DialogBase::OnOK();
+}
+
+
+void CAmpDlg::EnableFadeIn()
+{
+	if(!m_locked)
+		CheckDlgButton(IDC_CHECK1, BST_CHECKED);
+}
+
+
+void CAmpDlg::EnableFadeOut()
+{
+	if(!m_locked)
+		CheckDlgButton(IDC_CHECK2, BST_CHECKED);
 }
 
 
@@ -181,6 +203,13 @@ void CRawSampleDlg::DoDataExchange(CDataExchange *pDX)
 	//{{AFX_DATA_MAP(CRawSampleDlg)
 	DDX_Control(pDX, IDC_SPIN1, m_SpinOffset);
 	//}}AFX_DATA_MAP
+}
+
+
+CRawSampleDlg::CRawSampleDlg(FileReader &file, CWnd *parent)
+	: DialogBase{IDD_LOADRAWSAMPLE, parent}
+	, m_file{file}
+{
 }
 
 
@@ -579,9 +608,17 @@ void CSampleGridDlg::DoDataExchange(CDataExchange* pDX)
 {
 	DialogBase::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CSampleGridDlg)
-	DDX_Control(pDX, IDC_EDIT1,			m_EditSegments);
-	DDX_Control(pDX, IDC_SPIN1,			m_SpinSegments);
+	DDX_Control(pDX, IDC_EDIT1, m_EditSegments);
+	DDX_Control(pDX, IDC_SPIN1, m_SpinSegments);
 	//}}AFX_DATA_MAP
+}
+
+
+CSampleGridDlg::CSampleGridDlg(CWnd* parent, SmpLength nSegments, SmpLength nMaxSegments)
+	: DialogBase{IDD_SAMPLE_GRID_SIZE, parent}
+	, m_nSegments{nSegments}
+	, m_nMaxSegments{nMaxSegments}
+{
 }
 
 
@@ -613,10 +650,9 @@ bool CSampleXFadeDlg::m_useSustainLoop = false;
 
 BEGIN_MESSAGE_MAP(CSampleXFadeDlg, DialogBase)
 	ON_WM_HSCROLL()
-	ON_COMMAND(IDC_RADIO1,	&CSampleXFadeDlg::OnLoopTypeChanged)
-	ON_COMMAND(IDC_RADIO2,	&CSampleXFadeDlg::OnLoopTypeChanged)
-	ON_EN_CHANGE(IDC_EDIT1,	&CSampleXFadeDlg::OnFadeLengthChanged)
-	ON_NOTIFY_EX(TTN_NEEDTEXT, 0, &CSampleXFadeDlg::OnToolTipText)
+	ON_COMMAND(IDC_RADIO1,  &CSampleXFadeDlg::OnLoopTypeChanged)
+	ON_COMMAND(IDC_RADIO2,  &CSampleXFadeDlg::OnLoopTypeChanged)
+	ON_EN_CHANGE(IDC_EDIT1, &CSampleXFadeDlg::OnFadeLengthChanged)
 END_MESSAGE_MAP()
 
 
@@ -633,6 +669,12 @@ void CSampleXFadeDlg::DoDataExchange(CDataExchange* pDX)
 	//}}AFX_DATA_MAP
 }
 
+
+CSampleXFadeDlg::CSampleXFadeDlg(CWnd *parent, ModSample &sample)
+	: DialogBase{IDD_SAMPLE_XFADE, parent}
+	, m_sample{sample}
+{
+}
 
 BOOL CSampleXFadeDlg::OnInitDialog()
 {
@@ -718,35 +760,23 @@ void CSampleXFadeDlg::OnHScroll(UINT, UINT, CScrollBar *sb)
 }
 
 
-BOOL CSampleXFadeDlg::OnToolTipText(UINT, NMHDR *pNMHDR, LRESULT *pResult)
+CString CSampleXFadeDlg::GetToolTipText(UINT id, HWND) const
 {
-	TOOLTIPTEXT *pTTT = (TOOLTIPTEXT *)pNMHDR;
-	UINT_PTR nID = pNMHDR->idFrom;
-	if(pTTT->uFlags & TTF_IDISHWND)
-	{
-		// idFrom is actually the HWND of the tool
-		nID = (UINT_PTR)::GetDlgCtrlID((HWND)nID);
-	}
-	switch(nID)
+	CString s;
+	switch(id)
 	{
 	case IDC_SLIDER1:
 		{
 			uint32 percent = m_SliderLength.GetPos();
-			wsprintf(pTTT->szText, _T("%u.%03u%% of the loop (%u samples)"), percent / 1000, percent % 1000, PercentToSamples(percent));
+			s.Format(_T("%u.%03u%% of the loop (%u samples)"), percent / 1000, percent % 1000, PercentToSamples(percent));
 		}
 		break;
 	case IDC_SLIDER2:
-		_tcscpy(pTTT->szText, _T("Slide towards constant power for fixing badly looped samples."));
+		s = _T("Slide towards constant power for fixing badly looped samples.");
 		break;
-	default:
-		return FALSE;
 	}
-	*pResult = 0;
-
-	// bring the tooltip window above other popup windows
-	::SetWindowPos(pNMHDR->hwndFrom, HWND_TOP, 0, 0, 0, 0,
-		SWP_NOACTIVATE|SWP_NOSIZE|SWP_NOMOVE|SWP_NOOWNERZORDER);
-	return TRUE;
+	
+	return s;
 }
 
 
@@ -755,11 +785,23 @@ BOOL CSampleXFadeDlg::OnToolTipText(UINT, NMHDR *pNMHDR, LRESULT *pResult)
 
 CResamplingDlg::ResamplingOption CResamplingDlg::m_lastChoice = CResamplingDlg::Upsample;
 uint32 CResamplingDlg::m_lastFrequency = 0;
-bool CResamplingDlg::m_updatePatterns = false;
+bool CResamplingDlg::m_updatePatternCommands = false;
+bool CResamplingDlg::m_updatePatternNotes = false;
 
 BEGIN_MESSAGE_MAP(CResamplingDlg, DialogBase)
 	ON_EN_SETFOCUS(IDC_EDIT1, &CResamplingDlg::OnFocusEdit)
 END_MESSAGE_MAP()
+
+
+CResamplingDlg::CResamplingDlg(CWnd *parent, uint32 frequency, ResamplingMode srcMode, bool resampleAll, bool allowAdjustNotes)
+	: DialogBase{IDD_RESAMPLE, parent}
+	, m_srcMode{srcMode}
+	, m_frequency{frequency}
+	, m_resampleAll{resampleAll}
+	, m_allowAdjustNotes{allowAdjustNotes}
+{
+}
+
 
 BOOL CResamplingDlg::OnInitDialog()
 {
@@ -803,7 +845,9 @@ BOOL CResamplingDlg::OnInitDialog()
 	}
 	cbnResampling->SetRedraw(TRUE);
 
-	CheckDlgButton(IDC_CHECK1, m_updatePatterns ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(IDC_CHECK1, m_updatePatternCommands ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(IDC_CHECK2, (m_updatePatternNotes && m_allowAdjustNotes) ? BST_CHECKED : BST_UNCHECKED);
+	GetDlgItem(IDC_CHECK2)->EnableWindow(m_allowAdjustNotes ? TRUE : FALSE);
 
 	return TRUE;
 }
@@ -838,9 +882,16 @@ void CResamplingDlg::OnOK()
 	CComboBox *cbnResampling = static_cast<CComboBox *>(GetDlgItem(IDC_COMBO_FILTER));
 	m_srcMode = static_cast<ResamplingMode>(cbnResampling->GetItemData(cbnResampling->GetCurSel()));
 
-	m_updatePatterns = IsDlgButtonChecked(IDC_CHECK1) != BST_UNCHECKED;
+	m_updatePatternCommands = IsDlgButtonChecked(IDC_CHECK1) != BST_UNCHECKED;
+	m_updatePatternNotes = IsDlgButtonChecked(IDC_CHECK2) != BST_UNCHECKED;
 
 	DialogBase::OnOK();
+}
+
+
+void CResamplingDlg::OnFocusEdit()
+{
+	CheckRadioButton(IDC_RADIO1, IDC_RADIO3, IDC_RADIO3);
 }
 
 

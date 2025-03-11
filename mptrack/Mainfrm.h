@@ -11,7 +11,6 @@
 #pragma once
 
 #include "openmpt/all/BuildSettings.hpp"
-#include "AutoSaver.h"
 #include "CImageListEx.h"
 #include "Mainbar.h"
 #include "Notification.h"
@@ -29,12 +28,16 @@
 
 OPENMPT_NAMESPACE_BEGIN
 
+class CAutoSaver;
 class CDLSBank;
 class CInputHandler;
 class CModDoc;
+class QuickStartDlg;
 struct UpdateCheckResult;
 struct UpdateHint;
 struct MODPLUGDIB;
+enum class MidiSetup: int32;
+enum class MainToolBarItem : uint8;
 enum SoundDeviceStopMode : int;
 namespace SoundDevice {
 class Base;
@@ -147,8 +150,9 @@ public:
 	static HHOOK g_focusHook;
 
 	// GDI
+	CFont m_hCommentsFont;
+	static CFont m_hGUIFont;
 	static HICON m_hIcon;
-	static HFONT m_hGUIFont, m_hFixedFont;
 	static HPEN penDarkGray, penHalfDarkGray, penGray99;
 	static HCURSOR curDragging, curNoDrop, curArrow, curNoDrop2, curVSplit;
 	static MODPLUGDIB *bmpNotes;
@@ -186,6 +190,7 @@ protected:
 	samplecount_t m_dwTimeSec = 0;
 	UINT_PTR m_nTimer = 0;
 	UINT m_nAvgMixChn = 0, m_nMixChn = 0;
+	uint32 m_currentSpeed = 0;
 	// Misc
 	class COptionsSoundcard *m_SoundCardOptionsDialog = nullptr;
 #if defined(MPT_ENABLE_UPDATE)
@@ -193,25 +198,27 @@ protected:
 	std::unique_ptr<UpdateCheckResult> m_updateCheckResult;
 	bool m_cancelUpdateCheck = false;
 #endif // MPT_ENABLE_UPDATE
-	DWORD helpCookie = 0;
+	DWORD m_helpCookie = 0;
 	bool m_bOptionsLocked = false;
 
 	// Notification Buffer
 	mpt::mutex m_NotificationBufferMutex; // to avoid deadlocks, this mutex should only be taken as a innermost lock, i.e. do not block on anything while holding this mutex
-	Util::fixed_size_queue<Notification,MAX_UPDATE_HISTORY> m_NotifyBuffer;
+	Util::fixed_size_queue<Notification, MAX_UPDATE_HISTORY> m_NotifyBuffer;
 
 	// Instrument preview in tree view
 	CSoundFile m_WaveFile;
+	ModSample m_metronomeMeasure{}, m_metronomeBeat{};
 
 	TCHAR m_szUserText[512], m_szInfoText[512], m_szXInfoText[512];
 
-	CAutoSaver m_AutoSaver;
+	mpt::heap_value<CAutoSaver> m_AutoSaver;
+	mpt::heap_value<CInputHandler> m_InputHandler;
 
 public:
 	bool m_bModTreeHasFocus = false;
 
 public:
-	CMainFrame(/*CString regKeyExtension*/);
+	CMainFrame();
 	void Initialize();
 
 
@@ -250,8 +257,11 @@ public:
 	void midiCloseDevice();
 	void SetMidiRecordWnd(HWND hwnd) { m_hWndMidi = hwnd; }
 	HWND GetMidiRecordWnd() const { return m_hWndMidi; }
+	void LoadMetronomeSamples();
+	void UpdateMetronomeSamples();
+	void UpdateMetronomeVolume();
 
-	static int ApplyVolumeRelatedSettings(const DWORD &dwParam1, const BYTE midivolume);
+	static int ApplyVolumeRelatedSettings(const DWORD &dwParam1, const uint8 midivolume);
 
 // static functions
 public:
@@ -259,14 +269,12 @@ public:
 	static void UpdateColors();
 	static HICON GetModIcon() { return m_hIcon; }
 	static HFONT GetGUIFont() { return m_hGUIFont; }
-	static HFONT &GetCommentsFont() { return m_hFixedFont; }
-	static void UpdateAllViews(UpdateHint hint, CObject *pHint=NULL);
-	static LRESULT CALLBACK KeyboardProc(int code, WPARAM wParam, LPARAM lParam);
 	static LRESULT CALLBACK FocusChangeProc(int code, WPARAM wParam, LPARAM lParam);
-	static CInputHandler *m_InputHandler;
 
 	// Misc functions
 public:
+	CFont &GetCommentsFont() { return m_hCommentsFont; }
+
 	void SetUserText(LPCTSTR lpszText);
 	void SetInfoText(LPCTSTR lpszText);
 	void SetXInfoText(LPCTSTR lpszText);
@@ -279,8 +287,8 @@ public:
 	void OnDocumentClosed(CModDoc *pModDoc);
 	void UpdateTree(CModDoc *pModDoc, UpdateHint hint, CObject *pHint = nullptr);
 	void RefreshDlsBanks();
-	static CInputHandler* GetInputHandler() { return m_InputHandler; }
-	void SetElapsedTime(double t) { m_dwTimeSec = mpt::saturate_cast<samplecount_t>(t * 10.0); }
+	static CInputHandler *GetInputHandler();
+	void SetElapsedTime(double t) { m_dwTimeSec = mpt::saturate_trunc<samplecount_t>(t * 10.0); }
 
 #if defined(MPT_ENABLE_UPDATE)
 	bool ShowUpdateIndicator(const UpdateCheckResult &result, const CString &releaseVersion, const CString &infoURL, bool showHighlight);
@@ -292,7 +300,7 @@ public:
 
 	void CreateExampleModulesMenu();
 	void CreateTemplateModulesMenu();
-	CMenu *GetFileMenu() const;
+	static std::pair<CMenu *, int> FindMenuItemByCommand(CMenu &menu, UINT commandID);
 
 	// Creates submenu whose items are filenames of files in both
 	// AppDirectory\folderName\ (usually C:\Program Files\OpenMPT\folderName\)
@@ -302,7 +310,7 @@ public:
 	// [out] paths: Receives the full paths of the files added to the menu.
 	// [in] folderName: Name of the folder
 	// [in] idRangeBegin: First ID for the menu item.
-	static HMENU CreateFileMenu(const size_t maxCount, std::vector<mpt::PathString>& paths, const mpt::PathString &folderName, const uint16 idRangeBegin);
+	static HMENU CreateFileMenu(const size_t maxCount, std::vector<mpt::PathString> &paths, const mpt::PathString &folderName, const uint16 idRangeBegin);
 
 // Player functions
 public:
@@ -313,7 +321,7 @@ public:
 	void StopPlayback();
 	bool RestartPlayback();
 	bool PausePlayback();
-	static bool IsValidSoundFile(CSoundFile &sndFile) { return sndFile.GetType() ? true : false; }
+	static bool IsValidSoundFile(CSoundFile &sndFile) { return sndFile.GetType() != MOD_TYPE_NONE; }
 	static bool IsValidSoundFile(CSoundFile *pSndFile) { return pSndFile && pSndFile->GetType(); }
 	void SetPlaybackSoundFile(CSoundFile *pSndFile);
 	void UnsetPlaybackSoundFile();
@@ -345,12 +353,12 @@ public:
 
 	void IdleHandlerSounddevice();
 
-	BOOL ResetSoundCard();
-	BOOL SetupSoundCard(SoundDevice::Settings deviceSettings, SoundDevice::Identifier deviceIdentifier, SoundDeviceStopMode stoppedMode, bool forceReset = false);
-	BOOL SetupMiscOptions();
-	BOOL SetupPlayer();
+	void ResetSoundCard();
+	void SetupSoundCard(SoundDevice::Settings deviceSettings, SoundDevice::Identifier deviceIdentifier, SoundDeviceStopMode stoppedMode, bool forceReset = false);
+	void SetupMiscOptions();
+	void SetupPlayer();
 
-	void SetupMidi(DWORD d, UINT n);
+	void SetupMidi(FlagSet<MidiSetup> d, UINT n);
 	HWND GetFollowSong() const;
 	HWND GetFollowSong(const CModDoc *pDoc) const { return (pDoc == GetModPlaying()) ? GetFollowSong() : nullptr; }
 	void ResetNotificationBuffer();
@@ -358,11 +366,13 @@ public:
 	// Notify accessbility software that it should read out updated UI elements
 	void NotifyAccessibilityUpdate(CWnd &source);
 
+	void UpdateDocumentCount();
+
 // Overrides
 protected:
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CMainFrame)
-	BOOL PreCreateWindow(CREATESTRUCT& cs) override;
+	BOOL PreCreateWindow(CREATESTRUCT &cs) override;
 	BOOL PreTranslateMessage(MSG *pMsg) override;
 	BOOL DestroyWindow() override;
 	void OnUpdateFrameTitle(BOOL bAddToTitle) override;
@@ -371,12 +381,19 @@ protected:
 	/// Opens either template or example menu item.
 	void OpenMenuItemFile(const UINT nId, const bool isTemplateFile);
 
+	void ShowToolbarMenu(CPoint screenPt);
+	void AddToolBarMenuEntries(CMenu &menu) const;
+
+	void RecreateImageLists();
+	void SetupStatusBarSizes();
+
 public:
 	void UpdateMRUList();
 
 // Implementation
 public:
 	~CMainFrame() override;
+	void RecalcLayout(BOOL notify = TRUE) override;
 #ifdef _DEBUG
 	void AssertValid() const override;
 	void Dump(CDumpContext& dc) const override;
@@ -396,6 +413,7 @@ protected:
 	afx_msg void OnRButtonDown(UINT, CPoint);
 	afx_msg void OnClose();
 	afx_msg void OnTimer(UINT_PTR);
+	afx_msg LRESULT OnDPIChanged(WPARAM, LPARAM);
 
 	afx_msg void OnPluginManager();
 	afx_msg void OnClipboardManager();
@@ -438,6 +456,16 @@ protected:
 	afx_msg void OnDropFiles(HDROP hDropInfo);
 	afx_msg BOOL OnQueryEndSession();
 	afx_msg void OnActivateApp(BOOL active, DWORD threadID);
+	afx_msg void OnActivate(UINT nState, CWnd *pWndOther, BOOL bMinimized);
+
+	afx_msg void OnToggleMainBarShowOctave();
+	afx_msg void OnToggleMainBarShowTempo();
+	afx_msg void OnToggleMainBarShowSpeed();
+	afx_msg void OnToggleMainBarShowRowsPerBeat();
+	afx_msg void OnToggleMainBarShowGlobalVolume();
+	afx_msg void OnToggleMainBarShowVUMeter();
+	afx_msg void OnToggleMainBarItem(MainToolBarItem item, UINT menuID);
+	afx_msg void OnToggleTreeViewOnLeft();
 
 	afx_msg void OnCreateMixerDump();
 	afx_msg void OnVerifyMixerDump();
@@ -458,6 +486,8 @@ private:
 	std::vector<mpt::PathString> m_ExampleModulePaths;
 	/// Array of paths of template modules that are available from file menu.
 	std::vector<mpt::PathString> m_TemplateModulePaths;
+
+	std::unique_ptr<QuickStartDlg> m_quickStartDlg;
 };
 
 

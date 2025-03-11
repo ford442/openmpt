@@ -20,6 +20,42 @@ case $UNAME_S in
  OpenBSD)
   TAR_FLAVOUR=bsd
   MAKE=gmake
+  UNAME_R="$(uname -r)"
+  case $UNAME_R in
+   1.*)
+    TAR_FLAVOUR=oldbsd
+    ;;
+   2.*)
+    TAR_FLAVOUR=oldbsd
+    ;;
+   3.*)
+    TAR_FLAVOUR=oldbsd
+    ;;
+   4.*)
+    TAR_FLAVOUR=oldbsd
+    ;;
+   5.*)
+    TAR_FLAVOUR=oldbsd
+    ;;
+   6.*)
+    TAR_FLAVOUR=oldbsd
+    ;;
+   7.1)
+    TAR_FLAVOUR=oldbsd
+    ;;
+   7.2)
+    TAR_FLAVOUR=oldbsd
+    ;;
+   7.3)
+    TAR_FLAVOUR=oldbsd
+    ;;
+   7.4)
+    TAR_FLAVOUR=oldbsd
+    ;;
+   7.5)
+    TAR_FLAVOUR=oldbsd
+    ;;
+  esac
   ;;
  *BSD*)
   TAR_FLAVOUR=libarchive
@@ -89,6 +125,7 @@ svn export ./src/mpt/io_read                          bin/dist-autotools/src/mpt
 svn export ./src/mpt/io_write                         bin/dist-autotools/src/mpt/io_write
 #svn export ./src/mpt/json                             bin/dist-autotools/src/mpt/json
 #svn export ./src/mpt/library                          bin/dist-autotools/src/mpt/library
+svn export ./src/mpt/main                             bin/dist-autotools/src/mpt/main
 svn export ./src/mpt/mutex                            bin/dist-autotools/src/mpt/mutex
 svn export ./src/mpt/out_of_memory                    bin/dist-autotools/src/mpt/out_of_memory
 svn export ./src/mpt/osinfo                           bin/dist-autotools/src/mpt/osinfo
@@ -164,6 +201,7 @@ cp -r ./src/mpt/io_read                               bin/dist-autotools/src/mpt
 cp -r ./src/mpt/io_write                              bin/dist-autotools/src/mpt/io_write
 #cp -r ./src/mpt/json                                  bin/dist-autotools/src/mpt/json
 #cp -r ./src/mpt/library                               bin/dist-autotools/src/mpt/library
+cp -r ./src/mpt/main                                  bin/dist-autotools/src/mpt/main
 cp -r ./src/mpt/mutex                                 bin/dist-autotools/src/mpt/mutex
 cp -r ./src/mpt/out_of_memory                         bin/dist-autotools/src/mpt/out_of_memory
 cp -r ./src/mpt/osinfo                                bin/dist-autotools/src/mpt/osinfo
@@ -283,7 +321,8 @@ $MAKE check
 
 echo "Building dist-autotools.tar ..."
 cd "$OLDDIR"
-MPT_LIBOPENMPT_VERSION=$($MAKE distversion-tarball)
+$MAKE QUIET=1 distversion-tarball
+MPT_LIBOPENMPT_VERSION=$(cat bin/distversion-tarball)
 cd bin/dist-autotools
 rm -rf libopenmpt
 mkdir -p libopenmpt/src.autotools/$MPT_LIBOPENMPT_VERSION/
@@ -291,16 +330,19 @@ cp *.tar.gz libopenmpt/src.autotools/$MPT_LIBOPENMPT_VERSION/
 
 case $TAR_FLAVOUR in
  mac)
-  tar -cv -f ../dist-autotools.tar libopenmpt
+  tar -cv --format pax -f ../dist-autotools.tar libopenmpt
   ;;
- bsd)
+ oldbsd)
   tar -cv -N -f ../dist-autotools.tar libopenmpt
   ;;
+ bsd)
+  tar -cv -F pax -N -f ../dist-autotools.tar libopenmpt
+  ;;
  libarchive)
-  tar -cv --numeric-owner --uname "" --gname "" --uid 0 --gid 0 -f ../dist-autotools.tar libopenmpt
+  tar -cv --format pax --numeric-owner --uname "" --gname "" --uid 0 --gid 0 -f ../dist-autotools.tar libopenmpt
   ;;
  gnu)
-  tar -cv --numeric-owner --owner=0 --group=0 -f ../dist-autotools.tar libopenmpt
+  tar -cv --format=pax --numeric-owner --owner=0 --group=0 -f ../dist-autotools.tar libopenmpt
   ;;
  *)
   tar -cv -f ../dist-autotools.tar libopenmpt
