@@ -1779,7 +1779,7 @@ void CViewSample::OnMouseMove(UINT flags, CPoint point)
 					linear = sample.sample16()[offset] / 32768.0;
 				else
 					linear = sample.sample8()[offset] / 128.0;
-				pMainFrm->SetXInfoText(MPT_TFORMAT("Value At Cursor: {}% / {}")(mpt::tfmt::fix(linear * 100.0, 3), CModDoc::LinearToDecibels(std::abs(linear), 1.0)).c_str());
+				pMainFrm->SetXInfoText(MPT_TFORMAT("Value At Cursor: {}% / {}")(mpt::tfmt::fix(linear * 100.0, 3), CModDoc::LinearToDecibelsString(std::abs(linear), 1.0)).c_str());
 			} else
 			{
 				pMainFrm->SetInfoText(_T(""));
@@ -2556,21 +2556,18 @@ void CViewSample::OnEditCopy()
 		return;
 	}
 
-	bool addLoopInfo = true;
-	size_t smpSize = sample.nLength;
-	size_t smpOffset = 0;
+	SmpLength rangeStart = 0, rangeEnd = sample.nLength;
 
 	// First things first: Calculate sample size, taking partial selections into account.
 	LimitMax(m_dwEndSel, sample.nLength);
 	if(m_dwEndSel > m_dwBeginSel)
 	{
-		smpSize = m_dwEndSel - m_dwBeginSel;
-		smpOffset = m_dwBeginSel;
-		addLoopInfo = false;
+		rangeStart = m_dwBeginSel;
+		rangeEnd = m_dwEndSel;
 	}
 
-	smpSize *= sample.GetBytesPerSample();
-	smpOffset *= sample.GetBytesPerSample();
+	size_t smpSize = (rangeEnd - rangeStart) * sample.GetBytesPerSample();
+	size_t smpOffset = rangeStart * sample.GetBytesPerSample();
 
 	// Ok, now calculate size of the resulting WAV file.
 	size_t memSize = sizeof(RIFFHeader)									// RIFF Header
@@ -2582,15 +2579,12 @@ void CViewSample::OnEditCopy()
 	static_assert((MAX_SAMPLENAME % 2u) == 0);
 	static_assert((MAX_SAMPLEFILENAME % 2u) == 0);
 
-	if(addLoopInfo)
-	{
-		// We want to store some loop metadata as well.
-		memSize += sizeof(RIFFChunk) + sizeof(WAVSampleInfoChunk) + 2 * sizeof(WAVSampleLoop);
-		// ...and cue points, too.
-		memSize += sizeof(RIFFChunk) + sizeof(uint32) + std::size(sample.cues) * sizeof(WAVCuePoint);
-	}
+	// We want to store some loop metadata as well.
+	memSize += sizeof(RIFFChunk) + sizeof(WAVSampleInfoChunk) + 2 * sizeof(WAVSampleLoop);
+	// ...and cue points, too.
+	memSize += sizeof(RIFFChunk) + sizeof(uint32) + std::size(sample.cues) * sizeof(WAVCuePoint);
 
-	ASSERT((memSize % 2u) == 0);
+	MPT_ASSERT((memSize % 2u) == 0);
 
 	BeginWaitCursor();
 	Clipboard clipboard(CF_WAVE, memSize);
@@ -2618,11 +2612,8 @@ void CViewSample::OnEditCopy()
 		}
 		ff.SeekRelative(smpSize);
 
-		if(addLoopInfo)
-		{
-			file.WriteLoopInformation(sample);
-			file.WriteCueInformation(sample);
-		}
+		file.WriteLoopInformation(sample, rangeStart, rangeEnd);
+		file.WriteCueInformation(sample, rangeStart, rangeEnd);
 		file.WriteExtraInformation(sample, sndFile.GetType(), sndFile.GetSampleName(m_nSample));
 
 		mpt::IO::Offset totalSize = file.Finalize();

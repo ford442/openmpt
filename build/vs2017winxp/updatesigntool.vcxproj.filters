@@ -225,9 +225,6 @@
     <ClInclude Include="..\..\common\ComponentManager.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\Dither.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\common\FileReader.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -436,6 +433,9 @@
       <Filter>include\nlohmann-json\include\nlohmann\thirdparty\hedley</Filter>
     </ClInclude>
     <ClInclude Include="..\..\misc\WriteMemoryDump.h">
+      <Filter>misc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\misc\mptClock.h">
       <Filter>misc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\misc\mptColor.h">
@@ -1039,6 +1039,9 @@
     </ClCompile>
     <ClCompile Include="..\..\installer\updatesigntool\updatesigntool.cpp">
       <Filter>installer\updatesigntool</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\misc\mptClock.cpp">
+      <Filter>misc</Filter>
     </ClCompile>
     <ClCompile Include="..\..\misc\mptColor.cpp">
       <Filter>misc</Filter>

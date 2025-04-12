@@ -31,7 +31,7 @@
 #pragma warning(pop)
 #endif // MPT_COMPILER_MSVC
 
-#if defined(MPT_ENABLE_ARCH_INTRINSICS_SSE2)
+#if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
 #if MPT_COMPILER_MSVC
 #include <intrin.h>
 #endif
@@ -43,7 +43,7 @@ OPENMPT_NAMESPACE_BEGIN
 namespace SampleEdit
 {
 
-#if defined(MPT_ENABLE_ARCH_INTRINSICS_SSE2)
+#if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
 
 // SSE2 implementation for min/max finder, packs 8*int16 in a 128-bit XMM register.
 // scanlen = How many samples to process on this channel
@@ -187,7 +187,7 @@ std::pair<int, int> FindMinMax(const int8 *p, SmpLength numSamples, int numChann
 {
 	int minVal = 127;
 	int maxVal = -128;
-#if defined(MPT_ENABLE_ARCH_INTRINSICS_SSE2)
+#if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
 	if(CPU::HasFeatureSet(CPU::feature::sse2) && CPU::HasModesEnabled(CPU::mode::xmm128sse) && numSamples >= 16)
 	{
 		sse2_findminmax8(p, numSamples, numChannels, minVal, maxVal);
@@ -211,7 +211,7 @@ std::pair<int, int> FindMinMax(const int16 *p, SmpLength numSamples, int numChan
 {
 	int minVal = 32767;
 	int maxVal = -32768;
-#if defined(MPT_ENABLE_ARCH_INTRINSICS_SSE2)
+#if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
 	if(CPU::HasFeatureSet(CPU::feature::sse2) && CPU::HasModesEnabled(CPU::mode::xmm128sse) && numSamples >= 8)
 	{
 		sse2_findminmax16(p, numSamples, numChannels, minVal, maxVal);
@@ -1019,15 +1019,19 @@ SmpLength Resample(ModSample &smp, SmpLength start, SmpLength end, uint32 newRat
 	{
 		sndFile.Patterns.ForEachModCommand([&](ModCommand &m)
 		{
-			if(m.command != CMD_OFFSET && m.command != CMD_REVERSEOFFSET && m.command != CMD_OFFSETPERCENTAGE)
+			if(m.command != CMD_OFFSET && m.command != CMD_REVERSEOFFSET)
+				return;
+			// Percentage offset is unaffected
+			if(m.volcmd == VOLCMD_OFFSET && m.vol == 0)
+				return;
+			// Recall last parameter
+			if(m.param == 0)
 				return;
 			if(sndFile.GetSampleIndex(m.note, m.instr) != sampleIndex)
 				return;
 			SmpLength point = m.param * 256u;
 
-			if(m.command == CMD_OFFSETPERCENTAGE || (m.volcmd == VOLCMD_OFFSET && m.vol == 0))
-				point = Util::muldivr_unsigned(point, oldLength, 65536);
-			else if(m.volcmd == VOLCMD_OFFSET && m.vol <= std::size(oldCues))
+			if(m.volcmd == VOLCMD_OFFSET && m.vol <= oldCues.size())
 				point += oldCues[m.vol - 1];
 
 			if(point >= oldLength)
@@ -1038,16 +1042,19 @@ SmpLength Resample(ModSample &smp, SmpLength start, SmpLength end, uint32 newRat
 				point = start + Util::muldivr_unsigned(point - start, newRate, oldRate);
 			LimitMax(point, newTotalLength);
 
-			if(m.command == CMD_OFFSETPERCENTAGE || (m.volcmd == VOLCMD_OFFSET && m.vol == 0))
-				point = Util::muldivr_unsigned(point, 65536, newTotalLength);
-			else if(m.volcmd == VOLCMD_OFFSET && m.vol <= std::size(smp.cues))
+			if(m.volcmd == VOLCMD_OFFSET && m.vol <= smp.cues.size())
 				point -= smp.cues[m.vol - 1];
+
+			ModCommand::PARAM newParam = std::max(mpt::saturate_cast<ModCommand::PARAM>((point + 128u) / 256u), ModCommand::PARAM(1));
+			if(m.param == newParam)
+				return;
+
 			if(!patternUndoCreated)
 			{
 				patternUndoCreated = true;
 				preparePatternUndoFunc();
 			}
-			m.param = mpt::saturate_cast<ModCommand::PARAM>(point / 256u);
+			m.param = newParam;
 		});
 	}
 

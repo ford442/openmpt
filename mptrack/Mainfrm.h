@@ -16,13 +16,14 @@
 #include "Notification.h"
 #include "openmpt/soundbase/Dither.hpp"
 #include "Settings.h"
-#include "../common/Dither.h"
 #include "../soundlib/AudioCriticalSection.h"
+#include "../soundlib/AudioReadTarget.h"
 #include "../soundlib/Sndfile.h"
 #include "mpt/audio/span.hpp"
 #include "mpt/mutex/mutex.hpp"
 #include "openmpt/sounddevice/SoundDevice.hpp"
 #include "openmpt/sounddevice/SoundDeviceBuffer.hpp"
+#include "../misc/mptClock.h"
 
 #include <Msctf.h>
 

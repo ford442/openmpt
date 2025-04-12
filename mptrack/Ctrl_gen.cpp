@@ -22,7 +22,7 @@
 #include "View_gen.h"
 #include "WindowMessages.h"
 #include "../common/misc_util.h"
-#include "../common/mptTime.h"
+#include "../misc/mptClock.h"
 #include "../soundlib/mod_specifications.h"
 #include "mpt/parse/parse.hpp"
 
@@ -725,17 +725,17 @@ CString CCtrlGeneral::GetToolTipText(UINT uId, HWND) const
 				s = notAvailable;
 			break;
 		case IDC_SLIDER_SAMPLEPREAMP:
-			s = displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_nSamplePreAmp, m_sndFile.GetPlayConfig().getNormalSamplePreAmp()).GetString() : moreRecentMixModeNote;
+			s = displayDBValues ? CModDoc::LinearToDecibelsString(m_sndFile.m_nSamplePreAmp, m_sndFile.GetPlayConfig().getNormalSamplePreAmp()).GetString() : moreRecentMixModeNote;
 			break;
 		case IDC_SLIDER_VSTIVOL:
 			if(isEnabled)
-				s = displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_nVSTiVolume, m_sndFile.GetPlayConfig().getNormalVSTiVol()).GetString() : moreRecentMixModeNote;
+				s = displayDBValues ? CModDoc::LinearToDecibelsString(m_sndFile.m_nVSTiVolume, m_sndFile.GetPlayConfig().getNormalVSTiVol()).GetString() : moreRecentMixModeNote;
 			else
 				s = notAvailable;
 			break;
 		case IDC_SLIDER_GLOBALVOL:
 			if(isEnabled)
-				s = displayDBValues ? CModDoc::LinearToDecibels(m_sndFile.m_PlayState.m_nGlobalVolume, m_sndFile.GetPlayConfig().getNormalGlobalVol()).GetString() : moreRecentMixModeNote;
+				s = displayDBValues ? CModDoc::LinearToDecibelsString(m_sndFile.m_PlayState.m_nGlobalVolume, m_sndFile.GetPlayConfig().getNormalGlobalVol()).GetString() : moreRecentMixModeNote;
 			else
 				s = notAvailable;
 			break;

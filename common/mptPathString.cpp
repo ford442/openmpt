@@ -16,10 +16,6 @@
 #include <tchar.h>
 #endif
 
-#if defined(MODPLUG_TRACKER) && MPT_OS_WINDOWS
-#include <windows.h>
-#endif
-
 OPENMPT_NAMESPACE_BEGIN
 
 
@@ -30,17 +26,6 @@ namespace mpt
 
 
 #if defined(MODPLUG_TRACKER) && MPT_OS_WINDOWS
-
-
-
-#if !MPT_OS_WINDOWS_WINRT
-
-int PathCompareNoCase(const PathString & a, const PathString & b)
-{
-	return lstrcmpi(a.AsNative().c_str(), b.AsNative().c_str());
-}
-
-#endif // !MPT_OS_WINDOWS_WINRT
 
 
 
@@ -100,27 +85,6 @@ mpt::PathString RelativePathToAbsolute(const mpt::PathString &path, const mpt::P
 	}
 	return result;
 }
-
-
-
-#if !(MPT_WINRT_BEFORE(MPT_WIN_10))
-
-mpt::PathString GetAbsolutePath(const mpt::PathString &path)
-{
-	DWORD size = GetFullPathName(path.AsNative().c_str(), 0, nullptr, nullptr);
-	if(size == 0)
-	{
-		return path;
-	}
-	std::vector<TCHAR> fullPathName(size, TEXT('\0'));
-	if(GetFullPathName(path.AsNative().c_str(), size, fullPathName.data(), nullptr) == 0)
-	{
-		return path;
-	}
-	return mpt::PathString::FromNative(fullPathName.data());
-}
-
-#endif
 
 
 
