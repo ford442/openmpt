@@ -157,7 +157,7 @@ LDFLAGS  += -DNDEBUG=1 \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer \
 -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=700mb -sMALLOC='mimalloc' \
 -march=haswell -rtlib=compiler-rt -sENVIRONMENT=web -sASYNCIFY=0 -sEXIT_RUNTIME=0 \
---output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0 -sASSERTIONS=0
+--output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0 -sASSERTIONS=0 --bind -lembind
 
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
@@ -179,7 +179,7 @@ endif
 CXXFLAGS += -s DISABLE_EXCEPTION_CATCHING=0
 CFLAGS   += -s DISABLE_EXCEPTION_CATCHING=0 -fno-strict-aliasing
 LDFLAGS  += -s DISABLE_EXCEPTION_CATCHING=0 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s ERROR_ON_MISSING_LIBRARIES=1 -s EXPORT_NAME="'libopenmpt'"
-SO_LDFLAGS += -s EXPORTED_FUNCTIONS="['_malloc','_free','HEAPU8']"
+SO_LDFLAGS += # -s EXPORTED_FUNCTIONS="['_malloc','_free','HEAPU8']"
 
 NO_NO_UNDEFINED_LINKER_FLAG=1
 
