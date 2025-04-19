@@ -71,9 +71,9 @@ NO_MINIZ=1
 NO_MINIMP3=1
 NO_STBVORBIS=1
 
-CXXFLAGS += -Oz
-CFLAGS   += -Oz
-LDFLAGS  += -Oz
+CXXFLAGS += -O1
+CFLAGS   += -O1
+LDFLAGS  += -O1
 
 # Enable LTO as recommended by Emscripten
 #CXXFLAGS += -flto=thin
@@ -147,9 +147,9 @@ LDFLAGS  += -DNDEBUG=1 \
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-dbg)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
 SIMD_FLAGS = -DSIMD=AVX -msimd128 -mavx
-CPPFLAGS += -fno-inline-functions -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
-CXXFLAGS += -fno-inline-functions -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
-CFLAGS   += -fno-inline-functions -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
+CPPFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
+CXXFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
+CFLAGS   += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
 LDFLAGS  += -DNDEBUG=1 \
 -sTRUSTED_TYPES=1 -pipe -dead-strip -fno-fast-math -mtune=wasm32 -polly -polly-position=before-vectorizer \
 -ffp-contract=off -fexcess-precision=standard -stdlib=libc++ -sALLOW_UNIMPLEMENTED_SYSCALLS=1 \
@@ -179,7 +179,7 @@ endif
 CXXFLAGS += -s DISABLE_EXCEPTION_CATCHING=0
 CFLAGS   += -s DISABLE_EXCEPTION_CATCHING=0 -fno-strict-aliasing
 LDFLAGS  += -s DISABLE_EXCEPTION_CATCHING=0 -s ERROR_ON_UNDEFINED_SYMBOLS=1 -s ERROR_ON_MISSING_LIBRARIES=1 -s EXPORT_NAME="'libopenmpt'"
-SO_LDFLAGS += # -s EXPORTED_FUNCTIONS="['_malloc','_free','HEAPU8']"
+SO_LDFLAGS += -s EXPORTED_FUNCTIONS="['_malloc','_free']"
 
 NO_NO_UNDEFINED_LINKER_FLAG=1
 
