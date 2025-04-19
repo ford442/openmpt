@@ -131,14 +131,14 @@ SIMD_FLAGS = -DSIMD=AVX -msimd128 -mavx
 CPPFLAGS += -ffp-contract=off -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
 CXXFLAGS += -ffp-contract=off -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
 CFLAGS   += -ffp-contract=off -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
-LDFLAGS  += -DNDEBUG=1 -force-vector-width=1 \
+LDFLAGS  += -DNDEBUG=1 \
 -sTRUSTED_TYPES=1 -pipe -dead-strip -fno-fast-math -mtune=wasm32 -polly -polly-position=before-vectorizer \
 -ffp-contract=off -fexcess-precision=standard -stdlib=libc++ -sALLOW_UNIMPLEMENTED_SYSCALLS=1 \
 -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer \
 -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=700mb -sMALLOC='mimalloc' \
 -march=haswell -rtlib=compiler-rt -sENVIRONMENT=web -sASYNCIFY=0 -sEXIT_RUNTIME=0 \
---output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0
+--output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0 -sASSERTIONS=0
 
 
 
