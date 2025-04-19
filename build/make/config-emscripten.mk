@@ -6,7 +6,7 @@ ifeq ($(origin CXX),default)
 CXX = em++
 endif
 ifeq ($(origin LD),default)
-LD  = em++
+LD  = wasm-ld
 endif
 ifeq ($(origin AR),default)
 AR  = emar
