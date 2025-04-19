@@ -147,11 +147,10 @@ LDFLAGS  += -DNDEBUG=1 \
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-dbg)
 LINK_SIMD_FLAGS = 
 SIMD_FLAGS = 
-CPPFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
-CXXFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
-CFLAGS   += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
+CPPFLAGS +=
+CXXFLAGS += 
+CFLAGS   += 
 LDFLAGS  += -sWASM=0 -sFORCE_FILESYSTEM=1
-
 
 
 else ifeq ($(EMSCRIPTEN_TARGET),js)
