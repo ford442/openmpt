@@ -131,9 +131,9 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
 SIMD_FLAGS = -DSIMD=AVX -msimd128 -mavx
-CPPFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
-CXXFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
-CFLAGS   += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
+CPPFLAGS += -fno-inline-functions -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
+CXXFLAGS += -fno-inline-functions -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
+CFLAGS   += -fno-inline-functions -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
 LDFLAGS  += -DNDEBUG=1 \
 -sTRUSTED_TYPES=1 -pipe -dead-strip -fno-fast-math -mtune=wasm32 -polly -polly-position=before-vectorizer \
 -ffp-contract=off -fexcess-precision=standard -stdlib=libc++ -sALLOW_UNIMPLEMENTED_SYSCALLS=1 \
