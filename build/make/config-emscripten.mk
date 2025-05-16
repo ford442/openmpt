@@ -127,6 +127,21 @@ LDFLAGS  += -s WASM=1
 LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
 
+else ifeq ($(EMSCRIPTEN_TARGET),1it1-new2)
+LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128 -mavx2
+SIMD_FLAGS = -DSIMD=AVX -msse4.2 -msimd128 -mavx2
+CPPFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=standard -mtune=wasm32 -fno-math-errno
+CXXFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=standard -mtune=wasm32 -fno-math-errno
+CFLAGS   += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
+LDFLAGS  += -DNDEBUG=1 \
+-sTRUSTED_TYPES=1 -pipe -dead-strip -fno-fast-math -mtune=wasm32 -polly -polly-position=before-vectorizer \
+-ffp-contract=off -fexcess-precision=standard -stdlib=libc++ -sALLOW_UNIMPLEMENTED_SYSCALLS=1 \
+-mextended-const -mbulk-memory --typed-function-references --enable-reference-types -fno-math-errno \
+-matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer \
+-sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=512mb \
+-rtlib=compiler-rt -sENVIRONMENT=web -sASYNCIFY=0 -sMALLOC='emmalloc' \
+--output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0
+
 
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
 LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
