@@ -139,7 +139,7 @@ LDFLAGS  += -DNDEBUG=1 \
 -mextended-const -mbulk-memory --typed-function-references --enable-reference-types -fno-math-errno \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-omit-frame-pointer \
 -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=512mb \
--rtlib=compiler-rt -sENVIRONMENT=web -sASYNCIFY=0 -sMALLOC='emmalloc' \
+-rtlib=compiler-rt -sENVIRONMENT=web -sASYNCIFY=0 -sMALLOC='emmalloc' -sAUDIO_WORKLET=1 \
 --output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0
 
 
