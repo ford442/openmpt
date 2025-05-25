@@ -130,12 +130,12 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new2)
 LINK_SIMD_FLAGS = --enable-simd -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128 -mavx2 -mrelaxed-simd
 SIMD_FLAGS = -DSIMD=AVX -msse4.2 -msimd128 -mavx2 -mrelaxed-simd
-CPPFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=precise -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants
-CXXFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=precise -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants
-CFLAGS   += -fno-fast-math -ffp-contract=off -fexcess-precision=precise -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants
+CPPFLAGS += -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants
+CXXFLAGS += -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants
+CFLAGS   += -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants
 LDFLAGS  += -DNDEBUG=1 \
 -sTRUSTED_TYPES=1 -pipe -dead-strip -mtune=wasm32 -polly -polly-position=before-vectorizer \
--ffp-contract=off -fexcess-precision=precise -stdlib=libc++ -sALLOW_UNIMPLEMENTED_SYSCALLS=1 \
+-ffp-contract=off -ffp-model=strict -stdlib=libc++ -sALLOW_UNIMPLEMENTED_SYSCALLS=1 \
 -fno-fast-math -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-math-errno \
 -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=384mb \
