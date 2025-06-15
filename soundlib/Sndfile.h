@@ -406,6 +406,7 @@ public:
 
 	std::vector<SubSong> GetAllSubSongs();
 
+	CTuningCollection* m_pTuningsTuneSpecific = nullptr;
 	//Tuning-->
 public:
 	static std::unique_ptr<CTuning> CreateTuning12TET(const mpt::ustring &name);
@@ -429,8 +430,9 @@ private:
 	const NoteName *m_NoteNames;
 #endif
 
-private:
-	CTuningCollection* m_pTuningsTuneSpecific = nullptr;
+// CTuningCollection* m_pTuningsTuneSpecific = nullptr; // This line is removed here if present, otherwise this block won't match.
+// If it was already removed by the previous partial application, this search block will fail, which is fine.
+// The goal is to ensure it's not in this old position.
 
 private: //Misc data
 	const CModSpecifications *m_pModSpecs;
