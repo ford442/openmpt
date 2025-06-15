@@ -260,7 +260,7 @@ void CSoundFile::UpgradeModule()
 	{
 		for(INSTRUMENTINDEX i = 1; i <= GetNumInstruments(); i++)
 		{
-			ModInstrument *ins = Instruments[i];
+			ModInstrument *ins = Instruments[i].get();
 			if(!ins)
 				continue;
 			// Previously, volume swing values ranged from 0 to 64. They should reach from 0 to 100 instead.
@@ -422,7 +422,7 @@ void CSoundFile::UpgradeModule()
 	{
 		for(INSTRUMENTINDEX i = 1; i <= GetNumInstruments(); i++)
 		{
-			ModInstrument *ins = Instruments[i];
+			ModInstrument *ins = Instruments[i].get();
 			if(!ins)
 				continue;
 			// Even after fixing it in OpenMPT 1.18, instrument PPS was only half the depth.
