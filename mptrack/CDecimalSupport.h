@@ -136,7 +136,7 @@ public:
 #else
 		HGLOBAL hglb = ::GetClipboardData(CF_TEXT);
 #endif
-		if (hglb != NULL)
+		if (hglb != nullptr)
 		{
 			TCHAR *lptstr = static_cast<TCHAR *>(GlobalLock(hglb));
 			if (lptstr != nullptr)

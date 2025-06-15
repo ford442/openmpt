@@ -92,8 +92,8 @@ void CModDoc::AppendModule(const CSoundFile &source)
 				}
 				if(m_SndFile.ReadInstrumentFromSong(targetIns, source, i))
 				{
-					ModInstrument *ins = m_SndFile.Instruments[targetIns];
-					if(ins->nMixPlug <= MAX_MIXPLUGINS)
+					ModInstrument *ins = m_SndFile.Instruments[targetIns].get();
+					if(ins != nullptr && ins->nMixPlug <= MAX_MIXPLUGINS)
 					{
 						ins->nMixPlug = pluginMapping[ins->nMixPlug];
 					}
@@ -136,7 +136,10 @@ void CModDoc::AppendModule(const CSoundFile &source)
 					AddToLog("Too many samples!");
 					break;
 				}
-				m_SndFile.ReadSampleFromSong(targetSmp, source, source.Instruments[i]->Keyboard[NOTE_MIDDLEC - NOTE_MIN]);
+				if(source.Instruments[i]) // Check if source instrument exists
+				{
+					m_SndFile.ReadSampleFromSong(targetSmp, source, source.Instruments[i]->Keyboard[NOTE_MIDDLEC - NOTE_MIN]);
+				}
 				instrMapping[i] = targetSmp;
 			}
 		} else

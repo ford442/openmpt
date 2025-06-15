@@ -14,6 +14,7 @@
 
 #include "DialogBase.h"
 #include "../soundlib/Snd_defs.h"
+#include <vector> // Required for std::vector
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -30,17 +31,14 @@ protected:
 
 	SmpLength m_selectionStart, m_selectionEnd;
 
-	int16 *m_sampleData = nullptr;
+	std::vector<int16> m_sampleData;
 	SmpLength m_sampleLength = 0;
 
 public:
 	Autotune(ModSample &smp, MODTYPE type, SmpLength selStart, SmpLength selEnd) : m_sample(smp), m_modType(type), m_selectionStart(selStart), m_selectionEnd(selEnd)
 	{ };
 
-	~Autotune()
-	{
-		delete[] m_sampleData;
-	}
+	// ~Autotune() is no longer needed as std::vector handles its own memory.
 
 	bool CanApply() const;
 	bool Apply(double pitchReference, int targetNote);

@@ -11,6 +11,7 @@
 #include "stdafx.h"
 #include "Profiler.h"
 
+#include <memory> // For std::unique_ptr
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -49,7 +50,7 @@ struct ProfileBlock
 {
 	class Profile * profile;
 	const char * name;
-	class Statistics * stats;
+	std::unique_ptr<Statistics> stats;
 };
 
 static constexpr std::size_t MAX_PROFILES = 1024;
@@ -64,7 +65,7 @@ static void RegisterProfile(Profile *newprofile)
 	if(NextProfile < MAX_PROFILES)
 	{
 		Profiles[NextProfile].profile = newprofile;
-		Profiles[NextProfile].stats = 0;
+		// Profiles[NextProfile].stats is already nullptr by default for std::unique_ptr
 		NextProfile++;
 	}
 }
@@ -75,8 +76,7 @@ static void UnregisterProfile(Profile *oldprofile)
 	for(std::size_t i=0; i<NextProfile; i++) {
 		if(Profiles[i].profile == oldprofile) {
 			Profiles[i].profile = 0;
-			delete Profiles[i].stats;
-			Profiles[i].stats = 0;
+			Profiles[i].stats.reset(); // Replaces delete and nullptr assignment
 		}
 	}
 }
@@ -88,7 +88,7 @@ void Profiler::Update()
 	{
 		if(!Profiles[i].stats)
 		{
-			Profiles[i].stats = new Statistics(*Profiles[i].profile);
+			Profiles[i].stats = std::make_unique<Statistics>(*Profiles[i].profile);
 		} else
 		{
 			Profiles[i].stats->Update();

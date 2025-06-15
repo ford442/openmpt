@@ -499,7 +499,7 @@ void COptionsColors::SelectColor(int colorIndex)
 	CHOOSECOLOR cc;
 	cc.lStructSize = sizeof(CHOOSECOLOR);
 	cc.hwndOwner = m_hWnd;
-	cc.hInstance = NULL;
+	cc.hInstance = nullptr;
 	cc.rgbResult = color;
 	cc.lpCustColors = rgbCustomColors;
 	cc.Flags = CC_RGBINIT | CC_FULLOPEN;

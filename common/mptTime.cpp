@@ -217,7 +217,7 @@ Unix UnixFromLocal(Local timeLocal)
 		sys_local.wSecond = static_cast<uint16>(timeLocal.seconds);
 		sys_local.wMilliseconds = 0;
 		SYSTEMTIME sys_utc{};
-		if(TzSpecificLocalTimeToSystemTime(NULL, &sys_local, &sys_utc) == FALSE) // WinXP
+		if(TzSpecificLocalTimeToSystemTime(nullptr, &sys_local, &sys_utc) == FALSE) // WinXP
 		{
 			throw tz_error{};
 		}
@@ -303,7 +303,7 @@ Local UnixAsLocal(Unix tp)
 			throw tz_error{};
 		}
 		SYSTEMTIME sys_local{};
-		if(SystemTimeToTzSpecificLocalTime(NULL, &sys_utc, &sys_local) == FALSE) // Win2000
+		if(SystemTimeToTzSpecificLocalTime(nullptr, &sys_utc, &sys_local) == FALSE) // Win2000
 		{
 			throw tz_error{};
 		}

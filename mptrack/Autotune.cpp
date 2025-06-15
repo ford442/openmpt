@@ -126,12 +126,10 @@ bool Autotune::PrepareSample(SmpLength maxShift)
 	m_sampleLength = std::max(sampleLoopEnd, static_cast<SmpLength>(m_sample.GetSampleRate(m_modType))) + maxShift;
 	m_sampleLength = (m_sampleLength + 7) & ~7;
 
-	if(m_sampleData != nullptr)
+	try
 	{
-		delete[] m_sampleData;
-	}
-	m_sampleData = new int16[m_sampleLength];
-	if(m_sampleData == nullptr)
+		m_sampleData.resize(m_sampleLength);
+	} catch(const std::bad_alloc &)
 	{
 		return false;
 	}
@@ -176,7 +174,7 @@ struct AutotuneHistogram
 
 struct AutotuneContext
 {
-	const int16 *m_sampleData;
+	const int16 *m_sampleData_ptr; // Changed from m_sampleData to avoid conflict
 	double pitchReference;
 	SmpLength processLength;
 	uint32 sampleFreq;
@@ -189,8 +187,8 @@ static inline AutotuneHistogramEntry CalculateNoteHistogramSSE2(int note, Autotu
 	const SmpLength autocorrShift = NoteToShift(ctx.sampleFreq, note, ctx.pitchReference);
 	uint64 autocorrSum = 0;
 	{
-		const __m128i *normalData = reinterpret_cast<const __m128i *>(ctx.m_sampleData);
-		const __m128i *shiftedData = reinterpret_cast<const __m128i *>(ctx.m_sampleData + autocorrShift);
+		const __m128i *normalData = reinterpret_cast<const __m128i *>(ctx.m_sampleData_ptr);
+		const __m128i *shiftedData = reinterpret_cast<const __m128i *>(ctx.m_sampleData_ptr + autocorrShift);
 		for(SmpLength i = ctx.processLength / 8; i != 0; i--)
 		{
 			__m128i normal = _mm_loadu_si128(normalData++);
@@ -215,8 +213,8 @@ static inline AutotuneHistogramEntry CalculateNoteHistogram(int note, AutotuneCo
 	const SmpLength autocorrShift = NoteToShift(ctx.sampleFreq, note, ctx.pitchReference);
 	uint64 autocorrSum = 0;
 	{
-		const int16 *normalData = ctx.m_sampleData;
-		const int16 *shiftedData = ctx.m_sampleData + autocorrShift;
+		const int16 *normalData = ctx.m_sampleData_ptr;
+		const int16 *shiftedData = ctx.m_sampleData_ptr + autocorrShift;
 		// Add up squared differences of all values
 		for(SmpLength i = ctx.processLength; i != 0; i--, normalData++, shiftedData++)
 		{
@@ -310,7 +308,7 @@ bool Autotune::Apply(double pitchReference, int targetNote)
 	const SmpLength processLength = m_sampleLength - maxShift;
 
 	AutotuneContext ctx;
-	ctx.m_sampleData = m_sampleData;
+	ctx.m_sampleData_ptr = m_sampleData.data();
 	ctx.pitchReference = pitchReference;
 	ctx.processLength = processLength;
 	ctx.sampleFreq = sampleFreq;

@@ -56,7 +56,7 @@ struct EnabledBackends
 class IDevicesEnumerator
 {
 protected:
-	typedef SoundDevice::IBase *(*CreateSoundDeviceFunc)(ILogger &logger, const SoundDevice::Info &info, SoundDevice::SysInfo sysInfo);
+	typedef std::unique_ptr<SoundDevice::IBase> (*CreateSoundDeviceFunc)(ILogger &logger, const SoundDevice::Info &info, SoundDevice::SysInfo sysInfo);
 
 protected:
 	IDevicesEnumerator() = default;
@@ -94,9 +94,9 @@ public:
 	}
 
 public:
-	static SoundDevice::IBase *ConstructSoundDevice(ILogger &logger, const SoundDevice::Info &info, SoundDevice::SysInfo sysInfo)
+	static std::unique_ptr<SoundDevice::IBase> ConstructSoundDevice(ILogger &logger, const SoundDevice::Info &info, SoundDevice::SysInfo sysInfo)
 	{
-		return new TSoundDevice(logger, info, sysInfo);
+		return std::make_unique<TSoundDevice>(logger, info, sysInfo);
 	}
 };
 
@@ -157,7 +157,7 @@ public:
 	SoundDevice::Caps GetDeviceCaps(SoundDevice::Identifier identifier, SoundDevice::IBase *currentSoundDevice = nullptr);
 	SoundDevice::DynamicCaps GetDeviceDynamicCaps(SoundDevice::Identifier identifier, const std::vector<uint32> &baseSampleRates, SoundDevice::IMessageReceiver *messageReceiver = nullptr, SoundDevice::IBase *currentSoundDevice = nullptr, bool update = false);
 
-	SoundDevice::IBase *CreateSoundDevice(SoundDevice::Identifier identifier);
+	std::unique_ptr<SoundDevice::IBase> CreateSoundDevice(SoundDevice::Identifier identifier);
 };
 
 

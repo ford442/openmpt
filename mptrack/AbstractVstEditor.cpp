@@ -171,7 +171,7 @@ LRESULT CAbstractVstEditor::OnMidiMsg(WPARAM midiData, LPARAM sender)
 // Drop files from Windows
 void CAbstractVstEditor::OnDropFiles(HDROP hDropInfo)
 {
-	const UINT nFiles = ::DragQueryFileW(hDropInfo, (UINT)-1, NULL, 0);
+	const UINT nFiles = ::DragQueryFileW(hDropInfo, (UINT)-1, nullptr, 0);
 	CMainFrame::GetMainFrame()->SetForegroundWindow();
 	for(UINT f = 0; f < nFiles; f++)
 	{
@@ -927,7 +927,7 @@ INSTRUMENTINDEX CAbstractVstEditor::GetBestInstrumentCandidate() const
 	// First try current instrument:
 	const CModDoc *modDoc = m_VstPlugin.GetModDoc();
 	POSITION pos = modDoc->GetFirstViewPosition();
-	while(pos != NULL)
+	while(pos != nullptr)
 	{
 		CModControlView *pView = dynamic_cast<CModControlView *>(modDoc->GetNextView(pos));
 		if(pView != nullptr && pView->GetDocument() == modDoc)
@@ -1025,3 +1025,5 @@ void CAbstractVstEditor::RestoreWindowPos()
 
 
 OPENMPT_NAMESPACE_END
+
+[end of mptrack/AbstractVstEditor.cpp]

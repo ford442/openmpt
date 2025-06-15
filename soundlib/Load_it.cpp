@@ -2348,14 +2348,15 @@ void CSoundFile::SaveExtendedSongProperties(std::ostream &f) const
 	if((GetType() & (MOD_TYPE_IT | MOD_TYPE_MPT)) && GetNumChannels() > 64)
 	{
 		// IT header has only room for 64 channels. Save the settings that do not fit to the header here as an extension.
-		WriteModularHeader(f, MagicBE("ChnS"), (GetNumChannels() - 64) * 2);
-		for(CHANNELINDEX chn = 64; chn < GetNumChannels(); chn++)
+		const CHANNELINDEX numChannelsToSave = GetNumChannels() - 64;
+		WriteModularHeader(f, MagicBE("ChnS"), numChannelsToSave * 2u);
+		for(const auto &settings : mpt::as_span(ChnSettings).subspan(64, numChannelsToSave))
 		{
 			uint8 panvol[2];
-			panvol[0] = (uint8)(ChnSettings[chn].nPan >> 2);
-			if (ChnSettings[chn].dwFlags[CHN_SURROUND]) panvol[0] = 100;
-			if (ChnSettings[chn].dwFlags[CHN_MUTE]) panvol[0] |= 0x80;
-			panvol[1] = (uint8)ChnSettings[chn].nVolume;
+			panvol[0] = (uint8)(settings.nPan >> 2);
+			if (settings.dwFlags[CHN_SURROUND]) panvol[0] = 100;
+			if (settings.dwFlags[CHN_MUTE]) panvol[0] |= 0x80;
+			panvol[1] = (uint8)settings.nVolume;
 			mpt::IO::Write(f, panvol);
 		}
 	}

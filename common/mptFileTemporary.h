@@ -112,7 +112,7 @@ public:
 		{
 			return;
 		}
-		if(::CreateDirectory(mpt::support_long_path(dirname.AsNative()).c_str(), NULL) == 0)
+		if(::CreateDirectory(mpt::support_long_path(dirname.AsNative()).c_str(), nullptr) == 0)
 		{ // fail
 			dirname = mpt::PathString();
 		}

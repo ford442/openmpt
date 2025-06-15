@@ -26,6 +26,9 @@
 #include "../mptrack/MIDIMapping.h"
 #endif // MODPLUG_TRACKER
 
+#include <array>
+#include <memory>
+
 #include "Mixer.h"
 #include "Resampler.h"
 #ifndef NO_REVERB
@@ -430,7 +433,7 @@ private:
 #endif
 
 private:
-	CTuningCollection* m_pTuningsTuneSpecific = nullptr;
+	std::unique_ptr<CTuningCollection> m_pTuningsTuneSpecific;
 
 private: //Misc data
 	const CModSpecifications *m_pModSpecs;
@@ -523,7 +526,7 @@ public:
 protected:
 	ModSample Samples[MAX_SAMPLES];
 public:
-	ModInstrument *Instruments[MAX_INSTRUMENTS];  // Instrument Headers
+	std::array<std::unique_ptr<ModInstrument>, MAX_INSTRUMENTS> Instruments;  // Instrument Headers
 	InstrumentSynth::Events m_globalScript;
 	MIDIMacroConfig m_MidiCfg;                    // MIDI Macro config table
 #ifndef NO_PLUGINS
@@ -761,6 +764,8 @@ public:
 	bool SetTitle(const std::string &newTitle); // Return true if title was changed.
 	const char *GetSampleName(SAMPLEINDEX nSample) const;
 	const char *GetInstrumentName(INSTRUMENTINDEX nInstr) const;
+	const ModInstrument *GetInstrument(INSTRUMENTINDEX nInstr) const { if(nInstr == 0 || nInstr >= MAX_INSTRUMENTS) return nullptr; return Instruments[nInstr].get(); }
+	ModInstrument *GetInstrument(INSTRUMENTINDEX nInstr) { if(nInstr == 0 || nInstr >= MAX_INSTRUMENTS) return nullptr; return Instruments[nInstr].get(); }
 	uint32 GetMusicSpeed() const { return m_PlayState.m_nMusicSpeed; }
 	TEMPO GetMusicTempo() const { return m_PlayState.m_nMusicTempo; }
 	constexpr bool IsFirstTick() const noexcept { return (m_PlayState.m_lTotalSampleCount == 0); }
@@ -1297,7 +1302,7 @@ public:
 #ifndef NO_PLUGINS
 inline IMixPlugin* CSoundFile::GetInstrumentPlugin(INSTRUMENTINDEX instr) const noexcept
 {
-	if(instr > 0 && instr <= GetNumInstruments() && Instruments[instr] && Instruments[instr]->nMixPlug && Instruments[instr]->nMixPlug <= MAX_MIXPLUGINS)
+	if(instr > 0 && instr <= GetNumInstruments() && Instruments[instr].get() && Instruments[instr]->nMixPlug && Instruments[instr]->nMixPlug <= MAX_MIXPLUGINS)
 		return m_MixPlugins[Instruments[instr]->nMixPlug - 1].pMixPlugin;
 	else
 		return nullptr;

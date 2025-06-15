@@ -182,10 +182,9 @@ size_t SampleIO::ReadSample(ModSample &sample, FileReader &file) const
 		AMSUnpack(packedDataView.span(), mpt::as_span(sample.sampleb(), sample.GetSampleSizeInBytes()), packCharacter);
 		if(sample.uFlags[CHN_16BIT] && !mpt::endian_is_little())
 		{
-			auto p = sample.sample16();
-			for(SmpLength length = sample.nLength; length != 0; length--, p++)
+			for(auto &sample_val : mpt::as_span(sample.sample16(), sample.nLength))
 			{
-				*p = mpt::bit_cast<int16le>(*p);
+				sample_val = mpt::bit_cast<int16le>(sample_val);
 			}
 		}
 	} else if(GetEncoding() == PTM8Dto16 && GetChannelFormat() == mono && GetBitDepth() == 16)
@@ -204,37 +203,56 @@ size_t SampleIO::ReadSample(ModSample &sample, FileReader &file) const
 			const bool is16bit = GetBitDepth() == 16;
 			try
 			{
-				for(SmpLength j = 0; j < sample.nLength; j++)
+				if(!is16bit)
 				{
-					uint8 hibyte;
-					if(is16bit)
+					for(auto &val : mpt::as_span(sample.sample8(), sample.nLength))
 					{
-						lowbyte = static_cast<uint8>(chunk.ReadBits(8));
-					}
-					bool sign = chunk.ReadBits(1) != 0;
-					if(chunk.ReadBits(1))
-					{
-						hibyte = static_cast<uint8>(chunk.ReadBits(3));
-					} else
-					{
-						hibyte = 8;
-						while(!chunk.ReadBits(1))
+						uint8 hibyte;
+						bool sign = chunk.ReadBits(1) != 0;
+						if(chunk.ReadBits(1))
 						{
-							hibyte += 0x10;
+							hibyte = static_cast<uint8>(chunk.ReadBits(3));
+						} else
+						{
+							hibyte = 8;
+							while(!chunk.ReadBits(1))
+							{
+								hibyte += 0x10;
+							}
+							hibyte += static_cast<uint8>(chunk.ReadBits(4));
 						}
-						hibyte += static_cast<uint8>(chunk.ReadBits(4));
+						if(sign)
+						{
+							hibyte = ~hibyte;
+						}
+						dlt += hibyte;
+						val = dlt;
 					}
-					if(sign)
+				} else
+				{
+					for(auto &val : mpt::as_span(sample.sample16(), sample.nLength))
 					{
-						hibyte = ~hibyte;
-					}
-					dlt += hibyte;
-					if(!is16bit)
-					{
-						sample.sample8()[j] = dlt;
-					} else
-					{
-						sample.sample16()[j] = lowbyte | (dlt << 8);
+						uint8 hibyte;
+						lowbyte = static_cast<uint8>(chunk.ReadBits(8));
+						bool sign = chunk.ReadBits(1) != 0;
+						if(chunk.ReadBits(1))
+						{
+							hibyte = static_cast<uint8>(chunk.ReadBits(3));
+						} else
+						{
+							hibyte = 8;
+							while(!chunk.ReadBits(1))
+							{
+								hibyte += 0x10;
+							}
+							hibyte += static_cast<uint8>(chunk.ReadBits(4));
+						}
+						if(sign)
+						{
+							hibyte = ~hibyte;
+						}
+						dlt += hibyte;
+						val = lowbyte | (dlt << 8);
 					}
 				}
 			} catch(const BitReader::eof &)

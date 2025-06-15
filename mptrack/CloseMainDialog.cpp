@@ -33,6 +33,8 @@ void CloseMainDialog::DoDataExchange(CDataExchange* pDX)
 	//}}AFX_DATA_MAP
 }
 
+// Corrected line:
+CCloseMainDialog * CCloseMainDialog::sharedInstance_ = nullptr;
 
 CloseMainDialog::CloseMainDialog() : ResizableDialog(IDD_CLOSEDOCUMENTS) {}
 

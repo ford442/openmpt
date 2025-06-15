@@ -379,13 +379,13 @@ bool Manager::OpenDriverSettings(SoundDevice::Identifier identifier, SoundDevice
 		result = currentSoundDevice->OpenDriverSettings();
 	} else
 	{
-		SoundDevice::IBase *dummy = CreateSoundDevice(identifier);
+		std::unique_ptr<SoundDevice::IBase> dummy = CreateSoundDevice(identifier);
 		if(dummy)
 		{
 			dummy->SetMessageReceiver(messageReceiver);
 			result = dummy->OpenDriverSettings();
 		}
-		delete dummy;
+		// delete dummy; // Not needed with unique_ptr
 	}
 	return result;
 }
@@ -401,7 +401,7 @@ SoundDevice::Caps Manager::GetDeviceCaps(SoundDevice::Identifier identifier, Sou
 			m_DeviceCaps[identifier] = currentSoundDevice->GetDeviceCaps();
 		} else
 		{
-			SoundDevice::IBase *dummy = CreateSoundDevice(identifier);
+			std::unique_ptr<SoundDevice::IBase> dummy = CreateSoundDevice(identifier);
 			if(dummy)
 			{
 				m_DeviceCaps[identifier] = dummy->GetDeviceCaps();
@@ -409,7 +409,7 @@ SoundDevice::Caps Manager::GetDeviceCaps(SoundDevice::Identifier identifier, Sou
 			{
 				SetDeviceUnavailable(identifier);
 			}
-			delete dummy;
+			// delete dummy; // Not needed with unique_ptr
 		}
 	}
 	return m_DeviceCaps[identifier];
@@ -430,7 +430,7 @@ SoundDevice::DynamicCaps Manager::GetDeviceDynamicCaps(SoundDevice::Identifier i
 			}
 		} else
 		{
-			SoundDevice::IBase *dummy = CreateSoundDevice(identifier);
+			std::unique_ptr<SoundDevice::IBase> dummy = CreateSoundDevice(identifier);
 			if(dummy)
 			{
 				dummy->SetMessageReceiver(messageReceiver);
@@ -443,14 +443,14 @@ SoundDevice::DynamicCaps Manager::GetDeviceDynamicCaps(SoundDevice::Identifier i
 			{
 				SetDeviceUnavailable(identifier);
 			}
-			delete dummy;
+			// delete dummy; // Not needed with unique_ptr
 		}
 	}
 	return m_DeviceDynamicCaps[identifier];
 }
 
 
-SoundDevice::IBase *Manager::CreateSoundDevice(SoundDevice::Identifier identifier)
+std::unique_ptr<SoundDevice::IBase> Manager::CreateSoundDevice(SoundDevice::Identifier identifier)
 {
 	MPT_SOUNDDEV_TRACE_SCOPE();
 	const SoundDevice::Info info = FindDeviceInfo(identifier);
@@ -466,15 +466,14 @@ SoundDevice::IBase *Manager::CreateSoundDevice(SoundDevice::Identifier identifie
 	{
 		return nullptr;
 	}
-	SoundDevice::IBase *result = m_DeviceFactoryMethods[identifier](GetLogger(), info, GetSysInfo());
+	std::unique_ptr<SoundDevice::IBase> result = m_DeviceFactoryMethods[identifier](GetLogger(), info, GetSysInfo());
 	if(!result)
 	{
 		return nullptr;
 	}
 	if(!result->Init(m_AppInfo))
 	{
-		delete result;
-		result = nullptr;
+		result.reset(); // replaces delete result; result = nullptr;
 		return nullptr;
 	}
 	m_DeviceCaps[identifier] = result->GetDeviceCaps();  // update cached caps

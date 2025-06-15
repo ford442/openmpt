@@ -216,7 +216,7 @@ bool CRippleBitmap::Animate()
 
 	m_frame = !m_frame;
 
-	InvalidateRect(NULL, FALSE);
+	InvalidateRect(nullptr, FALSE);
 
 	return true;
 }

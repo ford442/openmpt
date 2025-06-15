@@ -138,18 +138,17 @@ CSoundFile::CSoundFile() :
 	m_nDefaultRowsPerMeasure = m_PlayState.m_nCurrentRowsPerMeasure = DEFAULT_ROWS_PER_MEASURE;
 #endif // MODPLUG_TRACKER
 
-	MemsetZero(Instruments);
+	// MemsetZero(Instruments); // Not needed for std::array of std::unique_ptr
 	Clear(m_szNames);
 
-	m_pTuningsTuneSpecific = new CTuningCollection();
+	m_pTuningsTuneSpecific = std::make_unique<CTuningCollection>();
 }
 
 
 CSoundFile::~CSoundFile()
 {
 	Destroy();
-	delete m_pTuningsTuneSpecific;
-	m_pTuningsTuneSpecific = nullptr;
+	// m_pTuningsTuneSpecific (std::unique_ptr) is automatically deleted.
 }
 
 
@@ -189,8 +188,7 @@ void CSoundFile::InitializeGlobals(MODTYPE type, CHANNELINDEX numChannels)
 	// Delete instruments in case some previously called loader already created them.
 	for(INSTRUMENTINDEX i = 1; i <= m_nInstruments; i++)
 	{
-		delete Instruments[i];
-		Instruments[i] = nullptr;
+		Instruments[i].reset();
 	}
 
 	m_ContainerType = ModContainerType::None;
@@ -657,11 +655,11 @@ bool CSoundFile::CreateInternal(FileReader file, ModLoadingFlags loadFlags)
 	}
 	// Check invalid instruments
 	INSTRUMENTINDEX maxInstr = 0;
-	for(INSTRUMENTINDEX i = 0; i <= m_nInstruments; i++)
+	for(INSTRUMENTINDEX i = 0; i <= m_nInstruments; i++) // Check even Instruments[0] which should be nullptr
 	{
-		if(Instruments[i] != nullptr)
+		if(Instruments[i]) // unique_ptr converts to bool
 		{
-			maxInstr = i;
+			maxInstr = i; // Found an instrument
 			Instruments[i]->Sanitize(GetType());
 		}
 	}
@@ -846,8 +844,7 @@ bool CSoundFile::Destroy()
 	}
 	for(auto &ins : Instruments)
 	{
-		delete ins;
-		ins = nullptr;
+		ins.reset();
 	}
 #ifndef NO_PLUGINS
 	for(auto &plug : m_MixPlugins)
@@ -1462,7 +1459,7 @@ const char *CSoundFile::GetSampleName(SAMPLEINDEX nSample) const
 
 const char *CSoundFile::GetInstrumentName(INSTRUMENTINDEX nInstr) const
 {
-	if((nInstr >= MAX_INSTRUMENTS) || (!Instruments[nInstr]))
+	if((nInstr >= MAX_INSTRUMENTS) || (!Instruments[nInstr])) // unique_ptr converts to bool
 		return "";
 
 	MPT_ASSERT(nInstr <= GetNumInstruments());
@@ -1530,7 +1527,7 @@ SAMPLEINDEX CSoundFile::DetectUnusedSamples(std::vector<bool> &sampleUsed) const
 					}
 					for(INSTRUMENTINDEX i = minInstr; i <= maxInstr; i++)
 					{
-						if(const auto *pIns = Instruments[i]; pIns != nullptr)
+						if(const auto *pIns = Instruments[i].get(); pIns != nullptr)
 						{
 							SAMPLEINDEX n = pIns->Keyboard[p->note - NOTE_MIN];
 							if(n <= GetNumSamples())
@@ -1952,7 +1949,7 @@ SAMPLEINDEX CSoundFile::GetSampleIndex(ModCommand::NOTE note, uint32 instr) cons
 	SAMPLEINDEX smp = 0;
 	if(GetNumInstruments())
 	{
-		if(ModCommand::IsNote(note) && instr <= GetNumInstruments() && Instruments[instr] != nullptr)
+		if(ModCommand::IsNote(note) && instr <= GetNumInstruments() && Instruments[instr])
 			smp = Instruments[instr]->Keyboard[note - NOTE_MIN];
 	} else
 	{
@@ -1989,13 +1986,13 @@ SAMPLEINDEX CSoundFile::GetNextFreeSample(INSTRUMENTINDEX targetInstrument, SAMP
 				// In instrument mode, check whether any instrument references this sample slot. If that is the case, we won't use it as it could lead to unwanted conflicts.
 				// If we are loading the sample *into* an instrument, we should also not consider that instrument's sample map, since it might be inconsistent at this time.
 				bool isReferenced = false;
-				for(INSTRUMENTINDEX ins = 1; ins <= GetNumInstruments(); ins++)
+				for(INSTRUMENTINDEX ins_idx = 1; ins_idx <= GetNumInstruments(); ins_idx++)
 				{
-					if(ins == targetInstrument)
+					if(ins_idx == targetInstrument)
 					{
 						continue;
 					}
-					if(IsSampleReferencedByInstrument(i, ins))
+					if(IsSampleReferencedByInstrument(i, ins_idx))
 					{
 						isReferenced = true;
 						break;
@@ -2019,7 +2016,7 @@ INSTRUMENTINDEX CSoundFile::GetNextFreeInstrument(INSTRUMENTINDEX start) const
 {
 	for(INSTRUMENTINDEX i = start; i <= GetModSpecifications().instrumentsMax; i++)
 	{
-		if(Instruments[i] == nullptr)
+		if(Instruments[i].get() == nullptr)
 		{
 			return i;
 		}
@@ -2035,7 +2032,7 @@ bool CSoundFile::IsSampleReferencedByInstrument(SAMPLEINDEX sample, INSTRUMENTIN
 	if(instr < 1 || instr > GetNumInstruments())
 		return false;
 
-	const ModInstrument *targetIns = Instruments[instr];
+	const ModInstrument *targetIns = Instruments[instr].get();
 	if(targetIns == nullptr)
 		return false;
 
@@ -2050,21 +2047,20 @@ ModInstrument *CSoundFile::AllocateInstrument(INSTRUMENTINDEX instr, SAMPLEINDEX
 		return nullptr;
 	}
 
-	ModInstrument *ins = Instruments[instr];
-	if(ins != nullptr)
+	if(Instruments[instr])
 	{
 		// Re-initialize instrument
-		*ins = ModInstrument(assignedSample);
+		*Instruments[instr] = ModInstrument(assignedSample);
 	} else
 	{
 		// Create new instrument
-		Instruments[instr] = ins = new (std::nothrow) ModInstrument(assignedSample);
+		Instruments[instr] = std::make_unique<ModInstrument>(assignedSample);
 	}
-	if(ins != nullptr)
+	if(Instruments[instr])
 	{
 		m_nInstruments = std::max(m_nInstruments, instr);
 	}
-	return ins;
+	return Instruments[instr].get();
 }
 
 
@@ -2137,7 +2133,7 @@ void CSoundFile::SetupMODPanning(bool forceSetup)
 
 void CSoundFile::PropagateXMAutoVibrato(INSTRUMENTINDEX ins, VibratoType type, uint8 sweep, uint8 depth, uint8 rate)
 {
-	if(ins > m_nInstruments || Instruments[ins] == nullptr)
+	if(ins > m_nInstruments || !Instruments[ins])
 		return;
 	const std::set<SAMPLEINDEX> referencedSamples = Instruments[ins]->GetSamples();
 

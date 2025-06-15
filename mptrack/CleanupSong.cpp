@@ -57,7 +57,7 @@ WORD const CModCleanupDlg::m_CleanupIDtoDlgID[kMaxCleanupOptions] =
 };
 
 // Options that are mutually exclusive to each other
-CModCleanupDlg::CleanupOptions const CModCleanupDlg::m_MutuallyExclusive[CModCleanupDlg::kMaxCleanupOptions] =
+CModCleanupDlg::CleanupOptions const CModCleanupDlg::m_MutuallyExclusive[CModCleanupOptions::kMaxCleanupOptions] =
 {
 	// patterns
 	kRemovePatterns,		kCleanupPatterns,
@@ -611,7 +611,7 @@ bool CModCleanupDlg::RemoveUnusedSamples()
 		// Easy: Samples that aren't used by any instruments
 		for(INSTRUMENTINDEX i = 1; i <= sndFile.GetNumInstruments(); i++)
 		{
-			if(sndFile.Instruments[i] != nullptr)
+			if(sndFile.Instruments[i]) // Check if unique_ptr is not null
 				sndFile.Instruments[i]->GetSamples(samplesUsed);
 		}
 		numRemoved = sndFile.RemoveSelectedSamples(samplesUsed);
@@ -653,7 +653,7 @@ bool CModCleanupDlg::RemoveUnusedSamples()
 
 				if(sndFile.GetNumInstruments())
 				{
-					if(m.IsNote() && sndFile.Instruments[instr])
+					if(m.IsNote() && instr > 0 && instr <= sndFile.GetNumInstruments() && sndFile.Instruments[instr])
 					{
 						auto sample = sndFile.Instruments[instr]->Keyboard[m.note - NOTE_MIN];
 						if(sample < samplesUsed.size())

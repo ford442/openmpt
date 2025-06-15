@@ -254,10 +254,10 @@ BOOL CChildFrame::ChangeViewClass(CRuntimeClass* pViewClass, CCreateContext* pCo
 	{
 		if (pMainFrm->GetMidiRecordWnd() == m_hWndView)
 		{
-			pMainFrm->SetMidiRecordWnd(NULL);
+			pMainFrm->SetMidiRecordWnd(nullptr);
 		}
 	}
-	m_hWndView = NULL;
+	m_hWndView = nullptr;
 	if (!m_wndSplitter.CreateView(1, 0, pViewClass, CSize(0, 0), pContext)) return FALSE;
 	// Get 2nd window handle
 	if ((pWnd = m_wndSplitter.GetPane(1, 0)) != NULL) m_hWndView = pWnd->m_hWnd;
