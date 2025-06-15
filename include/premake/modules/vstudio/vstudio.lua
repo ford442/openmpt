@@ -1,7 +1,7 @@
 --
 -- vstudio.lua
 -- Define the Visual Studio 200x actions.
--- Copyright (c) Jason Perkins and the Premake project
+-- Copyright (c) Jess Perkins and the Premake project
 --
 
 	local p = premake
@@ -35,7 +35,6 @@
 	{
 		win32   = "x86",
 	}
-
 
 	local function architecture(system, arch)
 		local result
@@ -279,8 +278,12 @@
 			arch = iif(isnative, "x86", "Any CPU")
 		end
 
-		if win32 and isnative and arch == "x86" then
-			arch = "Win32"
+		if cfg.system == p.WINDOWS or cfg.system == p.UWP then
+
+			if win32 and isnative and arch == "x86" then
+				arch = "Win32"
+			end
+
 		end
 
 		return arch
@@ -449,6 +452,8 @@
 		elseif project.isc(prj) or project.iscpp(prj) then
 			if prj.kind == p.SHAREDITEMS then
 				extension = ".vcxitems"
+			elseif prj.kind == p.PACKAGING then
+				extension = ".androidproj"
 			else
 				extension = iif(_ACTION > "vs2008", ".vcxproj", ".vcproj")
 			end
@@ -623,7 +628,11 @@
 		elseif project.isfsharp(prj) then
 			return "F2A71F9B-5D33-465A-A702-920D77279786"
 		elseif project.isc(prj) or project.iscpp(prj) then
-			return "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942"
+			if prj.kind == p.PACKAGING then
+				return "39E2626F-3545-4960-A6E8-258AD8476CE5"
+			else
+				return "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942"
+			end
 		end
 	end
 
@@ -649,5 +658,6 @@
 	include("vs2010_rules_targets.lua")
 	include("vs2010_rules_xml.lua")
 	include("vs2013_vcxitems.lua")
+	include("vs2015_androidproj.lua")
 
 	return p.modules.vstudio

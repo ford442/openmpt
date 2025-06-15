@@ -1,13 +1,14 @@
 --
 -- vs2005_dotnetbase.lua
 -- Generate a Visual Studio 2005+ .NET project.
--- Copyright (c) Jason Perkins and the Premake project
+-- Copyright (c) Jess Perkins and the Premake project
 --
 
 	local p = premake
 	p.vstudio.dotnetbase = {}
 
 	local vstudio = p.vstudio
+	local vs2005 = p.vstudio.vs2005
 	local dotnetbase  = p.vstudio.dotnetbase
 	local project = p.project
 	local config = p.config
@@ -56,11 +57,7 @@
 
 	function dotnetbase.projectElement(prj)
 		if dotnetbase.isNewFormatProject(prj) then
-			if prj.flags.WPF then
-				_p('<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">')
-			else				
-				_p('<Project Sdk="Microsoft.NET.Sdk">')
-			end
+			_p('<Project Sdk="%s">', dotnetbase.netcore.getsdk(prj))
 		else
 			local ver = ''
 			local action = p.action.current()
@@ -84,7 +81,14 @@
 		_p(1,'</PropertyGroup>')
 	end
 
-
+--
+-- Write the available configurations to have correct configuration mapping on vs2022 format and later.
+--
+	function dotnetbase.projectConfigurations(prj)
+		if _ACTION >= "vs2022" and #prj.configurations > 0 then
+			_p(2, '<Configurations>%s</Configurations>', table.implode(prj.configurations, "", "", ";"))
+		end
+	end
 --
 -- Write out the settings for the project configurations.
 --
@@ -232,12 +236,34 @@
 			end
 		end
 
-		local cfg = project.getfirstconfig(prj)
-		if #cfg.prebuildcommands > 0 or #cfg.postbuildcommands > 0 then
-			_p(1,'<PropertyGroup>')
-			output("Pre", cfg.prebuildcommands)
-			output("Post", cfg.postbuildcommands)
-			_p(1,'</PropertyGroup>')
+		for cfg in project.eachconfig(prj) do
+			if #cfg.prebuildcommands > 0 or #cfg.postbuildcommands > 0 then
+				_p(1,'<PropertyGroup %s>', dotnetbase.condition(cfg))
+				output("Pre", cfg.prebuildcommands)
+				output("Post", cfg.postbuildcommands)
+				_p(1,'</PropertyGroup>')
+			end
+		end
+	end
+
+--
+-- Write out the additional props.
+--
+
+	function dotnetbase.additionalProps(cfg)
+		local function recurseTableIfNeeded(tbl, tab_level)
+			for key, value in spairs(tbl) do
+				if (type(value) == "table") then
+					_p(tab_level, '<%s>', key)
+					recurseTableIfNeeded(value, tab_level + 1)
+					_p(tab_level, '</%s>', key)
+				else
+					_p(tab_level, '<%s>%s</%s>', key, vs2005.esc(value), key)
+				end
+			end
+		end
+		for i = 1, #cfg.vsprops do
+			recurseTableIfNeeded(cfg.vsprops[i], 2)
 		end
 	end
 
@@ -256,7 +282,7 @@
 			dotnetbase.allowUnsafeBlocks(cfg)
 		end
 
-		if cfg.flags.FatalCompileWarnings then
+		if p.hasFatalCompileWarnings(cfg.fatalwarnings) then
 			_p(2,'<TreatWarningsAsErrors>true</TreatWarningsAsErrors>')
 		end
 
@@ -740,6 +766,7 @@
 		end
 	end
 
+
 	function dotnetbase.targetFrameworkProfile(cfg)
 		if _ACTION == "vs2010" then
 			_p(2,'<TargetFrameworkProfile>')
@@ -751,6 +778,17 @@
 	function dotnetbase.xmlDeclaration()
 		if _ACTION > "vs2008" then
 			p.xmlUtf8()
+		end
+	end
+
+	function dotnetbase.documentationfile(cfg)
+		if cfg.documentationfile then
+			if _ACTION > "vs2015" and dotnetbase.isNewFormatProject(cfg) and cfg.documentationfile == true  then
+				_p(2,'<GenerateDocumentationFile>true</GenerateDocumentationFile>')
+			else
+				local documentationFile = iif(cfg.documentationfile ~= true, cfg.documentationfile, cfg.targetdir)
+				_p(2, string.format('<DocumentationFile>%s\\%s.xml</DocumentationFile>', vstudio.path(cfg, documentationFile),cfg.project.name))
+			end
 		end
 	end
 
@@ -783,6 +821,33 @@
 		if cfg.flags.WPF then
 			_p(2,'<UseWpf>true</UseWpf>')
 		end
+	end
+
+	function dotnetbase.netcore.getsdk(cfg)
+        local map = {
+			["Default"] = "Microsoft.NET.Sdk",
+            ["Web"] = "Microsoft.NET.Sdk.Web",
+            ["Razor"] = "Microsoft.NET.Sdk.Razor",
+            ["Worker"] = "Microsoft.NET.Sdk.Worker",
+            ["Blazor"] = "Microsoft.NET.Sdk.BlazorWebAssembly",
+            ["WindowsDesktop"] = "Microsoft.NET.Sdk.WindowsDesktop",
+            ["MSTest"] = "MSTest.Sdk",
+        }
+
+		local parts = nil
+
+		if cfg.dotnetsdk then
+			parts = cfg.dotnetsdk:explode("/", true, 1)
+		end
+
+		local sdk = (parts and #parts > 0 and parts[1]) or cfg.dotnetsdk
+		if not parts or #parts < 2 then
+			return map[sdk or "Default"]
+		elseif parts and #parts == 2 then
+			return string.format("%s/%s", map[parts[1]] or parts[1], parts[2])
+		end
+
+		return map["Default"]
 	end
 
 	function dotnetbase.allowUnsafeBlocks(cfg)
