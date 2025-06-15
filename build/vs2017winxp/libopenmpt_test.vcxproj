@@ -214,85 +214,85 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\bin\debug\vs2017-winxp-static\x86\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86\Debug\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\debug\vs2017-winxp-static\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86\Debug\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\bin\debug\vs2017-winxp-static\amd64\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86_64\Debug\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\debug\vs2017-winxp-static\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86_64\Debug\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\release\vs2017-winxp-static\x86\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86\Release\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\release\vs2017-winxp-static\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86\Release\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\release\vs2017-winxp-static\amd64\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86_64\Release\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\release\vs2017-winxp-static\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86_64\Release\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\checked\vs2017-winxp-static\x86\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86\Checked\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\checked\vs2017-winxp-static\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86\Checked\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\checked\vs2017-winxp-static\amd64\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86_64\Checked\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\checked\vs2017-winxp-static\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86_64\Checked\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\bin\debug\vs2017-winxp-shared\x86\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86\DebugShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\debug\vs2017-winxp-shared\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86\DebugShared\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\bin\debug\vs2017-winxp-shared\amd64\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86_64\DebugShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\debug\vs2017-winxp-shared\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86_64\DebugShared\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\release\vs2017-winxp-shared\x86\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86\ReleaseShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\release\vs2017-winxp-shared\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86\ReleaseShared\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\release\vs2017-winxp-shared\amd64\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86_64\ReleaseShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\release\vs2017-winxp-shared\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86_64\ReleaseShared\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\checked\vs2017-winxp-shared\x86\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86\CheckedShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\checked\vs2017-winxp-shared\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86\CheckedShared\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\checked\vs2017-winxp-shared\amd64\</OutDir>
-    <IntDir>..\obj\vs2017winxp\libopenmpt_test\x86_64\CheckedShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\checked\vs2017-winxp-shared\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2017winxp\libopenmpt_test\x86_64\CheckedShared\</IntDir>
     <TargetName>libopenmpt_test</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
@@ -311,6 +311,10 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
@@ -339,6 +343,10 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
@@ -371,11 +379,16 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>ole32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -403,11 +416,16 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>ole32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -437,6 +455,10 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -470,6 +492,10 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -500,6 +526,10 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -527,6 +557,10 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -558,11 +592,16 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>ole32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -590,11 +629,16 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>ole32.lib;rpcrt4.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -624,6 +668,10 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -657,6 +705,10 @@
       <AdditionalOptions>/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -990,8 +1042,6 @@
     <ClInclude Include="..\..\test\TestToolsLib.h" />
     <ClInclude Include="..\..\test\TestToolsTracker.h" />
     <ClInclude Include="..\..\test\test.h" />
-    <ClInclude Include="..\..\unarchiver\archive.h" />
-    <ClInclude Include="..\..\unarchiver\ungzip.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\common\ComponentManager.cpp" />
@@ -1158,10 +1208,12 @@
     <ClCompile Include="..\..\test\mpt_tests_string_transcode.cpp" />
     <ClCompile Include="..\..\test\mpt_tests_uuid.cpp" />
     <ClCompile Include="..\..\test\test.cpp" />
-    <ClCompile Include="..\..\unarchiver\ungzip.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\libopenmpt\libopenmpt_test\libopenmpt_test.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\libopenmpt\libopenmpt_version.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="ext\mpg123.vcxproj">

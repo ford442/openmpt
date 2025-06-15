@@ -1,7 +1,7 @@
 --
 -- clang.lua
 -- Clang toolset adapter for Premake
--- Copyright (c) 2013 Jason Perkins and the Premake project
+-- Copyright (c) 2013 Jess Perkins and the Premake project
 --
 
 	local p = premake
@@ -44,20 +44,16 @@
 
 	clang.shared = {
 		architecture = gcc.shared.architecture,
+		fatalwarnings = {
+			All = "-Werror"
+		},
 		flags = gcc.shared.flags,
 		floatingpoint = {
 			Fast = "-ffast-math",
 		},
 		strictaliasing = gcc.shared.strictaliasing,
 		openmp = gcc.shared.openmp,
-		optimize = {
-			Off = "-O0",
-			On = "-O2",
-			Debug = "-O0",
-			Full = "-O3",
-			Size = "-Os",
-			Speed = "-O3",
-		},
+		optimize = gcc.shared.optimize,
 		pic = gcc.shared.pic,
 		vectorextensions = gcc.shared.vectorextensions,
 		isaextensions = gcc.shared.isaextensions,
@@ -65,7 +61,15 @@
 		symbols = gcc.shared.symbols,
 		unsignedchar = gcc.shared.unsignedchar,
 		omitframepointer = gcc.shared.omitframepointer,
-		compileas = gcc.shared.compileas
+		compileas = gcc.shared.compileas,
+		sanitize = table.merge(gcc.shared.sanitize, {
+			Fuzzer = "-fsanitize=fuzzer",
+		}),
+		structmemberalign = gcc.shared.structmemberalign,
+		visibility = gcc.shared.visibility,
+		inlinesvisibility = gcc.shared.inlinesvisibility,
+		linktimeoptimization = gcc.shared.linktimeoptimization,
+		profile = gcc.shared.profile,
 	}
 
 	clang.cflags = table.merge(gcc.cflags, {
@@ -86,16 +90,21 @@
 	end
 
 --
--- Returns C/C++ system version related build flags
+-- Returns system version related build flags
 --
 
 	function clang.getsystemversionflags(cfg)
 		local flags = {}
 
-		if cfg.system == p.MACOSX or cfg.system == p.IOS then
+		if cfg.system == p.MACOSX or cfg.system == p.IOS or cfg.system == p.TVOS then
 			local minVersion = p.project.systemversion(cfg)
 			if minVersion ~= nil then
-				local name = iif(cfg.system == p.MACOSX, "macosx", "iphoneos")
+				local name = "macosx"
+				if cfg.system == p.IOS then
+					name = "iphoneos"
+				elseif cfg.system == p.TVOS then
+					name = "appletvos"
+				end
 				table.insert (flags, "-m" .. name .. "-version-min=" .. p.project.systemversion(cfg))
 			end
 		end
@@ -115,9 +124,6 @@
 --
 
 	clang.cxxflags = table.merge(gcc.cxxflags, {
-		sanitize = {
-			Fuzzer = "-fsanitize=fuzzer",
-		},
 	})
 
 	function clang.getcxxflags(cfg)
@@ -186,14 +192,23 @@
 -- @param dirs
 --    An array of include file search directories; as an array of
 --    string values.
+-- @param extdirs
+--    An array of include file search directories for external includes;
+--    as an array of string values.
+-- @param frameworkdirs
+--    An array of file search directories for the framework includes;
+--    as an array of string vlaues
+-- @param includedirsafter
+--    An array of include file search directories for includes after system;
+--    as an array of string values.
 -- @return
 --    An array of symbols with the appropriate flag decorations.
 --
 
-	function clang.getincludedirs(cfg, dirs, extdirs, frameworkdirs)
+	function clang.getincludedirs(cfg, dirs, extdirs, frameworkdirs, includedirsafter)
 
 		-- Just pass through to GCC for now
-		local flags = gcc.getincludedirs(cfg, dirs, extdirs, frameworkdirs)
+		local flags = gcc.getincludedirs(cfg, dirs, extdirs, frameworkdirs, includedirsafter)
 		return flags
 
 	end
@@ -221,10 +236,13 @@
 		architecture = {
 			x86 = "-m32",
 			x86_64 = "-m64",
+			WASM32 = "-m32",
+			WASM64 = "-m64",
 		},
-		flags = {
-			LinkTimeOptimization = "-flto",
+		linkerfatalwarnings = {
+			All = "-Wl,--fatal-warnings",
 		},
+		linktimeoptimization = clang.shared.linktimeoptimization,
 		kind = {
 			SharedLib = function(cfg)
 				local r = { clang.getsharedlibarg(cfg) }
@@ -241,6 +259,11 @@
 				if cfg.system == p.WINDOWS then return "-mwindows" end
 			end,
 		},
+		linker = gcc.ldflags.linker,
+		profile = gcc.ldflags.profile,
+		sanitize = table.merge(gcc.ldflags.sanitize, {
+			Fuzzer = "-fsanitize=fuzzer",
+		}),
 		system = {
 			wii = "$(MACHDEP)",
 		}
@@ -328,13 +351,18 @@
 	clang.tools = {
 		cc = "clang",
 		cxx = "clang++",
-		ar = function(cfg) return iif(cfg.flags.LinkTimeOptimization, "llvm-ar", "ar") end
+		ar = function(cfg) return iif(cfg.linktimeoptimization == "On", "llvm-ar", "ar") end,
+		rc = "windres"
 	}
 
 	function clang.gettoolname(cfg, tool)
+		local toolset, version = p.tools.canonical(cfg.toolset or p.CLANG)
 		local value = clang.tools[tool]
 		if type(value) == "function" then
 			value = value(cfg)
+		end
+		if toolset == p.tools.clang and version ~= nil then
+			value = value .. "-" .. version
 		end
 		return value
 	end

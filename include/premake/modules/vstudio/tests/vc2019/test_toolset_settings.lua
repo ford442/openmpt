@@ -1,7 +1,7 @@
 --
 -- tests/actions/vstudio/vc2010/test_compile_settings.lua
 -- Validate compiler settings in Visual Studio 2019 C/C++ projects.
--- Copyright (c) 2011-2020 Jason Perkins and the Premake project
+-- Copyright (c) 2011-2020 Jess Perkins and the Premake project
 --
 
 	local p = premake
@@ -59,6 +59,45 @@
 	end
 
 
+---
+-- Check the project settings with the llvm version
+---
+
+	function suite.toolsetClang_llvmVersion()
+		toolset "clang"
+		llvmversion "16"
+		prepare()
+		test.capture [[
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+	<ConfigurationType>Application</ConfigurationType>
+	<UseDebugLibraries>false</UseDebugLibraries>
+	<CharacterSet>Unicode</CharacterSet>
+	<PlatformToolset>ClangCL</PlatformToolset>
+	<LLVMToolsVersion>16</LLVMToolsVersion>
+</PropertyGroup>
+		]]
+	end
+
+---
+-- Check the project settings with the llvm version
+---
+
+	function suite.toolsetClang_llvmDir()
+		toolset "clang"
+		llvmdir "llvm/dir"
+		prepare()
+		test.capture [[
+<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+	<ConfigurationType>Application</ConfigurationType>
+	<UseDebugLibraries>false</UseDebugLibraries>
+	<CharacterSet>Unicode</CharacterSet>
+	<PlatformToolset>ClangCL</PlatformToolset>
+	<LLVMInstallDir>llvm\dir</LLVMInstallDir>
+</PropertyGroup>
+		]]
+	end
+
+
 --
 -- If AllModulesPublic flag is set, add <AllProjectBMIsArePublic> element (supported from VS2019)
 --
@@ -70,8 +109,8 @@ function suite.onAllModulesPublicOn()
 	test.capture [[
 <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
 	<LinkIncremental>true</LinkIncremental>
-	<OutDir>bin\Debug\</OutDir>
-	<IntDir>obj\Debug\</IntDir>
+	<OutDir>$(ProjectDir)bin\Debug\</OutDir>
+	<IntDir>$(ProjectDir)obj\Debug\</IntDir>
 	<TargetName>MyProject</TargetName>
 	<TargetExt>.exe</TargetExt>
 	<AllProjectBMIsArePublic>true</AllProjectBMIsArePublic>
@@ -86,8 +125,8 @@ function suite.onAllModulesPublicOff()
 	test.capture [[
 <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
 	<LinkIncremental>true</LinkIncremental>
-	<OutDir>bin\Debug\</OutDir>
-	<IntDir>obj\Debug\</IntDir>
+	<OutDir>$(ProjectDir)bin\Debug\</OutDir>
+	<IntDir>$(ProjectDir)obj\Debug\</IntDir>
 	<TargetName>MyProject</TargetName>
 	<TargetExt>.exe</TargetExt>
 	<AllProjectBMIsArePublic>false</AllProjectBMIsArePublic>

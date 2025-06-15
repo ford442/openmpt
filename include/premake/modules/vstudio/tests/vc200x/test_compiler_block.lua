@@ -1,7 +1,7 @@
 --
 -- tests/actions/vstudio/vc200x/test_compiler_block.lua
 -- Validate generation the VCCLCompiler element in Visual Studio 200x C/C++ projects.
--- Copyright (c) 2011-2013 Jason Perkins and the Premake project
+-- Copyright (c) 2011-2013 Jess Perkins and the Premake project
 --
 
 	local p = premake
@@ -135,7 +135,7 @@
 
 	function suite.looksGood_onC7DebugFormat()
 		symbols "On"
-		debugformat "C7"
+		debugformat("c7")
 		prepare()
 		test.capture [[
 <Tool
@@ -354,8 +354,27 @@
 -- Verify the correct warnings settings are used when FatalWarnings are enabled.
 --
 
-	function suite.runtimeLibraryIsDebug_onFatalWarnings()
+	function suite.runtimeLibraryIsDebug_onFatalWarningsViaFlag()
 		flags { "FatalWarnings" }
+		prepare()
+		test.capture [[
+<Tool
+	Name="VCCLCompilerTool"
+	Optimization="0"
+	BasicRuntimeChecks="3"
+	RuntimeLibrary="2"
+	EnableFunctionLevelLinking="true"
+	UsePrecompiledHeader="0"
+	WarningLevel="3"
+	WarnAsError="true"
+	DebugInformationFormat="0"
+/>
+		]]
+	end
+
+
+	function suite.runtimeLibraryIsDebug_onFatalWarningsViaAPI()
+		fatalwarnings { "All" }
 		prepare()
 		test.capture [[
 <Tool
@@ -377,8 +396,27 @@
 -- Verify the correct warnings settings are used when no warnings are enabled.
 --
 
-	function suite.runtimeLibraryIsDebug_onNoWarnings_whichDisablesAllOtherWarningsFlags()
+	function suite.runtimeLibraryIsDebug_onNoWarnings_whichDisablesAllOtherWarningsFlagsViaFlag()
 		flags { "FatalWarnings" }
+		warnings "Off"
+		prepare()
+		test.capture [[
+<Tool
+	Name="VCCLCompilerTool"
+	Optimization="0"
+	BasicRuntimeChecks="3"
+	RuntimeLibrary="2"
+	EnableFunctionLevelLinking="true"
+	UsePrecompiledHeader="0"
+	WarningLevel="0"
+	DebugInformationFormat="0"
+/>
+		]]
+	end
+
+
+	function suite.runtimeLibraryIsDebug_onNoWarnings_whichDisablesAllOtherWarningsFlagsViaAPI()
+		fatalwarnings { "All" }
 		warnings "Off"
 		prepare()
 		test.capture [[
@@ -570,8 +608,20 @@
 -- Check the LinkTimeOptimization flag.
 --
 
-	function suite.flags_onLinkTimeOptimization()
+	function suite.flags_onLinkTimeOptimizationViaFlag()
 		flags { "LinkTimeOptimization" }
+		prepare()
+		test.capture [[
+<Tool
+	Name="VCCLCompilerTool"
+	Optimization="0"
+	WholeProgramOptimization="true"
+		]]
+
+	end
+
+	function suite.flags_onLinkTimeOptimization()
+		linktimeoptimization "On"
 		prepare()
 		test.capture [[
 <Tool

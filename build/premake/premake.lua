@@ -30,7 +30,8 @@ newoption {
 		{ "win7", "Windows 7" },
 		{ "win8", "Windows 8" },
 		{ "win81", "Windows 8.1" },
-		{ "win10", "Wiondows 10" }
+		{ "win10", "Windows 10" },
+		{ "win11", "Windows 11" }
 	}
 }
 
@@ -169,48 +170,19 @@ end)
 
 
 
-premake.api.register {
-	name = "preprocessor",
-	scope = "config",
-	kind = "string",
-	allowed = {
-		"Default",
-		"Standard",
-		"Legacy",
-	}
-}
-
-function premake.vstudio.vc2010.preprocessor(cfg)
-	if _ACTION >= "vs2019" then
-		if (cfg.preprocessor == 'Standard') then
-			premake.vstudio.vc2010.element("UseStandardPreprocessor", nil, "true")
-		elseif (cfg.preprocessor == 'Legacy') then
-			premake.vstudio.vc2010.element("UseStandardPreprocessor", nil, "false")
-		end
-	end
-end
-
-premake.override(premake.vstudio.vc2010.elements, "clCompile", function(base, prj)
-	local calls = base(prj)
-	table.insertafter(calls, premake.vstudio.vc2010.externalAngleBrackets, premake.vstudio.vc2010.preprocessor)
-	return calls
-end)
-
-
-
 mpt_projectpathname = _ACTION .. _OPTIONS["windows-version"]
 mpt_bindirsuffix = _OPTIONS["windows-version"]
 
-if _OPTIONS["windows-version"] == "win10" then
+if _OPTIONS["windows-version"] == "win11" then
 	if _OPTIONS["clang"] then
-		allplatforms = { "x86", "x86_64", "arm", "arm64" }
+		allplatforms = { "x86", "x86_64", "arm64" }
+	elseif _OPTIONS["windows-family"] == "uwp" then
+		allplatforms = { "x86", "x86_64", "arm64" }
 	else
-		if _OPTIONS["windows-family"] == "uwp" then
-			allplatforms = { "x86", "x86_64", "arm", "arm64" }
-		else
-			allplatforms = { "x86", "x86_64", "arm", "arm64", "arm64ec" }
-		end
+		allplatforms = { "x86", "x86_64", "arm64", "arm64ec" }
 	end
+elseif _OPTIONS["windows-version"] == "win10" then
+	allplatforms = { "x86", "x86_64", "arm", "arm64" }
 elseif _OPTIONS["windows-version"] == "win81" then
 	allplatforms = { "x86", "x86_64", "arm" }
 elseif _OPTIONS["windows-version"] == "win8" then

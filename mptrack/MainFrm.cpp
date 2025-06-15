@@ -363,8 +363,8 @@ void CMainFrame::RecreateImageLists()
 	CDC *dc = GetDC();
 	const double scaling = HighDPISupport::GetDpiForWindow(m_hWnd) / 96.0;
 	static constexpr int miscIconsInvert[] = {IMAGE_PATTERNS, IMAGE_OPLINSTRACTIVE, IMAGE_OPLINSTRMUTE};
-	static constexpr int patternIconsInvert[] = {TIMAGE_PREVIEW, TIMAGE_MACROEDITOR, TIMAGE_PATTERN_OVERFLOWPASTE, TIMAGE_PATTERN_PLUGINS, TIMAGE_SAMPLE_UNSIGN};
-	static constexpr int envelopeIconsInvert[] = {IIMAGE_CHECKED, IIMAGE_VOLSWITCH, IIMAGE_PANSWITCH, IIMAGE_PITCHSWITCH, IIMAGE_FILTERSWITCH, IIMAGE_NOPITCHSWITCH, IIMAGE_NOFILTERSWITCH};
+	static constexpr int patternIconsInvert[] = {TIMAGE_PREVIEW, TIMAGE_MACROEDITOR, TIMAGE_PATTERN_OVERFLOWPASTE, TIMAGE_PATTERN_PLUGINS, TIMAGE_SAMPLE_AMPLIFY, TIMAGE_SAMPLE_UNSIGN};
+	static constexpr int envelopeIconsInvert[] = {IIMAGE_VOLENV, IIMAGE_PANENV, IIMAGE_CHECKED, IIMAGE_VOLSWITCH, IIMAGE_PANSWITCH, IIMAGE_PITCHSWITCH, IIMAGE_FILTERSWITCH, IIMAGE_NOPITCHSWITCH, IIMAGE_NOFILTERSWITCH, IIMAGE_GRID};
 	m_MiscIcons.Create(IDB_IMAGELIST, 16, 16, IMGLIST_NUMIMAGES, 1, dc, scaling, false, miscIconsInvert);
 	m_MiscIconsDisabled.Create(IDB_IMAGELIST, 16, 16, IMGLIST_NUMIMAGES, 1, dc, scaling, true, miscIconsInvert);
 	m_PatternIcons.Create(IDB_PATTERNS, 16, 16, PATTERNIMG_NUMIMAGES, 1, dc, scaling, false, patternIconsInvert);
@@ -2053,7 +2053,31 @@ class CPropertySheetMPT : public CPropertySheet
 
 		return CPropertySheet::PreTranslateMessage(pMsg);
 	}
+
+	BOOL OnInitDialog() override
+	{
+		ModifyStyleEx(0, WS_EX_CONTEXTHELP);
+		return CPropertySheet::OnInitDialog();
+	}
+
+	afx_msg void OnSysCommand(UINT id, LPARAM param)
+	{
+		if(id == SC_CONTEXTHELP)
+		{
+			CMainFrame::GetMainFrame()->OnHelp();
+			return;
+		}
+		CPropertySheet::OnSysCommand(id, param);
+	}
+
+	DECLARE_MESSAGE_MAP()
 };
+
+BEGIN_MESSAGE_MAP(CPropertySheetMPT, CPropertySheet)
+	//{{AFX_MSG_MAP(CPropertySheetMPT)
+	ON_WM_SYSCOMMAND()
+	//}}AFX_MSG_MAP
+END_MESSAGE_MAP()
 
 
 void CMainFrame::OnViewOptions()
@@ -2106,7 +2130,9 @@ void CMainFrame::OnViewOptions()
 #if defined(MPT_ENABLE_UPDATE)
 	m_UpdateOptionsDialog = &pages->updatedlg;
 #endif // MPT_ENABLE_UPDATE
+
 	dlg.DoModal();
+
 	m_SoundCardOptionsDialog = nullptr;
 #if defined(MPT_ENABLE_UPDATE)
 	m_UpdateOptionsDialog = nullptr;

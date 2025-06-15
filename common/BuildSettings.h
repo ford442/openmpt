@@ -44,7 +44,7 @@
 #define OPENMPT_BUILD_VARIANT_MONIKER " RETRO"
 #else
 #if MPT_OS_WINDOWS
-#if MPT_WINNT_AT_LEAST(MPT_WIN_10)
+#if MPT_WINNT_AT_LEAST(MPT_WIN_11)
 #define OPENMPT_BUILD_VARIANT "Standard"
 #define OPENMPT_BUILD_VARIANT_MONIKER ""
 #else
@@ -177,8 +177,7 @@
 #else
 //#define MPT_ENABLE_CHARSET_LOCALE
 #endif
-// Do not use architecture-specifid intrinsics in library builds. There is just about no codepath which would use it anyway.
-//#define MPT_ENABLE_ARCH_INTRINSICS
+#define MPT_ENABLE_ARCH_INTRINSICS
 #if defined(MPT_BUILD_HACK_ARCHIVE_SUPPORT)
 //#define NO_ARCHIVE_SUPPORT
 #else
