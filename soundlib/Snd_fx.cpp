@@ -692,7 +692,7 @@ std::vector<GetLengthType> CSoundFile::GetLength(enmGetLengthResetMode adjustMod
 						// Even if we don't intend to render anything on this channel, update instrument cutoff/resonance because it might override a Zxx effect evaluated earlier.
 						const ModInstrument *instr = chn.pModInstrument;
 						if(chn.nNewIns && chn.nNewIns <= GetNumInstruments())
-							instr = Instruments[chn.nNewIns];
+							instr = Instruments[chn.nNewIns].get();
 						if(instr != nullptr)
 						{
 							if(instr->IsCutoffEnabled())
@@ -710,7 +710,7 @@ std::vector<GetLengthType> CSoundFile::GetLength(enmGetLengthResetMode adjustMod
 				if(chn.rowCommand.IsNote() || chn.rowCommand.instr)
 				{
 					ModInstrument *pIns;
-					if(chn.nNewIns > 0 && chn.nNewIns <= GetNumInstruments() && (pIns = Instruments[chn.nNewIns]) != nullptr)
+					if(chn.nNewIns > 0 && chn.nNewIns <= GetNumInstruments() && (pIns = Instruments[chn.nNewIns].get()) != nullptr)
 					{
 						if(pIns->dwFlags[INS_SETPANNING])
 							chn.SetInstrumentPan(pIns->nPan, *this);
