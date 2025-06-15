@@ -1137,5 +1137,3 @@ bool CSoundFile::SaveMod(std::ostream &f) const
 
 
 OPENMPT_NAMESPACE_END
-
-[end of soundlib/Load_mod.cpp]
