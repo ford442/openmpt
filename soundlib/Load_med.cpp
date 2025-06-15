@@ -1735,8 +1735,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 	{
 		for(INSTRUMENTINDEX ins = 1; ins <= m_nInstruments; ins++)
 		{
-			delete Instruments[ins];
-			Instruments[ins] = nullptr;
+			Instruments[ins].reset();
 		}
 		m_nInstruments = 0;
 	}
