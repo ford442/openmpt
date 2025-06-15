@@ -408,6 +408,7 @@ public:
 	double GetPlaybackTimeAt(ORDERINDEX ord, ROWINDEX row, bool updateVars, bool updateSamplePos);
 
 	std::vector<SubSong> GetAllSubSongs();
+	CTuningCollection* m_pTuningsTuneSpecific = nullptr;
 
 	//Tuning-->
 public:
