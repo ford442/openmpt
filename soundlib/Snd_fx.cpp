@@ -1050,12 +1050,12 @@ std::vector<GetLengthType> CSoundFile::GetLength(enmGetLengthResetMode adjustMod
 			{
 				UpdateS3MEffectMemory(chn, static_cast<ModCommand::PARAM>(param));
 			}
-		}
-
-		if(chn.rowCommand.instr)
-		{
-			// Not necessarily consistent with actually playing instrument for IT compatibility
-			chn.nOldIns = chn.rowCommand.instr;
+			
+			if(chn.rowCommand.instr)
+			{
+				// Not necessarily consistent with actually playing instrument for IT compatibility
+				chn.nOldIns = chn.rowCommand.instr;
+			}
 		}
 
 		ProcessAutoSlides(playState, nChn);
