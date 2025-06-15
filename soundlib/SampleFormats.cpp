@@ -112,41 +112,136 @@ bool CSoundFile::ReadInstrumentFromFile(INSTRUMENTINDEX nInstr, FileReader &file
 	return true;
 }
 
-
-bool CSoundFile::ReadSampleAsInstrument(INSTRUMENTINDEX nInstr, FileReader &file, bool mayNormalize)
+INSTRUMENTINDEX CSoundFile::ReadSampleAsInstrument(SAMPLEINDEX nSample, FileReader &file)
 {
-	// Scanning free sample
-	SAMPLEINDEX nSample = GetNextFreeSample(nInstr); // may also return samples which are only referenced by the current instrument
-	if(nSample == SAMPLEINDEX_INVALID)
+	if(!nSample || nSample > GetNumSamples())
 	{
-		return false;
+		return INSTRUMENTINDEX_INVALID;
 	}
 
-	// Loading Instrument
-	ModInstrument *pIns = new (std::nothrow) ModInstrument(nSample);
-	if(pIns == nullptr)
+	const INSTRUMENTINDEX oldNumInstruments = GetNumInstruments();
+	INSTRUMENTINDEX nInstr = 0;
+	for(INSTRUMENTINDEX i = 1; i <= oldNumInstruments; i++)
 	{
-		return false;
+		if(Instruments[i] != nullptr)
+		{
+			for(auto sample : Instruments[i]->GetSamples())
+			{
+				if(sample == nSample)
+				{
+					// Reuse instrument
+					nInstr = i;
+					break;
+				}
+			}
+		}
+		if(nInstr != 0) break;
 	}
-	if(!ReadSampleFromFile(nSample, file, mayNormalize, false))
+
+	ModInstrument *pIns = nullptr;
+	if(nInstr == 0)
 	{
-		delete pIns;
-		return false;
+		// Need to create new instrument.
+		nInstr = GetNextFreeInstrument();
+		if(nInstr != INSTRUMENTINDEX_INVALID)
+		{
+			pIns = new ModInstrument();
+		} else
+		{
+			return INSTRUMENTINDEX_INVALID;
+		}
+	} else
+	{
+		pIns = Instruments[nInstr].get();
 	}
 
-	// Remove all samples which are only referenced by the old instrument, except for the one we just loaded our new sample into.
-	RemoveInstrumentSamples(nInstr, nSample);
+	if(pIns)
+	{
+		Instruments[nInstr].reset(pIns);
+		if(file.Length() >= 12)
+		{
+			FileReader instFile(file.GetSubReader(0, 12));
+			if(Samples[nSample].uFlags[SMP_KEEPONDISK])
+			{
+				pIns->filename = Samples[nSample].filename;
+			}
+			pIns->name = Samples[nSample].filename;
+			ReadSample(pIns, nSample, instFile, GetType());
+		}
+	}
 
-	// Replace the instrument
-	DestroyInstrument(nInstr, doNoDeleteAssociatedSamples);
-	Instruments[nInstr] = pIns;
+	// Maybe the sample name is now a valid instrument name
+	if(oldNumInstruments < GetNumInstruments())
+	{
+		ModInstrument *pIns = Instruments[nInstr].get();
+		pIns->Convert(true, file.GetSample(nSample).uFlags);
+	}
 
-#if defined(MPT_EXTERNAL_SAMPLES)
-	SetSamplePath(nSample, file.GetOptionalFileName().value_or(P_("")));
-#endif
 
-	return true;
+	// In case of duplicate-sample-to-instrument, we need to find
+	// the correct instrument again, as it may have been moved.
+	nInstr = FindInstrument(pIns);
+
+	if(GetpModDoc()->GetFollowSong(m_pModDoc) && GetpModDoc()->GetSoundFile() == this)
+	{
+		GetpModDoc()->SetModified();
+		GetpModDoc()->UpdateAllViews(nullptr, SampleHint(nSample).Info().Data(), nullptr);
+		if(nInstr != INSTRUMENTINDEX_INVALID)
+		{
+			GetpModDoc()->UpdateAllViews(nullptr, InstrumentHint(nInstr).Info(), nullptr);
+		}
+	}
+
+	// Now, check if the sample was imported from an XI instrument.
+	// We do this after updating the view so that we can keep the original sample name around for a while.
+	if(nInstr && Samples[nSample].pExternalSample == nullptr)
+	{
+		file.Seek(0);
+		XiHeader xiHeader;
+		if(file.ReadStruct(xiHeader) && xiHeader.IsValid())
+		{
+			// Find a better name for the instrument
+			INSTRUMENTINDEX targetInstr = nInstr;
+			const mpt::ustring instrName = mpt::ToUnicode(mpt::Charset::CP437, xiHeader.ifilename);
+			if(GetInstrument(nInstr) && GetInstrument(nInstr)->name.empty())
+			{
+				GetInstrument(nInstr)->name = instrName;
+			} else if(oldNumInstruments < GetNumInstruments())
+			{
+				// We have created a new instrument, so we can just use its name
+				GetInstrument(nInstr)->name = instrName;
+			} else
+			{
+				// All instrument slots are taken. Let's see if we can find an empty one.
+				targetInstr = GetNextFreeInstrument(nInstr);
+				if(targetInstr == INSTRUMENTINDEX_INVALID)
+				{
+					// Take the first unused instrument
+					for(INSTRUMENTINDEX i = 1; i <= GetNumInstruments(); i++)
+					{
+						if(!IsInstrumentUsed(i))
+						{
+							targetInstr = i;
+							break;
+						}
+					}
+				}
+				if(targetInstr != INSTRUMENTINDEX_INVALID)
+				{
+					// Move sample to other instrument slot.
+					pIns = new ModInstrument();
+					*pIns = *GetInstrument(nInstr);
+					delete GetInstrument(nInstr);
+					Instruments[nInstr] = nullptr;
+					Instruments[targetInstr].reset(pIns);
+				}
+			}
+		}
+	}
+
+	return nInstr;
 }
+
 
 
 bool CSoundFile::DestroyInstrument(INSTRUMENTINDEX nInstr, deleteInstrumentSamples removeSamples)
@@ -434,118 +529,78 @@ static bool IMAADPCMUnpack16(int16 *target, SmpLength sampleLen, FileReader file
 ////////////////////////////////////////////////////////////////////////////////
 // WAV Open
 
-bool CSoundFile::ReadWAVSample(SAMPLEINDEX nSample, FileReader &file, bool mayNormalize, FileReader *wsmpChunk)
+bool CSoundFile::ReadWavSample(SAMPLEINDEX nSample, FileReader &file, bool ignoreWaveData, FileReader *wsmpChunk)
 {
-	WAVReader wavFile(file);
+	WAVReader reader(file);
 
-	static constexpr WAVFormatChunk::SampleFormats SupportedFormats[] = {WAVFormatChunk::fmtPCM, WAVFormatChunk::fmtFloat, WAVFormatChunk::fmtIMA_ADPCM, WAVFormatChunk::fmtMP3, WAVFormatChunk::fmtALaw, WAVFormatChunk::fmtULaw};
-	if(!wavFile.IsValid()
-	   || wavFile.GetNumChannels() == 0
-	   || wavFile.GetNumChannels() > 2
-	   || (wavFile.GetBitsPerSample() == 0 && wavFile.GetSampleFormat() != WAVFormatChunk::fmtMP3)
-	   || (wavFile.GetBitsPerSample() < 32 && wavFile.GetSampleFormat() == WAVFormatChunk::fmtFloat)
-	   || (wavFile.GetBitsPerSample() > 64)
-	   || !mpt::contains(SupportedFormats, wavFile.GetSampleFormat()))
+	if(!reader.IsValid())
 	{
 		return false;
 	}
 
-	DestroySampleThreadsafe(nSample);
-	m_szNames[nSample] = "";
-	ModSample &sample = Samples[nSample];
-	sample.Initialize();
-	sample.nLength = wavFile.GetSampleLength();
-	sample.nC5Speed = wavFile.GetSampleRate();
-	wavFile.ApplySampleSettings(sample, GetCharsetInternal(), m_szNames[nSample]);
-
-	FileReader sampleChunk = wavFile.GetSampleData();
-
-	SampleIO sampleIO(
-		SampleIO::_8bit,
-		(wavFile.GetNumChannels() > 1) ? SampleIO::stereoInterleaved : SampleIO::mono,
-		SampleIO::littleEndian,
-		SampleIO::signedPCM);
-
-	if(wavFile.GetSampleFormat() == WAVFormatChunk::fmtIMA_ADPCM && wavFile.GetNumChannels() <= 2)
+	// The sample is already associated with this module, so we can savely import loops, etc.
+	reader.ReadLoopInformation(Samples[nSample]);
+	if(wsmpChunk)
 	{
-		// IMA ADPCM 4:1
-		LimitMax(sample.nLength, MAX_SAMPLE_LENGTH);
-		sample.uFlags.set(CHN_16BIT);
-		sample.uFlags.set(CHN_STEREO, wavFile.GetNumChannels() == 2);
-		if(!sample.AllocateSample())
+		reader.ReadWsmpInformation(Samples[nSample], *wsmpChunk);
+	}
+
+	// If there's an instrument chunk, we're going to create a new instrument.
+	INSTRUMENTINDEX nInstr = 0;
+	if(reader.ReadIARTChunk(m_songName, m_songArtist))
+	{
+		// We have read artist and title information.
+	}
+
+	if(reader.HasInstrumentChunk())
+	{
+		nInstr = GetNextFreeInstrument();
+		if(nInstr == INSTRUMENTINDEX_INVALID)
 		{
-			return false;
-		}
-		IMAADPCMUnpack16(sample.sample16(), sample.nLength, sampleChunk, wavFile.GetBlockAlign(), wavFile.GetNumChannels());
-		sample.PrecomputeLoops(*this, false);
-	} else if(wavFile.GetSampleFormat() == WAVFormatChunk::fmtMP3)
-	{
-		// MP3 in WAV
-		bool loadedMP3 = ReadMP3Sample(nSample, sampleChunk, false, true) || ReadMediaFoundationSample(nSample, sampleChunk, true);
-		if(!loadedMP3)
+			AddToLog(LogWarning, U_("Could not import instrument information from WAV file because there are no free instrument slots."));
+		} else
 		{
-			return false;
+			ModInstrument *pIns = new ModInstrument();
+			reader.ReadInstrumentChunk(*pIns);
+			if(nInstr <= m_nInstruments)
+			{
+				DestroyInstrument(nInstr, deleteAssociatedSamples);
+			}
+			Instruments[nInstr].reset(pIns);
+			if(nInstr > m_nInstruments)
+			{
+				m_nInstruments = nInstr;
+			}
+			pIns->AssignSample(nSample);
+			Samples[nSample].uFlags.set(SMP_HASINSTRUMENT);
 		}
-	} else if(!wavFile.IsExtensibleFormat() && wavFile.MayBeCoolEdit16_8() && wavFile.GetSampleFormat() == WAVFormatChunk::fmtPCM && wavFile.GetBitsPerSample() == 32 && wavFile.GetBlockAlign() == wavFile.GetNumChannels() * 4)
+	}
+
+	if(!ignoreWaveData)
 	{
-		// Syntrillium Cool Edit hack to store IEEE 32bit floating point
-		// Format is described as 32bit integer PCM contained in 32bit blocks and an WAVEFORMATEX extension size of 2 which contains a single 16 bit little endian value of 1.
-		//  (This is parsed in WAVTools.cpp and returned via MayBeCoolEdit16_8()).
-		// The data actually stored in this case is little endian 32bit floating point PCM with 2**15 full scale.
-		// Cool Edit calls this format "16.8 float".
-		sampleIO |= SampleIO::_32bit;
-		sampleIO |= SampleIO::floatPCM15;
-		sampleIO.ReadSample(sample, sampleChunk);
-	} else if(!wavFile.IsExtensibleFormat() && wavFile.GetSampleFormat() == WAVFormatChunk::fmtPCM && wavFile.GetBitsPerSample() == 24 && wavFile.GetBlockAlign() == wavFile.GetNumChannels() * 4)
-	{
-		// Syntrillium Cool Edit hack to store IEEE 32bit floating point
-		// Format is described as 24bit integer PCM contained in 32bit blocks.
-		// The data actually stored in this case is little endian 32bit floating point PCM with 2**23 full scale.
-		// Cool Edit calls this format "24.0 float".
-		sampleIO |= SampleIO::_32bit;
-		sampleIO |= SampleIO::floatPCM23;
-		sampleIO.ReadSample(sample, sampleChunk);
-	} else if(wavFile.GetSampleFormat() == WAVFormatChunk::fmtALaw || wavFile.GetSampleFormat() == WAVFormatChunk::fmtULaw)
-	{
-		// a-law / u-law
-		sampleIO |= SampleIO::_16bit;
-		sampleIO |= wavFile.GetSampleFormat() == WAVFormatChunk::fmtALaw ? SampleIO::aLaw : SampleIO::uLaw;
-		sampleIO.ReadSample(sample, sampleChunk);
+		DestroySampleThreadsafe(nSample);
+		Samples[nSample].nLength = reader.GetSampleLength();
+		Samples[nSample].nC5Speed = reader.GetSampleRate();
+		if(!Samples[nSample].nC5Speed) Samples[nSample].nC5Speed = 22050;
+
+		// Bits per sample
+		Samples[nSample].uFlags.set(CHN_16BIT, reader.GetBitDepth() > 8);
+		Samples[nSample].uFlags.set(CHN_STEREO, reader.GetNumChannels() > 1);
+
+		reader.ReadSampleData(Samples[nSample]);
 	} else
 	{
-		// PCM / Float
-		SampleIO::Bitdepth bitDepth;
-		switch((wavFile.GetBitsPerSample() - 1) / 8u)
-		{
-		default:
-		case 0: bitDepth = SampleIO::_8bit; break;
-		case 1: bitDepth = SampleIO::_16bit; break;
-		case 2: bitDepth = SampleIO::_24bit; break;
-		case 3: bitDepth = SampleIO::_32bit; break;
-		case 7: bitDepth = SampleIO::_64bit; break;
-		}
-
-		sampleIO |= bitDepth;
-		if(wavFile.GetBitsPerSample() <= 8)
-			sampleIO |= SampleIO::unsignedPCM;
-
-		if(wavFile.GetSampleFormat() == WAVFormatChunk::fmtFloat)
-			sampleIO |= SampleIO::floatPCM;
-
-		if(mayNormalize)
-			sampleIO.MayNormalize();
-
-		sampleIO.ReadSample(sample, sampleChunk);
+		Samples[nSample].uFlags.set(SMP_MODIFIED, false);
 	}
 
-	if(wsmpChunk != nullptr)
+	if(m_pModDoc)
 	{
-		// DLS WSMP chunk
-		*wsmpChunk = wavFile.GetWsmpChunk();
+		m_pModDoc->UpdateAllViews(nullptr, SampleHint(nSample).Info().Data(), nullptr);
+		if(nInstr)
+		{
+			m_pModDoc->UpdateAllViews(nullptr, InstrumentHint(nInstr).Info(), nullptr);
+		}
 	}
-
-	sample.Convert(MOD_TYPE_IT, GetType());
-	sample.PrecomputeLoops(*this, false);
 
 	return true;
 }
@@ -1017,35 +1072,53 @@ static void PatchToSample(CSoundFile *that, SAMPLEINDEX nSample, GF1SampleHeader
 }
 
 
-bool CSoundFile::ReadPATSample(SAMPLEINDEX nSample, FileReader &file)
+bool CSoundFile::ReadPATSample(SAMPLEINDEX nSample, FileReader &file, bool ignoreWaveData, FileReader *wsmpChunk)
 {
 	file.Rewind();
-	GF1PatchFileHeader fileHeader;
-	GF1Instrument instrHeader;  // We only support one instrument
-	GF1Layer layerHeader;
-	if(!file.ReadStruct(fileHeader)
-		|| memcmp(fileHeader.magic, "GF1PATCH", 8)
-		|| (memcmp(fileHeader.version, "110\0", 4) && memcmp(fileHeader.version, "100\0", 4))
-		|| memcmp(fileHeader.id, "ID#000002\0", 10)
-		|| !fileHeader.numInstr || !fileHeader.numSamples
-		|| !file.ReadStruct(instrHeader)
-		//|| !instrHeader.layers  // DOO.PAT has 0 layers
-		|| !file.ReadStruct(layerHeader)
-		|| !layerHeader.samples)
+	PATHeader patHeader;
+	if(!file.ReadStruct(patHeader) || !patHeader.IsValid())
 	{
 		return false;
 	}
 
+	// GUS PnP patch
 	DestroySampleThreadsafe(nSample);
-	GF1SampleHeader sampleHeader;
-	PatchToSample(this, nSample, sampleHeader, file);
+	Samples[nSample].nC5Speed = 22050;
+	Samples[nSample].nVolume = 256;
+	Samples[nSample].nPan = 128;
+	Samples[nSample].uFlags.reset();
 
-	if(instrHeader.name[0] > ' ')
+	const INSTRUMENTINDEX nInstr = GetNextFreeInstrument();
+	ModInstrument *pIns = (nInstr != INSTRUMENTINDEX_INVALID) ? new ModInstrument() : nullptr;
+	if(pIns)
 	{
-		m_szNames[nSample] = mpt::String::ReadBuf(mpt::String::maybeNullTerminated, instrHeader.name);
+		Instruments[nInstr].reset(pIns);
+		if(nInstr > m_nInstruments)
+		{
+			m_nInstruments = nInstr;
+		}
 	}
+
+	patHeader.ConvertToMPT(Samples[nSample], pIns);
+
+	if(!ignoreWaveData)
+	{
+		file.Seek(patHeader.GetSampleOffset());
+		reader.ReadSampleData(Samples[nSample]);
+	}
+
+	if(m_pModDoc)
+	{
+		m_pModDoc->UpdateAllViews(nullptr, SampleHint(nSample).Info().Data(), nullptr);
+		if(nInstr)
+		{
+			m_pModDoc->UpdateAllViews(nullptr, InstrumentHint(nInstr).Info(), nullptr);
+		}
+	}
+
 	return true;
 }
+
 
 
 // PAT Instrument
