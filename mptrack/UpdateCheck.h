@@ -87,7 +87,6 @@ public:
 
 	struct Settings
 	{
-		Version previousVersion;
 		int32 periodDays;
 		UpdateChannel channel;
 		mpt::PathString persistencePath;

@@ -1,7 +1,7 @@
 ---
 -- gcc.lua
 -- Provides GCC-specific configuration strings.
--- Copyright (c) 2002-2015 Jess Perkins and the Premake project
+-- Copyright (c) 2002-2015 Jason Perkins and the Premake project
 ---
 
 	local p = premake
@@ -12,12 +12,6 @@
 	local project = p.project
 	local config = p.config
 
-	p.api.register {
-		name = "gccprefix",
-		scope = "config",
-		kind = "string",
-		tokens = true,
-	}
 
 --
 -- Returns list of C preprocessor flags for a configuration.
@@ -57,19 +51,15 @@
 			x86 = "-m32",
 			x86_64 = "-m64",
 		},
-		fatalwarnings = {
-			All = "-Werror",
-		},
 		flags = {
+			FatalCompileWarnings = "-Werror",
+			LinkTimeOptimization = "-flto",
 			ShadowedVariables = "-Wshadow",
 			UndefinedIdentifiers = "-Wundef",
 		},
 		floatingpoint = {
 			Fast = "-ffast-math",
 			Strict = "-ffloat-store",
-		},
-		linktimeoptimization = {
-			On = "-flto",
 		},
 		strictaliasing = {
 			Off = "-fno-strict-aliasing",
@@ -100,7 +90,6 @@
 			SSSE3 = "-mssse3",
 			["SSE4.1"] = "-msse4.1",
 			["SSE4.2"] = "-msse4.2",
-			ALTIVEC = "-maltivec",
 		},
 		isaextensions = {
 			MOVBE = "-mmovbe",
@@ -145,34 +134,8 @@
 			Off = "-fno-omit-frame-pointer"
 		},
 		compileas = {
-			["C"] = "-x c",
-			["C++"] = "-x c++",
 			["Objective-C"] = "-x objective-c",
 			["Objective-C++"] = "-x objective-c++",
-		},
-		sanitize = {
-			Address = "-fsanitize=address",
-			Thread = "-fsanitize=thread",
-			UndefinedBehavior = "-fsanitize=undefined",
-		},
-		structmemberalign = {
-			[1] = "-fpack-struct=1",
-			[2] = "-fpack-struct=2",
-			[4] = "-fpack-struct=4",
-			[8] = "-fpack-struct=8",
-			[16] = "-fpack-struct=16",
-		},
-		visibility = {
-			Default = "-fvisibility=default",
-			Hidden = "-fvisibility=hidden",
-			Internal = "-fvisibility=internal",
-			Protected = "-fvisibility=protected",
-		},
-		inlinesvisibility = {
-			Hidden = "-fvisibility-inlines-hidden"
-		},
-		profile = {
-			On = "-pg",
 		}
 	}
 
@@ -183,13 +146,11 @@
 			["C99"] = "-std=c99",
 			["C11"] = "-std=c11",
 			["C17"] = "-std=c17",
-			["C23"] = "-std=c23",
 			["gnu89"] = "-std=gnu89",
 			["gnu90"] = "-std=gnu90",
 			["gnu99"] = "-std=gnu99",
 			["gnu11"] = "-std=gnu11",
-			["gnu17"] = "-std=gnu17",
-			["gnu23"] = "-std=gnu23",
+			["gnu17"] = "-std=gnu17"
 		}
 	}
 
@@ -209,7 +170,7 @@
 		for _, disable in ipairs(cfg.disablewarnings) do
 			table.insert(result, '-Wno-' .. disable)
 		end
-		for _, fatal in ipairs(p.filterFatalWarnings(cfg.fatalwarnings)) do
+		for _, fatal in ipairs(cfg.fatalwarnings) do
 			table.insert(result, '-Werror=' .. fatal)
 		end
 		return result
@@ -254,8 +215,6 @@
 			["C++17"] = "-std=c++17",
 			["C++2a"] = "-std=c++2a",
 			["C++20"] = "-std=c++20",
-			["C++2b"] = "-std=c++2b",
-			["C++23"] = "-std=c++23",
 			["gnu++98"] = "-std=gnu++98",
 			["gnu++0x"] = "-std=gnu++0x",
 			["gnu++11"] = "-std=gnu++11",
@@ -265,12 +224,22 @@
 			["gnu++17"] = "-std=gnu++17",
 			["gnu++2a"] = "-std=gnu++2a",
 			["gnu++20"] = "-std=gnu++20",
-			["gnu++2b"] = "-std=gnu++2b",
-			["gnu++23"] = "-std=gnu++23",
-			["C++latest"] = "-std=c++23",
+			["C++latest"] = "-std=c++20",
 		},
 		rtti = {
 			Off = "-fno-rtti"
+		},
+		sanitize = {
+			Address = "-fsanitize=address",
+		},
+		visibility = {
+			Default = "-fvisibility=default",
+			Hidden = "-fvisibility=hidden",
+			Internal = "-fvisibility=internal",
+			Protected = "-fvisibility=protected",
+		},
+		inlinesvisibility = {
+			Hidden = "-fvisibility-inlines-hidden"
 		}
 	}
 
@@ -318,7 +287,7 @@
 		local result = {}
 
 		table.foreachi(cfg.forceincludes, function(value)
-			local fn = p.tools.getrelative(cfg.project, value)
+			local fn = project.getrelative(cfg.project, value)
 			table.insert(result, string.format('-include %s', p.quoted(fn)))
 		end)
 
@@ -327,49 +296,26 @@
 
 
 --
--- Returns a list of include file search directories, decorated for
--- the compiler command line.
---
--- @param cfg
---    The project configuration.
--- @param dirs
---    An array of include file search directories; as an array of
---    string values.
--- @param extdirs
---    An array of include file search directories for external includes;
---    as an array of string values.
--- @param frameworkdirs
---    An array of file search directories for the framework includes;
---    as an array of string vlaues
--- @param includedirsafter
---    An array of include file search directories for includes after system;
---    as an array of string values.
--- @return
---    An array of symbols with the appropriate flag decorations.
+-- Decorate include file search paths for the GCC command line.
 --
 
-	function gcc.getincludedirs(cfg, dirs, extdirs, frameworkdirs, includedirsafter)
+	function gcc.getincludedirs(cfg, dirs, extdirs, frameworkdirs)
 		local result = {}
 		for _, dir in ipairs(dirs) do
-			dir = p.tools.getrelative(cfg.project, dir)
+			dir = project.getrelative(cfg.project, dir)
 			table.insert(result, '-I' .. p.quoted(dir))
 		end
 
 		if table.contains(os.getSystemTags(cfg.system), "darwin") then
 			for _, dir in ipairs(frameworkdirs or {}) do
-				dir = p.tools.getrelative(cfg.project, dir)
+				dir = project.getrelative(cfg.project, dir)
 				table.insert(result, '-F' .. p.quoted(dir))
 			end
 		end
 
 		for _, dir in ipairs(extdirs or {}) do
-			dir = p.tools.getrelative(cfg.project, dir)
+			dir = project.getrelative(cfg.project, dir)
 			table.insert(result, '-isystem ' .. p.quoted(dir))
-		end
-
-		for _, dir in ipairs(includedirsafter or {}) do
-			dir = p.tools.getrelative(cfg.project, dir)
-			table.insert(result, '-idirafter ' .. p.quoted(dir))
 		end
 
 		return result
@@ -399,18 +345,18 @@
 		-- test locally in the project folder first (this is the most likely location)
 		local testname = path.join(cfg.project.basedir, pch)
 		if os.isfile(testname) then
-			return p.tools.getrelative(cfg.project, testname)
+			return project.getrelative(cfg.project, testname)
 		else
 			-- else scan in all include dirs.
 			for _, incdir in ipairs(cfg.includedirs) do
 				testname = path.join(incdir, pch)
 				if os.isfile(testname) then
-					return p.tools.getrelative(cfg.project, testname)
+					return project.getrelative(cfg.project, testname)
 				end
 			end
 		end
 
-		return p.tools.getrelative(cfg.project, path.getabsolute(pch))
+		return project.getrelative(cfg.project, path.getabsolute(pch))
 	end
 
 --
@@ -488,10 +434,9 @@
 			x86 = "-m32",
 			x86_64 = "-m64",
 		},
-		linkerfatalwarnings = {
-			All = "-Wl,--fatal-warnings",
+		flags = {
+			LinkTimeOptimization = "-flto",
 		},
-		linktimeoptimization = gcc.shared.linktimeoptimization,
 		kind = {
 			SharedLib = function(cfg)
 				local r = { gcc.getsharedlibarg(cfg) }
@@ -507,18 +452,6 @@
 			WindowedApp = function(cfg)
 				if cfg.system == p.WINDOWS then return "-mwindows" end
 			end,
-		},
-		linker = {
-			Default = "",
-			LLD = "-fuse-ld=lld"
-		},
-		profile = {
-			On = "-pg",
-		},
-		sanitize = {
-			Address = "-fsanitize=address",
-			Thread = "-fsanitize=thread",
-			UndefinedBehavior = "-fsanitize=undefined",
 		},
 		system = {
 			wii = "$(MACHDEP)",
@@ -574,14 +507,14 @@
 
 		if table.contains(os.getSystemTags(cfg.system), "darwin") then
 			for _, dir in ipairs(cfg.frameworkdirs) do
-				dir = p.tools.getrelative(cfg.project, dir)
+				dir = project.getrelative(cfg.project, dir)
 				table.insert(flags, '-F' .. p.quoted(dir))
 			end
 		end
 
 		if cfg.flags.RelativeLinks then
 			for _, dir in ipairs(config.getlinks(cfg, "siblings", "directory")) do
-				local libFlag = "-L" .. p.tools.getrelative(cfg.project, dir)
+				local libFlag = "-L" .. p.project.getrelative(cfg.project, dir)
 				if not table.contains(flags, libFlag) then
 					table.insert(flags, libFlag)
 				end
@@ -714,11 +647,8 @@
 	}
 
 	function gcc.gettoolname(cfg, tool)
-		local toolset, version = p.tools.canonical(cfg.toolset or p.GCC)
-		if toolset == p.tools.gcc and version ~= nil then
-			version = "-" .. version
-		else
-			version = ""
+		if (cfg.gccprefix and gcc.tools[tool]) or tool == "rc" then
+			return (cfg.gccprefix or "") .. gcc.tools[tool]
 		end
-		return (cfg.gccprefix or "") .. gcc.tools[tool] .. version
+		return nil
 	end

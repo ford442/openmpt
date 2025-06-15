@@ -42,13 +42,11 @@
    "../../openmpt123/*.hpp",
   }
 
-	filter {}
 	filter { "action:vs*", "kind:SharedLib or ConsoleApp or WindowedApp" }
 		resdefines {
 			"MPT_BUILD_VER_FILENAME=\"" .. "openmpt123" .. ".exe\"",
 			"MPT_BUILD_VER_FILEDESC=\"" .. "openmpt123" .. "\"",
 		}
-	filter {}
 	filter { "action:vs*", "kind:SharedLib or ConsoleApp or WindowedApp" }
 		resincludedirs {
 			"$(IntDir)/svn_version",
@@ -58,10 +56,8 @@
 		files {
 			"../../libopenmpt/libopenmpt_version.rc",
 		}
-	filter {}
 	filter { "action:vs*", "kind:SharedLib" }
 		resdefines { "MPT_BUILD_VER_DLL" }
-	filter {}
 	filter { "action:vs*", "kind:ConsoleApp or WindowedApp" }
 		resdefines { "MPT_BUILD_VER_EXE" }
 	filter {}

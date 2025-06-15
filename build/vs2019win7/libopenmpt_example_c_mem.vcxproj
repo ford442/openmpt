@@ -189,85 +189,85 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\debug\vs2019-win7-static\x86\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86\Debug\</IntDir>
+    <OutDir>..\..\bin\debug\vs2019-win7-static\x86\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86\Debug\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\debug\vs2019-win7-static\amd64\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\Debug\</IntDir>
+    <OutDir>..\..\bin\debug\vs2019-win7-static\amd64\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\Debug\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\release\vs2019-win7-static\x86\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86\Release\</IntDir>
+    <OutDir>..\..\bin\release\vs2019-win7-static\x86\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86\Release\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\release\vs2019-win7-static\amd64\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\Release\</IntDir>
+    <OutDir>..\..\bin\release\vs2019-win7-static\amd64\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\Release\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\checked\vs2019-win7-static\x86\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86\Checked\</IntDir>
+    <OutDir>..\..\bin\checked\vs2019-win7-static\x86\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86\Checked\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\checked\vs2019-win7-static\amd64\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\Checked\</IntDir>
+    <OutDir>..\..\bin\checked\vs2019-win7-static\amd64\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\Checked\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\debug\vs2019-win7-shared\x86\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86\DebugShared\</IntDir>
+    <OutDir>..\..\bin\debug\vs2019-win7-shared\x86\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86\DebugShared\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\debug\vs2019-win7-shared\amd64\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\DebugShared\</IntDir>
+    <OutDir>..\..\bin\debug\vs2019-win7-shared\amd64\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\DebugShared\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\release\vs2019-win7-shared\x86\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86\ReleaseShared\</IntDir>
+    <OutDir>..\..\bin\release\vs2019-win7-shared\x86\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86\ReleaseShared\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\release\vs2019-win7-shared\amd64\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\ReleaseShared\</IntDir>
+    <OutDir>..\..\bin\release\vs2019-win7-shared\amd64\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\ReleaseShared\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\checked\vs2019-win7-shared\x86\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86\CheckedShared\</IntDir>
+    <OutDir>..\..\bin\checked\vs2019-win7-shared\x86\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86\CheckedShared\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\bin\checked\vs2019-win7-shared\amd64\</OutDir>
-    <IntDir>$(ProjectDir)..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\CheckedShared\</IntDir>
+    <OutDir>..\..\bin\checked\vs2019-win7-shared\amd64\</OutDir>
+    <IntDir>..\obj\vs2019win7\libopenmpt_example_c_mem\x86_64\CheckedShared\</IntDir>
     <TargetName>libopenmpt_example_c_mem</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
@@ -284,13 +284,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
@@ -315,13 +310,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <FullProgramDatabaseFile>true</FullProgramDatabaseFile>
@@ -350,19 +340,13 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>ksuser.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -386,19 +370,13 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>ksuser.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -424,13 +402,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -460,13 +433,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -492,13 +460,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;LIBOPENMPT_USE_DLL;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -522,13 +485,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;LIBOPENMPT_USE_DLL;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -556,19 +514,13 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;LIBOPENMPT_USE_DLL;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>ksuser.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -592,19 +544,13 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;LIBOPENMPT_USE_DLL;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>ksuser.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -630,13 +576,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;LIBOPENMPT_USE_DLL;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -666,13 +607,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;LIBOPENMPT_USE_DLL;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_example_c_mem.dll\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_example_c_mem\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..;..\..\include\portaudio\include;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -690,9 +626,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\vs\win7.manifest" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\..\libopenmpt\libopenmpt_version.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="libopenmpt.vcxproj">

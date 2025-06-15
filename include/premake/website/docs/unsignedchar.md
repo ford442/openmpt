@@ -1,20 +1,12 @@
-Force sign of `char`
+unsignedchar - This page was auto-generated. Feel free to help us improve the documentation by creating a pull request.
 
 ```lua
 unsignedchar (value)
 ```
 
-Note that `char` is still a distinct type from `signed char` and `unsigned char`.
-
 ### Parameters ###
 
-`value` is one of:
-
-
-* Off: Make `char` signed. (default on msc)
-* On: Make `char` unsigned.
-
-Don't use that api to have default for gcc/clang
+`value` - needs documentation.
 
 ## Applies To ###
 
@@ -27,5 +19,5 @@ Premake 5.0.0 alpha 14 or later.
 ### Examples ###
 
 ```lua
-unsignedchar "On"
+unsignedchar (value)
 ```

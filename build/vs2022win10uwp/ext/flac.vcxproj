@@ -354,181 +354,181 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\x86\Debug\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86\Debug\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\x86\Debug\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86\Debug\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\x86_64\Debug\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86_64\Debug\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\x86_64\Debug\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86_64\Debug\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\ARM\Debug\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm\Debug\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\ARM\Debug\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm\Debug\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\ARM64\Debug\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm64\Debug\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\ARM64\Debug\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm64\Debug\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\x86\Release\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86\Release\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\x86\Release\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86\Release\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\x86_64\Release\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86_64\Release\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\x86_64\Release\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86_64\Release\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\ARM\Release\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm\Release\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\ARM\Release\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm\Release\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\ARM64\Release\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm64\Release\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\ARM64\Release\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm64\Release\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|Win32'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\x86\Checked\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86\Checked\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\x86\Checked\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86\Checked\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\x86_64\Checked\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86_64\Checked\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\x86_64\Checked\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86_64\Checked\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|ARM'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\ARM\Checked\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm\Checked\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\ARM\Checked\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm\Checked\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|ARM64'">
-    <OutDir>$(ProjectDir)..\..\lib\vs2022win10uwp\ARM64\Checked\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm64\Checked\</IntDir>
+    <OutDir>..\..\lib\vs2022win10uwp\ARM64\Checked\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm64\Checked\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.lib</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\debug\vs2022-win10uwp-shared\x86\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86\DebugShared\</IntDir>
+    <OutDir>..\..\..\bin\debug\vs2022-win10uwp-shared\x86\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86\DebugShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\debug\vs2022-win10uwp-shared\amd64\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86_64\DebugShared\</IntDir>
+    <OutDir>..\..\..\bin\debug\vs2022-win10uwp-shared\amd64\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86_64\DebugShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|ARM'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\debug\vs2022-win10uwp-shared\arm\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm\DebugShared\</IntDir>
+    <OutDir>..\..\..\bin\debug\vs2022-win10uwp-shared\arm\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm\DebugShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|ARM64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\debug\vs2022-win10uwp-shared\arm64\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm64\DebugShared\</IntDir>
+    <OutDir>..\..\..\bin\debug\vs2022-win10uwp-shared\arm64\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm64\DebugShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\release\vs2022-win10uwp-shared\x86\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86\ReleaseShared\</IntDir>
+    <OutDir>..\..\..\bin\release\vs2022-win10uwp-shared\x86\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86\ReleaseShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\release\vs2022-win10uwp-shared\amd64\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86_64\ReleaseShared\</IntDir>
+    <OutDir>..\..\..\bin\release\vs2022-win10uwp-shared\amd64\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86_64\ReleaseShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|ARM'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\release\vs2022-win10uwp-shared\arm\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm\ReleaseShared\</IntDir>
+    <OutDir>..\..\..\bin\release\vs2022-win10uwp-shared\arm\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm\ReleaseShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|ARM64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\release\vs2022-win10uwp-shared\arm64\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm64\ReleaseShared\</IntDir>
+    <OutDir>..\..\..\bin\release\vs2022-win10uwp-shared\arm64\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm64\ReleaseShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\checked\vs2022-win10uwp-shared\x86\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86\CheckedShared\</IntDir>
+    <OutDir>..\..\..\bin\checked\vs2022-win10uwp-shared\x86\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86\CheckedShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\checked\vs2022-win10uwp-shared\amd64\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\x86_64\CheckedShared\</IntDir>
+    <OutDir>..\..\..\bin\checked\vs2022-win10uwp-shared\amd64\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\x86_64\CheckedShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|ARM'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\checked\vs2022-win10uwp-shared\arm\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm\CheckedShared\</IntDir>
+    <OutDir>..\..\..\bin\checked\vs2022-win10uwp-shared\arm\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm\CheckedShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|ARM64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(ProjectDir)..\..\..\bin\checked\vs2022-win10uwp-shared\arm64\</OutDir>
-    <IntDir>$(ProjectDir)..\..\obj\vs2022win10uwp\flac\arm64\CheckedShared\</IntDir>
+    <OutDir>..\..\..\bin\checked\vs2022-win10uwp-shared\arm64\</OutDir>
+    <IntDir>..\..\obj\vs2022win10uwp\flac\arm64\CheckedShared\</IntDir>
     <TargetName>openmpt-flac</TargetName>
     <TargetExt>.dll</TargetExt>
     <IgnoreImportLibrary>false</IgnoreImportLibrary>
@@ -537,14 +537,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -562,14 +562,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -587,14 +587,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -611,14 +611,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -635,7 +635,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -646,7 +646,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -659,14 +659,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -676,7 +675,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -689,14 +688,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -706,7 +704,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -719,14 +717,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -736,7 +733,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -749,14 +746,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Checked|Win32'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -768,7 +764,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -787,7 +783,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -798,7 +794,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -817,7 +813,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -828,7 +824,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -847,7 +843,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -858,7 +854,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -877,14 +873,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -903,14 +899,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -929,14 +925,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -955,14 +951,14 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -981,7 +977,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -992,7 +988,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -1005,7 +1001,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <ImportLibrary>..\..\..\bin\release\vs2022-win10uwp-shared\x86\openmpt-flac.lib</ImportLibrary>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -1014,7 +1009,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -1024,7 +1019,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -1037,7 +1032,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <ImportLibrary>..\..\..\bin\release\vs2022-win10uwp-shared\amd64\openmpt-flac.lib</ImportLibrary>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -1046,7 +1040,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -1056,7 +1050,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -1069,7 +1063,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <ImportLibrary>..\..\..\bin\release\vs2022-win10uwp-shared\arm\openmpt-flac.lib</ImportLibrary>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -1078,7 +1071,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -1088,7 +1081,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -1101,7 +1094,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <ImportLibrary>..\..\..\bin\release\vs2022-win10uwp-shared\arm64\openmpt-flac.lib</ImportLibrary>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -1110,7 +1102,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -1122,7 +1114,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -1143,7 +1135,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -1154,7 +1146,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -1175,7 +1167,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -1186,7 +1178,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -1207,7 +1199,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000D;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;HAVE_C11THREADS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0A00;NTDDI_VERSION=0x0A00000C;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -1218,7 +1210,7 @@
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:checkGwOdr /wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -1247,7 +1239,6 @@
     <ClInclude Include="..\..\..\include\flac\include\FLAC\stream_encoder.h" />
     <ClInclude Include="..\..\..\include\flac\include\share\alloc.h" />
     <ClInclude Include="..\..\..\include\flac\include\share\compat.h" />
-    <ClInclude Include="..\..\..\include\flac\include\share\compat_threads.h" />
     <ClInclude Include="..\..\..\include\flac\include\share\endswap.h" />
     <ClInclude Include="..\..\..\include\flac\include\share\macros.h" />
     <ClInclude Include="..\..\..\include\flac\include\share\private.h" />

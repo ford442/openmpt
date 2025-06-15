@@ -14,7 +14,7 @@ improvements to earlier versions of Premake (feel free to add your name
 in here too)!
 
 Original design and implementation:
-  Jess Perkins <starkos@industriousone.com>
+  Jason Perkins <starkos@industriousone.com>
 
 Main Contributors
   Blizzard Entertainment (contact tvandijck@blizzard.com)

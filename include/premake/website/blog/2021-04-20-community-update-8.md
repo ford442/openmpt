@@ -1,7 +1,10 @@
 ---
 title: "Community Update #8"
 tags: [community-updates]
-authors: starkos
+author: starkos
+author_url: https://github.com/starkos
+author_image_url: https://avatars.githubusercontent.com/u/249247?v=4
+author_title: Premake Admin & Developer
 ---
 
 ### Welcome Website!
@@ -21,8 +24,6 @@ Very happy about this.
 I…did not realize how long it had been since there was a proper release. Pandemic and all that. I've corrected the matter: [v5.0-alpha16 is now available](https://github.com/premake/premake-core/releases/tag/v5.0.0-alpha16), with lots of good improvements. See the full changelog [here](https://github.com/premake/premake-core/releases/tag/v5.0.0-alpha16).
 
 (By the way, if anyone out there has a knack for build automation I'd love to see these releases automated. Get in touch!)
-
-{/* truncate */}
 
 ### RFC: Branch or Backport
 

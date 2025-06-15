@@ -1,6 +1,5 @@
 return {
 	-- Base API tests
-	"test_lua.lua",
 	"test_string.lua",
 	"base/test_aliasing.lua",
 	"base/test_binmodules.lua",
@@ -44,13 +43,11 @@ return {
 	-- Baking tests
 	"oven/test_filtering.lua",
 	"oven/test_objdirs.lua",
-	"oven/test_usages.lua",
 
 	-- API tests
 	"api/test_boolean_kind.lua",
 	"api/test_containers.lua",
 	"api/test_directory_kind.lua",
-	"api/test_file_kind.lua",
 	"api/test_list_kind.lua",
 	"api/test_path_kind.lua",
 	"api/test_register.lua",
@@ -64,7 +61,6 @@ return {
 
 	-- -- Toolset tests
 	"tools/test_dotnet.lua",
-	"tools/test_emcc.lua",
 	"tools/test_gcc.lua",
 	"tools/test_clang.lua",
 	"tools/test_msc.lua",

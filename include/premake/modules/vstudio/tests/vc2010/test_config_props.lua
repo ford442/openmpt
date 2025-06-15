@@ -1,7 +1,7 @@
 --
 -- tests/actions/vstudio/vc2010/test_config_props.lua
 -- Validate generation of the configuration property group.
--- Copyright (c) 2011-2013 Jess Perkins and the Premake project
+-- Copyright (c) 2011-2013 Jason Perkins and the Premake project
 --
 
 	local p = premake
@@ -45,7 +45,7 @@
 
 
 --
--- Check the configuration type for different project kinds.
+-- Check the configuration type for differenet project kinds.
 --
 
 	function suite.configurationType_onConsoleApp()
@@ -174,18 +174,7 @@
 --
 
 	function suite.useOfMfc_onDynamicRuntime()
-		mfc "On"
-		prepare()
-		test.capture [[
-<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-	<ConfigurationType>Application</ConfigurationType>
-	<UseDebugLibraries>false</UseDebugLibraries>
-	<UseOfMfc>Dynamic</UseOfMfc>
-		]]
-	end
-
-	function suite.useOfMfc_onDynamicRuntimeViaFlag()
-		flags { "MFC" }
+		flags "MFC"
 		prepare()
 		test.capture [[
 <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -196,18 +185,6 @@
 	end
 
 	function suite.useOfMfc_onStaticRuntime()
-		mfc "On"
-		staticruntime "On"
-		prepare()
-		test.capture [[
-<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-	<ConfigurationType>Application</ConfigurationType>
-	<UseDebugLibraries>false</UseDebugLibraries>
-	<UseOfMfc>Static</UseOfMfc>
-		]]
-	end
-	
-	function suite.useOfMfc_onStaticRuntimeViaFlag()
 		flags { "MFC" }
 		staticruntime "On"
 		prepare()
@@ -216,29 +193,6 @@
 	<ConfigurationType>Application</ConfigurationType>
 	<UseDebugLibraries>false</UseDebugLibraries>
 	<UseOfMfc>Static</UseOfMfc>
-		]]
-	end
-	
-	function suite.useOfMfc_forceStatic()
-		mfc "Static"
-		prepare()
-		test.capture [[
-<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-	<ConfigurationType>Application</ConfigurationType>
-	<UseDebugLibraries>false</UseDebugLibraries>
-	<UseOfMfc>Static</UseOfMfc>
-		]]
-	end
-
-	function suite.useOfMfc_forceDynamic()
-		mfc "Dynamic"
-		staticruntime "On"
-		prepare()
-		test.capture [[
-<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-	<ConfigurationType>Application</ConfigurationType>
-	<UseDebugLibraries>false</UseDebugLibraries>
-	<UseOfMfc>Dynamic</UseOfMfc>
 		]]
 	end
 
@@ -300,8 +254,8 @@
 <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
 	<ConfigurationType>Makefile</ConfigurationType>
 	<UseDebugLibraries>false</UseDebugLibraries>
-	<OutDir>$(ProjectDir)bin\Debug\</OutDir>
-	<IntDir>$(ProjectDir)obj\Debug\</IntDir>
+	<OutDir>bin\Debug\</OutDir>
+	<IntDir>obj\Debug\</IntDir>
 </PropertyGroup>
 		]]
 	end
@@ -313,8 +267,8 @@
 <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
 	<ConfigurationType>Makefile</ConfigurationType>
 	<UseDebugLibraries>false</UseDebugLibraries>
-	<OutDir>$(ProjectDir)bin\Debug\</OutDir>
-	<IntDir>$(ProjectDir)obj\Debug\</IntDir>
+	<OutDir>bin\Debug\</OutDir>
+	<IntDir>obj\Debug\</IntDir>
 </PropertyGroup>
 		]]
 	end
@@ -338,21 +292,8 @@
 -- Check the LinkTimeOptimization flag
 --
 
-	function suite.useOfLinkTimeOptimizationViaFlag()
+	function suite.useOfLinkTimeOptimization()
 		flags { "LinkTimeOptimization" }
-		prepare()
-		test.capture [[
-<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-	<ConfigurationType>Application</ConfigurationType>
-	<UseDebugLibraries>false</UseDebugLibraries>
-	<CharacterSet>Unicode</CharacterSet>
-	<PlatformToolset>v100</PlatformToolset>
-	<WholeProgramOptimization>true</WholeProgramOptimization>
-		]]
-	end
-
-	function suite.useOfLinkTimeOptimizationViaAPI()
-		linktimeoptimization "On"
 		prepare()
 		test.capture [[
 <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

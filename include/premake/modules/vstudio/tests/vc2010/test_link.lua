@@ -1,7 +1,7 @@
 --
 -- tests/actions/vstudio/vc2010/test_link.lua
 -- Validate linking and project references in Visual Studio 2010 C/C++ projects.
--- Copyright (c) 2011-2013 Jess Perkins and the Premake project
+-- Copyright (c) 2011-2013 Jason Perkins and the Premake project
 --
 
 	local p = premake
@@ -766,34 +766,4 @@
 	<ImportLibrary>bin\Debug\MyProject.lib</ImportLibrary>
 </Link>
 		]]
-	end
-
-
---
--- Test for the Profile flag.
---
-
-	function suite.profileOn()
-		profile "On"
-		prepare()
-		test.capture [[
-<Link>
-	<SubSystem>Windows</SubSystem>
-	<ImportLibrary>bin\Debug\MyProject.lib</ImportLibrary>
-	<Profile>true</Profile>
-</Link>
-	]]
-	end
-
-
-	function suite.profileOff()
-		profile "Off"
-		prepare()
-		test.capture [[
-<Link>
-	<SubSystem>Windows</SubSystem>
-	<ImportLibrary>bin\Debug\MyProject.lib</ImportLibrary>
-	<Profile>false</Profile>
-</Link>
-	]]
 	end

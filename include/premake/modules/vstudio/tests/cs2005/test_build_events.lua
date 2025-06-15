@@ -1,7 +1,7 @@
 --
 -- tests/actions/vstudio/cs2005/test_build_events.lua
 -- Check generation of pre- and post-build commands for C# projects.
--- Copyright (c) 2012-2013 Jess Perkins and the Premake project
+-- Copyright (c) 2012-2013 Jason Perkins and the Premake project
 --
 
 	local p = premake
@@ -19,8 +19,6 @@
 		p.action.set("vs2005")
 		p.escaper(p.vstudio.vs2010.esc)
 		wks = test.createWorkspace()
-		language "C#"
-		architecture("x86")
 	end
 
 	local function prepare(platform)
@@ -47,7 +45,7 @@
 		prebuildcommands { "command1" }
 		prepare()
 		test.capture [[
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+	<PropertyGroup>
 		<PreBuildEvent>command1</PreBuildEvent>
 	</PropertyGroup>
 		]]
@@ -57,7 +55,7 @@
 		postbuildcommands { "command1" }
 		prepare()
 		test.capture [[
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+	<PropertyGroup>
 		<PostBuildEvent>command1</PostBuildEvent>
 	</PropertyGroup>
 		]]
@@ -68,44 +66,13 @@
 		postbuildcommands { "command2" }
 		prepare()
 		test.capture [[
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+	<PropertyGroup>
 		<PreBuildEvent>command1</PreBuildEvent>
 		<PostBuildEvent>command2</PostBuildEvent>
 	</PropertyGroup>
 		]]
 	end
 
-	function suite.onMultipleConfigs()
-		configurations {"Debug", "Release"}
-		filter "configurations:Debug"
-			prebuildcommands { "command1" }
-		filter "configurations:Release"
-			prebuildcommands { "command2" }
-		filter ""
-		prepare()
-		test.capture [[
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-		<PreBuildEvent>command1</PreBuildEvent>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-		<PreBuildEvent>command2</PreBuildEvent>
-	</PropertyGroup>
-		]]
-	end
-
-	function suite.onMultipleConfigsNoFilter()
-		configurations {"Debug", "Release"}
-		postbuildcommands { "command1" }
-		prepare()
-		test.capture [[
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-		<PostBuildEvent>command1</PostBuildEvent>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-		<PostBuildEvent>command1</PostBuildEvent>
-	</PropertyGroup>
-		]]
-	end
 
 --
 -- Multiple commands should be separated with un-escaped EOLs.
@@ -114,7 +81,7 @@
 	function suite.splits_onMultipleCommands()
 		postbuildcommands { "command1", "command2" }
 		prepare()
-		test.capture ("\t<PropertyGroup Condition=\" '$(Configuration)|$(Platform)' == 'Debug|x86' \">\n\t\t<PostBuildEvent>command1\r\ncommand2</PostBuildEvent>\n\t</PropertyGroup>\n")
+		test.capture ("\t<PropertyGroup>\n\t\t<PostBuildEvent>command1\r\ncommand2</PostBuildEvent>\n\t</PropertyGroup>\n")
 	end
 
 
@@ -127,7 +94,7 @@
 		postbuildcommands { '\' " < > &' }
 		prepare()
 		test.capture [[
-	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+	<PropertyGroup>
 		<PostBuildEvent>' " &lt; &gt; &amp;</PostBuildEvent>
 	</PropertyGroup>
 		]]

@@ -1,10 +1,10 @@
-Source: premake5
+Source: premake
 Section: contrib/devel
 Priority: optional
 Maintainer: Ryan Mulder <rjmyst3@gmail.com>
-Build-Depends: debhelper (>= 13)
+Build-Depends: debhelper (>= 5)
 Standards-Version: 3.7.3
-Homepage: https://premake.github.io/
+Homepage: http://premake.sourceforge.net
 
 Package: premake
 Architecture: any

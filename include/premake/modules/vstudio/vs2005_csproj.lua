@@ -1,7 +1,7 @@
 --
 -- vs2005_csproj.lua
 -- Generate a Visual Studio 2005+ C# project.
--- Copyright (c) Jess Perkins and the Premake project
+-- Copyright (c) Jason Perkins and the Premake project
 --
 
 	local p = premake
@@ -52,9 +52,7 @@
 				dotnetbase.bindingRedirects,
 				dotnetbase.netcore.useWpf,
 				dotnetbase.csversion,
-				dotnetbase.projectConfigurations,
 				dotnetbase.netcore.enableDefaultCompileItems,
-				dotnetbase.netcore.dotnetsdk
 			}
 		else
 			return {
@@ -83,9 +81,7 @@
 			dotnetbase.debugProps,
 			dotnetbase.outputProps,
 			dotnetbase.compilerProps,
-			dotnetbase.additionalProps,
-			dotnetbase.NoWarn,
-			dotnetbase.documentationfile,
+			dotnetbase.NoWarn
 		}
 	end
 

@@ -1,7 +1,7 @@
 ---
 -- xcode/_preload.lua
 -- Define the Apple XCode actions and new APIs.
--- Copyright (c) 2009-2015 Jess Perkins and the Premake project
+-- Copyright (c) 2009-2015 Jason Perkins and the Premake project
 ---
 
 	local p = premake
@@ -10,17 +10,6 @@
 --
 -- Register new Xcode-specific project fields.
 --
-
-	p.api.register {
-		name = "swiftversion",
-		scope = "config",
-		kind = "string",
-		allowed = {
-			"4.0",
-			"4.2",
-			"5.0",
-		}
-	}
 
 	p.api.register {
 		name = "xcodebuildsettings",
@@ -80,7 +69,7 @@
 
 		-- Xcode always uses Mac OS X path and naming conventions
 
-		toolset  = "clang", -- TODO: os.target() == p.MACOSX and p.checkVersion(minOSVersion, "<10.7") -> gcc
+		toolset  = "clang",
 
 		-- The capabilities of this action
 

@@ -32,9 +32,9 @@ before_install:
 
 install:
   - export DEBUG=DEBUG
-  - sudo -E luarocks make luasocket-scm-0.rockspec 
+  - sudo -E luarocks make luasocket-scm-0.rockspec
 
-script: 
+script:
   - cd test
   - lua$LUA_SFX hello.lua
   - lua$LUA_SFX testsrvr.lua > /dev/null &

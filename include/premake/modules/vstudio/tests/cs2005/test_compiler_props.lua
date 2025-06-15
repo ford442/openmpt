@@ -1,7 +1,7 @@
 --
 -- tests/actions/vstudio/cs2005/test_compiler_props.lua
 -- Test the compiler flags of a Visual Studio 2005+ C# project.
--- Copyright (c) 2012-2013 Jess Perkins and the Premake project
+-- Copyright (c) 2012-2013 Jason Perkins and the Premake project
 --
 
 	local p = premake
@@ -73,18 +73,6 @@
 
 	function suite.treatWarningsAsErrors_onFatalWarningsFlag()
 		flags { "FatalWarnings" }
-		prepare()
-		test.capture [[
-		<DefineConstants></DefineConstants>
-		<ErrorReport>prompt</ErrorReport>
-		<WarningLevel>4</WarningLevel>
-		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-		]]
-	end
-
-
-	function suite.treatWarningsAsErrors_onFatalWarningsAPI()
-		fatalwarnings { "All" }
 		prepare()
 		test.capture [[
 		<DefineConstants></DefineConstants>

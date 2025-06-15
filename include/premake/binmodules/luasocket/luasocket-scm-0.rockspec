@@ -72,7 +72,7 @@ local function make_plat(plat)
 	if plat == "unix" or plat == "macosx" or plat == "haiku" then
 	    modules["socket.core"].sources[#modules["socket.core"].sources+1] = "src/usocket.c"
 	    if plat == "haiku" then
-	    	modules["socket.core"].libraries = {"network"}
+		modules["socket.core"].libraries = {"network"}
 	    end
 		modules["socket.unix"] = {
 		  sources = { "src/buffer.c", "src/auxiliar.c", "src/options.c", "src/timeout.c", "src/io.c", "src/usocket.c", "src/unix.c" },

@@ -1,7 +1,7 @@
 --
 -- vs2010_vcxproj_filters.lua
 -- Generate a Visual Studio 201x C/C++ filters file.
--- Copyright (c) Jess Perkins and the Premake project
+-- Copyright (c) Jason Perkins and the Premake project
 --
 
 	local p = premake
@@ -15,18 +15,11 @@
 -- Generate a Visual Studio 201x C++ project, with support for the new platforms API.
 --
 
-	m.elements.filters = function(prj)
-		return {
-			m.xmlDeclaration,
-			m.filtersProject,
-			m.uniqueIdentifiers,
-			m.filterGroups,
-		}
-	end
-
 	function m.generateFilters(prj)
-		p.utf8()
-		p.callArray(m.elements.filters, prj)
+		m.xmlDeclaration()
+		m.filtersProject()
+		m.uniqueIdentifiers(prj)
+		m.filterGroups(prj)
 		p.out('</Project>')
 	end
 
@@ -59,32 +52,7 @@
 --
 
 	function m.uniqueIdentifiers(prj)
-		-- This map contains the sort key for the known filters.
-		local knownFilters = {
-			['Source Files'] = 1,
-			['Header Files'] = 2,
-			['Resource Files'] = 3,
-		}
-
-		local sortInFilterOrder = function (a,b)
-			if #a.children > 0 or #b.children > 0 then
-				local orderA = knownFilters[a.name] or 999
-				local orderB = knownFilters[b.name] or 999
-				if orderA < orderB then
-					return true
-				end
-				if orderA > orderB then
-					return false
-				end
-				-- This can only happen if both filters are
-				-- unknown, fall back on default comparison.
-			end
-
-			-- Use default order
-			return a.name < b.name
-		end
-
-		local tr = project.getsourcetree(prj, sortInFilterOrder)
+		local tr = project.getsourcetree(prj)
 		local contents = p.capture(function()
 			p.push()
 			tree.traverse(tr, {

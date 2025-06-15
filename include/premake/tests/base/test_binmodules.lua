@@ -7,7 +7,6 @@
 	local suite = test.declare("premake_binmodules")
 	local p = premake
 
-	if not _COSMOPOLITAN and debug.getregistry()[0x5348494D] ~= nil then
 
 	function suite.setup()
 		require("example")
@@ -17,6 +16,4 @@
 	function suite.testExample()
 		local result = example.test("world")
 		test.isequal("hello world", result)
-	end
-
 	end

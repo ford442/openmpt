@@ -617,7 +617,6 @@ enum PlayBehaviour
 	kLegacyPluginNNABehaviour,      // Plugin notes with NNA=continue are affected by note-offs etc.
 	kITCarryAfterNoteOff,           // Envelope Carry continues to function as normal even after note-off
 	kFT2OffsetMemoryRequiresNote,   // Offset memory is only updated when offset command is next to a note
-	kITNoteCutWithPorta,            // Note Cut (SCx) resets note frequency and interacts with tone portamento with row delay
 
 	// Add new play behaviours here.
 

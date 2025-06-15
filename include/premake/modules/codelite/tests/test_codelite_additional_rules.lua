@@ -112,12 +112,10 @@
         <CustomPreBuild>test.obj test2.obj
 test.obj: test.rule
 	@echo "Rule-ing test.rule"
-	@$(MakeDirCommand) $(@D)
 	dorule -p       "test.rule"
 
 test2.obj: test2.rule
 	@echo "Rule-ing test2.rule"
-	@$(MakeDirCommand) $(@D)
 	dorule -p -p2      "test2.rule"
 </CustomPreBuild>
       </AdditionalRules>
@@ -159,22 +157,18 @@ test2.obj: test2.rule
         <CustomPreBuild>test.obj test2.obj test3.obj test4.obj
 test.obj: test.rule
 	@echo "Rule-ing test.rule"
-	@$(MakeDirCommand) $(@D)
 	dorule   testValue1 testValue2     "test.rule"
 
 test2.obj: test2.rule
 	@echo "Rule-ing test2.rule"
-	@$(MakeDirCommand) $(@D)
 	dorule    -StestValue1 -StestValue2    "test2.rule"
 
 test3.obj: test3.rule
 	@echo "Rule-ing test3.rule"
-	@$(MakeDirCommand) $(@D)
 	dorule     testValue1,testValue2   "test3.rule"
 
 test4.obj: test4.rule
 	@echo "Rule-ing test4.rule"
-	@$(MakeDirCommand) $(@D)
 	dorule      -OtestValue1,testValue2  "test4.rule"
 </CustomPreBuild>
       </AdditionalRules>
@@ -204,12 +198,10 @@ test4.obj: test4.rule
         <CustomPreBuild>test.obj test2.obj
 test.obj: test.rule
 	@echo "Rule-ing test.rule"
-	@$(MakeDirCommand) $(@D)
 	dorule       S0 "test.rule"
 
 test2.obj: test2.rule
 	@echo "Rule-ing test2.rule"
-	@$(MakeDirCommand) $(@D)
 	dorule       S1 "test2.rule"
 </CustomPreBuild>
       </AdditionalRules>
@@ -230,7 +222,6 @@ test2.obj: test2.rule
         <CustomPreBuild>toto.c
 toto.c: toto.txt extra_dependency
 	@echo "Some message"
-	@$(MakeDirCommand) $(@D)
 	test
 	test toto.c
 </CustomPreBuild>
@@ -251,7 +242,6 @@ toto.c: toto.txt extra_dependency
         <CustomPreBuild>toto.c
 toto.c: toto.txt extra_dependency
 	@echo "\"Some message\""
-	@$(MakeDirCommand) $(@D)
 	test
 	test toto.c
 </CustomPreBuild>
@@ -273,38 +263,14 @@ toto.c: toto.txt extra_dependency
         <CustomPreBuild>bar.c foo.c
 bar.c: bar.txt bar.h extra_dependency
 	@echo "Some message"
-	@$(MakeDirCommand) $(@D)
 	test
 	test bar
 
 foo.c: foo.txt foo.h extra_dependency
 	@echo "Some message"
-	@$(MakeDirCommand) $(@D)
 	test
 	test foo
 </CustomPreBuild>
       </AdditionalRules>]]
 	end
 
-	function suite.buildactionCopy()
-		targetdir "bin"
-		files {"foo.txt", "bar.txt"}
-		filter "files:**.txt"
-			buildaction "Copy"
-
-		prepare()
-		codelite.project.additionalRules(cfg)
-		test.capture( [[
-      <AdditionalRules>
-        <CustomPostBuild/>
-        <CustomPreBuild>bin/bar.txt bin/foo.txt
-bin/bar.txt: bar.txt
-	@$(MakeDirCommand) $(@D)
-	]] .. os.translateCommands('{COPYFILE} "bar.txt" "bin/bar.txt"') .. '\n' ..	[[
-
-bin/foo.txt: foo.txt
-	@$(MakeDirCommand) $(@D)
-	]]  .. os.translateCommands('{COPYFILE} "foo.txt" "bin/foo.txt"') .. '\n' .. [[
-</CustomPreBuild>
-      </AdditionalRules>]])
-	end

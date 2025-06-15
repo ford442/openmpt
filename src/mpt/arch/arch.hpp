@@ -143,15 +143,7 @@ struct info_initializer {
 	}
 };
 
-#if MPT_COMPILER_CLANG
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wglobal-constructors"
-#endif // MPT_COMPILER_CLANG
 inline info_initializer g_info_initializer;
-#if MPT_COMPILER_CLANG
-#pragma clang diagnostic pop
-#endif // MPT_COMPILER_CLANG
-
 
 } // namespace detail
 

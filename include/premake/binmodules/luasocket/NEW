@@ -1,17 +1,17 @@
 What's New
 
-Main changes for LuaSocket 3.0-rc1 are IPv6 support and Lua 5.2 compatibility. 
+Main changes for LuaSocket 3.0-rc1 are IPv6 support and Lua 5.2 compatibility.
 
     * Added: Compatible with Lua 5.2
         - Note that unless you define LUA_COMPAT_MODULE, package
-          tables will not be exported as globals! 
+          tables will not be exported as globals!
     * Added: IPv6 support;
         - Socket.connect and socket.bind support IPv6 addresses;
         - Getpeername and getsockname support IPv6 addresses, and
           return the socket family as a third value;
         - URL module updated to support IPv6 host names;
         - New socket.tcp6 and socket.udp6 functions;
-        - New socket.dns.getaddrinfo and socket.dns.getnameinfo functions; 
+        - New socket.dns.getaddrinfo and socket.dns.getnameinfo functions;
     * Added: getoption method;
     * Fixed: url.unescape was returning additional values;
     * Fixed: mime.qp, mime.unqp, mime.b64, and mime.unb64 could
@@ -19,10 +19,10 @@ Main changes for LuaSocket 3.0-rc1 are IPv6 support and Lua 5.2 compatibility.
     * Fixed: Receiving zero-length datagram is now possible;
     * Improved: Hidden all internal library symbols;
     * Improved: Better error messages;
-    * Improved: Better documentation of socket options. 
+    * Improved: Better documentation of socket options.
     * Fixed: manual sample of HTTP authentication now uses correct
       "authorization" header (Alexandre Ittner);
-    * Fixed: failure on bind() was destroying the socket (Sam Roberts); 
+    * Fixed: failure on bind() was destroying the socket (Sam Roberts);
     * Fixed: receive() returns immediatelly if prefix can satisfy
       bytes requested (M Joonas Pihlaja);
     * Fixed: multicast didn't work on Windows, or anywhere

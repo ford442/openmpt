@@ -1,8 +1,8 @@
 --
 -- api.lua
 -- Implementation of the workspace, project, and configuration APIs.
--- Author Jess Perkins
--- Copyright (c) 2002-2015 Jess Perkins and the Premake project
+-- Author Jason Perkins
+-- Copyright (c) 2002-2015 Jason Perkins and the Premake project
 --
 
 	local p = premake
@@ -15,7 +15,7 @@
 
 ---
 -- Set up a place to store the current active objects in each configuration
--- scope (e.g. workspaces, projects, groups, and configurations). This likely
+-- scope (e.g. wprkspaces, projects, groups, and configurations). This likely
 -- ought to be internal scope, but it is useful for testing.
 ---
 
@@ -25,7 +25,7 @@
 
 ---
 -- Define a new class of configuration container. A container can receive and
--- store configuration blocks, which are what hold the individual settings
+-- store configuration blocks, which are what hold the individial settings
 -- from the scripts. A container can also hold one or more kinds of child
 -- containers; a workspace can contain projects, for instance.
 --
@@ -81,10 +81,11 @@
 ---
 
 	function includeexternal(fname)
-		fname, compiled_chunk = p.findProjectScript(fname)
+		local fullPath = p.findProjectScript(fname)
 		local wasIncludingExternal = api._isIncludingExternal
 		api._isIncludingExternal = true
-		compiled_chunk()
+		fname = fullPath or fname
+		dofile(fname)
 		api._isIncludingExternal = wasIncludingExternal
 	end
 
@@ -265,15 +266,7 @@
 
 		if type(field.allowed) == "table" then
 			for i, item in ipairs(field.allowed) do
-				if type(item) == "string" then
-            		field.allowed[item:lower()] = item
-        		end
-			end
-		end
-
-		if type(field.reserved) == "table" then
-			for i, item in ipairs(field.reserved) do
-				field.reserved[item:lower()] = item
+				field.allowed[item:lower()] = item
 			end
 		end
 
@@ -496,7 +489,7 @@
 
 --
 -- Callback for all API functions; everything comes here first, and then
--- gets parcelled out to the individual set...() functions.
+-- gets parceled out to the individual set...() functions.
 --
 
 	function api.storeField(field, value)
@@ -642,74 +635,60 @@
 --
 
 	function api.checkValue(field, value, kind)
-
-		if field.allowed then
-
-			local canonical, result
-			local lowerValue = value:lower()
-
-			if field.aliases then
-				canonical = field.aliases[lowerValue]
-			end
-
-			if not canonical then
-				if type(field.allowed) == "function" then
-					canonical = field.allowed(value, kind or "string")
-				else
-					canonical = field.allowed[lowerValue]
-				end
-			end
-
-
-			-- If a tool was not found, check to see if there is a function in the
-			-- table to check against.  For each function in the table, check if
-			-- the value is allowed (break early if so).
-			if not canonical and type(field.allowed) == "table" then
-				for _, allow in ipairs(field.allowed)
-				do
-					if type(allow) == "function" then
-						canonical = allow(value, kind or "string")
-					end
-
-					if canonical then
-						break
-					end
-				end
-			end
-
-			if not canonical then
-				return nil, "invalid value '" .. value .. "' for " .. field.name
-			end
-
-			if field.deprecated and field.deprecated[canonical] then
-				local handler = field.deprecated[canonical]
-				handler.add(canonical)
-				if handler.message and api._deprecations ~= "off" then
-					local caller =  filelineinfo(9)
-					local key = field.name .. "_" .. value .. "_" .. caller
-					p.warnOnce(key, "the %s value %s has been deprecated and will be removed.\n   %s\n   @%s\n", field.name, canonical, handler.message, caller)
-					if api._deprecations == "error" then
-						return nil, "deprecation errors enabled"
-					end
-				end
-			end
-
-			return canonical
-
-		elseif field.reserved then
-
-			local lowerValue = value:lower()
-			local canonical = field.reserved[lowerValue]
-
-			if canonical then
-				return canonical
-			else
-				return value
-			end
-
-		else
+		if not field.allowed then
 			return value
 		end
+
+		local canonical, result
+		local lowerValue = value:lower()
+
+		if field.aliases then
+			canonical = field.aliases[lowerValue]
+		end
+
+		if not canonical then
+			if type(field.allowed) == "function" then
+				canonical = field.allowed(value, kind or "string")
+			else
+				canonical = field.allowed[lowerValue]
+			end
+		end
+
+
+		-- If a tool was not found, check to see if there is a function in the
+		-- table to check against.  For each function in the table, check if
+		-- the value is allowed (break early if so).
+		if not canonical and type(field.allowed) == "table" then
+			for _, allow in ipairs(field.allowed)
+			do
+				if type(allow) == "function" then
+					canonical = allow(value, kind or "string")
+				end
+
+				if canonical then
+					break
+				end
+			end
+		end
+
+		if not canonical then
+			return nil, "invalid value '" .. value .. "' for " .. field.name
+		end
+
+		if field.deprecated and field.deprecated[canonical] then
+			local handler = field.deprecated[canonical]
+			handler.add(canonical)
+			if handler.message and api._deprecations ~= "off" then
+				local caller =  filelineinfo(9)
+				local key = field.name .. "_" .. value .. "_" .. caller
+				p.warnOnce(key, "the %s value %s has been deprecated and will be removed.\n   %s\n   @%s\n", field.name, canonical, handler.message, caller)
+				if api._deprecations == "error" then
+					return nil, "deprecation errors enabled"
+				end
+			end
+		end
+
+		return canonical
 	end
 
 
@@ -1161,6 +1140,25 @@
 			return true
 		end
 	})
+
+
+
+---
+-- Start a new block of configuration settings, using the old, "open"
+-- style of matching without field prefixes.
+---
+
+	function configuration(terms)
+		-- Sep 16 2021
+		premake.warnOnce("configuration", "`configuration` has been deprecated; use `filter` instead (https://premake.github.io/docs/Filters/)")
+		if terms then
+			if (type(terms) == "table" and #terms == 1 and terms[1] == "*") or (terms == "*") then
+				terms = nil
+			end
+			configset.addblock(api.scope.current, {terms}, os.getcwd())
+		end
+		return api.scope.current
+	end
 
 
 

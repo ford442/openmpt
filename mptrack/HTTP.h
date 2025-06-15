@@ -235,9 +235,9 @@ struct Request
 
 	Request &SetURI(const URI &uri);
 
-#if MPT_WIN_BEFORE(MPT_WIN_VISTA)
+#if defined(MPT_BUILD_RETRO)
 	Request &InsecureTLSDowngradeWindowsXP();
-#endif // < MPT_WIN_VISTA
+#endif // MPT_BUILD_RETRO
 
 	Result operator()(InternetSession &internet) const;
 

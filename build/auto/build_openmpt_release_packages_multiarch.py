@@ -72,7 +72,6 @@ openmpt_zip_amd64_basepath = "installer/OpenMPT-" + openmpt_version + "-amd64/"
 openmpt_zip_amd64_legacy_basepath = "installer/OpenMPT-" + openmpt_version + "-amd64-legacy/"
 openmpt_zip_arm_legacy_basepath = "installer/OpenMPT-" + openmpt_version + "-arm-legacy/"
 openmpt_zip_arm64_basepath = "installer/OpenMPT-" + openmpt_version + "-arm64/"
-openmpt_zip_arm64ec_basepath = "installer/OpenMPT-" + openmpt_version + "-arm64ec/"
 openmpt_zip_symbols_basepath = "installer/OpenMPT-" + openmpt_version + "-symbols/"
 openmpt_zip_x86_path = openmpt_zip_x86_basepath
 openmpt_zip_x86_legacy_path = openmpt_zip_x86_legacy_basepath
@@ -80,7 +79,6 @@ openmpt_zip_amd64_path = openmpt_zip_amd64_basepath
 openmpt_zip_amd64_legacy_path = openmpt_zip_amd64_legacy_basepath
 openmpt_zip_arm_legacy_path = openmpt_zip_arm_legacy_basepath
 openmpt_zip_arm64_path = openmpt_zip_arm64_basepath
-openmpt_zip_arm64ec_path = openmpt_zip_arm64ec_basepath
 openmpt_zip_symbols_path = openmpt_zip_symbols_basepath
 
 def copy_file(from_path, to_path, filename):
@@ -128,7 +126,6 @@ remove_dir(openmpt_zip_x86_basepath)
 remove_dir(openmpt_zip_amd64_basepath)
 remove_dir(openmpt_zip_arm_legacy_basepath)
 remove_dir(openmpt_zip_arm64_basepath)
-remove_dir(openmpt_zip_arm64ec_basepath)
 remove_dir(openmpt_zip_symbols_basepath)
 
 remove_file("installer/" + openmpt_version_name + "-Setup.exe")
@@ -145,8 +142,6 @@ remove_file("installer/" + openmpt_version_name + "-portable-arm-legacy.zip")
 remove_file("installer/" + openmpt_version_name + "-portable-arm-legacy.update.json")
 remove_file("installer/" + openmpt_version_name + "-portable-arm64.zip")
 remove_file("installer/" + openmpt_version_name + "-portable-arm64.update.json")
-remove_file("installer/" + openmpt_version_name + "-portable-arm64ec.zip")
-remove_file("installer/" + openmpt_version_name + "-portable-arm64ec.update.json")
 remove_file("installer/" + openmpt_version_name + "-symbols.7z")
 remove_file("installer/" + openmpt_version_name + "-Setup.exe.digests")
 remove_file("installer/" + openmpt_version_name + "-portable-x86.zip.digests")
@@ -155,7 +150,6 @@ remove_file("installer/" + openmpt_version_name + "-portable-amd64.zip.digests")
 remove_file("installer/" + openmpt_version_name + "-portable-amd64-legacy.zip.digests")
 remove_file("installer/" + openmpt_version_name + "-portable-arm-legacy.zip.digests")
 remove_file("installer/" + openmpt_version_name + "-portable-arm64.zip.digests")
-remove_file("installer/" + openmpt_version_name + "-portable-arm64ec.zip.digests")
 remove_file("installer/" + openmpt_version_name + "-symbols.7z.digests")
 remove_file("installer/" + openmpt_version_name + "-update.json")
 
@@ -167,7 +161,7 @@ if singleThreaded:
 		raise Exception("Something went wrong during manual creation!")
 
 
-sourcePathModern    = "bin/release/vs2022-win11-static/"
+sourcePathModern    = "bin/release/vs2022-win10-static/"
 sourcePathLegacyARM = "bin/release/vs2022-win8-static/"
 sourcePathLegacy    = "bin/release/vs2022-win7-static/"
 
@@ -183,7 +177,7 @@ def list_binaries(path):
 if(signBinaries):
 	print("Signing binaries...")
 
-	signDirs = [sourcePathModern + "x86/", sourcePathLegacy + "x86/", sourcePathModern + "amd64/", sourcePathLegacy + "amd64/", sourcePathLegacyARM + "arm/", sourcePathModern + "arm64/", sourcePathModern + "arm64ec/"]
+	signDirs = [sourcePathModern + "x86/", sourcePathLegacy + "x86/", sourcePathModern + "amd64/", sourcePathLegacy + "amd64/", sourcePathLegacyARM + "arm/", sourcePathModern + "arm64/"]
 	signFiles = []
 	for dir in signDirs:
 		signFiles = signFiles + list_binaries(dir)
@@ -200,16 +194,13 @@ copy_pluginbridge(sourcePathModern, "x86", openmpt_zip_x86_path)
 copy_pluginbridge(sourcePathModern, "amd64", openmpt_zip_x86_path)
 copy_pluginbridge(sourcePathLegacyARM, "arm", openmpt_zip_x86_path)
 copy_pluginbridge(sourcePathModern, "arm64", openmpt_zip_x86_path)
-copy_pluginbridge(sourcePathModern, "arm64ec", openmpt_zip_x86_path)
 Path(openmpt_zip_x86_path + "OpenMPT.portable").touch()
-
 print("Copying x86 legacy binaries...")
 shutil.rmtree(openmpt_zip_x86_legacy_basepath, ignore_errors=True)
 copy_binaries(sourcePathLegacy + "x86/", openmpt_zip_x86_legacy_path)
 copy_pluginbridge(sourcePathLegacy, "x86", openmpt_zip_x86_legacy_path)
 copy_pluginbridge(sourcePathLegacy, "amd64", openmpt_zip_x86_legacy_path)
 Path(openmpt_zip_x86_legacy_path + "OpenMPT.portable").touch()
-
 print("Copying amd64 binaries...")
 shutil.rmtree(openmpt_zip_amd64_basepath, ignore_errors=True)
 copy_binaries(sourcePathModern + "amd64/", openmpt_zip_amd64_path)
@@ -217,24 +208,21 @@ copy_pluginbridge(sourcePathModern, "x86", openmpt_zip_amd64_path)
 copy_pluginbridge(sourcePathModern, "amd64", openmpt_zip_amd64_path)
 copy_pluginbridge(sourcePathLegacyARM, "arm", openmpt_zip_amd64_path)
 copy_pluginbridge(sourcePathModern, "arm64", openmpt_zip_amd64_path)
-copy_pluginbridge(sourcePathModern, "arm64ec", openmpt_zip_amd64_path)
 Path(openmpt_zip_amd64_path + "OpenMPT.portable").touch()
-
 print("Copying amd64 legacy binaries...")
 shutil.rmtree(openmpt_zip_amd64_legacy_basepath, ignore_errors=True)
 copy_binaries(sourcePathLegacy + "amd64/", openmpt_zip_amd64_legacy_path)
 copy_pluginbridge(sourcePathLegacy, "x86", openmpt_zip_amd64_legacy_path)
 copy_pluginbridge(sourcePathLegacy, "amd64", openmpt_zip_amd64_legacy_path)
 Path(openmpt_zip_amd64_legacy_path + "OpenMPT.portable").touch()
-
-print("Copying arm legacy binaries...")
+print("Copying arm binaries...")
 shutil.rmtree(openmpt_zip_arm_legacy_basepath, ignore_errors=True)
 copy_binaries(sourcePathLegacyARM + "arm/", openmpt_zip_arm_legacy_path)
-copy_pluginbridge(sourcePathLegacy, "x86", openmpt_zip_arm_legacy_path)
-copy_pluginbridge(sourcePathLegacy, "amd64", openmpt_zip_arm_legacy_path)
+copy_pluginbridge(sourcePathModern, "x86", openmpt_zip_arm_legacy_path)
+copy_pluginbridge(sourcePathModern, "amd64", openmpt_zip_arm_legacy_path)
 copy_pluginbridge(sourcePathLegacyARM, "arm", openmpt_zip_arm_legacy_path)
+copy_pluginbridge(sourcePathModern, "arm64", openmpt_zip_arm_legacy_path)
 Path(openmpt_zip_arm_legacy_path + "OpenMPT.portable").touch()
-
 print("Copying arm64 binaries...")
 shutil.rmtree(openmpt_zip_arm64_basepath, ignore_errors=True)
 copy_binaries(sourcePathModern + "arm64/", openmpt_zip_arm64_path)
@@ -242,18 +230,7 @@ copy_pluginbridge(sourcePathModern, "x86", openmpt_zip_arm64_path)
 copy_pluginbridge(sourcePathModern, "amd64", openmpt_zip_arm64_path)
 copy_pluginbridge(sourcePathLegacyARM, "arm", openmpt_zip_arm64_path)
 copy_pluginbridge(sourcePathModern, "arm64", openmpt_zip_arm64_path)
-copy_pluginbridge(sourcePathModern, "arm64ec", openmpt_zip_arm64_path)
 Path(openmpt_zip_arm64_path + "OpenMPT.portable").touch()
-
-print("Copying arm64ec binaries...")
-shutil.rmtree(openmpt_zip_arm64_basepath, ignore_errors=True)
-copy_binaries(sourcePathModern + "arm64ec/", openmpt_zip_arm64ec_path)
-copy_pluginbridge(sourcePathModern, "x86", openmpt_zip_arm64ec_path)
-copy_pluginbridge(sourcePathModern, "amd64", openmpt_zip_arm64ec_path)
-copy_pluginbridge(sourcePathLegacyARM, "arm", openmpt_zip_arm64ec_path)
-copy_pluginbridge(sourcePathModern, "arm64", openmpt_zip_arm64ec_path)
-copy_pluginbridge(sourcePathModern, "arm64ec", openmpt_zip_arm64ec_path)
-Path(openmpt_zip_arm64ec_path + "OpenMPT.portable").touch()
 
 print("Copying symbols...")
 shutil.rmtree(openmpt_zip_symbols_basepath, ignore_errors=True)
@@ -263,14 +240,12 @@ copy_symbols(sourcePathModern + "amd64/", openmpt_zip_symbols_path  + "amd64/")
 copy_symbols(sourcePathLegacy + "amd64/", openmpt_zip_symbols_path  + "amd64-legacy/")
 copy_symbols(sourcePathLegacyARM + "arm/", openmpt_zip_symbols_path  + "arm-legacy/")
 copy_symbols(sourcePathModern + "arm64/", openmpt_zip_symbols_path  + "arm64/")
-copy_symbols(sourcePathModern + "arm64ec/", openmpt_zip_symbols_path  + "arm64ec/")
 copy_symbols_pluginbridge(sourcePathModern + "x86/", openmpt_zip_symbols_path  + "x86/", "x86")
 copy_symbols_pluginbridge(sourcePathLegacy + "x86/", openmpt_zip_symbols_path  + "x86-legacy/", "x86")
 copy_symbols_pluginbridge(sourcePathModern + "amd64/", openmpt_zip_symbols_path  + "amd64/", "amd64")
 copy_symbols_pluginbridge(sourcePathLegacy + "amd64/", openmpt_zip_symbols_path  + "amd64-legacy/", "amd64")
 copy_symbols_pluginbridge(sourcePathLegacyARM + "arm/", openmpt_zip_symbols_path  + "arm-legacy/", "arm")
 copy_symbols_pluginbridge(sourcePathModern + "arm64/", openmpt_zip_symbols_path  + "arm64/", "arm64")
-copy_symbols_pluginbridge(sourcePathModern + "arm64ec/", openmpt_zip_symbols_path  + "arm64ec/", "arm64ec")
 
 if not singleThreaded:
 	pManual.communicate()
@@ -290,7 +265,6 @@ copy_other(openmpt_zip_amd64_path, openmpt_version_short)
 copy_other(openmpt_zip_amd64_legacy_path, openmpt_version_short)
 copy_other(openmpt_zip_arm_legacy_path, openmpt_version_short)
 copy_other(openmpt_zip_arm64_path, openmpt_version_short)
-copy_other(openmpt_zip_arm64ec_path, openmpt_version_short)
 
 print("Creating zip files and installers...")
 
@@ -320,9 +294,6 @@ if singleThreaded:
 p7zarm64 = Popen([path7z, "a", "-tzip", "-mx=9", "../" + openmpt_version_name + "-portable-arm64.zip", "."], cwd=openmpt_zip_arm64_basepath)
 if singleThreaded:
 	p7zarm64.communicate()
-p7zarm64ec = Popen([path7z, "a", "-tzip", "-mx=9", "../" + openmpt_version_name + "-portable-arm64ec.zip", "."], cwd=openmpt_zip_arm64ec_basepath)
-if singleThreaded:
-	p7zarm64ec.communicate()
 
 p7zsymbols = Popen([path7z, "a", "-t7z", "-mx=9", "-myv=1512", "../" + openmpt_version_name + "-symbols.7z", "."], cwd=openmpt_zip_symbols_basepath)
 if singleThreaded:
@@ -336,10 +307,9 @@ if not singleThreaded:
 	p7zamd64legacy.communicate()
 	p7zarm.communicate()
 	p7zarm64.communicate()
-	p7zarm64ec.communicate()
 	p7zsymbols.communicate()
 
-if(p7zx86.returncode != 0 or p7zx86legacy.returncode != 0 or p7zamd64.returncode != 0 or p7zamd64legacy.returncode != 0 or p7zarm.returncode != 0 or p7zarm64.returncode != 0 or p7zarm64ec.returncode != 0 or pInno.returncode != 0):
+if(p7zx86.returncode != 0 or p7zx86legacy.returncode != 0 or p7zamd64.returncode != 0 or p7zamd64legacy.returncode != 0 or p7zarm.returncode != 0 or p7zarm64.returncode != 0 or pInno.returncode != 0):
     raise Exception("Something went wrong during packaging!")
 
 def hash_file(filename):
@@ -360,7 +330,6 @@ hash_file("installer/" + openmpt_version_name + "-portable-amd64.zip")
 hash_file("installer/" + openmpt_version_name + "-portable-amd64-legacy.zip")
 hash_file("installer/" + openmpt_version_name + "-portable-arm-legacy.zip")
 hash_file("installer/" + openmpt_version_name + "-portable-arm64.zip")
-hash_file("installer/" + openmpt_version_name + "-portable-arm64ec.zip")
 hash_file("installer/" + openmpt_version_name + "-symbols.7z")
 
 shutil.rmtree(openmpt_zip_x86_basepath)
@@ -369,7 +338,6 @@ shutil.rmtree(openmpt_zip_amd64_basepath)
 shutil.rmtree(openmpt_zip_amd64_legacy_basepath)
 shutil.rmtree(openmpt_zip_arm_legacy_basepath)
 shutil.rmtree(openmpt_zip_arm64_basepath)
-shutil.rmtree(openmpt_zip_arm64ec_basepath)
 shutil.rmtree(openmpt_zip_symbols_basepath)
 
 if interactive:

@@ -1,14 +1,14 @@
 --
 -- vs2022.lua
 -- Extend the existing exporters with support for Visual Studio 2022.
--- Copyright (c) Jess Perkins and the Premake project
+-- Copyright (c) Jason Perkins and the Premake project
 --
 
 local p = premake
 local vstudio = p.vstudio
 
 ---
--- Define the Visual Studio 2022 export action.
+-- Define the Visual Studio 2019 export action.
 ---
 
 newaction {
@@ -25,7 +25,7 @@ newaction {
 
 	-- The capabilities of this action
 
-	valid_kinds     = { "ConsoleApp", "WindowedApp", "StaticLib", "SharedLib", "Makefile", "None", "Utility", "SharedItems", p.PACKAGING },
+	valid_kinds     = { "ConsoleApp", "WindowedApp", "StaticLib", "SharedLib", "Makefile", "None", "Utility", "SharedItems" },
 	valid_languages = { "C", "C++", "C#", "F#" },
 	valid_tools     = {
 		cc     = { "msc", "clang" },

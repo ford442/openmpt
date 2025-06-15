@@ -432,9 +432,6 @@ private:
 	const NoteName *m_NoteNames;
 #endif
 
-private:
-	std::unique_ptr<CTuningCollection> m_pTuningsTuneSpecific;
-
 private: //Misc data
 	const CModSpecifications *m_pModSpecs;
 
@@ -458,15 +455,15 @@ public:
 	mixsample_t m_RvbROfsVol = 0, m_RvbLOfsVol = 0;
 	CReverb m_Reverb;
 #endif
+#ifndef NO_AGC
+	CAGC m_AGC;
+#endif
 #ifndef NO_DSP
 	CSurround m_Surround;
 	CMegaBass m_MegaBass;
 #endif
 #ifndef NO_EQ
 	CEQ m_EQ;
-#endif
-#ifndef NO_AGC
-	CAGC m_AGC;
 #endif
 #ifndef NO_DSP
 	BitCrush m_BitCrush;
@@ -954,7 +951,17 @@ public:
 
 	// Reads extended instrument properties(XM/IT/MPTM/ITI/XI).
 	// Returns true if extended instrument properties were found.
-	bool LoadExtendedInstrumentProperties(FileReader &file) { return LoadExtendedInstrumentProperties(mpt::as_span(Instruments).subspan(1, GetNumInstruments()), file); }
+	bool LoadExtendedInstrumentProperties(FileReader &file)
+	{
+		std::vector<ModInstrument*> rawInstruments;
+		rawInstruments.reserve(GetNumInstruments());
+		// Instruments[0] is not used, so start from 1.
+		for(INSTRUMENTINDEX i = 1; i <= GetNumInstruments(); ++i)
+		{
+			rawInstruments.push_back(Instruments[i].get());
+		}
+		return LoadExtendedInstrumentProperties(mpt::as_span(rawInstruments), file);
+	}
 	static bool LoadExtendedInstrumentProperties(mpt::span<ModInstrument *> instruments, FileReader &file);
 
 	void SetDefaultPlaybackBehaviour(MODTYPE type);

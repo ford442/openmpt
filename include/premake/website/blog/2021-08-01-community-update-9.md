@@ -1,7 +1,10 @@
 ---
 title: "Community Update #9"
 tags: [community-updates]
-authors: starkos
+author: starkos
+author_url: https://github.com/starkos
+author_image_url: https://avatars.githubusercontent.com/u/249247?v=4
+author_title: Premake Admin & Developer
 ---
 
 I can't believe we're already eight months into 2021, how did this happen.
@@ -23,8 +26,6 @@ I've [opened a 5.0 milestone](https://github.com/premake/premake-core/milestone/
 In other news, Premake6 can now generate its own Visual Studio project files and bootstrap itself. That doesn't sound very impressive, but it does means that all of the under the hood stuff is now online and working as intended, and a full vertical slice has been completed. 🎉
 
 [@nickclark2016](https://github.com/nickclark2016) has volunteered to begin looking into a new-and-improved makefile exporter, which frees me up to start looking at Xcode and improving the way we represent toolsets like Clang and GCC. The stable release of 5.0 is likely to take up all the air in the room for a bit, but hopefully I can report progress on those soon.
-
-{/* truncate */}
 
 ### Community Contributions
 

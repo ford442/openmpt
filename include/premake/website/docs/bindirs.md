@@ -1,12 +1,12 @@
-Specifies extra paths to use when executing build commands
+bindirs
 
 ```lua
-bindirs { "directories" }
+bindirs { "directory" }
 ```
 
 ### Parameters ###
 
-`directories` - paths containing executable to run when building command.
+`directory` - needs documentation.
 
 ### Applies To ###
 
@@ -19,6 +19,6 @@ Premake 5.0.0 alpha 12 or later.
 ### Examples ###
 
 ```lua
-bindirs { "bin/", "scripts/" }
+bindirs { "directory" }
 ```
 

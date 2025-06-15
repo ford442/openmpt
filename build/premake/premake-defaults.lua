@@ -49,11 +49,7 @@
 			kind "StaticLib"
 		elseif mykind == "GUI" then
 			kind "WindowedApp"
-			if _OPTIONS["windows-version"] == "win11" then
-				files {
-					"../../build/vs/win10.manifest",
-				}
-			elseif _OPTIONS["windows-version"] == "win10" then
+			if _OPTIONS["windows-version"] == "win10" then
 				files {
 					"../../build/vs/win10.manifest",
 				}
@@ -72,11 +68,7 @@
 			end
 		elseif mykind == "Console" then
 			kind "ConsoleApp"
-			if _OPTIONS["windows-version"] == "win11" then
-				files {
-					"../../build/vs/win10.manifest",
-				}
-			elseif _OPTIONS["windows-version"] == "win10" then
+			if _OPTIONS["windows-version"] == "win10" then
 				files {
 					"../../build/vs/win10.manifest",
 				}
@@ -140,7 +132,7 @@
 	filter { "action:vs*", "action:vs2017" }
 		defines { "MPT_CHECK_CXX_IGNORE_PREPROCESSOR" }
 	filter { "action:vs*", "not action:vs2017" }
-		usestandardpreprocessor "On"
+		preprocessor "Standard"
 		conformancemode "On"
 	filter { "not action:vs*", "language:C++" }
 		buildoptions { "-std=c++17" }
@@ -306,7 +298,7 @@
    defines { "NDEBUG" }
    symbols "On"
 		if not _OPTIONS["clang"] then
-			linktimeoptimization "On"
+			flags { "LinkTimeOptimization" }
 			if _ACTION >= "vs2022" then
 				buildoptions { "/Gw" }
 				buildoptions { "/Zc:checkGwOdr" }
@@ -322,7 +314,7 @@
    defines { "NDEBUG" }
    symbols "On"
 		if not _OPTIONS["clang"] then
-			linktimeoptimization "On"
+			flags { "LinkTimeOptimization" }
 			if _ACTION >= "vs2022" then
 				buildoptions { "/Gw" }
 				buildoptions { "/Zc:checkGwOdr" }
@@ -370,23 +362,6 @@
 	
 	end
 
-	if _OPTIONS["windows-version"] == "win11" then
-
-		filter {}
-
-		filter { "architecture:x86_64" }
-			if _OPTIONS["clang"] then
-				-- not supported at the moment for clang-cl
-				--vectorextensions "SSE4.2"
-			elseif _ACTION >= "vs2022" then
-				buildoptions { "/arch:SSE4.2" }
-				defines { "MPT_BUILD_MSVC_REQUIRE_SSE42" }
-			end
-
-		filter {}
-
-	end
-
   filter {}
 	defines { "MPT_BUILD_MSVC" }
 
@@ -410,31 +385,49 @@
 		filter { "action:vs2019" }
 			systemversion "10.0.20348.0"
 		filter {}
-		filter { "action:vs2022" }
+		filter { "action:vs2022", "architecture:ARM" }
 			if _OPTIONS["windows-version"] == "win7" then
 				systemversion "10.0.20348.0"
 			elseif _OPTIONS["windows-version"] == "win8" then
 				systemversion "10.0.20348.0"
 			elseif _OPTIONS["windows-version"] == "win81" then
 				systemversion "10.0.20348.0"
-			elseif _OPTIONS["windows-version"] == "win10" then
+			else
 				systemversion "10.0.22621.0"
-			elseif _OPTIONS["windows-version"] == "win11" then
-				systemversion "10.0.26100.0"
+			end
+		filter {}
+		filter { "action:vs2022", "not architecture:ARM" }
+			if _OPTIONS["windows-version"] == "win7" then
+				systemversion "10.0.20348.0"
+			elseif _OPTIONS["windows-version"] == "win8" then
+				systemversion "10.0.20348.0"
+			elseif _OPTIONS["windows-version"] == "win81" then
+				systemversion "10.0.20348.0"
 			else
 				systemversion "10.0.26100.0"
 			end
 		filter {}
 	end
 
-	if _OPTIONS["windows-version"] == "win11" then
+	if _OPTIONS["windows-version"] == "win10" then
 		filter {}
 		defines { "_WIN32_WINNT=0x0A00" }
-		defines { "NTDDI_VERSION=0x0A000010" } -- Windows 11 23H2 Build 22631
-	elseif _OPTIONS["windows-version"] == "win10" then
 		filter {}
-		defines { "_WIN32_WINNT=0x0A00" }
-		defines { "NTDDI_VERSION=0x0A00000D" } -- Windows 10 22H2 Build 19045
+		filter { "architecture:x86" }
+			defines { "NTDDI_VERSION=0x0A00000C" } -- Windows 10 21H2 Build 19044
+		filter {}
+		filter { "architecture:x86_64" }
+			defines { "NTDDI_VERSION=0x0A00000C" } -- Windows 10 21H2 Build 19044
+		filter {}
+		filter { "architecture:ARM" }
+			defines { "NTDDI_VERSION=0x0A00000C" } -- Windows 10 21H2 Build 19044
+		filter {}
+		filter { "architecture:ARM64" }
+			defines { "NTDDI_VERSION=0x0A00000C" } -- Windows 10 21H2 Build 19044
+		filter {}
+		filter { "architecture:ARM64EC" }
+			defines { "NTDDI_VERSION=0x0A00000E" } -- Windows 11 Build 22000
+		filter {}
 	elseif _OPTIONS["windows-version"] == "win81" then
 		filter {}
 		defines { "_WIN32_WINNT=0x0603" }

@@ -3,8 +3,8 @@
 --
 -- Assertion functions for unit tests.
 --
--- Author Jess Perkins
--- Copyright (c) 2008-2016 Jess Perkins and the Premake project.
+-- Author Jason Perkins
+-- Copyright (c) 2008-2016 Jason Perkins and the Premake project.
 ---
 
 	local p = premake
@@ -51,9 +51,6 @@
 
 	function m.contains(expected, actual)
 		if type(expected) == "table" then
-			if #expected == 0 then
-				m.fail("expected cannot be empty")
-			end
 			for i, v in ipairs(expected) do
 				m.contains(v, actual)
 			end
@@ -66,9 +63,6 @@
 
 	function m.excludes(expected, actual)
 		if type(expected) == "table" then
-			if #expected == 0 then
-				m.fail("expected cannot be empty")
-			end
 			for i, v in ipairs(expected) do
 				m.excludes(v, actual)
 			end
@@ -88,7 +82,7 @@
 			format = table.remove(arg, 1)
 		end
 
-		-- convert nils into something more useful
+		-- convert nils into something more usefuls
 		for i = 1, #arg do
 			if (arg[i] == nil) then
 				arg[i] = "(nil)"

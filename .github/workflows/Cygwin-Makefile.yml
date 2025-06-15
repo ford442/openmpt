@@ -15,7 +15,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: cygwin/cygwin-install-action@master
+      - uses: cygwin/cygwin-install-action@v5
         with:
           packages: subversion make gcc-core gcc-g++ autoconf autoconf-archive automake zlib-devel libmpg123-devel libogg-devel libvorbis-devel libsndfile-devel libflac-devel libSDL2-devel libportaudio-devel libportaudiocpp-devel libpulse-devel help2man doygen graphviz curl p7zip zip unzip perl-XML-XPath
       - name: setup parallel make

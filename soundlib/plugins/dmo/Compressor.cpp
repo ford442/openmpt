@@ -177,8 +177,6 @@ CString Compressor::GetParamLabel(PlugParamIndex param)
 	case kCompRelease:
 	case kCompPredelay:
 		return _T("ms");
-	case kCompRatio:
-		return _T(": 1");
 	}
 	return CString();
 }

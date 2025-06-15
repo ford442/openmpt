@@ -1,7 +1,7 @@
 --
 -- os.lua
 -- Additions to the OS namespace.
--- Copyright (c) 2002-2014 Jess Perkins and the Premake project
+-- Copyright (c) 2002-2014 Jason Perkins and the Premake project
 --
 
 
@@ -63,31 +63,44 @@
 	end
 
 	local function get_library_search_path()
+		local path
 		if os.istarget("windows") then
-			return (os.getenv("PATH") or ""):explode(";")
+			path = os.getenv("PATH") or ""
 		elseif os.istarget("haiku") then
-			return (os.getenv("LIBRARY_PATH") or ""):explode(":")
+			path = os.getenv("LIBRARY_PATH") or ""
 		else
-			local paths
 			if os.istarget("darwin") then
-				paths = (os.getenv("DYLD_LIBRARY_PATH") or ""):explode(":")
+				path = os.getenv("DYLD_LIBRARY_PATH") or ""
 			else
-				paths = (os.getenv("LD_LIBRARY_PATH") or ""):explode(":")
+				path = os.getenv("LD_LIBRARY_PATH") or ""
 
 				for _, prefix in ipairs({"", "/opt"}) do
 					local conf_file = prefix .. "/etc/ld.so.conf"
 					if os.isfile(conf_file) then
-						paths = table.join(paths, parse_ld_so_conf(conf_file))
+						for _, v in ipairs(parse_ld_so_conf(conf_file)) do
+							if (#path > 0) then
+								path = path .. ":" .. v
+							else
+								path = v
+							end
+						end
 					end
 				end
 			end
 
-			local archpaths = {"/lib", "/usr/lib", "/usr/local/lib"}
+			path = path or ""
+			local archpath = "/lib:/usr/lib:/usr/local/lib"
 			if os.is64bit() and not (os.istarget("darwin")) then
-				archpaths = table.join({"/lib64", "/usr/lib64/", "usr/local/lib64"}, archpaths)
+				archpath = "/lib64:/usr/lib64/:usr/local/lib64" .. ":" .. archpath
 			end
-			return table.join(paths, archpaths)
+			if (#path > 0) then
+				path = path .. ":" .. archpath
+			else
+				path = archpath
+			end
 		end
+
+		return path
 	end
 
 
@@ -110,7 +123,7 @@
 --    The full path to the library if found; `nil` otherwise.
 ---
 	function os.findlib(libname, libdirs)
-		local paths = get_library_search_path()
+		local path = get_library_search_path()
 		local formats
 
 		-- assemble a search path, depending on the platform
@@ -128,17 +141,25 @@
 			table.insert(formats, "%s")
 		end
 
-		local userpaths = {}
+		local userpath = ""
 
 		if type(libdirs) == "string" then
-			userpaths = {libdirs}
+			userpath = libdirs
 		elseif type(libdirs) == "table" then
-			userpaths = libdirs
+			userpath = table.implode(libdirs, "", "", ":")
 		end
-		paths = table.join(userpaths, paths)
+
+		if (#userpath > 0) then
+			if (#path > 0) then
+				path = userpath .. ":" .. path
+			else
+				path = userpath
+			end
+		end
+
 		for _, fmt in ipairs(formats) do
 			local name = string.format(fmt, libname)
-			local result = os.pathsearch(name, table.unpack(paths))
+			local result = os.pathsearch(name, path)
 			if result then return result end
 		end
 	end
@@ -147,21 +168,30 @@
 		-- headerpath: a partial header file path
 		-- headerdirs: additional header search paths
 
-		local paths = get_library_search_path()
+		local path = get_library_search_path()
 
-		-- replace all /lib and /bin by /include
-		paths = table.translate(paths, function (path) return path:gsub('[/\\]lib[0-9]*', '/include'):gsub('[/\\]bin', '/include') end)
+		-- replace all /lib by /include
+		path = path .. ':'
+		path = path:gsub ('/lib[0-9]*([:/])', '/include%1')
+		path = path:sub (1, #path - 1)
 
-		local userpaths = {}
+		local userpath = ""
 
 		if type(headerdirs) == "string" then
-			userpaths = { headerdirs }
+			userpath = headerdirs
 		elseif type(headerdirs) == "table" then
-			userpaths = headerdirs
+			userpath = table.implode(headerdirs, "", "", ":")
 		end
-		paths = table.join(userpaths, paths)
 
-		local result = os.pathsearch (headerpath, table.unpack(paths))
+		if (#userpath > 0) then
+			if (#path > 0) then
+				path = userpath .. ":" .. path
+			else
+				path = userpath
+			end
+		end
+
+		local result = os.pathsearch (headerpath, path)
 		return result
 	end
 
@@ -171,14 +201,6 @@
 
 	function os.target()
 		return _OPTIONS.os or _TARGET_OS
-	end
-
---
--- Retrieve the current target architecture ID string.
---
-
-	function os.targetarch()
-		return _OPTIONS.arch or _TARGET_ARCH
 	end
 
 	function os.get()
@@ -236,13 +258,6 @@
 		return table.contains(tags, id:lower())
 	end
 
---
--- Retrieve the current target shell ID string.
---
-
-	function os.shell()
-		return _OPTIONS.shell or iif(os.target() == "windows", "cmd", "posix")
-	end
 
 ---
 -- Determine if a directory exists on the file system, and that it is a
@@ -545,24 +560,21 @@
 
 	local builtin_rmdir = os.rmdir
 	function os.rmdir(p)
-		-- Only delete children if the path is not a symlink
-		if not os.islink(p) then
-			-- recursively remove subdirectories
-			local dirs = os.matchdirs(p .. "/*")
-			for _, dname in ipairs(dirs) do
-				local ok, err = os.rmdir(dname)
-				if not ok then
-					return ok, err
-				end
+		-- recursively remove subdirectories
+		local dirs = os.matchdirs(p .. "/*")
+		for _, dname in ipairs(dirs) do
+			local ok, err = os.rmdir(dname)
+			if not ok then
+				return ok, err
 			end
+		end
 
-			-- remove any files
-			local files = os.matchfiles(p .. "/*")
-			for _, fname in ipairs(files) do
-				local ok, err = os.remove(fname)
-				if not ok then
-					return ok, err
-				end
+		-- remove any files
+		local files = os.matchfiles(p .. "/*")
+		for _, fname in ipairs(files) do
+			local ok, err = os.remove(fname)
+			if not ok then
+				return ok, err
 			end
 		end
 
@@ -587,7 +599,7 @@
 ---
 
 	os.commandTokens = {
-		posix = {
+		_ = {
 			chdir = function(v)
 				return "cd " .. path.normalize(v)
 			end,
@@ -606,40 +618,6 @@
 			echo = function(v)
 				return "echo " .. v
 			end,
-			linkdir = function(v)
-				-- split the source and target
-				-- source and target may be quoted with spaces
-				-- if the source or target was quoted, retain the quotes
-				local src, tgt = v:match("^%s*\"(.-)\"%s+\"(.-)\"%s*$")
-				if not src then
-					src, _ = v:match("^%s*(.-)%s+(.-)%s*$")
-				else
-					src = '"' .. src .. '"'
-				end
-				if not tgt then
-					_, tgt = v:match("^%s*(.-)%s+(.-)%s*$")
-				else
-					tgt = '"' .. tgt .. '"'
-				end
-				return "ln -s " .. path.normalize(tgt) .. " " .. path.normalize(src)
-			end,
-			linkfile = function(v)
-				-- split the source and target
-				-- source and target may be quoted with spaces
-				-- if the source or target was quoted, retain the quotes
-				local src, tgt = v:match("^%s*\"(.-)\"%s+\"(.-)\"%s*$")
-				if not src then
-					src, _ = v:match("^%s*(.-)%s+(.-)%s*$")
-				else
-					src = '"' .. src .. '"'
-				end
-				if not tgt then
-					_, tgt = v:match("^%s*(.-)%s+(.-)%s*$")
-				else
-					tgt = '"' .. tgt .. '"'
-				end
-				return "ln -s " .. path.normalize(tgt) .. " " .. path.normalize(src)
-			end,
 			mkdir = function(v)
 				return "mkdir -p " .. path.normalize(v)
 			end,
@@ -653,7 +631,7 @@
 				return "touch " .. path.normalize(v)
 			end,
 		},
-		cmd = {
+		windows = {
 			chdir = function(v)
 				return "chdir " .. path.translate(path.normalize(v))
 			end,
@@ -685,12 +663,6 @@
 			echo = function(v)
 				return "echo " .. v
 			end,
-			linkdir = function(v)
-				return "mklink /d " .. path.translate(path.normalize(v))
-			end,
-			linkfile = function(v)
-				return "mklink " .. path.translate(path.normalize(v))
-			end,
 			mkdir = function(v)
 				v = path.translate(path.normalize(v))
 				return "IF NOT EXIST " .. v .. " (mkdir " .. v .. ")"
@@ -709,12 +681,9 @@
 	}
 
 	function os.translateCommands(cmd, map)
-		map = map or os.shell()
+		map = map or os.target()
 		if type(map) == "string" then
-			if map == "windows" then -- For retro compatibility
-				map = "cmd"
-			end
-			map = os.commandTokens[map] or os.commandTokens["posix"]
+			map = os.commandTokens[map] or os.commandTokens["_"]
 		end
 
 		local processOne = function(cmd)
@@ -728,7 +697,7 @@
 
 					local token = cmd:sub(i + 1, j - 1):lower()
 					local args = cmd:sub(j + 2)
-					local func = map[token] or os.commandTokens["posix"][token]
+					local func = map[token] or os.commandTokens["_"][token]
 					if func then
 						cmd = cmd:sub(1, i -1) .. func(args)
 					end
@@ -756,7 +725,7 @@
 -- Apply os slashes for decorated command paths.
 ---
 	function os.translateCommandAndPath(dir, map)
-		if map == 'windows' or map == 'cmd' then
+		if map == 'windows' then
 			return path.translate(dir)
 		end
 		return dir
@@ -766,14 +735,14 @@
 -- Translate decorated command paths into their OS equivalents.
 ---
 	function os.translateCommandsAndPaths(cmds, basedir, location, map)
-		map = map or os.shell()
-		location = path.getabsolute(location)
-		basedir = path.getabsolute(basedir)
+		local translatedBaseDir = path.getrelative(location, basedir)
+
+		map = map or os.target()
 
 		local translateFunction = function(value)
-			local result = path.getrelative(location, path.join(basedir, value))
+			local result = path.join(translatedBaseDir, value)
 			result = os.translateCommandAndPath(result, map)
-			if value:endswith('/') or value:endswith('\\') or -- if original path ends with a slash then ensure the same
+			if value:endswith('/') or value:endswith('\\') or -- if orginal path ends with a slash then ensure the same
 			   value:endswith('/"') or value:endswith('\\"') then
 				result = result .. '/'
 			end
@@ -825,18 +794,14 @@
 
 	os.systemTags =
 	{
-		["aix"]        = { "aix",     "posix", "desktop" },
-		["android"]    = { "android", "mobile" },
-		["bsd"]        = { "bsd",     "posix", "desktop" },
-		["emscripten"] = { "emscripten", "web" },
-		["haiku"]      = { "haiku",   "posix", "desktop" },
-		["ios"]        = { "ios",     "darwin", "posix", "mobile" },
-		["linux"]      = { "linux",   "posix", "desktop" },
-		["macosx"]     = { "macosx",  "darwin", "posix", "desktop" },
-		["solaris"]    = { "solaris", "posix", "desktop" },
-		["tvos"]       = { "tvos",    "darwin", "posix", "mobile" },
-		["uwp"]        = { "uwp", "windows", "desktop" },
-		["windows"]    = { "windows", "win32", "desktop" },
+		["aix"]      = { "aix",     "posix" },
+		["bsd"]      = { "bsd",     "posix" },
+		["haiku"]    = { "haiku",   "posix" },
+		["ios"]      = { "ios",     "darwin", "posix", "mobile" },
+		["linux"]    = { "linux",   "posix" },
+		["macosx"]   = { "macosx",  "darwin", "posix" },
+		["solaris"]  = { "solaris", "posix" },
+		["windows"]  = { "windows", "win32" },
 	}
 
 	function os.getSystemTags(name)

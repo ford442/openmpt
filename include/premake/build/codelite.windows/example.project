@@ -1,10 +1,11 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<CodeLite_Project Name="example" InternalType="Library" Version="11000">
+<CodeLite_Project Name="example" InternalType="Library">
+  <Plugins/>
   <Description/>
-  <VirtualDirectory Name="example">
-    <File Name="../../binmodules/example/main.c"/>
-    <File Name="../../binmodules/example/premake5.lua"/>
-  </VirtualDirectory>
+<VirtualDirectory Name="example">
+  <File Name="../../binmodules/example/main.c"/>
+  <File Name="../../binmodules/example/premake5.lua"/>
+</VirtualDirectory>
   <Dependencies Name="x86-Release">
     <Project Name="luashim-lib"/>
   </Dependencies>
@@ -28,20 +29,18 @@
       <ResourceCompiler Options=""/>
     </GlobalSettings>
     <Configuration Name="x86-Release" CompilerType="clang" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-m32;-flto;-O3;-Wall;-Wextra;-fno-stack-protector" C_Options="-m32;-flto;-O3;-Wall;-Wextra" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="1">
+      <Compiler Options="-m32;-flto;-O3;-Wall;-Wextra;-fno-stack-protector" C_Options="-m32;-flto;-O3;-Wall;-Wextra" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlagsPolicy="1" PCHFlags="">
         <IncludePath Value="../../contrib/lua/src"/>
         <IncludePath Value="../../contrib/luashim"/>
         <Preprocessor Value="PREMAKE_COMPRESSION"/>
-        <Preprocessor Value="PREMAKE_CURL"/>
         <Preprocessor Value="CURL_STATICLIB"/>
-        <Preprocessor Value="LUA_STATICLIB"/>
+        <Preprocessor Value="PREMAKE_CURL"/>
         <Preprocessor Value="NDEBUG"/>
       </Compiler>
-      <Linker Options="-m32;-shared;-Wl,--out-implib=&quot;../../bin/release/example.lib&quot;;-flto;bin/x86/Release/luashim-lib.lib" Required="yes">
+      <Linker Required="yes" Options="-m32;-flto;-shared;-Wl,--out-implib=&quot;../../bin/release/example.lib&quot;;bin/x86/Release/luashim-lib.lib">
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="../../bin/release/example.dll" IntermediateDirectory="obj/x86/Release/example" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="" PauseExecWhenProcTerminates="no" IsGUIProgram="no" IsEnabled="yes"/>
-      <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>
@@ -50,18 +49,7 @@
         <PostConnectCommands/>
         <StartupCommands/>
       </Debugger>
-      <PreBuild/>
-      <PostBuild/>
-      <CustomBuild Enabled="no">
-        <RebuildCommand/>
-        <CleanCommand/>
-        <BuildCommand/>
-        <PreprocessFileCommand/>
-        <SingleFileCommand/>
-        <MakefileGenerationCommand/>
-        <ThirdPartyToolName/>
-        <WorkingDirectory/>
-      </CustomBuild>
+      <CustomBuild Enabled="no"/>
       <AdditionalRules>
         <CustomPostBuild/>
         <CustomPreBuild/>
@@ -74,20 +62,18 @@
       </Completion>
     </Configuration>
     <Configuration Name="x64-Release" CompilerType="clang" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-m64;-flto;-O3;-Wall;-Wextra;-fno-stack-protector" C_Options="-m64;-flto;-O3;-Wall;-Wextra" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="1">
+      <Compiler Options="-m64;-flto;-O3;-Wall;-Wextra;-fno-stack-protector" C_Options="-m64;-flto;-O3;-Wall;-Wextra" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlagsPolicy="1" PCHFlags="">
         <IncludePath Value="../../contrib/lua/src"/>
         <IncludePath Value="../../contrib/luashim"/>
         <Preprocessor Value="PREMAKE_COMPRESSION"/>
-        <Preprocessor Value="PREMAKE_CURL"/>
         <Preprocessor Value="CURL_STATICLIB"/>
-        <Preprocessor Value="LUA_STATICLIB"/>
+        <Preprocessor Value="PREMAKE_CURL"/>
         <Preprocessor Value="NDEBUG"/>
       </Compiler>
-      <Linker Options="-m64;-shared;-Wl,--out-implib=&quot;../../bin/release/example.lib&quot;;-flto;bin/x64/Release/luashim-lib.lib" Required="yes">
+      <Linker Required="yes" Options="-m64;-flto;-shared;-Wl,--out-implib=&quot;../../bin/release/example.lib&quot;;bin/x64/Release/luashim-lib.lib">
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="../../bin/release/example.dll" IntermediateDirectory="obj/x64/Release/example" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="" PauseExecWhenProcTerminates="no" IsGUIProgram="no" IsEnabled="yes"/>
-      <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>
@@ -96,18 +82,7 @@
         <PostConnectCommands/>
         <StartupCommands/>
       </Debugger>
-      <PreBuild/>
-      <PostBuild/>
-      <CustomBuild Enabled="no">
-        <RebuildCommand/>
-        <CleanCommand/>
-        <BuildCommand/>
-        <PreprocessFileCommand/>
-        <SingleFileCommand/>
-        <MakefileGenerationCommand/>
-        <ThirdPartyToolName/>
-        <WorkingDirectory/>
-      </CustomBuild>
+      <CustomBuild Enabled="no"/>
       <AdditionalRules>
         <CustomPostBuild/>
         <CustomPreBuild/>
@@ -120,20 +95,18 @@
       </Completion>
     </Configuration>
     <Configuration Name="x86-Debug" CompilerType="clang" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-m32;-g;-Wall;-Wextra" C_Options="-m32;-g;-Wall;-Wextra" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="1">
+      <Compiler Options="-m32;-g;-Wall;-Wextra" C_Options="-m32;-g;-Wall;-Wextra" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlagsPolicy="1" PCHFlags="">
         <IncludePath Value="../../contrib/lua/src"/>
         <IncludePath Value="../../contrib/luashim"/>
         <Preprocessor Value="PREMAKE_COMPRESSION"/>
-        <Preprocessor Value="PREMAKE_CURL"/>
         <Preprocessor Value="CURL_STATICLIB"/>
-        <Preprocessor Value="LUA_STATICLIB"/>
+        <Preprocessor Value="PREMAKE_CURL"/>
         <Preprocessor Value="_DEBUG"/>
       </Compiler>
-      <Linker Options="-m32;-shared;-Wl,--out-implib=&quot;../../bin/debug/example.lib&quot;;bin/x86/Debug/luashim-lib.lib" Required="yes">
+      <Linker Required="yes" Options="-m32;-shared;-Wl,--out-implib=&quot;../../bin/debug/example.lib&quot;;bin/x86/Debug/luashim-lib.lib">
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="../../bin/debug/example.dll" IntermediateDirectory="obj/x86/Debug/example" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="" PauseExecWhenProcTerminates="no" IsGUIProgram="no" IsEnabled="yes"/>
-      <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>
@@ -142,18 +115,7 @@
         <PostConnectCommands/>
         <StartupCommands/>
       </Debugger>
-      <PreBuild/>
-      <PostBuild/>
-      <CustomBuild Enabled="no">
-        <RebuildCommand/>
-        <CleanCommand/>
-        <BuildCommand/>
-        <PreprocessFileCommand/>
-        <SingleFileCommand/>
-        <MakefileGenerationCommand/>
-        <ThirdPartyToolName/>
-        <WorkingDirectory/>
-      </CustomBuild>
+      <CustomBuild Enabled="no"/>
       <AdditionalRules>
         <CustomPostBuild/>
         <CustomPreBuild/>
@@ -166,20 +128,18 @@
       </Completion>
     </Configuration>
     <Configuration Name="x64-Debug" CompilerType="clang" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
-      <Compiler Options="-m64;-g;-Wall;-Wextra" C_Options="-m64;-g;-Wall;-Wextra" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="1">
+      <Compiler Options="-m64;-g;-Wall;-Wextra" C_Options="-m64;-g;-Wall;-Wextra" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlagsPolicy="1" PCHFlags="">
         <IncludePath Value="../../contrib/lua/src"/>
         <IncludePath Value="../../contrib/luashim"/>
         <Preprocessor Value="PREMAKE_COMPRESSION"/>
-        <Preprocessor Value="PREMAKE_CURL"/>
         <Preprocessor Value="CURL_STATICLIB"/>
-        <Preprocessor Value="LUA_STATICLIB"/>
+        <Preprocessor Value="PREMAKE_CURL"/>
         <Preprocessor Value="_DEBUG"/>
       </Compiler>
-      <Linker Options="-m64;-shared;-Wl,--out-implib=&quot;../../bin/debug/example.lib&quot;;bin/x64/Debug/luashim-lib.lib" Required="yes">
+      <Linker Required="yes" Options="-m64;-shared;-Wl,--out-implib=&quot;../../bin/debug/example.lib&quot;;bin/x64/Debug/luashim-lib.lib">
       </Linker>
       <ResourceCompiler Options="" Required="no"/>
       <General OutputFile="../../bin/debug/example.dll" IntermediateDirectory="obj/x64/Debug/example" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="" PauseExecWhenProcTerminates="no" IsGUIProgram="no" IsEnabled="yes"/>
-      <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
       </Environment>
@@ -188,18 +148,7 @@
         <PostConnectCommands/>
         <StartupCommands/>
       </Debugger>
-      <PreBuild/>
-      <PostBuild/>
-      <CustomBuild Enabled="no">
-        <RebuildCommand/>
-        <CleanCommand/>
-        <BuildCommand/>
-        <PreprocessFileCommand/>
-        <SingleFileCommand/>
-        <MakefileGenerationCommand/>
-        <ThirdPartyToolName/>
-        <WorkingDirectory/>
-      </CustomBuild>
+      <CustomBuild Enabled="no"/>
       <AdditionalRules>
         <CustomPostBuild/>
         <CustomPreBuild/>

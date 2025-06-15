@@ -13,19 +13,14 @@ If no system is specified, Premake will identify and target the current operatin
 * aix
 * android
 * bsd
-* [emscripten](https://emscripten.org/)
 * [haiku](http://www.haiku-os.org)
 * ios
 * linux
 * macosx
 * solaris
-* tvos
-* uwp
 * wii
 * windows
 * xbox360
-
-To note: `emscripten` at the moment is only supported for the `gmake` and `gmakelegacy` actions.
 
 ### Applies To ###
 
@@ -55,4 +50,4 @@ workspace "MyWorkspace"
 ### See Also ###
 
 * [architecture](architecture.md)
-* [_OS](globals/premake_OS.md)
+* [_OS](premake_OS.md)

@@ -484,7 +484,7 @@ Request &Request::SetURI(const URI &uri)
 }
 
 
-#if MPT_WIN_BEFORE(MPT_WIN_VISTA)
+#if defined(MPT_BUILD_RETRO)
 Request &Request::InsecureTLSDowngradeWindowsXP()
 {
 	if(mpt::OS::Windows::IsOriginal() && mpt::osinfo::windows::Version::Current().IsBefore(mpt::osinfo::windows::Version::WinVista))
@@ -502,7 +502,7 @@ Request &Request::InsecureTLSDowngradeWindowsXP()
 	}
 	return *this;
 }
-#endif // < MPT_WIN_VISTA
+#endif // MPT_BUILD_RETRO
 
 
 Result SimpleGet(InternetSession &internet, Protocol protocol, const mpt::ustring &host, const mpt::ustring &path)

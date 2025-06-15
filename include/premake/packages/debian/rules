@@ -5,7 +5,7 @@ CFLAGS = -Wall -g
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CFLAGS += -O0
 else
-	CFLAGS += -O3
+	CFLAGS += -O2
 endif
 
 configure: configure-stamp
@@ -34,10 +34,10 @@ clean:
 install: build
 	dh_testdir
 	dh_testroot
-	dh_prep
+	dh_clean -k
 	dh_installdirs
 
-	cp $(CURDIR)/bin/release/premake5 $(CURDIR)/debian/premake/usr/bin
+	cp $(CURDIR)/bin/premake $(CURDIR)/debian/premake/usr/bin
 
 binary-indep: build install
 

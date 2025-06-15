@@ -1,7 +1,7 @@
 /**
  * \file   os_getversioninfo.c
  * \brief  Retrieve operating system version information.
- * \author Copyright (c) 2011-2012 Jess Perkins and the Premake project
+ * \author Copyright (c) 2011-2012 Jason Perkins and the Premake project
  */
 
 #include "premake.h"
@@ -272,7 +272,7 @@ getversion_macosx_cleanup:
 
 /*************************************************************/
 
-#elif defined(PLATFORM_BSD) || defined(PLATFORM_LINUX) || defined(PLATFORM_SOLARIS) || defined(PLATFORM_HURD) || defined(PLATFORM_HAIKU) || defined(PLATFORM_COSMO)
+#elif defined(PLATFORM_BSD) || defined(PLATFORM_LINUX) || defined(PLATFORM_SOLARIS) || defined(PLATFORM_HURD) || defined(PLATFORM_HAIKU)
 
 #include <string.h>
 #include <sys/utsname.h>
@@ -286,17 +286,23 @@ int getversion(struct OsVersionInfo* info)
 	info->minorversion = 0;
 	info->revision = 0;
 
-	// uname returns -1 on error, and returns 0 on success for most platforms
-	// except Solaris, which returns non-negative.
-	if (uname(&u) < 0)
+	if (uname(&u))
 	{
 		// error
-		info->description = PLATFORM_OS;
+		info->description = PLATFORM_STRING;
 		return 0;
 	}
 
-	info->description = strdup(u.sysname);
+#if __GLIBC__
+	// When using glibc, info->description gets set to u.sysname,
+	// but it isn't passed out of this function, so we need to copy
+	// the string.
+	info->description = malloc(strlen(u.sysname) + 1);
+	strcpy((char*)info->description, u.sysname);
 	info->isalloc = 1;
+#else
+	info->description = u.sysname;
+#endif
 
 	if ((ver = strtok(u.release, ".-")) != NULL)
 	{

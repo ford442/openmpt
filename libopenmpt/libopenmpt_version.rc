@@ -210,8 +210,6 @@ BEGIN
     END
 END
 
-2                       ICON                    "libopenmpt.ico"
-
 //#endif
 //#endif
 #endif

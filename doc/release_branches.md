@@ -18,8 +18,6 @@ branching release branches
      *  "publish_v2.sh" -> "publish_v2_rel.sh"
      *  "publish_v2_noindex.sh" -> "publish_v2_noindex_rel.sh"
      *  " rel" -> " dist"
-     *  "bin/rel-" -> "bin/dist-"
-     *  "auto/rel" -> "auto/dist"
      *  ".sh dist" -> ".sh rel"
      *  "nonrel" -> "nondist"
      *  "7z" -> "zip"
@@ -37,26 +35,18 @@ branching release branches
      3. run `build/update_libopenmpt_version.sh bumpltabi`
      4. update version numbers in `build/svn/do_libopenmpt_release.sh` and
         `build/svn/do_libopenmpt_release_rc.sh`
-     5. update version number in `.appveyor.yml`
-     6. update `doc/libopenmpt_release.md`
  9. update versions in branch
     `https://source.openmpt.org/svn/openmpt/branches/OpenMPT-$VER`:
      1. set OpenMPT version in `common/versionNumber.h` to
         `1.$VER.00.$MINORMINOR+1`
      2. run `build/update_libopenmpt_version.sh bumpprerel`
-     4. update `doc/libopenmpt_release.md`
-10. update old stable branch
-     1. uncomment updating OpenMPT version in
-        `build/svn/do_libopenmpt_release.sh`
-11. update CI branch configuration in new branch
-12. update announcement/changelog URLs for test builds in branch:
+10. update CI branch configuration in new branch
+11. update announcement/changelog URLs for test builds in branch:
     `installer/generate_update_json.py` and `generate_update_json_retro.py`:
      *  "trunk/OpenMPT" -> "banches/OpenMPT-1.32"
-13. update https://builds.openmpt.org/builds/
-14. update buildbot scripts that copy OpenMPT update information into place
-15. update branch release date on libopenmpt trunk changelog
-16. reduce libopenmpt release packages to only include source and modern Windows
-    builds for old stable branch:
-     1. Buildbot config
-     2. release script
-     3. Website download page
+12. update https://builds.openmpt.org/builds/
+13. update buildbot scripts that copy OpenMPT update information into place
+14. update branch release date on libopenmpt trunk changelog
+
+unclear:
+ *  adjust buildbot update management script

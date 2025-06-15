@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="build">
@@ -186,6 +186,9 @@
     </Filter>
     <Filter Include="test">
       <UniqueIdentifier>{65689E7C-519F-9F0D-FA8B-8510E6A11B0F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="unarchiver">
+      <UniqueIdentifier>{DCBADFD6-C872-2124-317A-FA7F1D51BC14}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1140,6 +1143,12 @@
     <ClInclude Include="..\..\test\test.h">
       <Filter>test</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\unarchiver\archive.h">
+      <Filter>unarchiver</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\unarchiver\ungzip.h">
+      <Filter>unarchiver</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\common\ComponentManager.cpp">
@@ -1634,6 +1643,9 @@
     <ClCompile Include="..\..\test\test.cpp">
       <Filter>test</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\unarchiver\ungzip.cpp">
+      <Filter>unarchiver</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\libopenmpt\libopenmpt_test\libopenmpt_test.manifest">
@@ -1642,10 +1654,5 @@
     <None Include="..\vs\win8.manifest">
       <Filter>build\vs</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\..\libopenmpt\libopenmpt_version.rc">
-      <Filter>libopenmpt</Filter>
-    </ResourceCompile>
   </ItemGroup>
 </Project>

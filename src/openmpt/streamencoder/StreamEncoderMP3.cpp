@@ -8,12 +8,9 @@
 #include "openmpt/streamencoder/StreamEncoderMP3.hpp"
 
 #include "mpt/base/alloc.hpp"
-#include "mpt/base/integer.hpp"
 #include "mpt/base/macros.hpp"
 #include "mpt/base/memory.hpp"
-#include "mpt/base/numeric.hpp"
 #include "mpt/base/saturate_cast.hpp"
-#include "mpt/base/saturate_round.hpp"
 #include "mpt/base/span.hpp"
 #include "mpt/format/message_macros.hpp"
 #include "mpt/format/simple.hpp"
@@ -30,7 +27,6 @@
 #include "openmpt/soundfile_data/tags.hpp"
 #include "openmpt/streamencoder/StreamEncoder.hpp"
 
-#include <algorithm>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -393,7 +389,7 @@ static Encoder::Traits BuildTraits(bool compatible)
 	traits.samplerates = (compatible ? mpt::make_vector(mpeg1layer3_samplerates) : mpt::make_vector(layer3_samplerates));
 	traits.modes = (compatible ? Encoder::ModeCBR : (Encoder::ModeABR | Encoder::ModeQuality));
 	traits.bitrates = (compatible ? mpt::make_vector(mpeg1layer3_bitrates) : mpt::make_vector(layer3_bitrates));
-	traits.defaultSamplerate = (compatible ? 44100 : 48000);
+	traits.defaultSamplerate = 44100;
 	traits.defaultChannels = 2;
 	traits.defaultMode = (compatible ? Encoder::ModeCBR : Encoder::ModeQuality);
 	traits.defaultBitrate = 256;
@@ -517,7 +513,7 @@ public:
 		{
 
 			float lame_quality = 10.0f - (settings.Quality * 10.0f);
-			lame_quality = std::clamp(lame_quality, 0.0f, 9.999f);
+			Limit(lame_quality, 0.0f, 9.999f);
 			lame_set_VBR_quality(gfp, lame_quality);
 			lame_set_VBR(gfp, vbr_default);
 

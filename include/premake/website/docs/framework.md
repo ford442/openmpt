@@ -1,7 +1,3 @@
-:::caution
-**This API is deprecated since 5.0**, please use [dotnetframework](dotnetframework.md) instead.
-:::
-
 Selects a .NET framework version.
 
 ```lua
@@ -36,6 +32,10 @@ Use the .NET 3.0 Framework.
 ```lua
 framework "3.0"
 ```
+
+### Remarks ###
+
+This API is deprecated since 5.0, please use [dotnetframework](dotnetframework.md) instead.
 
 ### See Also ###
 

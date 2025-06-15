@@ -12,8 +12,7 @@
 
 #include "openmpt/all/BuildSettings.hpp"
 
-#include "mpt/base/detect.hpp"
-#include "mpt/base/macros.hpp"
+#include "mpt/base/utility.hpp"
 
 #if MPT_COMPILER_MSVC
 #pragma warning(push)
@@ -26,50 +25,49 @@
 
 OPENMPT_NAMESPACE_BEGIN
 
-inline MPT_NOINLINE bool WriteMemoryDump(_EXCEPTION_POINTERS *pExceptionInfo, const TCHAR *filename, bool fullMemDump)
+inline bool WriteMemoryDump(_EXCEPTION_POINTERS *pExceptionInfo, const TCHAR *filename, bool fullMemDump)
 {
+	using MINIDUMPWRITEDUMP = BOOL(WINAPI *)(HANDLE hProcess, DWORD dwPid, HANDLE hFile, MINIDUMP_TYPE DumpType, CONST PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam, CONST PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam, CONST PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
+
 	bool result = false;
+
 	HMODULE hDll = ::LoadLibrary(_T("DBGHELP.DLL"));
 	if(hDll)
 	{
-		using MINIDUMPWRITEDUMP = BOOL(WINAPI *)(HANDLE hProcess, DWORD dwPid, HANDLE hFile, MINIDUMP_TYPE DumpType, CONST PMINIDUMP_EXCEPTION_INFORMATION ExceptionParam, CONST PMINIDUMP_USER_STREAM_INFORMATION UserStreamParam, CONST PMINIDUMP_CALLBACK_INFORMATION CallbackParam);
-#if (MPT_CLANG_AT_LEAST(19, 0, 0) && !MPT_OS_ANDROID) || MPT_CLANG_AT_LEAST(20, 0, 0)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-#endif
-		MINIDUMPWRITEDUMP pDump = reinterpret_cast<MINIDUMPWRITEDUMP>(::GetProcAddress(hDll, "MiniDumpWriteDump"));
-#if (MPT_CLANG_AT_LEAST(19, 0, 0) && !MPT_OS_ANDROID) || MPT_CLANG_AT_LEAST(20, 0, 0)
-#pragma clang diagnostic pop
-#endif
+		MINIDUMPWRITEDUMP pDump = mpt::function_pointer_cast<MINIDUMPWRITEDUMP>(::GetProcAddress(hDll, "MiniDumpWriteDump"));
 		if(pDump)
 		{
+
 			HANDLE hFile = ::CreateFile(filename, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-			if((hFile != INVALID_HANDLE_VALUE) && (hFile != NULL))
+			if (hFile != INVALID_HANDLE_VALUE)
 			{
-				const MINIDUMP_TYPE flags = fullMemDump ?
-						(MINIDUMP_TYPE)(MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithThreadInfo | MiniDumpWithProcessThreadData | MiniDumpWithFullMemoryInfo | MiniDumpIgnoreInaccessibleMemory | MiniDumpWithTokenInformation)
-					:
-						MiniDumpNormal
-					;
+				_MINIDUMP_EXCEPTION_INFORMATION ExInfo;
+
 				if(pExceptionInfo)
 				{
-					_MINIDUMP_EXCEPTION_INFORMATION ExInfo{};
 					ExInfo.ThreadId = ::GetCurrentThreadId();
 					ExInfo.ExceptionPointers = pExceptionInfo;
 					ExInfo.ClientPointers = NULL;
-					result = (pDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, flags, &ExInfo, NULL, NULL) == TRUE);
-				} else
-				{
-					result = (pDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, flags, NULL, NULL, NULL) == TRUE);
 				}
+
+				pDump(GetCurrentProcess(), GetCurrentProcessId(), hFile,
+					fullMemDump ?
+					(MINIDUMP_TYPE)(MiniDumpWithFullMemory | MiniDumpWithHandleData | MiniDumpWithThreadInfo | MiniDumpWithProcessThreadData | MiniDumpWithFullMemoryInfo
+#if MPT_COMPILER_MSVC
+					| MiniDumpIgnoreInaccessibleMemory | MiniDumpWithTokenInformation
+#endif
+					)
+					:
+				MiniDumpNormal,
+					pExceptionInfo ? &ExInfo : NULL, NULL, NULL);
+				::CloseHandle(hFile);
+
+				result = true;
 			}
-			::CloseHandle(hFile);
-			hFile = NULL;
 		}
 		::FreeLibrary(hDll);
-		hDll = NULL;
 	}
-	return result;
+	return  result;
 }
 
 OPENMPT_NAMESPACE_END

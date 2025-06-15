@@ -22,6 +22,7 @@ Unpack::Unpack(ComprDataIO *DataIO)
   Window=NULL;
   Fragmented=false;
   Suspended=false;
+  UnpAllBuf=false;
   UnpSomeRead=false;
   ExtraDist=false;
 #ifdef RAR_SMP

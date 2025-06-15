@@ -6,7 +6,6 @@ void SetConsoleMsgStream(MESSAGE_TYPE MsgStream);
 void SetConsoleRedirectCharset(RAR_CHARSET RedirectCharset);
 void ProhibitConsoleInput();
 void OutComment(const std::wstring &Comment);
-bool IsConsoleOutputPresent();
 
 #ifndef SILENT
 bool GetConsolePassword(UIPASSWORD_TYPE Type,const std::wstring &FileName,SecPassword *Password);

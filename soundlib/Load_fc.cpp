@@ -127,7 +127,6 @@ static void TranslateFCScript(InstrumentSynth::Events &events, const mpt::span<c
 	parsedSequences.set(sequencesToParse.back());
 
 	std::map<uint16, uint16> entryFromByte;
-	events.push_back(InstrumentSynth::Event::JumpMarker(0));
 	while(!sequencesToParse.empty())
 	{
 		const uint16 currentSequenceOffset = sequencesToParse.back() * 64u;

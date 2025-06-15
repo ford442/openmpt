@@ -1,7 +1,7 @@
 --
 -- config.lua
 -- Premake configuration object API
--- Copyright (c) 2011-2015 Jess Perkins and the Premake project
+-- Copyright (c) 2011-2015 Jason Perkins and the Premake project
 --
 
 	local p = premake
@@ -44,28 +44,26 @@
 		local prefix = cfg[field.."prefix"] or cfg.targetprefix or ""
 		local suffix = cfg[field.."suffix"] or cfg.targetsuffix or ""
 		local extension = cfg[field.."extension"] or cfg.targetextension or ""
-		local bundleextension = cfg[field.."bundleextension"] or cfg.targetbundleextension or ""
 
 		local bundlename = ""
 		local bundlepath = ""
 
 		if table.contains(os.getSystemTags(cfg.system), "darwin") and (kind == p.WINDOWEDAPP or (kind == p.SHAREDLIB and cfg.sharedlibtype)) then
-			bundlename = basename .. bundleextension
+			bundlename = basename .. extension
 			bundlepath = path.join(bundlename, iif(kind == p.SHAREDLIB and cfg.sharedlibtype == "OSXFramework", "Versions/A", "Contents/MacOS"))
 		end
 
 		local info = {}
-		info.directory       = directory
-		info.basename        = basename .. suffix
-		info.name            = prefix .. info.basename .. extension
-		info.extension       = extension
-		info.bundleextension = bundleextension
-		info.abspath         = path.join(directory, info.name)
-		info.fullpath        = info.abspath
-		info.bundlename      = bundlename
-		info.bundlepath      = path.join(directory, bundlepath)
-		info.prefix          = prefix
-		info.suffix          = suffix
+		info.directory  = directory
+		info.basename   = basename .. suffix
+		info.name       = prefix .. info.basename .. extension
+		info.extension  = extension
+		info.abspath    = path.join(directory, info.name)
+		info.fullpath   = info.abspath
+		info.bundlename = bundlename
+		info.bundlepath = path.join(directory, bundlepath)
+		info.prefix     = prefix
+		info.suffix     = suffix
 		return info
 	end
 
@@ -154,8 +152,7 @@
 	function config.canLinkIncremental(cfg)
 		if cfg.kind == "StaticLib"
 				or config.isOptimizedBuild(cfg)
-				or cfg.flags.NoIncrementalLink
-				or cfg.linktimeoptimization == "On" then
+				or cfg.flags.NoIncrementalLink then
 			return false
 		end
 		return true
@@ -265,20 +262,10 @@
 			local link = cfg.links[i]
 			local item
 
-			-- Strip linking decorators from link, to determine if the link
-			-- is a "sibling" project.
-			local endswith = function(s, ptrn)
-				return ptrn == string.sub(s, -string.len(ptrn))
-			end
-			local name = link
-			if endswith(name, ":static") or endswith(name, ":shared") then
-				name = string.sub(name, 0, -8)
-			end
-
 			-- Sort the links into "sibling" (is another project in this same
 			-- workspace) and "system" (is not part of this workspace) libraries.
 
-			local prj = p.workspace.findproject(cfg.workspace, name)
+			local prj = p.workspace.findproject(cfg.workspace, link)
 			if prj and kind ~= "system" then
 
 				-- Sibling; is there a matching configuration in this project that
@@ -313,7 +300,7 @@
 			end
 
 			-- If this is something I can link against, pull out the requested part
-			-- don't link against my self
+			-- dont link against my self
 			if item and item ~= cfg then
 				if part == "directory" then
 					item = path.getdirectory(item)
@@ -577,7 +564,7 @@
 				-- result if the corresponding value is not present
 
 				for key, replacement in pairs(map) do
-					if type(key) == "string" and #key > 1 and key:startswith("_") then
+					if #key > 1 and key:startswith("_") then
 						key = key:sub(2)
 						if values[key] == nil then
 							add(replacement)

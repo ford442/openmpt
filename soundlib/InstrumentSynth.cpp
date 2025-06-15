@@ -205,23 +205,13 @@ void InstrumentSynth::States::NextTick(PlayState &playState, CHANNELINDEX channe
 	states.resize(scripts.size());
 	for(size_t i = 0; i < scripts.size(); i++)
 	{
-		auto &script = scripts[i];
 		auto &state = states[i];
 		if(chn.triggerNote)
 			mpt::reconstruct(state);
-
 		if(i == 1 && chn.rowCommand.command == CMD_MED_SYNTH_JUMP && chn.isFirstTick)
-		{
-			// Ugly special case: If the script didn't run yet (not triggered on same row), we need to run at least the first SetStepSpeed command.
-			if(state.m_nextRow == 0 && !script.empty() && script[0].type == Event::Type::SetStepSpeed)
-			{
-				state.EvaluateEvent(script[0], playState, channel, sndFile, *this);
-				state.m_stepsRemain = 0;
-			}
-			state.JumpToPosition(script, chn.rowCommand.param);
-		}
+			state.JumpToPosition(scripts[i], chn.rowCommand.param);
 
-		state.NextTick(script, playState, channel, sndFile, *this);
+		state.NextTick(scripts[i], playState, channel, sndFile, *this);
 	}
 }
 
@@ -301,9 +291,8 @@ void InstrumentSynth::States::State::NextTick(const Events &events, PlayState &p
 		if(m_medVolumeEnv != uint8_max && chn->pModInstrument)
 		{
 			m_volumeFactor = static_cast<uint16>(std::clamp((MEDEnvelopeFromSample(*chn->pModInstrument, sndFile, m_medVolumeEnv & 0x7F, m_medVolumeEnvPos) + 128) * 64, 0, 16384));
-			if(m_medVolumeEnvPos < 127)
-				m_medVolumeEnvPos++;
-			else if(m_medVolumeEnv & 0x80)
+			m_medVolumeEnvPos++;
+			if(m_medVolumeEnvPos >= 128 && (m_medVolumeEnv & 0x80))
 				m_medVolumeEnvPos = 0;
 		}
 
@@ -698,9 +687,10 @@ bool InstrumentSynth::States::State::EvaluateEvent(const Event &event, PlayState
 		m_medArpPos = 0;
 		return true;
 	case Event::Type::MED_JumpScript:
-		if(event.u8 < chn.synthState.states.size() && chn.pModInstrument && event.u8 < chn.pModInstrument->synth.m_scripts.size())
+		if(event.u8 < chn.synthState.states.size())
 		{
-			chn.synthState.states[event.u8].JumpToPosition(chn.pModInstrument->synth.m_scripts[event.u8], event.u16);
+			chn.synthState.states[event.u8].m_nextRow = event.u16;
+			chn.synthState.states[event.u8].m_ticksRemain = 0;
 			chn.synthState.states[event.u8].m_stepsRemain = 0;
 		}
 		return false;

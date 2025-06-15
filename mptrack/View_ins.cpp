@@ -229,7 +229,6 @@ BOOL CViewInstrument::SetCurrentInstrument(INSTRUMENTINDEX nIns, EnvelopeType nE
 	UpdateScrollSize();
 	UpdateNcButtonState();
 	InvalidateRect(NULL, FALSE);
-	CMainFrame::GetMainFrame()->NotifyAccessibilityUpdate(*this);
 	return TRUE;
 }
 

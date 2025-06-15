@@ -6,7 +6,7 @@ prebuildcommands { "commands" }
 
 ### Parameters ###
 
-`commands` is one or more shell commands.
+`commands` is one or more shell commands. These commands will be passed to the shell exactly as entered, including path separators and the like.
 
 ### Applies To ###
 
@@ -19,11 +19,14 @@ Premake 4.4 or later.
 ### Examples ###
 
 ```lua
-prebuildcommands { "{COPYFILE} %[default.config] %[bin/project.config]" }
+filter { "system:windows" }
+   prebuildcommands { "copy default.config bin\\project.config" }
+
+filter { "not system:windows" }
+   prebuildcommands { "cp default.config bin/project.config" }
 ```
 
 ### See Also ###
 
- * [Tokens](Tokens.md)
  * [postbuildcommands](postbuildcommands.md)
  * [prelinkcommands](prelinkcommands.md)

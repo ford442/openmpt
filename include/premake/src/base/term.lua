@@ -43,11 +43,3 @@ function term.popColor()
 		term.setTextColor(color)
 	end
 end
-
-function term.clearToEndOfLine()
-	io.write("\027[K")
-end
-
-function term.moveLeft(n)
-	io.write(string.format("\027[%sD", n))
-end
