@@ -28,7 +28,7 @@ protected:
 	{
 		kI3DL2ReverbRoom = 0,
 		kI3DL2ReverbRoomHF,
-		kI3DL2ReverbRoomRolloffFactor,	// Doesn't actually do anything :)
+		kI3DL2ReverbRoomRolloffFactor,  // Doesn't actually do anything :)
 		kI3DL2ReverbDecayTime,
 		kI3DL2ReverbDecayHFRatio,
 		kI3DL2ReverbReflections,
@@ -75,7 +75,7 @@ protected:
 	float m_ReverbLevelL;
 	float m_ReverbLevelR;
 
-	int32 m_delayTaps[15];	// 6*L + 6*R + LR + Early L + Early R
+	int32 m_delayTaps[15];  // 6*L + 6*R + LR + Early L + Early R
 	int32 m_earlyTaps[2][6];
 	float m_delayCoeffs[13][2];
 
@@ -91,12 +91,12 @@ protected:
 	bool m_ok = false, m_recalcParams = true;
 
 public:
-	static IMixPlugin* Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
+	static IMixPlugin *Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 	I3DL2Reverb(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 
 	int32 GetUID() const override { return 0xEF985E71; }
 	int32 GetVersion() const override { return 0; }
-	void Idle() override { }
+	void Idle() override {}
 	uint32 GetLatency() const override { return 0; }
 
 	void Process(float *pOutL, float *pOutR, uint32 numFrames) override;
@@ -127,14 +127,14 @@ public:
 	CString GetParamDisplay(PlugParamIndex param) override;
 
 	CString GetCurrentProgramName() override;
-	void SetCurrentProgramName(const CString &) override { }
+	void SetCurrentProgramName(const CString &) override {}
 	CString GetProgramName(int32 program) override;
 
 	bool HasEditor() const override { return false; }
 #endif
 
-	void BeginSetProgram(int32) override { }
-	void EndSetProgram() override { }
+	void BeginSetProgram(int32) override {}
+	void EndSetProgram() override {}
 
 	int GetNumInputChannels() const override { return 2; }
 	int GetNumOutputChannels() const override { return 2; }
@@ -161,8 +161,8 @@ protected:
 	float CalcDecayCoeffs(int32 index);
 };
 
-} // namespace DMO
+}  // namespace DMO
 
 OPENMPT_NAMESPACE_END
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS

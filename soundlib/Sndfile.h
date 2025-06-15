@@ -408,7 +408,6 @@ public:
 	double GetPlaybackTimeAt(ORDERINDEX ord, ROWINDEX row, bool updateVars, bool updateSamplePos);
 
 	std::vector<SubSong> GetAllSubSongs();
-	CTuningCollection* m_pTuningsTuneSpecific = nullptr;
 
 	//Tuning-->
 public:
@@ -435,6 +434,7 @@ private:
 
 private: //Misc data
 	const CModSpecifications *m_pModSpecs;
+	std::unique_ptr<CTuningCollection> m_pTuningsTuneSpecific; // MOVED HERE
 
 private:
 	// Interleaved Front Mix Buffer (Also room for interleaved rear mix)
@@ -543,6 +543,9 @@ protected:
 	mpt::fast_prng m_PRNG;
 	inline mpt::fast_prng & AccessPRNG() const { return const_cast<CSoundFile*>(this)->m_PRNG; }
 	inline mpt::fast_prng & AccessPRNG() { return m_PRNG; }
+
+// private: // This was the original location of m_pTuningsTuneSpecific
+//	std::unique_ptr<CTuningCollection> m_pTuningsTuneSpecific; // REMOVED FROM HERE
 
 protected:
 	// Mix level stuff

@@ -134,7 +134,7 @@ mpt::PathString ToFilterOnlyString(const std::vector<FileType> &fileTypes, bool 
 
 #else
 MPT_MSVC_WORKAROUND_LNK4221(mptFileType)
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 

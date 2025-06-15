@@ -55,13 +55,12 @@ public:
 public:
 
 	virtual ComponentType GetType() const = 0;
-	
+
 	virtual bool IsInitialized() const = 0;  // Initialize() has been called
-	virtual bool IsAvailable() const = 0;  // Initialize() has been successfull
+	virtual bool IsAvailable() const = 0;    // Initialize() has been successfull
 	virtual mpt::ustring GetVersion() const = 0;
 
 	virtual void Initialize() = 0;  // try to load the component
-
 };
 
 
@@ -104,7 +103,6 @@ public:
 protected:
 
 	virtual bool DoInitialize() = 0;
-
 };
 
 
@@ -134,10 +132,10 @@ class ComponentLibrary
 {
 
 private:
-	
+
 	using TLibraryMap = std::map<std::string, mpt::Library>;
 	TLibraryMap m_Libraries;
-	
+
 	bool m_BindFailed;
 
 protected:
@@ -157,11 +155,11 @@ protected:
 	bool HasBindFailed() const;
 
 public:
-	
+
 	virtual mpt::Library GetLibrary(const std::string &libName) const;
-	
+
 	template <typename Tfunc>
-	bool Bind(Tfunc * & f, const std::string &libName, const std::string &symbol) const
+	bool Bind(Tfunc *&f, const std::string &libName, const std::string &symbol) const
 	{
 		return GetLibrary(libName).Bind(f, symbol);
 	}
@@ -169,14 +167,21 @@ public:
 protected:
 
 	bool DoInitialize() override = 0;
-
 };
 
 
-#define MPT_COMPONENT_BIND(libName, func) do { if(!Bind( func , libName , #func )) { SetBindFailed(); } } while(0)
-#define MPT_COMPONENT_BIND_OPTIONAL(libName, func) Bind( func , libName , #func )
-#define MPT_COMPONENT_BIND_SYMBOL(libName, symbol, func) do { if(!Bind( func , libName , symbol )) { SetBindFailed(); } } while(0)
-#define MPT_COMPONENT_BIND_SYMBOL_OPTIONAL(libName, symbol, func) Bind( func , libName , symbol )
+#define MPT_COMPONENT_BIND(libName, func) \
+	do \
+	{ \
+		if(!Bind(func, libName, #func)) { SetBindFailed(); } \
+	} while(0)
+#define MPT_COMPONENT_BIND_OPTIONAL(libName, func) Bind(func, libName, #func)
+#define MPT_COMPONENT_BIND_SYMBOL(libName, symbol, func) \
+	do \
+	{ \
+		if(!Bind(func, libName, symbol)) { SetBindFailed(); } \
+	} while(0)
+#define MPT_COMPONENT_BIND_SYMBOL_OPTIONAL(libName, symbol, func) Bind(func, libName, symbol)
 
 #if MPT_OS_WINDOWS
 #ifdef UNICODE
@@ -184,10 +189,18 @@ protected:
 #else
 #define MPT_COMPONENT_BINDWIN_SUFFIX "A"
 #endif
-#define MPT_COMPONENT_BINDWIN(libName, func) do { if(!Bind( func , libName , #func MPT_COMPONENT_BINDWIN_SUFFIX )) { SetBindFailed(); } } while(0)
-#define MPT_COMPONENT_BINDWIN_OPTIONAL(libName, func) Bind( func , libName , #func MPT_COMPONENT_BINDWIN_SUFFIX )
-#define MPT_COMPONENT_BINDWIN_SYMBOL(libName, symbol, func) do { if(!Bind( func , libName , symbol MPT_COMPONENT_BINDWIN_SUFFIX )) { SetBindFailed(); } } while(0)
-#define MPT_COMPONENT_BINDWIN_SYMBOL_OPTIONAL(libName, symbol, func) Bind( func , libName , symbol MPT_COMPONENT_BINDWIN_SUFFIX )
+#define MPT_COMPONENT_BINDWIN(libName, func) \
+	do \
+	{ \
+		if(!Bind(func, libName, #func MPT_COMPONENT_BINDWIN_SUFFIX)) { SetBindFailed(); } \
+	} while(0)
+#define MPT_COMPONENT_BINDWIN_OPTIONAL(libName, func) Bind(func, libName, #func MPT_COMPONENT_BINDWIN_SUFFIX)
+#define MPT_COMPONENT_BINDWIN_SYMBOL(libName, symbol, func) \
+	do \
+	{ \
+		if(!Bind(func, libName, symbol MPT_COMPONENT_BINDWIN_SUFFIX)) { SetBindFailed(); } \
+	} while(0)
+#define MPT_COMPONENT_BINDWIN_SYMBOL_OPTIONAL(libName, symbol, func) Bind(func, libName, symbol MPT_COMPONENT_BINDWIN_SUFFIX)
 #endif
 
 
@@ -229,7 +242,7 @@ public:
 };
 
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 #if MPT_COMPONENT_MANAGER
@@ -319,7 +332,7 @@ class ComponentManagerSettingsDefault
 public:
 	bool LoadOnStartup() const override { return false; }
 	bool KeepLoaded() const override { return true; }
-	bool IsBlocked(const std::string & /*key*/ ) const override { return false; }
+	bool IsBlocked(const std::string & /*key*/) const override { return false; }
 };
 
 
@@ -399,11 +412,11 @@ struct ComponentRegisterer
 };
 
 #define MPT_DECLARE_COMPONENT_MEMBERS(name, settingsKey) \
-	public: \
-		static constexpr const char *g_ID = #name ; \
-		static constexpr const char *g_SettingsKey = settingsKey ; \
-		static inline ComponentRegisterer< name > s_ComponentRegisterer; \
-/**/
+public: \
+	static constexpr const char *g_ID = #name; \
+	static constexpr const char *g_SettingsKey = settingsKey; \
+	static inline ComponentRegisterer<name> s_ComponentRegisterer; \
+	/**/
 
 
 template <typename type>
@@ -420,7 +433,7 @@ std::shared_ptr<const type> ReloadComponent()
 }
 
 
-#else // !MPT_COMPONENT_MANAGER
+#else  // !MPT_COMPONENT_MANAGER
 
 
 #define MPT_DECLARE_COMPONENT_MEMBERS(name, settingsKey)
@@ -432,12 +445,12 @@ std::shared_ptr<const type> GetComponent()
 #if MPT_COMPILER_CLANG
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexit-time-destructors"
-#endif // MPT_COMPILER_CLANG
+#endif  // MPT_COMPILER_CLANG
 	static std::weak_ptr<type> cache;
 	static mpt::mutex m;
 #if MPT_COMPILER_CLANG
 #pragma clang diagnostic pop
-#endif // MPT_COMPILER_CLANG	mpt::lock_guard<mpt::mutex> l(m);
+#endif  // MPT_COMPILER_CLANG	mpt::lock_guard<mpt::mutex> l(m);
 	mpt::lock_guard<mpt::mutex> l(m);
 	std::shared_ptr<type> component = cache.lock();
 	if(!component)
@@ -450,7 +463,7 @@ std::shared_ptr<const type> GetComponent()
 }
 
 
-#endif // MPT_COMPONENT_MANAGER
+#endif  // MPT_COMPONENT_MANAGER
 
 
 // Simple wrapper around std::shared_ptr<ComponentType> which automatically

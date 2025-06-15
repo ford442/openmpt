@@ -38,7 +38,7 @@ public:
 	// Our settings chunk for file I/O, as it will be written to files
 	struct PluginChunk
 	{
-		char  id[4];
+		char id[4];
 		uint8 param[kEchoNumParameters];
 
 		static PluginChunk Create(uint8 type, uint8 delay, uint8 feedback)
@@ -59,29 +59,34 @@ public:
 
 	std::vector<float> m_delayLine;
 	uint32 m_writePos = 0;  // Current write position in the delay line
-	float m_feedback  = 0.5f;
+	float m_feedback = 0.5f;
 
 	// Settings chunk for file I/O
 	PluginChunk m_chunk;
 
 public:
-	static IMixPlugin* Create(VSTPluginLib& factory, CSoundFile& sndFile, SNDMIXPLUGIN &mixStruct);
-	SymMODEcho(VSTPluginLib& factory, CSoundFile& sndFile, SNDMIXPLUGIN &mixStruct);
+	static IMixPlugin *Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
+	SymMODEcho(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 
 	void SaveAllParameters() override;
 	void RestoreAllParameters(int32 program) override;
-	int32 GetUID() const override { int32le id; memcpy(&id, "Echo", 4); return id; }
+	int32 GetUID() const override
+	{
+		int32le id;
+		memcpy(&id, "Echo", 4);
+		return id;
+	}
 	int32 GetVersion() const override { return 0; }
-	void Idle() override { }
+	void Idle() override {}
 	uint32 GetLatency() const override { return 0; }
 
-	void Process(float* pOutL, float* pOutR, uint32 numFrames) override;
+	void Process(float *pOutL, float *pOutR, uint32 numFrames) override;
 
 	float RenderSilence(uint32) override { return 0.0f; }
 
 	int32 GetNumPrograms() const override { return 0; }
 	int32 GetCurrentProgram() override { return 0; }
-	void SetCurrentProgram(int32) override { }
+	void SetCurrentProgram(int32) override {}
 
 	PlugParamIndex GetNumParameters() const override { return kEchoNumParameters; }
 	PlugParamValue GetParameter(PlugParamIndex index) override;
@@ -104,7 +109,7 @@ public:
 	CString GetParamDisplay(PlugParamIndex param) override;
 
 	CString GetCurrentProgramName() override { return CString(); }
-	void SetCurrentProgramName(const CString&) override { }
+	void SetCurrentProgramName(const CString &) override {}
 	CString GetProgramName(int32) override { return CString(); }
 
 	bool HasEditor() const override { return false; }
@@ -115,7 +120,7 @@ public:
 
 	bool ProgramsAreChunks() const override { return true; }
 	ChunkData GetChunk(bool) override;
-	void SetChunk(const ChunkData& chunk, bool) override;
+	void SetChunk(const ChunkData &chunk, bool) override;
 
 protected:
 	DSPType GetDSPType() const { return static_cast<DSPType>(m_chunk.param[kEchoType]); }
@@ -127,4 +132,4 @@ MPT_BINARY_STRUCT(SymMODEcho::PluginChunk, 7)
 
 OPENMPT_NAMESPACE_END
 
-#endif // NO_PLUGINS
+#endif  // NO_PLUGINS

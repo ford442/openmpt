@@ -14,7 +14,7 @@
 
 #ifndef NO_PLUGINS
 #include "../../Sndfile.h"
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -54,11 +54,11 @@ float logGain(float x, int32 shiftL, int32 shiftR)
 	return static_cast<float>(static_cast<int32>(intSample));
 }
 
-} // namespace DMO
+}  // namespace DMO
 
 #else
 MPT_MSVC_WORKAROUND_LNK4221(Distortion)
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_END

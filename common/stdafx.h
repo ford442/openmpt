@@ -22,13 +22,13 @@
 #if defined(MPT_WITH_MFC)
 
 // cppcheck-suppress missingInclude
-#include <afx.h>            // MFC core
+#include <afx.h>  // MFC core
 // cppcheck-suppress missingInclude
-#include <afxwin.h>         // MFC standard components
+#include <afxwin.h>  // MFC standard components
 // cppcheck-suppress missingInclude
-#include <afxext.h>         // MFC extensions
+#include <afxext.h>  // MFC extensions
 // cppcheck-suppress missingInclude
-#include <afxcmn.h>         // MFC support for Windows Common Controls
+#include <afxcmn.h>  // MFC support for Windows Common Controls
 // cppcheck-suppress missingInclude
 #include <afxcview.h>
 // cppcheck-suppress missingInclude
@@ -36,11 +36,11 @@
 #ifndef _AFX_NO_MFC_CONTROLS_IN_DIALOGS
 // cppcheck-suppress missingInclude
 #include <afxlistctrl.h>
-#endif // !_AFX_NO_MFC_CONTROLS_IN_DIALOGS
+#endif  // !_AFX_NO_MFC_CONTROLS_IN_DIALOGS
 // cppcheck-suppress missingInclude
 #include <afxole.h>
 
-#endif // MPT_WITH_MFC
+#endif  // MPT_WITH_MFC
 
 #if MPT_OS_WINDOWS
 
@@ -49,9 +49,9 @@
 #include <shlwapi.h>
 #include <mmsystem.h>
 
-#endif // MPT_OS_WINDOWS
+#endif  // MPT_OS_WINDOWS
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 #if MPT_COMPILER_MSVC

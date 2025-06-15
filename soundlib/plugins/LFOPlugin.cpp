@@ -16,15 +16,15 @@
 #include "../../common/FileReader.h"
 #ifdef MODPLUG_TRACKER
 #include "../../mptrack/plugins/LFOPluginEditor.h"
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 #include "mpt/base/numbers.hpp"
 #include "mpt/random/seed.hpp"
 
 OPENMPT_NAMESPACE_BEGIN
 
-IMixPlugin* LFOPlugin::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
+IMixPlugin *LFOPlugin::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
-	return new (std::nothrow) LFOPlugin(factory, sndFile, mixStruct);
+	return new(std::nothrow) LFOPlugin(factory, sndFile, mixStruct);
 }
 
 
@@ -72,27 +72,27 @@ void LFOPlugin::Process(float *pOutL, float *pOutR, uint32 numFrames)
 		double value = 0;
 		switch(m_waveForm)
 		{
-		case kSine:
-			value = std::sin(m_phase * (2.0 * mpt::numbers::pi));
-			break;
-		case kTriangle:
-			value = 1.0 - 4.0 * std::abs(m_phase - 0.5);
-			break;
-		case kSaw:
-			value = 2.0 * m_phase - 1.0;
-			break;
-		case kSquare:
-			value = m_phase < 0.5 ? -1.0 : 1.0;
-			break;
-		case kSHNoise:
-			value = m_random;
-			break;
-		case kSmoothNoise:
-			value = m_phase * m_phase * m_phase * (m_phase * (m_phase * 6 - 15) + 10);  // Smootherstep
-			value = m_nextRandom * value + m_random * (1.0 - value);
-			break;
-		default:
-			break;
+			case kSine:
+				value = std::sin(m_phase * (2.0 * mpt::numbers::pi));
+				break;
+			case kTriangle:
+				value = 1.0 - 4.0 * std::abs(m_phase - 0.5);
+				break;
+			case kSaw:
+				value = 2.0 * m_phase - 1.0;
+				break;
+			case kSquare:
+				value = m_phase < 0.5 ? -1.0 : 1.0;
+				break;
+			case kSHNoise:
+				value = m_random;
+				break;
+			case kSmoothNoise:
+				value = m_phase * m_phase * m_phase * (m_phase * (m_phase * 6 - 15) + 10);  // Smootherstep
+				value = m_nextRandom * value + m_random * (1.0 - value);
+				break;
+			default:
+				break;
 		}
 		if(m_polarity)
 			value = -value;
@@ -123,15 +123,15 @@ PlugParamValue LFOPlugin::GetParameter(PlugParamIndex index)
 {
 	switch(index)
 	{
-	case kAmplitude: return m_amplitude;
-	case kOffset: return m_offset;
-	case kFrequency: return m_frequency;
-	case kTempoSync: return m_tempoSync ? 1.0f : 0.0f;
-	case kWaveform: return WaveformToParam(m_waveForm);
-	case kPolarity: return m_polarity ? 1.0f : 0.0f;
-	case kBypassed: return m_bypassed ? 1.0f : 0.0f;
-	case kLoopMode: return m_oneshot ? 1.0f : 0.0f;
-	default: return 0;
+		case kAmplitude: return m_amplitude;
+		case kOffset: return m_offset;
+		case kFrequency: return m_frequency;
+		case kTempoSync: return m_tempoSync ? 1.0f : 0.0f;
+		case kWaveform: return WaveformToParam(m_waveForm);
+		case kPolarity: return m_polarity ? 1.0f : 0.0f;
+		case kBypassed: return m_bypassed ? 1.0f : 0.0f;
+		case kLoopMode: return m_oneshot ? 1.0f : 0.0f;
+		default: return 0;
 	}
 }
 
@@ -142,32 +142,32 @@ void LFOPlugin::SetParameter(PlugParamIndex index, PlugParamValue value, PlaySta
 	value = mpt::safe_clamp(value, 0.0f, 1.0f);
 	switch(index)
 	{
-	case kAmplitude: m_amplitude = value; break;
-	case kOffset: m_offset = value; break;
-	case kFrequency:
-		m_frequency = value;
-		RecalculateFrequency();
-		break;
-	case kTempoSync:
-		m_tempoSync = (value >= 0.5f);
-		RecalculateFrequency();
-		break;
-	case kWaveform:
-		m_waveForm = ParamToWaveform(value);
-		break;
-	case kPolarity: m_polarity = (value >= 0.5f); break;
-	case kBypassed: m_bypassed = (value >= 0.5f); break;
-	case kLoopMode: m_oneshot = (value >= 0.5f); break;
-	case kCurrentPhase:
-		if(value == 0)
-		{
-			// Enforce next random value for random LFOs
-			NextRandom();
-		}
-		m_phase = static_cast<double>(value);
-		return;
+		case kAmplitude: m_amplitude = value; break;
+		case kOffset: m_offset = value; break;
+		case kFrequency:
+			m_frequency = value;
+			RecalculateFrequency();
+			break;
+		case kTempoSync:
+			m_tempoSync = (value >= 0.5f);
+			RecalculateFrequency();
+			break;
+		case kWaveform:
+			m_waveForm = ParamToWaveform(value);
+			break;
+		case kPolarity: m_polarity = (value >= 0.5f); break;
+		case kBypassed: m_bypassed = (value >= 0.5f); break;
+		case kLoopMode: m_oneshot = (value >= 0.5f); break;
+		case kCurrentPhase:
+			if(value == 0)
+			{
+				// Enforce next random value for random LFOs
+				NextRandom();
+			}
+			m_phase = static_cast<double>(value);
+			return;
 
-	default: return;
+		default: return;
 	}
 
 #ifdef MODPLUG_TRACKER
@@ -291,18 +291,18 @@ void LFOPlugin::RestoreAllParameters(int32 /*program*/)
 
 struct PluginData
 {
-	char     magic[4];
+	char magic[4];
 	uint32le version;
 	uint32le amplitude;  // float
 	uint32le offset;     // float
 	uint32le frequency;  // float
 	uint32le waveForm;
 	uint32le outputParam;
-	uint8le  tempoSync;
-	uint8le  polarity;
-	uint8le  bypassed;
-	uint8le  outputToCC;
-	uint8le  loopMode;
+	uint8le tempoSync;
+	uint8le polarity;
+	uint8le bypassed;
+	uint8le outputToCC;
+	uint8le loopMode;
 };
 
 MPT_BINARY_STRUCT(PluginData, 33)
@@ -335,8 +335,8 @@ void LFOPlugin::SetChunk(const ChunkData &chunk, bool)
 	FileReader file(chunk);
 	PluginData data;
 	if(file.ReadStructPartial(data, mpt::saturate_cast<std::size_t>(file.BytesLeft()))
-		&& !memcmp(data.magic, "LFO ", 4)
-		&& data.version == 0)
+	   && !memcmp(data.magic, "LFO ", 4)
+	   && data.version == 0)
 	{
 		const float amplitude = IEEE754binary32LE().SetInt32(data.amplitude);
 		m_amplitude = mpt::safe_clamp(amplitude, 0.0f, 1.0f);
@@ -371,15 +371,15 @@ CString LFOPlugin::GetParamName(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kAmplitude: return _T("Amplitude");
-	case kOffset: return _T("Offset");
-	case kFrequency: return _T("Frequency");
-	case kTempoSync: return _T("Tempo Sync");
-	case kWaveform: return _T("Waveform");
-	case kPolarity: return _T("Polarity");
-	case kBypassed: return _T("Bypassed");
-	case kLoopMode: return _T("Loop Mode");
-	case kCurrentPhase: return _T("Set LFO Phase");
+		case kAmplitude: return _T("Amplitude");
+		case kOffset: return _T("Offset");
+		case kFrequency: return _T("Frequency");
+		case kTempoSync: return _T("Tempo Sync");
+		case kWaveform: return _T("Waveform");
+		case kPolarity: return _T("Polarity");
+		case kBypassed: return _T("Bypassed");
+		case kLoopMode: return _T("Loop Mode");
+		case kCurrentPhase: return _T("Set LFO Phase");
 	}
 	return CString();
 }
@@ -414,7 +414,7 @@ CString LFOPlugin::GetParamDisplay(PlugParamIndex param)
 		return m_bypassed ? _T("Yes") : _T("No");
 	} else if(param == kWaveform)
 	{
-		static constexpr const TCHAR * const waveforms[] = { _T("Sine"), _T("Triangle"), _T("Saw"), _T("Square"), _T("Noise"), _T("Smoothed Noise") };
+		static constexpr const TCHAR *const waveforms[] = {_T("Sine"), _T("Triangle"), _T("Saw"), _T("Square"), _T("Noise"), _T("Smoothed Noise")};
 		if(m_waveForm < static_cast<int>(std::size(waveforms)))
 			return waveforms[m_waveForm];
 	} else if(param == kLoopMode)
@@ -452,7 +452,7 @@ CAbstractVstEditor *LFOPlugin::OpenEditor()
 	}
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 void LFOPlugin::NextRandom()
@@ -518,4 +518,4 @@ OPENMPT_NAMESPACE_END
 #else
 MPT_MSVC_WORKAROUND_LNK4221(LFOPlugin)
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS

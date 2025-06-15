@@ -14,7 +14,7 @@
 #include "ParamEq.h"
 #include "../../Sndfile.h"
 #include "mpt/base/numbers.hpp"
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -23,9 +23,9 @@ OPENMPT_NAMESPACE_BEGIN
 namespace DMO
 {
 
-IMixPlugin* ParamEq::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
+IMixPlugin *ParamEq::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
-	return new (std::nothrow) ParamEq(factory, sndFile, mixStruct);
+	return new(std::nothrow) ParamEq(factory, sndFile, mixStruct);
 }
 
 
@@ -46,8 +46,8 @@ void ParamEq::Process(float *pOutL, float *pOutR, uint32 numFrames)
 	if(!m_mixBuffer.Ok())
 		return;
 
-	const float *in[2] = { m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1) };
-	float *out[2] = { m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1) };
+	const float *in[2] = {m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1)};
+	float *out[2] = {m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1)};
 
 	if(m_param[kEqGain] == 0.5f)
 	{
@@ -123,9 +123,9 @@ CString ParamEq::GetParamName(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kEqCenter: return _T("Center");
-	case kEqBandwidth: return _T("Bandwidth");
-	case kEqGain: return _T("Gain");
+		case kEqCenter: return _T("Center");
+		case kEqBandwidth: return _T("Bandwidth");
+		case kEqGain: return _T("Gain");
 	}
 	return CString();
 }
@@ -135,9 +135,9 @@ CString ParamEq::GetParamLabel(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kEqCenter: return _T("Hz");
-	case kEqBandwidth: return _T("Semitones");
-	case kEqGain: return _T("dB");
+		case kEqCenter: return _T("Hz");
+		case kEqBandwidth: return _T("Semitones");
+		case kEqGain: return _T("dB");
 	}
 	return CString();
 }
@@ -148,22 +148,22 @@ CString ParamEq::GetParamDisplay(PlugParamIndex param)
 	float value = 0.0f;
 	switch(param)
 	{
-	case kEqCenter:
-		value = FreqInHertz();
-		break;
-	case kEqBandwidth:
-		value = BandwidthInSemitones();
-		break;
-	case kEqGain:
-		value = GainInDecibel();
-		break;
+		case kEqCenter:
+			value = FreqInHertz();
+			break;
+		case kEqBandwidth:
+			value = BandwidthInSemitones();
+			break;
+		case kEqGain:
+			value = GainInDecibel();
+			break;
 	}
 	CString s;
 	s.Format(_T("%.2f"), value);
 	return s;
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 void ParamEq::RecalculateEqParams()
@@ -190,11 +190,11 @@ void ParamEq::RecalculateEqParams()
 	a2DIVa0 = a2 / a0;
 }
 
-} // namespace DMO
+}  // namespace DMO
 
 #else
 MPT_MSVC_WORKAROUND_LNK4221(ParamEq)
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_END

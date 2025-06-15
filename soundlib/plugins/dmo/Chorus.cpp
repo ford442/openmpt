@@ -14,7 +14,7 @@
 #include "Chorus.h"
 #include "../../Sndfile.h"
 #include "mpt/base/numbers.hpp"
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -23,9 +23,9 @@ OPENMPT_NAMESPACE_BEGIN
 namespace DMO
 {
 
-IMixPlugin* Chorus::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
+IMixPlugin *Chorus::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
-	return new (std::nothrow) Chorus(factory, sndFile, mixStruct);
+	return new(std::nothrow) Chorus(factory, sndFile, mixStruct);
 }
 
 
@@ -60,8 +60,8 @@ void Chorus::Process(float *pOutL, float *pOutR, uint32 numFrames)
 	if(!m_bufSize || !m_mixBuffer.Ok())
 		return;
 
-	const float *in[2] = { m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1) };
-	float *out[2] = { m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1) };
+	const float *in[2] = {m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1)};
+	float *out[2] = {m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1)};
 
 	const bool isSquare = IsSquare();
 	const float feedback = Feedback() / 100.0f;
@@ -210,13 +210,13 @@ CString Chorus::GetParamName(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kChorusWetDryMix: return _T("WetDryMix");
-	case kChorusDepth: return _T("Depth");
-	case kChorusFrequency: return _T("Frequency");
-	case kChorusWaveShape: return _T("WaveShape");
-	case kChorusPhase: return _T("Phase");
-	case kChorusFeedback: return _T("Feedback");
-	case kChorusDelay: return _T("Delay");
+		case kChorusWetDryMix: return _T("WetDryMix");
+		case kChorusDepth: return _T("Depth");
+		case kChorusFrequency: return _T("Frequency");
+		case kChorusWaveShape: return _T("WaveShape");
+		case kChorusPhase: return _T("Phase");
+		case kChorusFeedback: return _T("Feedback");
+		case kChorusDelay: return _T("Delay");
 	}
 	return CString();
 }
@@ -226,16 +226,16 @@ CString Chorus::GetParamLabel(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kChorusWetDryMix:
-	case kChorusDepth:
-	case kChorusFeedback:
-		return _T("%");
-	case kChorusFrequency:
-		return _T("Hz");
-	case kChorusPhase:
-		return mpt::ToCString(MPT_UTF8("\xC2\xB0"));  // U+00B0 DEGREE SIGN
-	case kChorusDelay:
-		return _T("ms");
+		case kChorusWetDryMix:
+		case kChorusDepth:
+		case kChorusFeedback:
+			return _T("%");
+		case kChorusFrequency:
+			return _T("Hz");
+		case kChorusPhase:
+			return mpt::ToCString(MPT_UTF8("\xC2\xB0"));  // U+00B0 DEGREE SIGN
+		case kChorusDelay:
+			return _T("ms");
 	}
 	return CString();
 }
@@ -247,37 +247,37 @@ CString Chorus::GetParamDisplay(PlugParamIndex param)
 	float value = m_param[param];
 	switch(param)
 	{
-	case kChorusWetDryMix:
-	case kChorusDepth:
-		value *= 100.0f;
-		break;
-	case kChorusFrequency:
-		value = FrequencyInHertz();
-		break;
-	case kChorusWaveShape:
-		return (value < 1) ? _T("Square") : _T("Sine");
-		break;
-	case kChorusPhase:
-		switch(Phase())
-		{
-		case 0: return _T("-180");
-		case 1: return _T("-90");
-		case 2: return _T("0");
-		case 3: return _T("90");
-		case 4: return _T("180");
-		}
-		break;
-	case kChorusFeedback:
-		value = Feedback();
-		break;
-	case kChorusDelay:
-		value = Delay();
+		case kChorusWetDryMix:
+		case kChorusDepth:
+			value *= 100.0f;
+			break;
+		case kChorusFrequency:
+			value = FrequencyInHertz();
+			break;
+		case kChorusWaveShape:
+			return (value < 1) ? _T("Square") : _T("Sine");
+			break;
+		case kChorusPhase:
+			switch(Phase())
+			{
+				case 0: return _T("-180");
+				case 1: return _T("-90");
+				case 2: return _T("0");
+				case 3: return _T("90");
+				case 4: return _T("180");
+			}
+			break;
+		case kChorusFeedback:
+			value = Feedback();
+			break;
+		case kChorusDelay:
+			value = Delay();
 	}
 	s.Format(_T("%.2f"), value);
 	return s;
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 void Chorus::RecalculateChorusParams()
@@ -295,11 +295,11 @@ void Chorus::RecalculateChorusParams()
 		m_waveShapeVal = std::sin(frequencySamples * mpt::numbers::pi_v<float>) * 2.0f;
 }
 
-} // namespace DMO
+}  // namespace DMO
 
 #else
 MPT_MSVC_WORKAROUND_LNK4221(Chorus)
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_END

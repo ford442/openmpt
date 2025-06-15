@@ -16,9 +16,9 @@
 
 OPENMPT_NAMESPACE_BEGIN
 
-IMixPlugin* DigiBoosterEcho::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
+IMixPlugin *DigiBoosterEcho::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
-	return new (std::nothrow) DigiBoosterEcho(factory, sndFile, mixStruct);
+	return new(std::nothrow) DigiBoosterEcho(factory, sndFile, mixStruct);
 }
 
 
@@ -157,10 +157,10 @@ CString DigiBoosterEcho::GetParamName(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kEchoDelay: return _T("Delay");
-	case kEchoFeedback: return _T("Feedback");
-	case kEchoMix: return _T("Wet / Dry Ratio");
-	case kEchoCross: return _T("Cross Echo");
+		case kEchoDelay: return _T("Delay");
+		case kEchoFeedback: return _T("Feedback");
+		case kEchoMix: return _T("Wet / Dry Ratio");
+		case kEchoCross: return _T("Cross Echo");
 	}
 	return CString();
 }
@@ -189,13 +189,13 @@ CString DigiBoosterEcho::GetParamDisplay(PlugParamIndex param)
 			if(val == 0)
 				val = 167;
 			val *= 2;
-		}	
+		}
 		s.Format(_T("%d"), val);
 	}
 	return s;
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 IMixPlugin::ChunkData DigiBoosterEcho::GetChunk(bool)
@@ -231,4 +231,4 @@ void DigiBoosterEcho::RecalculateEchoParams()
 
 OPENMPT_NAMESPACE_END
 
-#endif // NO_PLUGINS
+#endif  // NO_PLUGINS

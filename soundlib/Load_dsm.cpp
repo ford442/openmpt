@@ -28,7 +28,7 @@ OPENMPT_NAMESPACE_BEGIN
 
 struct DSMChunk
 {
-	char     magic[4];
+	char magic[4];
 	uint32le size;
 };
 
@@ -37,7 +37,7 @@ MPT_BINARY_STRUCT(DSMChunk, 8)
 
 struct DSMSongHeader
 {
-	char     songName[28];
+	char songName[28];
 	uint16le fileVersion;
 	uint16le flags;
 	uint16le orderPos;
@@ -46,12 +46,12 @@ struct DSMSongHeader
 	uint16le numSamples;
 	uint16le numPatterns;
 	uint16le numChannels;
-	uint8le  globalVol;
-	uint8le  mastervol;
-	uint8le  speed;
-	uint8le  bpm;
-	uint8le  panPos[16];
-	uint8le  orders[128];
+	uint8le globalVol;
+	uint8le mastervol;
+	uint8le speed;
+	uint8le bpm;
+	uint8le panPos[16];
+	uint8le orders[128];
 };
 
 MPT_BINARY_STRUCT(DSMSongHeader, 192)
@@ -59,15 +59,15 @@ MPT_BINARY_STRUCT(DSMSongHeader, 192)
 
 struct DSMSampleHeader
 {
-	char     filename[13];
+	char filename[13];
 	uint16le flags;
-	uint8le  volume;
+	uint8le volume;
 	uint32le length;
 	uint32le loopStart;
 	uint32le loopEnd;
 	uint32le dataPtr;  // Interal sample pointer during playback in DSIK
 	uint32le sampleRate;
-	char     sampleName[28];
+	char sampleName[28];
 
 	// Convert a DSM sample header to OpenMPT's internal sample header.
 	void ConvertToMPT(ModSample &mptSmp) const
@@ -92,7 +92,7 @@ struct DSMSampleHeader
 			SampleIO::littleEndian,
 			SampleIO::unsignedPCM);
 		if(flags & 0x40)
-			sampleIO |= SampleIO::deltaPCM;	// fairlight.dsm by Comrade J
+			sampleIO |= SampleIO::deltaPCM;  // fairlight.dsm by Comrade J
 		else if(flags & 0x02)
 			sampleIO |= SampleIO::signedPCM;
 		if(flags & 0x04)
@@ -117,7 +117,7 @@ MPT_BINARY_STRUCT(DSMHeader, 12)
 static bool ValidateHeader(const DSMHeader &fileHeader)
 {
 	if(!std::memcmp(fileHeader.fileMagic0, "RIFF", 4)
-		&& !std::memcmp(fileHeader.fileMagic2, "DSMF", 4))
+	   && !std::memcmp(fileHeader.fileMagic2, "DSMF", 4))
 	{
 		// "Normal" DSM files with RIFF header
 		// <RIFF> <file size> <DSMF>
@@ -277,7 +277,7 @@ bool CSoundFile::ReadDSM(FileReader &file, ModLoadingFlags loadFlags)
 				{
 					m.instr = chunk.ReadUint8();
 				}
-				if (flag & 0x20)
+				if(flag & 0x20)
 				{
 					m.volcmd = VOLCMD_VOLUME;
 					m.vol = std::min(chunk.ReadUint8(), uint8(64));
@@ -318,14 +318,14 @@ bool CSoundFile::ReadDSM(FileReader &file, ModLoadingFlags loadFlags)
 
 struct DSmSampleHeader
 {
-	char     name[22];
-	uint8    type;
+	char name[22];
+	uint8 type;
 	uint16le length;
-	uint8    finetune;
-	uint8    volume;
+	uint8 finetune;
+	uint8 volume;
 	uint16le loopStart;
 	uint16le loopLength;
-	uint8    padding;
+	uint8 padding;
 
 	void ConvertToMPT(ModSample &mptSmp) const
 	{
@@ -344,16 +344,16 @@ MPT_BINARY_STRUCT(DSmSampleHeader, 32)
 
 struct DSmFileHeader
 {
-	char  magic[4];  // "DSm\x1A"
+	char magic[4];  // "DSm\x1A"
 	uint8 version;
-	char  title[20];
-	char  artist[20];
+	char title[20];
+	char artist[20];
 	uint8 numChannels;
 	uint8 numSamples;
 	uint8 numOrders;
 	uint8 packInformation;
 	uint8 globalVol;  // 0...100
-	char  padding[14];
+	char padding[14];
 
 	bool IsValid() const noexcept
 	{
@@ -381,7 +381,7 @@ CSoundFile::ProbeResult CSoundFile::ProbeFileHeaderDSm(MemoryFileReader file, co
 		return ProbeWantMoreData;
 	if(!fileHeader.IsValid())
 		return ProbeFailure;
-	
+
 	return ProbeAdditionalSize(file, pfilesize, fileHeader.GetHeaderMinimumAdditionalSize());
 }
 
@@ -411,7 +411,7 @@ bool CSoundFile::ReadDSm(FileReader &file, ModLoadingFlags loadFlags)
 	{
 		ChnSettings[chn].nPan = (file.ReadUint8() & 0x0F) * 0x11;
 	}
-	
+
 	ReadOrderFromFile<uint8>(Order(), file, fileHeader.numOrders);
 	PATTERNINDEX numPatterns = 0;
 	for(PATTERNINDEX pat : Order())
@@ -457,25 +457,25 @@ bool CSoundFile::ReadDSm(FileReader &file, ModLoadingFlags loadFlags)
 			{
 				switch(m.param & 0xF0)
 				{
-				case 0x00:  // 4-bit panning
-					m.command = CMD_MODCMDEX;
-					m.param |= 0x80;
-					break;
-				case 0x10:  // Default volume slide Up (should stop at sample's default volume)
-					m.command = CMD_VOLUMESLIDE;
-					m.param <<= 4;
-					break;
-				case 0x20:  // Default fine volume slide Up (should stop at sample's default volume)
-					m.command = CMD_MODCMDEX;
-					m.param |= 0xA0;
-					break;
-				case 0x30:  // Fine porta up (support all 5 octaves)
-				case 0x40:  // Fine porta down (support all 5 octaves)
-					m.command = CMD_MODCMDEX;
-					m.param -= 0x20;
-					break;
-				default:
-					break;
+					case 0x00:  // 4-bit panning
+						m.command = CMD_MODCMDEX;
+						m.param |= 0x80;
+						break;
+					case 0x10:  // Default volume slide Up (should stop at sample's default volume)
+						m.command = CMD_VOLUMESLIDE;
+						m.param <<= 4;
+						break;
+					case 0x20:  // Default fine volume slide Up (should stop at sample's default volume)
+						m.command = CMD_MODCMDEX;
+						m.param |= 0xA0;
+						break;
+					case 0x30:  // Fine porta up (support all 5 octaves)
+					case 0x40:  // Fine porta down (support all 5 octaves)
+						m.command = CMD_MODCMDEX;
+						m.param -= 0x20;
+						break;
+					default:
+						break;
 				}
 			} else if(data[2] == 0x13)
 			{
@@ -508,10 +508,7 @@ bool CSoundFile::ReadDSm(FileReader &file, ModLoadingFlags loadFlags)
 	{
 		for(SAMPLEINDEX smp = 1; smp <= m_nSamples; smp++)
 		{
-			SampleIO(Samples[smp].uFlags[CHN_16BIT] ? SampleIO::_16bit : SampleIO::_8bit,
-				SampleIO::mono,
-				SampleIO::littleEndian,
-				SampleIO::signedPCM).ReadSample(Samples[smp], file);
+			SampleIO(Samples[smp].uFlags[CHN_16BIT] ? SampleIO::_16bit : SampleIO::_8bit, SampleIO::mono, SampleIO::littleEndian, SampleIO::signedPCM).ReadSample(Samples[smp], file);
 		}
 	}
 

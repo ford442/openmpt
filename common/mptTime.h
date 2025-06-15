@@ -42,8 +42,10 @@ OPENMPT_NAMESPACE_BEGIN
 
 #if defined(MODPLUG_TRACKER) && !defined(MPT_LIBCXX_QUIRK_NO_CHRONO)
 
-namespace mpt {
-namespace chrono {
+namespace mpt
+{
+namespace chrono
+{
 #if MPT_CXX_AT_LEAST(20)
 using days = std::chrono::days;
 using weeks = std::chrono::weeks;
@@ -55,10 +57,10 @@ using weeks = std::chrono::duration<int, std::ratio_multiply<std::ratio<7>, mpt:
 using years = std::chrono::duration<int, std::ratio_multiply<std::ratio<146097, 400>, mpt::chrono::days::period>>;
 using months = std::chrono::duration<int, std::ratio_divide<mpt::chrono::years::period, std::ratio<12>>>;
 #endif
-}
-}
+}  // namespace chrono
+}  // namespace mpt
 
-#endif // !MPT_LIBCXX_QUIRK_NO_CHRONO
+#endif  // !MPT_LIBCXX_QUIRK_NO_CHRONO
 
 
 
@@ -79,13 +81,13 @@ namespace ANSI
 
 uint64 Now();
 
-mpt::ustring ToUString(uint64 time100ns); // i.e. 2015-01-15 18:32:01.718
+mpt::ustring ToUString(uint64 time100ns);  // i.e. 2015-01-15 18:32:01.718
 
-} // namespacee ANSI
+}  // namespace ANSI
 
-#endif // MPT_OS_WINDOWS
+#endif  // MPT_OS_WINDOWS
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 
@@ -95,24 +97,24 @@ enum class LogicalTimezone
 	UTC,
 #if defined(MODPLUG_TRACKER)
 	Local,
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 };
 
 template <LogicalTimezone tz>
 struct Gregorian
 {
-	int          year    = 0;
-	unsigned int month   = 0;
-	unsigned int day     = 0;
-	int32        hours   = 0;
-	int32        minutes = 0;
-	int64        seconds = 0;
-	friend bool operator==(const Gregorian<tz>& lhs, const Gregorian<tz>& rhs)
+	int year = 0;
+	unsigned int month = 0;
+	unsigned int day = 0;
+	int32 hours = 0;
+	int32 minutes = 0;
+	int64 seconds = 0;
+	friend bool operator==(const Gregorian<tz> &lhs, const Gregorian<tz> &rhs)
 	{
 		return std::tie(lhs.year, lhs.month, lhs.day, lhs.hours, lhs.minutes, lhs.seconds)
 			== std::tie(rhs.year, rhs.month, rhs.day, rhs.hours, rhs.minutes, rhs.seconds);
 	}
-	friend bool operator!=(const Gregorian<tz>& lhs, const Gregorian<tz>& rhs)
+	friend bool operator!=(const Gregorian<tz> &lhs, const Gregorian<tz> &rhs)
 	{
 		return std::tie(lhs.year, lhs.month, lhs.day, lhs.hours, lhs.minutes, lhs.seconds)
 			!= std::tie(rhs.year, rhs.month, rhs.day, rhs.hours, rhs.minutes, rhs.seconds);
@@ -120,7 +122,7 @@ struct Gregorian
 	friend bool operator<(const Gregorian<tz> &lhs, const Gregorian<tz> &rhs)
 	{
 		return std::tie(lhs.year, lhs.month, lhs.day, lhs.hours, lhs.minutes, lhs.seconds)
-			< std::tie(rhs.year, rhs.month, rhs.day, rhs.hours, rhs.minutes, rhs.seconds);
+			 < std::tie(rhs.year, rhs.month, rhs.day, rhs.hours, rhs.minutes, rhs.seconds);
 	}
 };
 
@@ -130,7 +132,7 @@ using UTC = Gregorian<LogicalTimezone::UTC>;
 
 #if defined(MODPLUG_TRACKER)
 using Local = Gregorian<LogicalTimezone::Local>;
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 template <LogicalTimezone TZ>
 inline Gregorian<TZ> interpret_as_timezone(AnyGregorian gregorian)
@@ -204,9 +206,9 @@ Unix UnixFromLocal(Local timeLocal);
 
 Local UnixAsLocal(Unix tp);
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
-} // namespace nochrono
+}  // namespace nochrono
 
 #if MPT_CXX_AT_LEAST(20) && !defined(MPT_LIBCXX_QUIRK_NO_CHRONO) && !defined(MPT_LIBCXX_QUIRK_NO_CHRONO_DATE)
 
@@ -232,14 +234,9 @@ inline mpt::Date::Unix UnixFromUTC(UTC utc)
 	try
 	{
 		return std::chrono::system_clock::time_point{
-			std::chrono::sys_days {
-				std::chrono::year{ utc.year } /
-				std::chrono::month{ utc.month } /
-				std::chrono::day{ utc.day }
-			} +
-			std::chrono::hours{ utc.hours } +
-			std::chrono::minutes{ utc.minutes } +
-			std::chrono::seconds{ utc.seconds }};
+			std::chrono::sys_days{
+				std::chrono::year{utc.year} / std::chrono::month{utc.month} / std::chrono::day{utc.day}}
+			+ std::chrono::hours{utc.hours} + std::chrono::minutes{utc.minutes} + std::chrono::seconds{utc.seconds}};
 	} catch(const std::exception &)
 	{
 		return mpt::Date::UnixFromSeconds(mpt::Date::nochrono::UnixAsSeconds(mpt::Date::nochrono::UnixFromUTC(utc)));
@@ -275,14 +272,9 @@ inline mpt::Date::Unix UnixFromLocal(Local local)
 	try
 	{
 		std::chrono::time_point<std::chrono::local_t, std::chrono::seconds> local_tp =
-			std::chrono::local_days {
-				std::chrono::year{ local.year } /
-				std::chrono::month{ local.month } /
-				std::chrono::day{ local.day }
-			} +
-			std::chrono::hours{ local.hours } +
-			std::chrono::minutes{ local.minutes } +
-			std::chrono::seconds{ local.seconds };
+			std::chrono::local_days{
+				std::chrono::year{local.year} / std::chrono::month{local.month} / std::chrono::day{local.day}}
+			+ std::chrono::hours{local.hours} + std::chrono::minutes{local.minutes} + std::chrono::seconds{local.seconds};
 #if defined(MPT_LIBCXX_QUIRK_CHRONO_DATE_BROKEN_ZONED_TIME)
 		return std::chrono::zoned_time{std::chrono::current_zone(), std::chrono::current_zone()->to_sys(local_tp)}.get_sys_time();
 #else
@@ -300,7 +292,7 @@ inline mpt::Date::Local UnixAsLocal(Unix tp)
 #if !defined(MPT_LIBCXX_QUIRK_CHRONO_DATE_NO_ZONED_TIME)
 	try
 	{
-		std::chrono::zoned_time local_tp{ std::chrono::current_zone(), tp };
+		std::chrono::zoned_time local_tp{std::chrono::current_zone(), tp};
 		std::chrono::local_days dp = std::chrono::floor<std::chrono::days>(local_tp.get_local_time());
 		std::chrono::year_month_day ymd{dp};
 		std::chrono::hh_mm_ss hms{local_tp.get_local_time() - dp};
@@ -319,38 +311,38 @@ inline mpt::Date::Local UnixAsLocal(Unix tp)
 	}
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 #else
 
 using Unix = nochrono::Unix;
 
-using nochrono::UnixNow;
 using nochrono::UnixAsSeconds;
 using nochrono::UnixFromSeconds;
+using nochrono::UnixNow;
 
-using nochrono::UnixFromUTC;
 using nochrono::UnixAsUTC;
+using nochrono::UnixFromUTC;
 
 #if defined(MODPLUG_TRACKER)
 
-using nochrono::UnixFromLocal;
 using nochrono::UnixAsLocal;
+using nochrono::UnixFromLocal;
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 #endif
 
-mpt::ustring ToShortenedISO8601(AnyGregorian date); // i.e. 2015-01-15T18:32:01
+mpt::ustring ToShortenedISO8601(AnyGregorian date);  // i.e. 2015-01-15T18:32:01
 
-mpt::ustring ToShortenedISO8601(UTC date); // i.e. 2015-01-15T18:32:01Z
+mpt::ustring ToShortenedISO8601(UTC date);  // i.e. 2015-01-15T18:32:01Z
 
 #ifdef MODPLUG_TRACKER
-mpt::ustring ToShortenedISO8601(Local date); // i.e. 2015-01-15T18:32:01
-#endif // MODPLUG_TRACKER
+mpt::ustring ToShortenedISO8601(Local date);  // i.e. 2015-01-15T18:32:01
+#endif                                        // MODPLUG_TRACKER
 
-} // namespace Date
-} // namespace mpt
+}  // namespace Date
+}  // namespace mpt
 
 
 

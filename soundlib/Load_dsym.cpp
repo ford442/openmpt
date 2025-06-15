@@ -19,11 +19,11 @@ struct DSymFileHeader
 {
 	using uint24le = mpt::uint24le;
 
-	char     magic[8];
-	uint8le  version;      // 0 / 1
-	uint8le  numChannels;  // 1...8
-	uint16le numOrders;    // 0...4096
-	uint16le numTracks;    // 0...4096
+	char magic[8];
+	uint8le version;      // 0 / 1
+	uint8le numChannels;  // 1...8
+	uint16le numOrders;   // 0...4096
+	uint16le numTracks;   // 0...4096
 	uint24le infoLen;
 
 	bool Validate() const
@@ -493,103 +493,103 @@ bool CSoundFile::ReadDSym(FileReader &file, ModLoadingFlags loadFlags)
 		const uint8 packingType = file.ReadUint8();
 		switch(packingType)
 		{
-		case 0:  // Modified u-Law
-			if(loadFlags & loadSampleData)
-			{
-				std::vector<std::byte> sampleData;
-				if(!file.CanRead(mptSmp.nLength))
-					return false;
-				file.ReadVector(sampleData, mptSmp.nLength);
-				for(auto &b : sampleData)
+			case 0:  // Modified u-Law
+				if(loadFlags & loadSampleData)
 				{
-					uint8 v = mpt::byte_cast<uint8>(b);
-					v = (v << 7) | (static_cast<uint8>(~v) >> 1);
-					b = mpt::byte_cast<std::byte>(v);
-				}
-
-				FileReader sampleDataFile = FileReader(mpt::as_span(sampleData));
-				SampleIO(
-					SampleIO::_16bit,
-					SampleIO::mono,
-					SampleIO::littleEndian,
-					SampleIO::uLaw)
-					.ReadSample(mptSmp, sampleDataFile);
-			} else
-			{
-				file.Skip(mptSmp.nLength);
-			}
-			break;
-		case 1:  // 13-bit LZW applied to linear sample data differences
-			{
-				std::vector<std::byte> sampleData;
-				try
-				{
-					sampleData = DecompressDSymLZW(file, mptSmp.nLength);
-				} catch(const BitReader::eof &)
-				{
-					return false;
-				}
-				if(!(loadFlags & loadSampleData))
-					break;
-				FileReader sampleDataFile = FileReader(mpt::as_span(sampleData));
-				SampleIO(
-					SampleIO::_8bit,
-					SampleIO::mono,
-					SampleIO::littleEndian,
-					SampleIO::deltaPCM)
-					.ReadSample(mptSmp, sampleDataFile);
-			}
-			break;
-		case 2:  // 8-bit signed
-		case 3:  // 16-bit signed
-			if(loadFlags & loadSampleData)
-			{
-				SampleIO(
-					(packingType == 2) ? SampleIO::_8bit : SampleIO::_16bit,
-					SampleIO::mono,
-					SampleIO::littleEndian,
-					SampleIO::signedPCM)
-					.ReadSample(mptSmp, file);
-			} else
-			{
-				file.Skip(mptSmp.nLength * (packingType - 1));
-			}
-			break;
-		case 4:  // Sigma-Delta compression applied to linear sample differences
-		case 5:  // Sigma-Delta compression applied to logarithmic sample differences
-			{
-				std::vector<std::byte> sampleData;
-				try
-				{
-					sampleData = DecompressDSymSigmaDelta(file, mptSmp.nLength);
-				} catch(const BitReader::eof &)
-				{
-					return false;
-				}
-				if(!(loadFlags & loadSampleData))
-					break;
-				if(packingType == 5)
-				{
-					static constexpr uint8 xorMask[] = {0x00, 0x7F};
+					std::vector<std::byte> sampleData;
+					if(!file.CanRead(mptSmp.nLength))
+						return false;
+					file.ReadVector(sampleData, mptSmp.nLength);
 					for(auto &b : sampleData)
 					{
 						uint8 v = mpt::byte_cast<uint8>(b);
-						v ^= xorMask[v >> 7];
+						v = (v << 7) | (static_cast<uint8>(~v) >> 1);
 						b = mpt::byte_cast<std::byte>(v);
 					}
-				}
 
-				FileReader sampleDataFile = FileReader(mpt::as_span(sampleData));
-				SampleIO(
-					(packingType == 5) ? SampleIO::_16bit : SampleIO::_8bit,
-					SampleIO::mono,
-					SampleIO::littleEndian,
-					(packingType == 5) ? SampleIO::uLaw : SampleIO::unsignedPCM)
-					.ReadSample(mptSmp, sampleDataFile);
-			}
-			break;
-		default:
-			return false;
+					FileReader sampleDataFile = FileReader(mpt::as_span(sampleData));
+					SampleIO(
+						SampleIO::_16bit,
+						SampleIO::mono,
+						SampleIO::littleEndian,
+						SampleIO::uLaw)
+						.ReadSample(mptSmp, sampleDataFile);
+				} else
+				{
+					file.Skip(mptSmp.nLength);
+				}
+				break;
+			case 1:  // 13-bit LZW applied to linear sample data differences
+				{
+					std::vector<std::byte> sampleData;
+					try
+					{
+						sampleData = DecompressDSymLZW(file, mptSmp.nLength);
+					} catch(const BitReader::eof &)
+					{
+						return false;
+					}
+					if(!(loadFlags & loadSampleData))
+						break;
+					FileReader sampleDataFile = FileReader(mpt::as_span(sampleData));
+					SampleIO(
+						SampleIO::_8bit,
+						SampleIO::mono,
+						SampleIO::littleEndian,
+						SampleIO::deltaPCM)
+						.ReadSample(mptSmp, sampleDataFile);
+				}
+				break;
+			case 2:  // 8-bit signed
+			case 3:  // 16-bit signed
+				if(loadFlags & loadSampleData)
+				{
+					SampleIO(
+						(packingType == 2) ? SampleIO::_8bit : SampleIO::_16bit,
+						SampleIO::mono,
+						SampleIO::littleEndian,
+						SampleIO::signedPCM)
+						.ReadSample(mptSmp, file);
+				} else
+				{
+					file.Skip(mptSmp.nLength * (packingType - 1));
+				}
+				break;
+			case 4:  // Sigma-Delta compression applied to linear sample differences
+			case 5:  // Sigma-Delta compression applied to logarithmic sample differences
+				{
+					std::vector<std::byte> sampleData;
+					try
+					{
+						sampleData = DecompressDSymSigmaDelta(file, mptSmp.nLength);
+					} catch(const BitReader::eof &)
+					{
+						return false;
+					}
+					if(!(loadFlags & loadSampleData))
+						break;
+					if(packingType == 5)
+					{
+						static constexpr uint8 xorMask[] = {0x00, 0x7F};
+						for(auto &b : sampleData)
+						{
+							uint8 v = mpt::byte_cast<uint8>(b);
+							v ^= xorMask[v >> 7];
+							b = mpt::byte_cast<std::byte>(v);
+						}
+					}
+
+					FileReader sampleDataFile = FileReader(mpt::as_span(sampleData));
+					SampleIO(
+						(packingType == 5) ? SampleIO::_16bit : SampleIO::_8bit,
+						SampleIO::mono,
+						SampleIO::littleEndian,
+						(packingType == 5) ? SampleIO::uLaw : SampleIO::unsignedPCM)
+						.ReadSample(mptSmp, sampleDataFile);
+				}
+				break;
+			default:
+				return false;
 		}
 	}
 
@@ -612,4 +612,3 @@ bool CSoundFile::ReadDSym(FileReader &file, ModLoadingFlags loadFlags)
 
 
 OPENMPT_NAMESPACE_END
-

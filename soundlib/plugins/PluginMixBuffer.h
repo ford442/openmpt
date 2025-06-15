@@ -17,7 +17,7 @@
 
 #if defined(MPT_ENABLE_ARCH_INTRINSICS) || defined(MPT_WITH_VST)
 #include "mpt/base/aligned_array.hpp"
-#endif // MPT_ENABLE_ARCH_INTRINSICS || MPT_WITH_VST
+#endif  // MPT_ENABLE_ARCH_INTRINSICS || MPT_WITH_VST
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -26,7 +26,7 @@ OPENMPT_NAMESPACE_BEGIN
 // At least this part of the code is ready for double-precision rendering... :>
 // buffer_t: Sample buffer type (float, double, ...)
 // bufferSize: Buffer size in samples
-template<typename buffer_t, uint32 bufferSize>
+template <typename buffer_t, uint32 bufferSize>
 class PluginMixBuffer
 {
 
@@ -36,19 +36,19 @@ private:
 	static constexpr std::align_val_t alignment = std::align_val_t{16};
 	static_assert(sizeof(mpt::aligned_array<buffer_t, bufferSize, alignment>) == sizeof(std::array<buffer_t, bufferSize>));
 	static_assert(alignof(mpt::aligned_array<buffer_t, bufferSize, alignment>) == static_cast<std::size_t>(alignment));
-#endif // MPT_ENABLE_ARCH_INTRINSICS || MPT_WITH_VST
+#endif  // MPT_ENABLE_ARCH_INTRINSICS || MPT_WITH_VST
 
 protected:
 
 #if defined(MPT_ENABLE_ARCH_INTRINSICS) || defined(MPT_WITH_VST)
 	std::vector<mpt::aligned_array<buffer_t, bufferSize, alignment>> inputs;
 	std::vector<mpt::aligned_array<buffer_t, bufferSize, alignment>> outputs;
-#else // !(MPT_ENABLE_ARCH_INTRINSICS || MPT_WITH_VST)
+#else   // !(MPT_ENABLE_ARCH_INTRINSICS || MPT_WITH_VST)
 	std::vector<std::array<buffer_t, bufferSize>> inputs;
 	std::vector<std::array<buffer_t, bufferSize>> outputs;
-#endif // MPT_ENABLE_ARCH_INTRINSICS || MPT_WITH_VST
-	std::vector<buffer_t*> inputsarray;
-	std::vector<buffer_t*> outputsarray;
+#endif  // MPT_ENABLE_ARCH_INTRINSICS || MPT_WITH_VST
+	std::vector<buffer_t *> inputsarray;
+	std::vector<buffer_t *> outputsarray;
 
 public:
 
@@ -130,7 +130,6 @@ public:
 	buffer_t **GetOutputBufferArray() { return outputs.empty() ? nullptr : outputsarray.data(); }
 
 	bool Ok() const { return (inputs.size() + outputs.size()) > 0; }
-
 };
 
 

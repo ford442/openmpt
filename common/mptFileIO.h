@@ -20,7 +20,7 @@
 
 #include <utility>
 
-#endif // MPT_ENABLE_FILEIO
+#endif  // MPT_ENABLE_FILEIO
 
 
 OPENMPT_NAMESPACE_BEGIN
@@ -43,8 +43,7 @@ inline FileCursor GetFileReader(Targ1 &&arg1, Targ2 &&arg2)
 }
 
 
-#endif // MPT_ENABLE_FILEIO
+#endif  // MPT_ENABLE_FILEIO
 
 
 OPENMPT_NAMESPACE_END
-

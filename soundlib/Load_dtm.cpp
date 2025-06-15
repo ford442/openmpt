@@ -23,15 +23,15 @@ enum PatternFormats : uint32
 
 struct DTMFileHeader
 {
-	char     magic[4];
+	char magic[4];
 	uint32be headerSize;
-	uint16be type;        // 0 = module
-	uint8be  stereoMode;  // FF = panoramic stereo, 00 = old stereo
-	uint8be  bitDepth;    // Typically 8, sometimes 16, but is not actually used anywhere?
-	uint16be reserved;    // Usually 0, but not in unknown title 1.dtm and unknown title 2.dtm
+	uint16be type;       // 0 = module
+	uint8be stereoMode;  // FF = panoramic stereo, 00 = old stereo
+	uint8be bitDepth;    // Typically 8, sometimes 16, but is not actually used anywhere?
+	uint16be reserved;   // Usually 0, but not in unknown title 1.dtm and unknown title 2.dtm
 	uint16be speed;
 	uint16be tempo;
-	uint32be forcedSampleRate; // Seems to be ignored in newer files
+	uint32be forcedSampleRate;  // Seems to be ignored in newer files
 };
 
 MPT_BINARY_STRUCT(DTMFileHeader, 22)
@@ -75,15 +75,15 @@ MPT_BINARY_STRUCT(DTMChunk, 8)
 
 struct DTMSample
 {
-	uint32be reserved;   // 0x204 for first sample, 0x208 for second, etc...
-	uint32be length;     // in bytes
-	uint8be  finetune;   // -8....7
-	uint8be  volume;     // 0...64
-	uint32be loopStart;  // in bytes
-	uint32be loopLength; // ditto
-	char     name[22];
-	uint8be  stereo;
-	uint8be  bitDepth;
+	uint32be reserved;    // 0x204 for first sample, 0x208 for second, etc...
+	uint32be length;      // in bytes
+	uint8be finetune;     // -8....7
+	uint8be volume;       // 0...64
+	uint32be loopStart;   // in bytes
+	uint32be loopLength;  // ditto
+	char name[22];
+	uint8be stereo;
+	uint8be bitDepth;
 	uint16be transpose;
 	uint16be unknown;
 	uint32be sampleRate;
@@ -142,18 +142,18 @@ MPT_BINARY_STRUCT(DTMSample, 50)
 struct DTMInstrument
 {
 	uint16be insNum;
-	uint8be  unknown1;
-	uint8be  envelope; // 0xFF = none
-	uint8be  sustain;  // 0xFF = no sustain point
+	uint8be unknown1;
+	uint8be envelope;  // 0xFF = none
+	uint8be sustain;   // 0xFF = no sustain point
 	uint16be fadeout;
-	uint8be  vibRate;
-	uint8be  vibDepth;
-	uint8be  modulationRate;
-	uint8be  modulationDepth;
-	uint8be  breathRate;
-	uint8be  breathDepth;
-	uint8be  volumeRate;
-	uint8be  volumeDepth;
+	uint8be vibRate;
+	uint8be vibDepth;
+	uint8be modulationRate;
+	uint8be modulationDepth;
+	uint8be breathRate;
+	uint8be breathDepth;
+	uint8be volumeRate;
+	uint8be volumeDepth;
 };
 
 MPT_BINARY_STRUCT(DTMInstrument, 15)
@@ -176,7 +176,7 @@ MPT_BINARY_STRUCT(DTMEnvelope, 34)
 
 struct DTMText
 {
-	uint16be textType;	// 0 = pattern, 1 = free, 2 = song
+	uint16be textType;  // 0 = pattern, 1 = free, 2 = song
 	uint32be textLength;
 	uint16be tabWidth;
 	uint16be reserved;
@@ -189,9 +189,9 @@ MPT_BINARY_STRUCT(DTMText, 12)
 static bool ValidateHeader(const DTMFileHeader &fileHeader)
 {
 	if(std::memcmp(fileHeader.magic, "D.T.", 4)
-		|| fileHeader.headerSize < sizeof(fileHeader) - 8u
-		|| fileHeader.headerSize > 256 // Excessively long song title?
-		|| fileHeader.type != 0)
+	   || fileHeader.headerSize < sizeof(fileHeader) - 8u
+	   || fileHeader.headerSize > 256  // Excessively long song title?
+	   || fileHeader.type != 0)
 	{
 		return false;
 	}
@@ -274,7 +274,7 @@ bool CSoundFile::ReadDTM(FileReader &file, ModLoadingFlags loadFlags)
 	{
 		uint16 ordLen = chunk.ReadUint16BE();
 		uint16 restartPos = chunk.ReadUint16BE();
-		chunk.Skip(4);	// Reserved
+		chunk.Skip(4);  // Reserved
 		ReadOrderFromFile<uint8>(Order(), chunk, ordLen);
 		Order().SetRestartPos(restartPos);
 	} else
@@ -285,7 +285,7 @@ bool CSoundFile::ReadDTM(FileReader &file, ModLoadingFlags loadFlags)
 	// Read global info
 	if(FileReader chunk = chunks.GetChunk(DTMChunk::idSV19))
 	{
-		chunk.Skip(2);	// Ticks per quarter note, typically 24
+		chunk.Skip(2);  // Ticks per quarter note, typically 24
 		uint32 fractionalTempo = chunk.ReadUint32BE();
 		Order().SetDefaultTempo(TEMPO(Order().GetDefaultTempo().GetInt() + fractionalTempo / 4294967296.0));
 
@@ -312,7 +312,7 @@ bool CSoundFile::ReadDTM(FileReader &file, ModLoadingFlags loadFlags)
 				// Volume is in range 0...128, 64 = normal
 				ChnSettings[chn].nVolume = static_cast<uint8>(std::min(static_cast<int>(volume[chn]), int(128)) / 2);
 			}
-			m_nSamplePreAmp *= 2;	// Compensate for channel volume range
+			m_nSamplePreAmp *= 2;  // Compensate for channel volume range
 		}
 	}
 
@@ -338,7 +338,7 @@ bool CSoundFile::ReadDTM(FileReader &file, ModLoadingFlags loadFlags)
 		{
 			return false;
 		}
-		
+
 		m_nSamples = numSamples;
 		for(SAMPLEINDEX smp = 1; smp <= numSamples; smp++)
 		{
@@ -354,7 +354,7 @@ bool CSoundFile::ReadDTM(FileReader &file, ModLoadingFlags loadFlags)
 			dtmSample.ConvertToMPT(mptSmp, fileHeader.forcedSampleRate, patternFormat);
 			m_szNames[realSample] = mpt::String::ReadBuf(mpt::String::maybeNullTerminated, dtmSample.name);
 		}
-	
+
 		if(chunk.ReadUint16BE() == 0x0004)
 		{
 			// Digital Home Studio instruments
@@ -382,7 +382,7 @@ bool CSoundFile::ReadDTM(FileReader &file, ModLoadingFlags loadFlags)
 							DTMEnvelope env;
 							envChunk.ReadStruct(env);
 							mptEnv.dwFlags.set(ENV_ENABLED);
-							mptEnv.resize(std::min({ static_cast<std::size_t>(env.numPoints), std::size(env.points), static_cast<std::size_t>(MAX_ENVPOINTS) }));
+							mptEnv.resize(std::min({static_cast<std::size_t>(env.numPoints), std::size(env.points), static_cast<std::size_t>(MAX_ENVPOINTS)}));
 							for(size_t i = 0; i < mptEnv.size(); i++)
 							{
 								mptEnv[i].value = std::min(uint8(64), static_cast<uint8>(env.points[i].value));
@@ -409,7 +409,7 @@ bool CSoundFile::ReadDTM(FileReader &file, ModLoadingFlags loadFlags)
 	// Read pattern data
 	for(auto &chunk : chunks.GetAllChunks(DTMChunk::idDAPT))
 	{
-		chunk.Skip(4);	// FF FF FF FF
+		chunk.Skip(4);  // FF FF FF FF
 		PATTERNINDEX patNum = chunk.ReadUint16BE();
 		ROWINDEX numRows = chunk.ReadUint16BE();
 		if(patternFormat == DTM_206_PATTERN_FORMAT)
@@ -431,7 +431,7 @@ bool CSoundFile::ReadDTM(FileReader &file, ModLoadingFlags loadFlags)
 				if(length % 2u) length++;
 				FileReader rowChunk = chunk.ReadChunk(length);
 				int tick = 0;
-				std::div_t position = { 0, 0 };
+				std::div_t position = {0, 0};
 				while(rowChunk.CanRead(6) && static_cast<ROWINDEX>(position.quot) < numRows)
 				{
 					ModCommand *m = Patterns[patNum].GetpModCommand(position.quot, chn);
@@ -446,7 +446,7 @@ bool CSoundFile::ReadDTM(FileReader &file, ModLoadingFlags loadFlags)
 					{
 						// Lower 7 bits contain note, probably intended for MIDI-like note-on/note-off events
 						if(position.rem)
-							m->SetEffectCommand(CMD_MODCMDEX, static_cast<ModCommand::PARAM>(0xC0 |std::min(position.rem, 15)));
+							m->SetEffectCommand(CMD_MODCMDEX, static_cast<ModCommand::PARAM>(0xC0 | std::min(position.rem, 15)));
 						else
 							m->note = NOTE_NOTECUT;
 					}
@@ -504,21 +504,21 @@ bool CSoundFile::ReadDTM(FileReader &file, ModLoadingFlags loadFlags)
 				// Fix commands without memory and slide nibble precedence
 				switch(m.command)
 				{
-				case CMD_PORTAMENTOUP:
-				case CMD_PORTAMENTODOWN:
-					if(!m.param)
-						m.command = CMD_NONE;
-					break;
-				case CMD_VOLUMESLIDE:
-				case CMD_TONEPORTAVOL:
-				case CMD_VIBRATOVOL:
-					if(m.param & 0xF0)
-						m.param &= 0xF0;
-					else if(!m.param)
-						m.command = CMD_NONE;
-					break;
-				default:
-					break;
+					case CMD_PORTAMENTOUP:
+					case CMD_PORTAMENTODOWN:
+						if(!m.param)
+							m.command = CMD_NONE;
+						break;
+					case CMD_VOLUMESLIDE:
+					case CMD_TONEPORTAVOL:
+					case CMD_VIBRATOVOL:
+						if(m.param & 0xF0)
+							m.param &= 0xF0;
+						else if(!m.param)
+							m.command = CMD_NONE;
+						break;
+					default:
+						break;
 				}
 #ifdef MODPLUG_TRACKER
 				m.Convert(MOD_TYPE_MOD, MOD_TYPE_IT, *this);
@@ -564,9 +564,10 @@ bool CSoundFile::ReadDTM(FileReader &file, ModLoadingFlags loadFlags)
 		ModSample &mptSmp = Samples[smp + 1];
 		SampleIO(
 			mptSmp.uFlags[CHN_16BIT] ? SampleIO::_16bit : SampleIO::_8bit,
-			mptSmp.uFlags[CHN_STEREO] ? SampleIO::stereoInterleaved: SampleIO::mono,
+			mptSmp.uFlags[CHN_STEREO] ? SampleIO::stereoInterleaved : SampleIO::mono,
 			SampleIO::bigEndian,
-			SampleIO::signedPCM).ReadSample(mptSmp, chunk);
+			SampleIO::signedPCM)
+			.ReadSample(mptSmp, chunk);
 	}
 
 	// Is this accurate?

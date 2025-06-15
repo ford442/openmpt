@@ -826,7 +826,7 @@ bool CSoundFile::ReadMOD(FileReader &file, ModLoadingFlags loadFlags)
 						instr->name = m_szNames[ins];
 				}
 			}
-			ModInstrument *instr = Instruments[smp];
+			ModInstrument *instr = Instruments[smp].get();
 			if(!instr)
 				continue;
 
@@ -1137,3 +1137,5 @@ bool CSoundFile::SaveMod(std::ostream &f) const
 
 
 OPENMPT_NAMESPACE_END
+
+[end of soundlib/Load_mod.cpp]

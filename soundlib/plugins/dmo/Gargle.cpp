@@ -22,9 +22,9 @@ OPENMPT_NAMESPACE_BEGIN
 namespace DMO
 {
 
-IMixPlugin* Gargle::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
+IMixPlugin *Gargle::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
-	return new (std::nothrow) Gargle(factory, sndFile, mixStruct);
+	return new(std::nothrow) Gargle(factory, sndFile, mixStruct);
 }
 
 
@@ -94,7 +94,6 @@ void Gargle::Process(float *pOutL, float *pOutR, uint32 numFrames)
 				}
 				inL += remain;
 				inR += remain;
-
 			}
 			frame -= remain;
 			m_counter += remain;
@@ -143,8 +142,8 @@ CString Gargle::GetParamName(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kGargleRate: return _T("Rate");
-	case kGargleWaveShape: return _T("WaveShape");
+		case kGargleRate: return _T("Rate");
+		case kGargleWaveShape: return _T("WaveShape");
 	}
 	return CString();
 }
@@ -154,7 +153,7 @@ CString Gargle::GetParamLabel(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kGargleRate: return _T("Hz");
+		case kGargleRate: return _T("Hz");
 	}
 	return CString();
 }
@@ -165,16 +164,16 @@ CString Gargle::GetParamDisplay(PlugParamIndex param)
 	CString s;
 	switch(param)
 	{
-	case kGargleRate:
-		s.Format(_T("%u"), RateInHertz());
-		break;
-	case kGargleWaveShape:
-		return (m_param[param] < 0.5) ? _T("Triangle") : _T("Square");
+		case kGargleRate:
+			s.Format(_T("%u"), RateInHertz());
+			break;
+		case kGargleWaveShape:
+			return (m_param[param] < 0.5) ? _T("Triangle") : _T("Square");
 	}
 	return s;
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 uint32 Gargle::RateInHertz() const
@@ -191,11 +190,11 @@ void Gargle::RecalculateGargleParams()
 	LimitMax(m_counter, m_period);
 }
 
-} // namespace DMO
+}  // namespace DMO
 
 #else
 MPT_MSVC_WORKAROUND_LNK4221(Gargle)
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_END

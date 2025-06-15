@@ -44,23 +44,23 @@ namespace mpt
 
 using PathString = mpt::native_path;
 
-#define MPT_PATHSTRING_LITERAL(x) MPT_OS_PATH_LITERAL( x )
-#define MPT_PATHSTRING(x) mpt::PathString::FromNative(MPT_OS_PATH_LITERAL( x ))
+#define MPT_PATHSTRING_LITERAL(x) MPT_OS_PATH_LITERAL(x)
+#define MPT_PATHSTRING(x)         mpt::PathString::FromNative(MPT_OS_PATH_LITERAL(x))
 
-#else // !MPT_ENABLE_CHARSET_LOCALE
+#else  // !MPT_ENABLE_CHARSET_LOCALE
 
 using PathString = mpt::BasicPathString<mpt::Utf8PathTraits, false>;
 
-#define MPT_PATHSTRING_LITERAL(x) ( x )
-#define MPT_PATHSTRING(x) mpt::PathString::FromNative( x )
+#define MPT_PATHSTRING_LITERAL(x) (x)
+#define MPT_PATHSTRING(x)         mpt::PathString::FromNative(x)
 
-#endif // MPT_ENABLE_CHARSET_LOCALE
+#endif  // MPT_ENABLE_CHARSET_LOCALE
 
 using RawPathString = PathString::raw_path_type;
 
 #define PC_(x) MPT_PATHSTRING_LITERAL(x)
 #define PL_(x) MPT_PATHSTRING_LITERAL(x)
-#define P_(x) MPT_PATHSTRING(x)
+#define P_(x)  MPT_PATHSTRING(x)
 
 
 
@@ -82,8 +82,8 @@ inline mpt::ustring ToUString(const T &x)
 
 // Relative / absolute paths conversion
 
-mpt::PathString AbsolutePathToRelative(const mpt::PathString &p, const mpt::PathString &relativeTo); // similar to std::fs::path::lexically_approximate
-	
+mpt::PathString AbsolutePathToRelative(const mpt::PathString &p, const mpt::PathString &relativeTo);  // similar to std::fs::path::lexically_approximate
+
 mpt::PathString RelativePathToAbsolute(const mpt::PathString &p, const mpt::PathString &relativeTo);
 
 
@@ -93,11 +93,11 @@ inline int PathCompareNoCase(const PathString &a, const PathString &b)
 {
 	return lstrcmpi(a.AsNative().c_str(), b.AsNative().c_str());
 }
-#endif // !MPT_OS_WINDOWS_WINRT
+#endif  // !MPT_OS_WINDOWS_WINRT
 
 
 
-#endif // MPT_OS_WINDOWS
+#endif  // MPT_OS_WINDOWS
 
 
 
@@ -109,11 +109,11 @@ inline Tstring SanitizePathComponent(const Tstring &str)
 
 
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 
-} // namespace mpt
+}  // namespace mpt
 
 
 

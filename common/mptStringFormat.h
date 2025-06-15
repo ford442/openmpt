@@ -70,27 +70,32 @@
 
 
 
-namespace mpt {
-inline namespace MPT_INLINE_NS {
+namespace mpt
+{
+inline namespace MPT_INLINE_NS
+{
 template <typename Tstring, typename Tint, mpt::endian endian>
-inline auto format_value_default(const mpt::packed<Tint, endian> & x) -> decltype(mpt::default_formatter::format<Tstring, Tint>(x)) {
+inline auto format_value_default(const mpt::packed<Tint, endian> &x) -> decltype(mpt::default_formatter::format<Tstring, Tint>(x))
+{
 	return mpt::default_formatter::format<Tstring, Tint>(x);
 }
-} // namespace MPT_INLINE_NS
-} // namespace mpt
+}  // namespace MPT_INLINE_NS
+}  // namespace mpt
 
 
 OPENMPT_NAMESPACE_BEGIN
 
 
 template <typename Tstring, typename T>
-inline auto format_value_default(const T & x) -> decltype(mpt::transcode<Tstring>(x.ToUString())) {
+inline auto format_value_default(const T &x) -> decltype(mpt::transcode<Tstring>(x.ToUString()))
+{
 	return mpt::transcode<Tstring>(x.ToUString());
 }
 
 
 template <typename Tstring, typename T>
-inline auto format_value_default(const T & x) -> decltype(mpt::transcode<Tstring>(ToUString(x))) {
+inline auto format_value_default(const T &x) -> decltype(mpt::transcode<Tstring>(ToUString(x)))
+{
 	return mpt::transcode<Tstring>(ToUString(x));
 }
 
@@ -100,13 +105,15 @@ namespace mpt
 
 
 template <typename Tstring, typename T>
-inline auto format_value_default(const T & x) -> decltype(mpt::transcode<Tstring>(x.ToUString())) {
+inline auto format_value_default(const T &x) -> decltype(mpt::transcode<Tstring>(x.ToUString()))
+{
 	return mpt::transcode<Tstring>(x.ToUString());
 }
 
 
 template <typename Tstring, typename T>
-inline auto format_value_default(const T & x) -> decltype(mpt::transcode<Tstring>(ToUString(x))) {
+inline auto format_value_default(const T &x) -> decltype(mpt::transcode<Tstring>(ToUString(x)))
+{
 	return mpt::transcode<Tstring>(ToUString(x));
 }
 
@@ -121,13 +128,13 @@ using wfmt = fmtT<std::wstring>;
 using ufmt = fmtT<mpt::ustring>;
 #if defined(MPT_ENABLE_CHARSET_LOCALE)
 using lfmt = fmtT<mpt::lstring>;
-#endif // MPT_ENABLE_CHARSET_LOCALE
+#endif  // MPT_ENABLE_CHARSET_LOCALE
 #if MPT_OS_WINDOWS
 using tfmt = fmtT<mpt::tstring>;
 #endif
 #if defined(MPT_WITH_MFC)
 using cfmt = fmtT<CString>;
-#endif // MPT_WITH_MFC
+#endif  // MPT_WITH_MFC
 
 
 #define MPT_AFORMAT(f) MPT_AFORMAT_MESSAGE(f)
@@ -140,18 +147,18 @@ using cfmt = fmtT<CString>;
 
 #if defined(MPT_ENABLE_CHARSET_LOCALE)
 #define MPT_LFORMAT(f) MPT_LFORMAT_MESSAGE(f)
-#endif // MPT_ENABLE_CHARSET_LOCALE
+#endif  // MPT_ENABLE_CHARSET_LOCALE
 
 #if MPT_OS_WINDOWS
 #define MPT_TFORMAT(f) MPT_TFORMAT_MESSAGE(f)
-#endif // MPT_OS_WINDOWS
+#endif  // MPT_OS_WINDOWS
 
 #if defined(MPT_WITH_MFC)
 #define MPT_CFORMAT(f) MPT_CFORMAT_MESSAGE(f)
-#endif // MPT_WITH_MFC
+#endif  // MPT_WITH_MFC
 
 
-} // namespace mpt
+}  // namespace mpt
 
 
 

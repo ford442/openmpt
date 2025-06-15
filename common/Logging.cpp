@@ -104,99 +104,89 @@ void GlobalLogger::SendLogMessage(const mpt::source_location &loc, LogLevel leve
 	MPT_UNREFERENCED_PARAMETER(level);
 	MPT_UNREFERENCED_PARAMETER(facility);
 	MPT_UNREFERENCED_PARAMETER(text);
-#else // !MPT_LOG_IS_DISABLED
+#else  // !MPT_LOG_IS_DISABLED
 	MPT_MAYBE_CONSTANT_IF(mpt::log::GlobalLogLevel < level)
 	{
 		return;
 	}
-	#if defined(MODPLUG_TRACKER)
-		if(!IsFacilityActive(facility))
-		{
-			return;
-		}
-	#else // !MODPLUG_TRACKER
-		MPT_UNREFERENCED_PARAMETER(facility);
-	#endif // MODPLUG_TRACKER
+#if defined(MODPLUG_TRACKER)
+	if(!IsFacilityActive(facility))
+	{
+		return;
+	}
+#else   // !MODPLUG_TRACKER
+	MPT_UNREFERENCED_PARAMETER(facility);
+#endif  // MODPLUG_TRACKER
 	// remove eol if already present and add log level prefix
 	const mpt::ustring message = LogLevelToString(level) + U_(": ") + mpt::trim_right(text, U_("\r\n"));
 	const mpt::ustring file = mpt::transcode<mpt::ustring>(mpt::source_encoding, loc.file_name() ? loc.file_name() : "");
 	const mpt::ustring function = mpt::transcode<mpt::ustring>(mpt::source_encoding, loc.function_name() ? loc.function_name() : "");
 	const mpt::ustring line = mpt::ufmt::dec(loc.line());
-	#if defined(MODPLUG_TRACKER) && !defined(MPT_BUILD_WINESUPPORT)
+#if defined(MODPLUG_TRACKER) && !defined(MPT_BUILD_WINESUPPORT)
 #if MPT_OS_WINDOWS
-		static uint64 s_lastlogtime = 0;
-		uint64 cur = mpt::Date::ANSI::Now();
-		uint64 diff = cur/10000 - s_lastlogtime;
-		s_lastlogtime = cur/10000;
+	static uint64 s_lastlogtime = 0;
+	uint64 cur = mpt::Date::ANSI::Now();
+	uint64 diff = cur / 10000 - s_lastlogtime;
+	s_lastlogtime = cur / 10000;
 #else
-		uint64 cur = 0;
-		uint64 diff = 0;
+	uint64 cur = 0;
+	uint64 diff = 0;
 #endif
-		if(mpt::log::FileEnabled)
+	if(mpt::log::FileEnabled)
+	{
+		static std::optional<mpt::IO::ofstream> s_logfile;
+		if(!s_logfile)
 		{
-			static std::optional<mpt::IO::ofstream> s_logfile;
-			if(!s_logfile)
-			{
-				s_logfile.emplace(P_("mptrack.log"), std::ios::app);
-			}
-			if(s_logfile)
-			{
-				mpt::IO::WriteText(*s_logfile, mpt::transcode<std::string>(mpt::logfile_encoding, MPT_UFORMAT("{}+{} {}({}): {} [{}]\n")
-					( mpt::Date::ANSI::ToUString(cur)
-					, mpt::ufmt::right(6, mpt::ufmt::dec(diff))
-					, file
-					, line
-					, message
-					, function
-					)));
-				mpt::IO::Flush(*s_logfile);
-			}
+			s_logfile.emplace(P_("mptrack.log"), std::ios::app);
 		}
-		if(mpt::log::DebuggerEnabled)
+		if(s_logfile)
 		{
-			OutputDebugStringW(mpt::ToWide(MPT_UFORMAT("{}({}): +{} {} [{}]\n")
-				( file
-				, line
-				, mpt::ufmt::right(6, mpt::ufmt::dec(diff))
-				, message
-				, function
-				)).c_str());
+			mpt::IO::WriteText(*s_logfile, mpt::transcode<std::string>(mpt::logfile_encoding, MPT_UFORMAT("{}+{} {}({}): {} [{}]\n")(mpt::Date::ANSI::ToUString(cur), mpt::ufmt::right(6, mpt::ufmt::dec(diff)), file, line, message, function)));
+			mpt::IO::Flush(*s_logfile);
 		}
-		if(mpt::log::ConsoleEnabled)
+	}
+	if(mpt::log::DebuggerEnabled)
+	{
+		OutputDebugStringW(mpt::ToWide(MPT_UFORMAT("{}({}): +{} {} [{}]\n")(file, line, mpt::ufmt::right(6, mpt::ufmt::dec(diff)), message, function)).c_str());
+	}
+	if(mpt::log::ConsoleEnabled)
+	{
+		static bool consoleInited = false;
+		if(!consoleInited)
 		{
-			static bool consoleInited = false;
-			if(!consoleInited)
-			{
-				AllocConsole();
-				consoleInited = true;
-			}
-			std::wstring consoletext = mpt::ToWide(message) + L"\r\n";
-			DWORD dummy = 0;
-			WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), consoletext.c_str(), mpt::saturate_cast<DWORD>(consoletext.length()), &dummy, nullptr);
+			AllocConsole();
+			consoleInited = true;
 		}
-	#elif defined(MODPLUG_TRACKER) && defined(MPT_BUILD_WINESUPPORT)
-		std::clog
-			<< "NativeSupport: "
-			<< mpt::transcode<std::string>(mpt::stdio_encoding, file) << "(" << mpt::transcode<std::string>(mpt::stdio_encoding, line) << ")" << ": "
-			<< mpt::transcode<std::string>(mpt::stdio_encoding, message)
-			<< " [" << mpt::transcode<std::string>(mpt::stdio_encoding, function) << "]"
-			<< std::endl;
-	#else // !MODPLUG_TRACKER
-		std::clog
-			<< "libopenmpt: "
-			<< mpt::transcode<std::string>(mpt::stdio_encoding, file) << "(" << mpt::transcode<std::string>(mpt::stdio_encoding, line) << ")" << ": "
-			<< mpt::transcode<std::string>(mpt::stdio_encoding, message)
-			<< " [" << mpt::transcode<std::string>(mpt::stdio_encoding, function) << "]"
-			<< std::endl;
-	#endif // MODPLUG_TRACKER
-#endif // MPT_LOG_IS_DISABLED
+		std::wstring consoletext = mpt::ToWide(message) + L"\r\n";
+		DWORD dummy = 0;
+		WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), consoletext.c_str(), mpt::saturate_cast<DWORD>(consoletext.length()), &dummy, nullptr);
+	}
+#elif defined(MODPLUG_TRACKER) && defined(MPT_BUILD_WINESUPPORT)
+	std::clog
+		<< "NativeSupport: "
+		<< mpt::transcode<std::string>(mpt::stdio_encoding, file) << "(" << mpt::transcode<std::string>(mpt::stdio_encoding, line) << ")"
+		<< ": "
+		<< mpt::transcode<std::string>(mpt::stdio_encoding, message)
+		<< " [" << mpt::transcode<std::string>(mpt::stdio_encoding, function) << "]"
+		<< std::endl;
+#else   // !MODPLUG_TRACKER
+	std::clog
+		<< "libopenmpt: "
+		<< mpt::transcode<std::string>(mpt::stdio_encoding, file) << "(" << mpt::transcode<std::string>(mpt::stdio_encoding, line) << ")"
+		<< ": "
+		<< mpt::transcode<std::string>(mpt::stdio_encoding, message)
+		<< " [" << mpt::transcode<std::string>(mpt::stdio_encoding, function) << "]"
+		<< std::endl;
+#endif  // MODPLUG_TRACKER
+#endif  // MPT_LOG_IS_DISABLED
 }
 
 
 
 #if defined(MODPLUG_TRACKER)
 
-namespace Trace {
+namespace Trace
+{
 
 #if MPT_OS_WINDOWS
 
@@ -206,19 +196,20 @@ MPT_CONSTINIT std::atomic<bool> g_Enabled{false};
 
 static MPT_CONSTINIT bool g_Sealed = false;
 
-struct Entry {
-	uint32       Index;
-	uint32       ThreadId;
-	uint64       Timestamp;
-	const char * Function;
-	const char * File;
-	int          Line;
-	Direction    Direction;
+struct Entry
+{
+	uint32 Index;
+	uint32 ThreadId;
+	uint64 Timestamp;
+	const char *Function;
+	const char *File;
+	int Line;
+	Direction Direction;
 };
 
-static MPT_FORCEINLINE bool operator < (const Entry &a, const Entry &b) noexcept
+static MPT_FORCEINLINE bool operator<(const Entry &a, const Entry &b) noexcept
 {
-/*
+	/*
 	return false
 		|| (a.Timestamp < b.Timestamp)
 		|| (a.ThreadID < b.ThreadID)
@@ -228,8 +219,7 @@ static MPT_FORCEINLINE bool operator < (const Entry &a, const Entry &b) noexcept
 		;
 */
 	return false
-		|| (a.Index < b.Index)
-		;
+		|| (a.Index < b.Index);
 }
 
 #if MPT_COMPILER_MSVC
@@ -267,7 +257,7 @@ void Disable()
 	g_Enabled = false;
 }
 
-MPT_NOINLINE void Trace(const mpt::source_location & loc, Direction direction) noexcept
+MPT_NOINLINE void Trace(const mpt::source_location &loc, Direction direction) noexcept
 {
 	// This will get called in realtime contexts and hot paths.
 	// No blocking allowed here.
@@ -284,7 +274,7 @@ MPT_NOINLINE void Trace(const mpt::source_location & loc, Direction direction) n
 	const uint64 timestamp = (static_cast<uint64>(time.dwHighDateTime) << 32) | (static_cast<uint64>(time.dwLowDateTime) << 0);
 #endif
 	const uint32 threadid = static_cast<uint32>(GetCurrentThreadId());
-	mpt::log::Trace::Entry & entry = Entries[index % numEntries];
+	mpt::log::Trace::Entry &entry = Entries[index % numEntries];
 	entry.Index = index;
 	entry.ThreadId = threadid;
 	entry.Timestamp = timestamp;
@@ -355,7 +345,7 @@ bool Dump(const mpt::PathString &filename)
 		std::string time;
 		if(qpcValid)
 		{
-			time = mpt::transcode<std::string>(mpt::logfile_encoding, mpt::Date::ANSI::ToUString( ftNow - static_cast<int64>( static_cast<double>(qpcNow.QuadPart - entry.Timestamp) * (10000000.0 / static_cast<double>(qpcFreq.QuadPart) ) ) ) );
+			time = mpt::transcode<std::string>(mpt::logfile_encoding, mpt::Date::ANSI::ToUString(ftNow - static_cast<int64>(static_cast<double>(qpcNow.QuadPart - entry.Timestamp) * (10000000.0 / static_cast<double>(qpcFreq.QuadPart)))));
 		} else
 		{
 			time = MPT_AFORMAT("0x{}")(mpt::afmt::hex0<16>(entry.Timestamp));
@@ -377,7 +367,9 @@ bool Dump(const mpt::PathString &filename)
 		{
 			f << " " << mpt::afmt::hex0<8>(entry.ThreadId) << " ";
 		}
-		f << (entry.Direction == mpt::log::Trace::Direction::Enter ? ">" : entry.Direction == mpt::log::Trace::Direction::Leave ? "<" : " ") << " ";
+		f << (entry.Direction == mpt::log::Trace::Direction::Enter ? ">" : entry.Direction == mpt::log::Trace::Direction::Leave ? "<"
+																																: " ")
+		  << " ";
 		f << entry.File << "(" << entry.Line << "): " << entry.Function;
 		f << std::endl;
 	}
@@ -428,15 +420,15 @@ uint32 GetThreadId(mpt::log::Trace::ThreadKind kind)
 	return result;
 }
 
-#endif // MPT_OS_WINDOWS
+#endif  // MPT_OS_WINDOWS
 
-} // namespace Trace
+}  // namespace Trace
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
-} // namespace log
-} // namespace mpt
+}  // namespace log
+}  // namespace mpt
 
 
 OPENMPT_NAMESPACE_END

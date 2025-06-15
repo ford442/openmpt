@@ -56,20 +56,20 @@ struct VSTPluginLib
 public:
 	using CreateProc = IMixPlugin *(*)(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 
-	IMixPlugin *pPluginsList = nullptr; // Pointer to first plugin instance (this instance carries pointers to other instances)
+	IMixPlugin *pPluginsList = nullptr;  // Pointer to first plugin instance (this instance carries pointers to other instances)
 	void InsertPluginInstanceIntoList(IMixPlugin &pluginInstance);
 	void RemovePluginInstanceFromList(IMixPlugin &pluginInstance);
 
-	CreateProc Create;                  // Factory to call for this plugin
-	mpt::PathString libraryName;        // Display name
-	mpt::PathString dllPath;            // Full path name
+	CreateProc Create;            // Factory to call for this plugin
+	mpt::PathString libraryName;  // Display name
+	mpt::PathString dllPath;      // Full path name
 #ifdef MODPLUG_TRACKER
-	mpt::ustring tags;                  // User tags
+	mpt::ustring tags;  // User tags
 	CString vendor;
-#endif // MODPLUG_TRACKER
-	int32 pluginId1 = 0;                // Plugin type (kEffectMagic, kDmoMagic, ...)
-	int32 pluginId2 = 0;                // Plugin unique ID
-	uint32 shellPluginID = 0;           // ID of shell child plugin
+#endif                         // MODPLUG_TRACKER
+	int32 pluginId1 = 0;       // Plugin type (kEffectMagic, kDmoMagic, ...)
+	int32 pluginId2 = 0;       // Plugin unique ID
+	uint32 shellPluginID = 0;  // ID of shell child plugin
 	PluginCategory category = PluginCategory::Unknown;
 	const bool isBuiltIn : 1;
 	bool isInstrument : 1;
@@ -80,23 +80,34 @@ protected:
 public:
 	VSTPluginLib(CreateProc factoryProc, bool isBuiltIn, mpt::PathString dllPath, mpt::PathString libraryName)
 		: Create(factoryProc)
-		, libraryName(std::move(libraryName)), dllPath(std::move(dllPath))
+		, libraryName(std::move(libraryName))
+		, dllPath(std::move(dllPath))
 		, category(PluginCategory::Unknown)
-		, isBuiltIn(isBuiltIn), isInstrument(false)
-		, useBridge(false), shareBridgeInstance(true), modernBridge(true)
+		, isBuiltIn(isBuiltIn)
+		, isInstrument(false)
+		, useBridge(false)
+		, shareBridgeInstance(true)
+		, modernBridge(true)
 	{
 	}
 	VSTPluginLib(VSTPluginLib &&) = default;
 	VSTPluginLib(const VSTPluginLib &other)
 		: Create(other.Create)
-		, libraryName(other.libraryName), dllPath(other.dllPath)
+		, libraryName(other.libraryName)
+		, dllPath(other.dllPath)
 #ifdef MODPLUG_TRACKER
-		, tags(other.tags), vendor(other.vendor)
+		, tags(other.tags)
+		, vendor(other.vendor)
 #endif  // MODPLUG_TRACKER
-		, pluginId1(other.pluginId1), pluginId2(other.pluginId2), shellPluginID(other.shellPluginID)
+		, pluginId1(other.pluginId1)
+		, pluginId2(other.pluginId2)
+		, shellPluginID(other.shellPluginID)
 		, category(other.category)
-		, isBuiltIn(other.isBuiltIn), isInstrument(other.isInstrument)
-		, useBridge(other.useBridge), shareBridgeInstance(other.shareBridgeInstance), modernBridge(other.modernBridge)
+		, isBuiltIn(other.isBuiltIn)
+		, isInstrument(other.isInstrument)
+		, useBridge(other.useBridge)
+		, shareBridgeInstance(other.shareBridgeInstance)
+		, modernBridge(other.modernBridge)
 		, dllArch(other.dllArch)
 	{
 	}
@@ -116,7 +127,7 @@ public:
 	// (e.g. if tons of unscanned plugins would slow down generation of the plugin selection dialog)
 	bool IsNativeFromCache() const;
 
-#endif // MPT_WITH_VST
+#endif  // MPT_WITH_VST
 
 	void WriteToCache() const;
 
@@ -124,12 +135,11 @@ public:
 	{
 		// Format: 00000000.0000000M.AAAAAASB.CCCCCCCI
 		return (isInstrument ? 1 : 0)
-			| (static_cast<uint32>(category) << 1)
-			| (useBridge ? 0x100 : 0)
-			| (shareBridgeInstance ? 0x200 : 0)
-			| ((dllArch / 8) << 10)
-			| (modernBridge ? 0x10000 : 0)
-			;
+			 | (static_cast<uint32>(category) << 1)
+			 | (useBridge ? 0x100 : 0)
+			 | (shareBridgeInstance ? 0x200 : 0)
+			 | ((dllArch / 8) << 10)
+			 | (modernBridge ? 0x10000 : 0);
 	}
 
 	void DecodeCacheFlags(uint32 flags)
@@ -187,15 +197,15 @@ protected:
 
 	std::vector<VSTPluginLib *> AddPluginsToList(std::vector<VSTPluginLib> containedPlugins, std::function<void(VSTPluginLib &, bool)> updateFunc);
 
-#else // NO_PLUGINS
+#else   // NO_PLUGINS
 public:
 	const VSTPluginLib **begin() const { return nullptr; }
 	const VSTPluginLib **end() const { return nullptr; }
-	void reserve(size_t) { }
+	void reserve(size_t) {}
 	size_t size() const { return 0; }
 
 	void OnIdle() {}
-#endif // NO_PLUGINS
+#endif  // NO_PLUGINS
 };
 
 

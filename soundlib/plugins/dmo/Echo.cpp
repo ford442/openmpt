@@ -13,7 +13,7 @@
 #ifndef NO_PLUGINS
 #include "Echo.h"
 #include "../../Sndfile.h"
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -22,9 +22,9 @@ OPENMPT_NAMESPACE_BEGIN
 namespace DMO
 {
 
-IMixPlugin* Echo::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
+IMixPlugin *Echo::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
-	return new (std::nothrow) Echo(factory, sndFile, mixStruct);
+	return new(std::nothrow) Echo(factory, sndFile, mixStruct);
 }
 
 
@@ -50,8 +50,8 @@ void Echo::Process(float *pOutL, float *pOutR, uint32 numFrames)
 	if(!m_bufferSize || !m_mixBuffer.Ok())
 		return;
 	const float wetMix = m_param[kEchoWetDry], dryMix = 1 - wetMix;
-	const float *in[2] = { m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1) };
-	float *out[2] = { m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1) };
+	const float *in[2] = {m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1)};
+	float *out[2] = {m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1)};
 
 	for(uint32 i = numFrames; i != 0; i--)
 	{
@@ -139,11 +139,11 @@ CString Echo::GetParamName(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kEchoWetDry: return _T("WetDryMix");
-	case kEchoFeedback: return _T("Feedback");
-	case kEchoLeftDelay: return _T("LeftDelay");
-	case kEchoRightDelay: return _T("RightDelay");
-	case kEchoPanDelay: return _T("PanDelay");
+		case kEchoWetDry: return _T("WetDryMix");
+		case kEchoFeedback: return _T("Feedback");
+		case kEchoLeftDelay: return _T("LeftDelay");
+		case kEchoRightDelay: return _T("RightDelay");
+		case kEchoPanDelay: return _T("PanDelay");
 	}
 	return CString();
 }
@@ -153,13 +153,13 @@ CString Echo::GetParamLabel(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kEchoFeedback:
-		return _T("%");
-	case kEchoLeftDelay:
-	case kEchoRightDelay:
-		return _T("ms");
-	default:
-		return CString{};
+		case kEchoFeedback:
+			return _T("%");
+		case kEchoLeftDelay:
+		case kEchoRightDelay:
+			return _T("ms");
+		default:
+			return CString{};
 	}
 }
 
@@ -169,23 +169,23 @@ CString Echo::GetParamDisplay(PlugParamIndex param)
 	CString s;
 	switch(param)
 	{
-	case kEchoWetDry:
-		s.Format(_T("%.1f : %.1f"), m_param[param] * 100.0f, 100.0f - m_param[param] * 100.0f);
-		break;
-	case kEchoFeedback:
-		s.Format(_T("%.2f"), m_param[param] * 100.0f);
-		break;
-	case kEchoLeftDelay:
-	case kEchoRightDelay:
-		s.Format(_T("%.2f"), 1.0f + m_param[param] * 1999.0f);
-		break;
-	case kEchoPanDelay:
-		s = (m_param[param] <= 0.5) ? _T("No") : _T("Yes");
+		case kEchoWetDry:
+			s.Format(_T("%.1f : %.1f"), m_param[param] * 100.0f, 100.0f - m_param[param] * 100.0f);
+			break;
+		case kEchoFeedback:
+			s.Format(_T("%.2f"), m_param[param] * 100.0f);
+			break;
+		case kEchoLeftDelay:
+		case kEchoRightDelay:
+			s.Format(_T("%.2f"), 1.0f + m_param[param] * 1999.0f);
+			break;
+		case kEchoPanDelay:
+			s = (m_param[param] <= 0.5) ? _T("No") : _T("Yes");
 	}
 	return s;
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 void Echo::RecalculateEchoParams()
@@ -196,11 +196,11 @@ void Echo::RecalculateEchoParams()
 	m_crossEcho = (m_param[kEchoPanDelay]) > 0.5f;
 }
 
-} // namespace DMO
+}  // namespace DMO
 
 #else
 MPT_MSVC_WORKAROUND_LNK4221(Echo)
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_END

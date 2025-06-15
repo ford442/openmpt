@@ -15,18 +15,18 @@ OPENMPT_NAMESPACE_BEGIN
 
 struct CBAFileHeader
 {
-	char     magic[4];  // 'CBA\xF9'
-	char     title[32];
-	uint8    eof;
+	char magic[4];  // 'CBA\xF9'
+	char title[32];
+	uint8 eof;
 	uint16le messageLength;
-	uint8    numChannels;
-	uint8    lastPattern;
-	uint8    numOrders;
-	uint8    numSamples;
-	uint8    speed;
-	uint8    tempo;
-	uint8    panPos[32];
-	uint8    orders[255];
+	uint8 numChannels;
+	uint8 lastPattern;
+	uint8 numOrders;
+	uint8 numSamples;
+	uint8 speed;
+	uint8 tempo;
+	uint8 panPos[32];
+	uint8 orders[255];
 
 	bool IsValid() const
 	{
@@ -48,9 +48,9 @@ MPT_BINARY_STRUCT(CBAFileHeader, 332)
 
 struct CBASampleHeader
 {
-	char     name[32];
-	uint8    flags;
-	uint8    volume;
+	char name[32];
+	uint8 flags;
+	uint8 volume;
 	uint16le sampleRate;
 	uint32le length;
 	uint32le loopStart;
@@ -134,7 +134,7 @@ bool CSoundFile::ReadCBA(FileReader &file, ModLoadingFlags loadFlags)
 				m.note = NOTE_NOTECUT;
 			else if(note > 0 && note <= 96)
 				m.note = NOTE_MIDDLEC - 49 + note;
-			
+
 			if(vol)
 				m.SetVolumeCommand(VOLCMD_VOLUME, std::min(vol, uint8(65)) - 1);
 

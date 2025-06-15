@@ -18,9 +18,9 @@
 
 #if MPT_CXX_AT_LEAST(20)
 #include <version>
-#else // !C++20
+#else  // !C++20
 #include <array>
-#endif // C++20
+#endif  // C++20
 
 #include <array>
 #include <iterator>
@@ -38,7 +38,7 @@ OPENMPT_NAMESPACE_BEGIN
 
 
 #define MPT_UNREFERENCED_PARAMETER(x) MPT_UNUSED(x)
-#define MPT_UNUSED_VARIABLE(x) MPT_UNUSED(x)
+#define MPT_UNUSED_VARIABLE(x)        MPT_UNUSED(x)
 
 
 
@@ -52,9 +52,9 @@ OPENMPT_NAMESPACE_BEGIN
 //  3. An unused trivial inline function.
 // Option 3 does not actually solve the problem though, which leaves us with option 1.
 // In any case, for optimized builds, the linker will just remove the useless symbol.
-#define MPT_MSVC_WORKAROUND_LNK4221_CONCAT_DETAIL(x,y) x##y
-#define MPT_MSVC_WORKAROUND_LNK4221_CONCAT(x,y) MPT_MSVC_WORKAROUND_LNK4221_CONCAT_DETAIL(x,y)
-#define MPT_MSVC_WORKAROUND_LNK4221(x) int MPT_MSVC_WORKAROUND_LNK4221_CONCAT(mpt_msvc_workaround_lnk4221_,x) = 0;
+#define MPT_MSVC_WORKAROUND_LNK4221_CONCAT_DETAIL(x, y) x##y
+#define MPT_MSVC_WORKAROUND_LNK4221_CONCAT(x, y)        MPT_MSVC_WORKAROUND_LNK4221_CONCAT_DETAIL(x, y)
+#define MPT_MSVC_WORKAROUND_LNK4221(x)                  int MPT_MSVC_WORKAROUND_LNK4221_CONCAT(mpt_msvc_workaround_lnk4221_, x) = 0;
 #endif
 
 #ifndef MPT_MSVC_WORKAROUND_LNK4221

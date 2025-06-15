@@ -17,10 +17,10 @@ OPENMPT_NAMESPACE_BEGIN
 
 struct _669FileHeader
 {
-	char  magic[2];          // 'if' (0x6669, ha ha) or 'JN'
-	char  songMessage[108];  // Song Message
-	uint8 samples;           // number of samples (1-64)
-	uint8 patterns;          // number of patterns (1-128)
+	char magic[2];          // 'if' (0x6669, ha ha) or 'JN'
+	char songMessage[108];  // Song Message
+	uint8 samples;          // number of samples (1-64)
+	uint8 patterns;         // number of patterns (1-128)
 	uint8 restartPos;
 	uint8 orders[128];
 	uint8 tempoList[128];
@@ -32,7 +32,7 @@ MPT_BINARY_STRUCT(_669FileHeader, 497)
 
 struct _669Sample
 {
-	char     filename[13];
+	char filename[13];
 	uint32le length;
 	uint32le loopStart;
 	uint32le loopEnd;
@@ -64,9 +64,9 @@ MPT_BINARY_STRUCT(_669Sample, 25)
 static bool ValidateHeader(const _669FileHeader &fileHeader)
 {
 	if((std::memcmp(fileHeader.magic, "if", 2) && std::memcmp(fileHeader.magic, "JN", 2))
-		|| fileHeader.samples > 64
-		|| fileHeader.restartPos >= 128
-		|| fileHeader.patterns > 128)
+	   || fileHeader.samples > 64
+	   || fileHeader.restartPos >= 128
+	   || fileHeader.patterns > 128)
 	{
 		return false;
 	}
@@ -129,7 +129,7 @@ bool CSoundFile::Read669(FileReader &file, ModLoadingFlags loadFlags)
 	{
 		return true;
 	}
-	
+
 	if(!file.CanRead(mpt::saturate_cast<FileReader::pos_type>(GetHeaderMinimumAdditionalSize(fileHeader))))
 	{
 		return false;
@@ -145,7 +145,7 @@ bool CSoundFile::Read669(FileReader &file, ModLoadingFlags loadFlags)
 #ifdef MODPLUG_TRACKER
 	// 669 uses frequencies rather than periods, so linear slides mode will sound better in the higher octaves.
 	//m_SongFlags.set(SONG_LINEARSLIDES);
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 	const bool isExtended = !memcmp(fileHeader.magic, "JN", 2);
 	m_modFormat.formatName = UL_("Composer 669");
@@ -169,7 +169,7 @@ bool CSoundFile::Read669(FileReader &file, ModLoadingFlags loadFlags)
 	// Copy first song message line into song title
 	m_songName = mpt::String::ReadBuf(mpt::String::spacePadded, fileHeader.songMessage, 36);
 	// Song Message
-	m_songMessage.ReadFixedLineLength(mpt::byte_cast<const std::byte*>(fileHeader.songMessage), 108, 36, 0);
+	m_songMessage.ReadFixedLineLength(mpt::byte_cast<const std::byte *>(fileHeader.songMessage), 108, 36, 0);
 
 	// Reading Orders
 	ReadOrderFromArray(Order(), fileHeader.orders, std::size(fileHeader.orders), 0xFF, 0xFE);
@@ -193,18 +193,18 @@ bool CSoundFile::Read669(FileReader &file, ModLoadingFlags loadFlags)
 		}
 
 		static constexpr ModCommand::COMMAND effTrans[] =
-		{
-			CMD_AUTO_PORTAUP,    // Slide up (param * 80) Hz on every tick
-			CMD_AUTO_PORTADOWN,  // Slide down (param * 80) Hz on every tick
-			CMD_TONEPORTAMENTO,  // Slide to note by (param * 40) Hz on every tick
-			CMD_S3MCMDEX,        // Add (param * 80) Hz to sample frequency
-			CMD_VIBRATO,         // Add (param * 669) Hz on every other tick
-			CMD_SPEED,           // Set ticks per row
-			CMD_PANNINGSLIDE,    // Extended UNIS 669 effect
-			CMD_RETRIG,          // Extended UNIS 669 effect
-		};
+			{
+				CMD_AUTO_PORTAUP,    // Slide up (param * 80) Hz on every tick
+				CMD_AUTO_PORTADOWN,  // Slide down (param * 80) Hz on every tick
+				CMD_TONEPORTAMENTO,  // Slide to note by (param * 40) Hz on every tick
+				CMD_S3MCMDEX,        // Add (param * 80) Hz to sample frequency
+				CMD_VIBRATO,         // Add (param * 669) Hz on every other tick
+				CMD_SPEED,           // Set ticks per row
+				CMD_PANNINGSLIDE,    // Extended UNIS 669 effect
+				CMD_RETRIG,          // Extended UNIS 669 effect
+			};
 
-		uint8 effect[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+		uint8 effect[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 		for(ROWINDEX row = 0; row < 64; row++)
 		{
 			ModCommand *m = Patterns[pat].GetpModCommand(row, 0);
@@ -252,51 +252,51 @@ bool CSoundFile::Read669(FileReader &file, ModLoadingFlags loadFlags)
 				// Fix some commands
 				switch(command)
 				{
-				case 3:
-					// D - frequency adjust
+					case 3:
+						// D - frequency adjust
 #ifdef MODPLUG_TRACKER
-					// Since we convert to S3M, the finetune command will not quite do what we intend to do (it can adjust the frequency upwards and downwards), so try to approximate it using a fine slide.
-					m->command = CMD_PORTAMENTOUP;
-					m->param |= 0xF0;
+						// Since we convert to S3M, the finetune command will not quite do what we intend to do (it can adjust the frequency upwards and downwards), so try to approximate it using a fine slide.
+						m->command = CMD_PORTAMENTOUP;
+						m->param |= 0xF0;
 #else
-					m->param |= 0x20;
+						m->param |= 0x20;
 #endif
-					break;
+						break;
 
-				case 4:
-					// E - frequency vibrato - almost like an arpeggio, but does not arpeggiate by a given note but by a frequency amount.
+					case 4:
+						// E - frequency vibrato - almost like an arpeggio, but does not arpeggiate by a given note but by a frequency amount.
 #ifdef MODPLUG_TRACKER
-					m->command = CMD_ARPEGGIO;
+						m->command = CMD_ARPEGGIO;
 #endif
-					m->param |= (m->param << 4);
-					break;
-
-				case 5:
-					// F - set tempo
-					// TODO: param 0 is a "super fast tempo" in Unis 669 mode (?)
-					break;
-
-				case 6:
-					// G - subcommands (extended)
-					switch(m->param)
-					{
-					case 0:
-						// balance fine slide left
-						m->param = 0x4F;
+						m->param |= (m->param << 4);
 						break;
-					case 1:
-						// balance fine slide right
-						m->param = 0xF4;
-						break;
-					default:
-						m->command = CMD_NONE;
-					}
-					break;
 
-				case 7:
-					// H- slot retrig ("This command rapidly fires 4 slots. The command parameter specifies the speed at which to do it. The speed difference across the values is exponential.")
-					if(!m->IsNote() || !isExtended)
-						m->command = CMD_NONE;
+					case 5:
+						// F - set tempo
+						// TODO: param 0 is a "super fast tempo" in Unis 669 mode (?)
+						break;
+
+					case 6:
+						// G - subcommands (extended)
+						switch(m->param)
+						{
+							case 0:
+								// balance fine slide left
+								m->param = 0x4F;
+								break;
+							case 1:
+								// balance fine slide right
+								m->param = 0xF4;
+								break;
+							default:
+								m->command = CMD_NONE;
+						}
+						break;
+
+					case 7:
+						// H- slot retrig ("This command rapidly fires 4 slots. The command parameter specifies the speed at which to do it. The speed difference across the values is exponential.")
+						if(!m->IsNote() || !isExtended)
+							m->command = CMD_NONE;
 				}
 			}
 		}

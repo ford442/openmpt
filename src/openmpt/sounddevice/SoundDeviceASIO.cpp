@@ -712,7 +712,7 @@ void CASIODevice::OpenDriver()
 		if(GetAppInfo().AllowDeferredProcessing)
 		{
 			m_DeferredBufferSwitchDispatcher = ASIO::Windows::CreateBufferSwitchDispatcher([=](ASIO::BufferIndex bufferIndex)
-																						   { this->RealtimeBufferSwitchImpl(bufferIndex); });
+			{ this->RealtimeBufferSwitchImpl(bufferIndex); });
 		}
 		{
 			CrashContextGuard guard{&m_Ectx};

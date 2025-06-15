@@ -37,7 +37,7 @@ namespace detail
 inline MPT_CONSTINIT mpt::arch::current::feature_flags EnabledFeatures;
 inline MPT_CONSTINIT mpt::arch::current::mode_flags EnabledModes;
 
-} // namespace detail
+}  // namespace detail
 
 inline void EnableAvailableFeatures() noexcept
 {
@@ -68,7 +68,7 @@ struct Info
 };
 
 
-#else // !MODPLUG_TRACKER
+#else  // !MODPLUG_TRACKER
 
 
 struct Info
@@ -87,7 +87,7 @@ public:
 };
 
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 namespace feature = mpt::arch::current::feature;
@@ -104,10 +104,10 @@ namespace mode = mpt::arch::current::mode;
 }
 
 
-#endif // MPT_ENABLE_ARCH_INTRINSICS
+#endif  // MPT_ENABLE_ARCH_INTRINSICS
 
 
-} // namespace CPU
+}  // namespace CPU
 
 
 OPENMPT_NAMESPACE_END

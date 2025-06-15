@@ -733,16 +733,16 @@ bool CSoundFile::CreateInternal(FileReader file, ModLoadingFlags loadFlags)
 
 	if((loadFlags & (loadPluginData | loadPluginInstance)) == (loadPluginData | loadPluginInstance))
 	{
-		for(PLUGINDEX plug = 0; plug < MAX_MIXPLUGINS; plug++)
+		PLUGINDEX plug_idx_for_log = 0;
+		for(auto &plugin : m_MixPlugins)
 		{
-			auto &plugin = m_MixPlugins[plug];
 			if(plugin.IsValidPlugin())
 			{
 #ifdef MODPLUG_TRACKER
 				// Provide some visual feedback
 				{
 					mpt::ustring s = MPT_UFORMAT("Loading Plugin FX{}: {} ({})")(
-						mpt::ufmt::dec0<2>(plug + 1),
+						mpt::ufmt::dec0<2>(plug_idx_for_log + 1),
 						mpt::ToUnicode(mpt::Charset::UTF8, plugin.Info.szLibraryName),
 						mpt::ToUnicode(mpt::Charset::Locale, plugin.Info.szName));
 					CMainFrame::GetMainFrame()->SetHelpText(mpt::ToCString(s));
@@ -780,6 +780,7 @@ bool CSoundFile::CreateInternal(FileReader file, ModLoadingFlags loadFlags)
 					}
 				}
 			}
+			plug_idx_for_log++;
 		}
 	}
 

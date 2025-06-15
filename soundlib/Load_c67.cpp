@@ -15,7 +15,7 @@ OPENMPT_NAMESPACE_BEGIN
 
 struct C67SampleHeader
 {
-	uint32le unknown; // Probably placeholder for in-memory address, 0 on disk
+	uint32le unknown;  // Probably placeholder for in-memory address, 0 on disk
 	uint32le length;
 	uint32le loopStart;
 	uint32le loopEnd;
@@ -29,13 +29,13 @@ struct C67FileHeader
 	using InstrName = std::array<char, 13>;
 	using OPLInstr = std::array<uint8, 11>;
 
-	uint8           speed;
-	uint8           restartPos;
-	InstrName       sampleNames[32];
+	uint8 speed;
+	uint8 restartPos;
+	InstrName sampleNames[32];
 	C67SampleHeader samples[32];
-	InstrName       fmInstrNames[32];
-	OPLInstr        fmInstr[32];
-	uint8           orders[256];
+	InstrName fmInstrNames[32];
+	OPLInstr fmInstr[32];
+	uint8 orders[256];
 };
 
 MPT_BINARY_STRUCT(C67FileHeader, 1954)
@@ -55,19 +55,19 @@ static bool ValidateHeader(const C67FileHeader &fileHeader)
 	for(SAMPLEINDEX smp = 0; smp < 32; smp++)
 	{
 		if(fileHeader.sampleNames[smp][12] != 0
-			|| fileHeader.samples[smp].unknown != 0
-			|| fileHeader.samples[smp].length > 0xFFFFF
-			|| fileHeader.fmInstrNames[smp][12] != 0
-			|| (fileHeader.fmInstr[smp][0] & 0xF0) // No OPL3
-			|| (fileHeader.fmInstr[smp][5] & 0xFC) // No OPL3
-			|| (fileHeader.fmInstr[smp][10] & 0xFC)) // No OPL3
+		   || fileHeader.samples[smp].unknown != 0
+		   || fileHeader.samples[smp].length > 0xFFFFF
+		   || fileHeader.fmInstrNames[smp][12] != 0
+		   || (fileHeader.fmInstr[smp][0] & 0xF0)    // No OPL3
+		   || (fileHeader.fmInstr[smp][5] & 0xFC)    // No OPL3
+		   || (fileHeader.fmInstr[smp][10] & 0xFC))  // No OPL3
 		{
 			return false;
 		}
 		if(fileHeader.samples[smp].length != 0 && fileHeader.samples[smp].loopEnd < 0xFFFFF)
 		{
 			if(fileHeader.samples[smp].loopEnd > fileHeader.samples[smp].length
-				|| fileHeader.samples[smp].loopStart > fileHeader.samples[smp].loopEnd)
+			   || fileHeader.samples[smp].loopStart > fileHeader.samples[smp].loopEnd)
 			{
 				return false;
 			}
@@ -83,7 +83,7 @@ static bool ValidateHeader(const C67FileHeader &fileHeader)
 
 static uint64 GetHeaderMinimumAdditionalSize(const C67FileHeader &)
 {
-	return 1024; // Pattern offsets and lengths
+	return 1024;  // Pattern offsets and lengths
 }
 
 
@@ -108,10 +108,24 @@ static void TranslateVolume(ModCommand &m, uint8 volume, bool isFM)
 	// ScreamTracker, on the other hand, directly uses the OPL chip's logarithmic volume scale.
 	// Neither FM nor PCM instruments can be fully muted in CDFM.
 	static constexpr uint8 fmVolume[16] =
-	{
-		0x08, 0x10, 0x18, 0x20, 0x28, 0x2C, 0x30, 0x34,
-		0x36, 0x38, 0x3A, 0x3C, 0x3D, 0x3E, 0x3F, 0x40,
-	};
+		{
+			0x08,
+			0x10,
+			0x18,
+			0x20,
+			0x28,
+			0x2C,
+			0x30,
+			0x34,
+			0x36,
+			0x38,
+			0x3A,
+			0x3C,
+			0x3D,
+			0x3E,
+			0x3F,
+			0x40,
+		};
 
 	volume &= 0x0F;
 	m.volcmd = VOLCMD_VOLUME;
@@ -149,9 +163,9 @@ bool CSoundFile::ReadC67(FileReader &file, ModLoadingFlags loadFlags)
 	for(PATTERNINDEX pat = 0; pat < 128; pat++)
 	{
 		if(patOffsets[pat] > 0xFFFFFF
-			|| patLengths[pat] < 3      // Smallest well-formed pattern consists of command 0x40 followed by command 0x60
-			|| patLengths[pat] > 0x1000 // Any well-formed pattern is smaller than this
-			|| !file.LengthIsAtLeast(2978 + patOffsets[pat] + patLengths[pat]))
+		   || patLengths[pat] < 3       // Smallest well-formed pattern consists of command 0x40 followed by command 0x60
+		   || patLengths[pat] > 0x1000  // Any well-formed pattern is smaller than this
+		   || !file.LengthIsAtLeast(2978 + patOffsets[pat] + patLengths[pat]))
 		{
 			return false;
 		}
@@ -201,11 +215,16 @@ bool CSoundFile::ReadC67(FileReader &file, ModLoadingFlags loadFlags)
 		// Reorder OPL patch bytes (interleave modulator and carrier)
 		const auto &fm = fileHeader.fmInstr[smp];
 		OPLPatch patch{{}};
-		patch[0] = fm[1]; patch[1] = fm[6];
-		patch[2] = fm[2]; patch[3] = fm[7];
-		patch[4] = fm[3]; patch[5] = fm[8];
-		patch[6] = fm[4]; patch[7] = fm[9];
-		patch[8] = fm[5]; patch[9] = fm[10];
+		patch[0] = fm[1];
+		patch[1] = fm[6];
+		patch[2] = fm[2];
+		patch[3] = fm[7];
+		patch[4] = fm[3];
+		patch[5] = fm[8];
+		patch[6] = fm[4];
+		patch[7] = fm[9];
+		patch[8] = fm[5];
+		patch[9] = fm[10];
 		patch[10] = fm[0];
 		mptSmp.SetAdlib(true, patch);
 	}

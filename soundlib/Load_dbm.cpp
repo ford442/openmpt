@@ -13,7 +13,7 @@
 #include "../common/mptStringBuffer.h"
 #ifndef NO_PLUGINS
 #include "plugins/DigiBoosterEcho.h"
-#endif // NO_PLUGINS
+#endif  // NO_PLUGINS
 
 #ifdef LIBOPENMPT_BUILD
 #define MPT_DBM_USE_REAL_SUBSONGS
@@ -23,10 +23,10 @@ OPENMPT_NAMESPACE_BEGIN
 
 struct DBMFileHeader
 {
-	char  dbm0[4];
+	char dbm0[4];
 	uint8 trkVerHi;
 	uint8 trkVerLo;
-	char  reserved[2];
+	char reserved[2];
 };
 
 MPT_BINARY_STRUCT(DBMFileHeader, 8)
@@ -85,18 +85,18 @@ struct DBMInstrument
 {
 	enum DBMInstrFlags
 	{
-		smpLoop         = 0x01,
+		smpLoop = 0x01,
 		smpPingPongLoop = 0x02,
 	};
 
-	char     name[30];
+	char name[30];
 	uint16be sample;  // Sample reference
 	uint16be volume;  // 0...64
 	uint32be sampleRate;
 	uint32be loopStart;
 	uint32be loopLength;
-	int16be  panning;  // -128...128
-	uint16be flags;    // See DBMInstrFlags
+	int16be panning;  // -128...128
+	uint16be flags;   // See DBMInstrFlags
 
 	void ConvertToMPT(ModInstrument &mptIns) const
 	{
@@ -112,7 +112,7 @@ struct DBMInstrument
 		mptSmp.Initialize(MOD_TYPE_DBM);
 		mptSmp.nVolume = std::min(static_cast<uint16>(volume), uint16(64)) * 4u;
 		mptSmp.nC5Speed = Util::muldivr(sampleRate, 8303, 8363);
-		
+
 		if(loopLength && (flags & (smpLoop | smpPingPongLoop)))
 		{
 			mptSmp.nLoopStart = loopStart;
@@ -132,19 +132,19 @@ struct DBMEnvelope
 {
 	enum DBMEnvelopeFlags
 	{
-		envEnabled  = 0x01,
+		envEnabled = 0x01,
 		envSustain1 = 0x02,
-		envLoop     = 0x04,
+		envLoop = 0x04,
 		envSustain2 = 0x08,
 	};
 
 	uint16be instrument;
-	uint8be  flags;        // See DBMEnvelopeFlags
-	uint8be  numSegments;  // Number of envelope points - 1
-	uint8be  sustain1;
-	uint8be  loopBegin;
-	uint8be  loopEnd;
-	uint8be  sustain2;  // Second sustain point
+	uint8be flags;        // See DBMEnvelopeFlags
+	uint8be numSegments;  // Number of envelope points - 1
+	uint8be sustain1;
+	uint8be loopBegin;
+	uint8be loopEnd;
+	uint8be sustain2;  // Second sustain point
 	uint16be data[2 * 32];
 
 	void ConvertToMPT(InstrumentEnvelope &mptEnv, bool scaleEnv) const
@@ -188,22 +188,22 @@ MPT_BINARY_STRUCT(DBMEnvelope, 136)
 
 // Note: Unlike in MOD, 1Fx, 2Fx, 5Fx / 5xF, 6Fx / 6xF and AFx / AxF are fine slides.
 static constexpr EffectCommand dbmEffects[] =
-{
-	CMD_ARPEGGIO, CMD_PORTAMENTOUP, CMD_PORTAMENTODOWN, CMD_TONEPORTAMENTO,
-	CMD_VIBRATO, CMD_TONEPORTAVOL, CMD_VIBRATOVOL, CMD_TREMOLO,
-	CMD_PANNING8, CMD_OFFSET, CMD_VOLUMESLIDE, CMD_POSITIONJUMP,
-	CMD_VOLUME, CMD_PATTERNBREAK, CMD_MODCMDEX, CMD_TEMPO,
-	CMD_GLOBALVOLUME, CMD_GLOBALVOLSLIDE, CMD_NONE, CMD_NONE,
-	CMD_KEYOFF, CMD_SETENVPOSITION, CMD_NONE, CMD_NONE,
-	CMD_NONE, CMD_PANNINGSLIDE, CMD_NONE, CMD_NONE,
-	CMD_NONE, CMD_NONE, CMD_NONE,
+	{
+		CMD_ARPEGGIO, CMD_PORTAMENTOUP, CMD_PORTAMENTODOWN, CMD_TONEPORTAMENTO,
+		CMD_VIBRATO, CMD_TONEPORTAVOL, CMD_VIBRATOVOL, CMD_TREMOLO,
+		CMD_PANNING8, CMD_OFFSET, CMD_VOLUMESLIDE, CMD_POSITIONJUMP,
+		CMD_VOLUME, CMD_PATTERNBREAK, CMD_MODCMDEX, CMD_TEMPO,
+		CMD_GLOBALVOLUME, CMD_GLOBALVOLSLIDE, CMD_NONE, CMD_NONE,
+		CMD_KEYOFF, CMD_SETENVPOSITION, CMD_NONE, CMD_NONE,
+		CMD_NONE, CMD_PANNINGSLIDE, CMD_NONE, CMD_NONE,
+		CMD_NONE, CMD_NONE, CMD_NONE,
 #ifndef NO_PLUGINS
-	CMD_DBMECHO,  // Toggle DSP
-	CMD_MIDI,     // Wxx Echo Delay
-	CMD_MIDI,     // Xxx Echo Feedback
-	CMD_MIDI,     // Yxx Echo Mix
-	CMD_MIDI,     // Zxx Echo Cross
-#endif // NO_PLUGINS
+		CMD_DBMECHO,  // Toggle DSP
+		CMD_MIDI,     // Wxx Echo Delay
+		CMD_MIDI,     // Xxx Echo Feedback
+		CMD_MIDI,     // Yxx Echo Mix
+		CMD_MIDI,     // Zxx Echo Cross
+#endif                // NO_PLUGINS
 };
 
 
@@ -215,93 +215,93 @@ static std::pair<EffectCommand, uint8> ConvertDBMEffect(const uint8 cmd, uint8 p
 
 	switch(command)
 	{
-	case CMD_ARPEGGIO:
-		if(param == 0)
-			command = CMD_NONE;
-		break;
+		case CMD_ARPEGGIO:
+			if(param == 0)
+				command = CMD_NONE;
+			break;
 
-	case CMD_PATTERNBREAK:
-		param = static_cast<uint8>(((param >> 4) * 10) + (param & 0x0F));
-		break;
+		case CMD_PATTERNBREAK:
+			param = static_cast<uint8>(((param >> 4) * 10) + (param & 0x0F));
+			break;
 
 #ifdef MODPLUG_TRACKER
-	case CMD_VIBRATO:
-		if(param & 0x0F)
-		{
-			// DBM vibrato is half as deep as most other trackers. Convert it to IT fine vibrato range if possible.
-			uint8 depth = (param & 0x0F) * 2u;
-			param &= 0xF0;
-			if(depth < 16)
-				command = CMD_FINEVIBRATO;
-			else
-				depth = (depth + 2u) / 4u;
-			param |= depth;
-		}
-		break;
-#endif
-
-	// Volume slide nibble priority - first nibble (slide up) has precedence.
-	case CMD_VOLUMESLIDE:
-	case CMD_TONEPORTAVOL:
-	case CMD_VIBRATOVOL:
-		if((param & 0xF0) != 0x00 && (param & 0xF0) != 0xF0 && (param & 0x0F) != 0x0F)
-			param &= 0xF0;
-		break;
-
-	case CMD_GLOBALVOLUME:
-		if(param <= 64)
-			param *= 2;
-		else
-			param = 128;
-		break;
-
-	case CMD_MODCMDEX:
-		switch(param & 0xF0)
-		{
-		case 0x30:  // Play backwards
-			command = CMD_S3MCMDEX;
-			param = 0x9F;
-			break;
-		case 0x40:  // Turn off sound in channel (volume / portamento commands after this can't pick up the note anymore)
-			command = CMD_S3MCMDEX;
-			param = 0xC0;
-			break;
-		case 0x50:  // Turn on/off channel
-			// TODO: Apparently this should also kill the playing note.
-			if((param & 0x0F) <= 0x01)
+		case CMD_VIBRATO:
+			if(param & 0x0F)
 			{
-				command = CMD_CHANNELVOLUME;
-				param = (param == 0x50) ? 0x00 : 0x40;
+				// DBM vibrato is half as deep as most other trackers. Convert it to IT fine vibrato range if possible.
+				uint8 depth = (param & 0x0F) * 2u;
+				param &= 0xF0;
+				if(depth < 16)
+					command = CMD_FINEVIBRATO;
+				else
+					depth = (depth + 2u) / 4u;
+				param |= depth;
 			}
 			break;
-		case 0x70:  // Coarse offset
-			command = CMD_S3MCMDEX;
-			param = 0xA0 | (param & 0x0F);
+#endif
+
+		// Volume slide nibble priority - first nibble (slide up) has precedence.
+		case CMD_VOLUMESLIDE:
+		case CMD_TONEPORTAVOL:
+		case CMD_VIBRATOVOL:
+			if((param & 0xF0) != 0x00 && (param & 0xF0) != 0xF0 && (param & 0x0F) != 0x0F)
+				param &= 0xF0;
 			break;
+
+		case CMD_GLOBALVOLUME:
+			if(param <= 64)
+				param *= 2;
+			else
+				param = 128;
+			break;
+
+		case CMD_MODCMDEX:
+			switch(param & 0xF0)
+			{
+				case 0x30:  // Play backwards
+					command = CMD_S3MCMDEX;
+					param = 0x9F;
+					break;
+				case 0x40:  // Turn off sound in channel (volume / portamento commands after this can't pick up the note anymore)
+					command = CMD_S3MCMDEX;
+					param = 0xC0;
+					break;
+				case 0x50:  // Turn on/off channel
+					// TODO: Apparently this should also kill the playing note.
+					if((param & 0x0F) <= 0x01)
+					{
+						command = CMD_CHANNELVOLUME;
+						param = (param == 0x50) ? 0x00 : 0x40;
+					}
+					break;
+				case 0x70:  // Coarse offset
+					command = CMD_S3MCMDEX;
+					param = 0xA0 | (param & 0x0F);
+					break;
+				default:
+					// Rest will be converted later from CMD_MODCMDEX to CMD_S3MCMDEX.
+					break;
+			}
+			break;
+
+		case CMD_TEMPO:
+			if(param <= 0x1F) command = CMD_SPEED;
+			break;
+
+		case CMD_KEYOFF:
+			if(param == 0)
+			{
+				// TODO key off at tick 0
+			}
+			break;
+
+		case CMD_MIDI:
+			// Encode echo parameters into fixed MIDI macros
+			param = static_cast<uint8>(128 + (cmd - 32) * 32 + param / 8);
+			break;
+
 		default:
-			// Rest will be converted later from CMD_MODCMDEX to CMD_S3MCMDEX.
 			break;
-		}
-		break;
-
-	case CMD_TEMPO:
-		if(param <= 0x1F) command = CMD_SPEED;
-		break;
-
-	case CMD_KEYOFF:
-		if(param == 0)
-		{
-			// TODO key off at tick 0
-		}
-		break;
-
-	case CMD_MIDI:
-		// Encode echo parameters into fixed MIDI macros
-		param = static_cast<uint8>(128 + (cmd - 32) * 32 + param / 8);
-		break;
-
-	default:
-		break;
 	}
 	return {command, param};
 }
@@ -328,7 +328,7 @@ static void ReadDBMEnvelopeChunk(FileReader chunk, EnvelopeType envType, CSoundF
 static bool ValidateHeader(const DBMFileHeader &fileHeader)
 {
 	if(std::memcmp(fileHeader.dbm0, "DBM0", 4)
-		|| fileHeader.trkVerHi > 3)
+	   || fileHeader.trkVerHi > 3)
 	{
 		return false;
 	}
@@ -433,11 +433,11 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 				Order()[startIndex + ord] = static_cast<PATTERNINDEX>(songChunk.ReadUint16BE());
 			}
 		}
-#endif // MPT_DBM_USE_REAL_SUBSONGS
+#endif  // MPT_DBM_USE_REAL_SUBSONGS
 	}
 #ifdef MPT_DBM_USE_REAL_SUBSONGS
 	Order.SetSequence(0);
-#endif // MPT_DBM_USE_REAL_SUBSONGS
+#endif  // MPT_DBM_USE_REAL_SUBSONGS
 
 	// Read instruments
 	std::map<SAMPLEINDEX, SAMPLEINDEX> copySample;
@@ -456,10 +456,10 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 				instrHeader.ConvertToMPT(mptSmp);
 				const ModSample &origSmp = Samples[mappedSample];
 				if(mptSmp.nVolume != origSmp.nVolume
-					|| mptSmp.uFlags != origSmp.uFlags
-					|| mptSmp.nLoopStart != origSmp.nLoopStart
-					|| mptSmp.nLoopEnd != origSmp.nLoopEnd
-					|| mptSmp.nC5Speed != origSmp.nC5Speed)
+				   || mptSmp.uFlags != origSmp.uFlags
+				   || mptSmp.nLoopStart != origSmp.nLoopStart
+				   || mptSmp.nLoopEnd != origSmp.nLoopEnd
+				   || mptSmp.nC5Speed != origSmp.nC5Speed)
 				{
 					// Need to duplicate
 					mappedSample = ++m_nSamples;
@@ -495,7 +495,7 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 	FileReader patternChunk = chunks.GetChunk(DBMChunk::idPATT);
 #ifndef NO_PLUGINS
 	bool hasEchoEnable = false, hasEchoParams = false;
-#endif // NO_PLUGINS
+#endif  // NO_PLUGINS
 	if(patternChunk.IsValid() && (loadFlags & loadPatternData))
 	{
 		FileReader patternNameChunk = chunks.GetChunk(DBMChunk::idPNAM);
@@ -587,13 +587,13 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 
 #ifdef MODPLUG_TRACKER
 					m.ExtendedMODtoS3MEffect();
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 #ifndef NO_PLUGINS
 					if(m.command == CMD_DBMECHO)
 						hasEchoEnable = true;
 					else if(m.command == CMD_MIDI)
 						hasEchoParams = true;
-#endif // NO_PLUGINS
+#endif  // NO_PLUGINS
 				}
 			}
 		}
@@ -615,7 +615,7 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 
 		bool anyEnabled = hasEchoEnable;
 		// DBP 3 Documentation says that the defaults are 64/128/128/255, but they appear to be 80/150/80/255 in DBP 2.21
-		uint8 settings[8] = { 0, 80, 0, 150, 0, 80, 0, 255 };
+		uint8 settings[8] = {0, 80, 0, 150, 0, 80, 0, 255};
 
 		if(FileReader dspChunk = chunks.GetChunk(DBMChunk::idDSPE))
 		{
@@ -658,7 +658,7 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 
 			plugin.pluginData.resize(sizeof(DigiBoosterEcho::PluginChunk));
 			DigiBoosterEcho::PluginChunk chunk = DigiBoosterEcho::PluginChunk::Create(settings[1], settings[3], settings[5], settings[7]);
-			new (plugin.pluginData.data()) DigiBoosterEcho::PluginChunk(chunk);
+			new(plugin.pluginData.data()) DigiBoosterEcho::PluginChunk(chunk);
 		}
 	}
 
@@ -668,13 +668,13 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 		for(uint32 i = 0; i < 32; i++)
 		{
 			uint32 param = (i * 127u) / 32u;
-			m_MidiCfg.Zxx[i     ] = MPT_AFORMAT("F0F080{}")(mpt::afmt::HEX0<2>(param));
+			m_MidiCfg.Zxx[i] = MPT_AFORMAT("F0F080{}")(mpt::afmt::HEX0<2>(param));
 			m_MidiCfg.Zxx[i + 32] = MPT_AFORMAT("F0F081{}")(mpt::afmt::HEX0<2>(param));
 			m_MidiCfg.Zxx[i + 64] = MPT_AFORMAT("F0F082{}")(mpt::afmt::HEX0<2>(param));
 			m_MidiCfg.Zxx[i + 96] = MPT_AFORMAT("F0F083{}")(mpt::afmt::HEX0<2>(param));
 		}
 	}
-#endif // NO_PLUGINS
+#endif  // NO_PLUGINS
 
 	// Samples
 	FileReader sampleChunk = chunks.GetChunk(DBMChunk::idSMPL);
@@ -716,7 +716,7 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 		{
 			Samples[smp].nLength = mpegChunk.ReadUint32BE();
 		}
-		mpegChunk.Skip(2);	// 0x00 0x40
+		mpegChunk.Skip(2);  // 0x00 0x40
 
 		// Read whole MPEG stream into one sample and then split it up.
 		FileReader chunk = mpegChunk.GetChunk(mpegChunk.BytesLeft());
@@ -749,8 +749,8 @@ bool CSoundFile::ReadDBM(FileReader &file, ModLoadingFlags loadFlags)
 			srcSample.FreeSample();
 		}
 	}
-#endif // MPT_ENABLE_MP3_SAMPLES
-	
+#endif  // MPT_ENABLE_MP3_SAMPLES
+
 	return true;
 }
 

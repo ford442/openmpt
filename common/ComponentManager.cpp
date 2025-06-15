@@ -152,7 +152,7 @@ mpt::Library ComponentLibrary::GetLibrary(const std::string &libName) const
 }
 
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 #if MPT_COMPONENT_MANAGER
@@ -186,11 +186,7 @@ std::string ComponentFactoryBase::GetSettingsKey() const
 
 void ComponentFactoryBase::PreConstruct() const
 {
-	MPT_LOG_GLOBAL(LogInformation, "Components", 
-		MPT_UFORMAT("Constructing Component {}")
-			( mpt::ToUnicode(mpt::Charset::ASCII, m_ID)
-			)
-		);
+	MPT_LOG_GLOBAL(LogInformation, "Components", MPT_UFORMAT("Constructing Component {}")(mpt::ToUnicode(mpt::Charset::ASCII, m_ID)));
 }
 
 
@@ -216,13 +212,13 @@ void ComponentFactoryBase::Initialize(ComponentManager &componentManager, std::s
 // An implementation with a simple global list head and no mutex at all would
 //  thus work fine for MSVC (currently).
 
-static mpt::mutex & ComponentListMutex()
+static mpt::mutex &ComponentListMutex()
 {
 	static mpt::mutex g_ComponentListMutex;
 	return g_ComponentListMutex;
 }
 
-static ComponentListEntry * & ComponentListHead()
+static ComponentListEntry *&ComponentListHead()
 {
 	static ComponentListEntry g_ComponentListHeadEmpty = {nullptr, nullptr};
 	static ComponentListEntry *g_ComponentListHead = &g_ComponentListHeadEmpty;
@@ -232,7 +228,7 @@ static ComponentListEntry * & ComponentListHead()
 bool ComponentListPush(ComponentListEntry *entry)
 {
 	mpt::lock_guard<mpt::mutex> guard(ComponentListMutex());
-#if MPT_MSVC_BEFORE(2019,0)
+#if MPT_MSVC_BEFORE(2019, 0)
 	// Guard against VS2017 compiler bug causing repeated initialization of inline variables.
 	// See <https://developercommunity.visualstudio.com/t/static-inline-variable-gets-destroyed-multiple-tim/297876>.
 	if(entry->next)
@@ -349,25 +345,25 @@ std::shared_ptr<const IComponent> ComponentManager::GetComponent(const IComponen
 	std::shared_ptr<IComponent> component = nullptr;
 	auto it = m_Components.find(componentFactory.GetID());
 	if(it != m_Components.end())
-	{ // registered component
+	{  // registered component
 		if((*it).second.instance)
-		{ // loaded
+		{  // loaded
 			component = (*it).second.instance;
 		} else
-		{ // not loaded
+		{  // not loaded
 			component = (*it).second.weakInstance.lock();
 			if(!component)
 			{
 				component = (*it).second.factoryMethod(*this);
 			}
 			if(m_Settings.KeepLoaded())
-			{ // keep the component loaded
+			{  // keep the component loaded
 				(*it).second.instance = component;
 			}
 			(*it).second.weakInstance = component;
 		}
 	} else
-	{ // unregistered component
+	{  // unregistered component
 		component = componentFactory.Construct(*this);
 	}
 	MPT_ASSERT(component);
@@ -380,9 +376,9 @@ std::shared_ptr<const IComponent> ComponentManager::ReloadComponent(const ICompo
 	std::shared_ptr<IComponent> component = nullptr;
 	auto it = m_Components.find(componentFactory.GetID());
 	if(it != m_Components.end())
-	{ // registered component
+	{  // registered component
 		if((*it).second.instance)
-		{ // loaded
+		{  // loaded
 			(*it).second.instance = nullptr;
 			if(!(*it).second.weakInstance.expired())
 			{
@@ -393,12 +389,12 @@ std::shared_ptr<const IComponent> ComponentManager::ReloadComponent(const ICompo
 		// not loaded
 		component = (*it).second.factoryMethod(*this);
 		if(m_Settings.KeepLoaded())
-		{ // keep the component loaded
+		{  // keep the component loaded
 			(*it).second.instance = component;
 		}
 		(*it).second.weakInstance = component;
 	} else
-	{ // unregistered component
+	{  // unregistered component
 		component = componentFactory.Construct(*this);
 	}
 	MPT_ASSERT(component);
@@ -463,7 +459,7 @@ ComponentInfo ComponentManager::GetComponentInfo(std::string name) const
 }
 
 
-#endif // MPT_COMPONENT_MANAGER
+#endif  // MPT_COMPONENT_MANAGER
 
 
 OPENMPT_NAMESPACE_END

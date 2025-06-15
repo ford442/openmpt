@@ -17,7 +17,7 @@
 #include "../../Sndfile.h"
 #include "DMOUtils.h"
 #include "mpt/base/numbers.hpp"
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -26,9 +26,9 @@ OPENMPT_NAMESPACE_BEGIN
 namespace DMO
 {
 
-IMixPlugin* Distortion::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
+IMixPlugin *Distortion::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
-	return new (std::nothrow) Distortion(factory, sndFile, mixStruct);
+	return new(std::nothrow) Distortion(factory, sndFile, mixStruct);
 }
 
 
@@ -50,8 +50,8 @@ void Distortion::Process(float *pOutL, float *pOutR, uint32 numFrames)
 	if(!m_mixBuffer.Ok())
 		return;
 
-	const float *in[2] = { m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1) };
-	float *out[2] = { m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1) };
+	const float *in[2] = {m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1)};
+	float *out[2] = {m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1)};
 
 	for(uint32 i = numFrames; i != 0; i--)
 	{
@@ -63,7 +63,7 @@ void Distortion::Process(float *pOutL, float *pOutR, uint32 numFrames)
 			float z = x * m_preEQa0 + m_preEQz1[channel] * m_preEQb1;
 			m_preEQz1[channel] = z;
 
-			z *= 1073741824.0f;	// 32768^2
+			z *= 1073741824.0f;  // 32768^2
 
 			// The actual distortion
 			z = logGain(z, m_edge, m_shift);
@@ -73,7 +73,7 @@ void Distortion::Process(float *pOutL, float *pOutR, uint32 numFrames)
 			m_postEQz1[channel] = z * m_postEQb0 + m_postEQz2[channel];
 			m_postEQz2[channel] = z;
 
-			z *= (1.0f / 1073741824.0f);	// 32768^2
+			z *= (1.0f / 1073741824.0f);  // 32768^2
 			*(out[channel])++ = z;
 		}
 	}
@@ -126,11 +126,11 @@ CString Distortion::GetParamName(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kDistGain: return _T("Gain");
-	case kDistEdge: return _T("Edge");
-	case kDistPreLowpassCutoff: return _T("PreLowpassCutoff");
-	case kDistPostEQCenterFrequency: return _T("PostEQCenterFrequency");
-	case kDistPostEQBandwidth: return _T("PostEQBandwidth");
+		case kDistGain: return _T("Gain");
+		case kDistEdge: return _T("Edge");
+		case kDistPreLowpassCutoff: return _T("PreLowpassCutoff");
+		case kDistPostEQCenterFrequency: return _T("PostEQCenterFrequency");
+		case kDistPostEQBandwidth: return _T("PostEQBandwidth");
 	}
 	return CString();
 }
@@ -140,12 +140,12 @@ CString Distortion::GetParamLabel(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kDistGain:
-		return _T("dB");
-	case kDistPreLowpassCutoff:
-	case kDistPostEQCenterFrequency:
-	case kDistPostEQBandwidth:
-		return _T("Hz");
+		case kDistGain:
+			return _T("dB");
+		case kDistPreLowpassCutoff:
+		case kDistPostEQCenterFrequency:
+		case kDistPostEQBandwidth:
+			return _T("Hz");
 	}
 	return CString();
 }
@@ -156,24 +156,24 @@ CString Distortion::GetParamDisplay(PlugParamIndex param)
 	float value = m_param[param];
 	switch(param)
 	{
-	case kDistGain:
-		value = GainInDecibel();
-		break;
-	case kDistEdge:
-		value *= 100.0f;
-		break;
-	case kDistPreLowpassCutoff:
-	case kDistPostEQCenterFrequency:
-	case kDistPostEQBandwidth:
-		value = FreqInHertz(value);
-		break;
+		case kDistGain:
+			value = GainInDecibel();
+			break;
+		case kDistEdge:
+			value *= 100.0f;
+			break;
+		case kDistPreLowpassCutoff:
+		case kDistPostEQCenterFrequency:
+		case kDistPostEQBandwidth:
+			value = FreqInHertz(value);
+			break;
 	}
 	CString s;
 	s.Format(_T("%.2f"), value);
 	return s;
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 void Distortion::RecalculateDistortionParams()
@@ -188,12 +188,40 @@ void Distortion::RecalculateDistortionParams()
 	m_shift = static_cast<uint8>(mpt::bit_width(m_edge));
 
 	static constexpr float LogNorm[32] =
-	{
-		1.00f, 1.00f, 1.50f, 1.00f, 1.75f, 1.40f, 1.17f, 1.00f,
-		1.88f, 1.76f, 1.50f, 1.36f, 1.25f, 1.15f, 1.07f, 1.00f,
-		1.94f, 1.82f, 1.72f, 1.63f, 1.55f, 1.48f, 1.41f, 1.35f,
-		1.29f, 1.24f, 1.19f, 1.15f, 1.11f, 1.07f, 1.03f, 1.00f,
-	};
+		{
+			1.00f,
+			1.00f,
+			1.50f,
+			1.00f,
+			1.75f,
+			1.40f,
+			1.17f,
+			1.00f,
+			1.88f,
+			1.76f,
+			1.50f,
+			1.36f,
+			1.25f,
+			1.15f,
+			1.07f,
+			1.00f,
+			1.94f,
+			1.82f,
+			1.72f,
+			1.63f,
+			1.55f,
+			1.48f,
+			1.41f,
+			1.35f,
+			1.29f,
+			1.24f,
+			1.19f,
+			1.15f,
+			1.11f,
+			1.07f,
+			1.03f,
+			1.00f,
+		};
 
 	// Post-EQ
 	const float gain = std::pow(10.0f, GainInDecibel() / 20.0f);
@@ -205,11 +233,11 @@ void Distortion::RecalculateDistortionParams()
 	m_postEQa0 = gain * std::sqrt(1.0f - m_postEQb0 * m_postEQb0) * std::sqrt(1.0f - m_postEQb1 * m_postEQb1) * LogNorm[m_edge];
 }
 
-} // namespace DMO
+}  // namespace DMO
 
 #else
 MPT_MSVC_WORKAROUND_LNK4221(Distortion)
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_END

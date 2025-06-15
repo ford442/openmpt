@@ -13,7 +13,7 @@
 
 #if defined(MODPLUG_TRACKER) && MPT_OS_WINDOWS
 #include "mpt/osinfo/windows_wine_version.hpp"
-#endif // MODPLUG_TRACKER && MPT_OS_WINDOWS
+#endif  // MODPLUG_TRACKER && MPT_OS_WINDOWS
 
 #include "mptStringBuffer.h"
 
@@ -23,11 +23,11 @@
 
 #if defined(MODPLUG_TRACKER) && MPT_OS_WINDOWS
 #include <optional>
-#endif // MODPLUG_TRACKER && MPT_OS_WINDOWS
+#endif  // MODPLUG_TRACKER && MPT_OS_WINDOWS
 
 #if defined(MPT_FALLBACK_TIMEZONE_C)
 #include <ctime>
-#endif // MPT_FALLBACK_TIMEZONE_C
+#endif  // MPT_FALLBACK_TIMEZONE_C
 
 #if MPT_OS_WINDOWS
 #include <windows.h>
@@ -89,14 +89,13 @@ mpt::ustring ToUString(uint64 time100ns)
 	result.append(mpt::ufmt::dec0<3>((unsigned)systime.wMilliseconds));
 
 	return result;
-
 }
 
-} // namespace ANSI
+}  // namespace ANSI
 
-#endif // MPT_OS_WINDOWS
+#endif  // MPT_OS_WINDOWS
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 
@@ -107,26 +106,26 @@ static int32 ToDaynum(int32 year, int32 month, int32 day)
 {
 	month = (month + 9) % 12;
 	year = year - (month / 10);
-	int32 daynum = year*365 + year/4 - year/100 + year/400 + (month*306 + 5)/10 + (day - 1);
+	int32 daynum = year * 365 + year / 4 - year / 100 + year / 400 + (month * 306 + 5) / 10 + (day - 1);
 	return daynum;
 }
 
-static void FromDaynum(int32 d, int32 & year, int32 & month, int32 & day)
+static void FromDaynum(int32 d, int32 &year, int32 &month, int32 &day)
 {
 	int64 g = d;
-	int64 y,ddd,mi,mm,dd;
+	int64 y, ddd, mi, mm, dd;
 
-	y = (10000*g + 14780)/3652425;
-	ddd = g - (365*y + y/4 - y/100 + y/400);
+	y = (10000 * g + 14780) / 3652425;
+	ddd = g - (365 * y + y / 4 - y / 100 + y / 400);
 	if(ddd < 0)
 	{
 		y = y - 1;
-		ddd = g - (365*y + y/4 - y/100 + y/400);
+		ddd = g - (365 * y + y / 4 - y / 100 + y / 400);
 	}
-	mi = (100*ddd + 52)/3060;
-	mm = (mi + 2)%12 + 1;
-	y = y + (mi + 2)/12;
-	dd = ddd - (mi*306 + 5)/10 + 1;
+	mi = (100 * ddd + 52) / 3060;
+	mm = (mi + 2) % 12 + 1;
+	y = y + (mi + 2) / 12;
+	dd = ddd - (mi * 306 + 5) / 10 + 1;
 
 	year = static_cast<int32>(y);
 	month = static_cast<int32>(mm);
@@ -143,11 +142,14 @@ Unix UnixFromUTC(UTC timeUtc)
 UTC UnixAsUTC(Unix tp)
 {
 	int64 tmp = tp.value;
-	int64 seconds = tmp % 60; tmp /= 60;
-	int64 minutes = tmp % 60; tmp /= 60;
-	int64 hours   = tmp % 24; tmp /= 24;
+	int64 seconds = tmp % 60;
+	tmp /= 60;
+	int64 minutes = tmp % 60;
+	tmp /= 60;
+	int64 hours = tmp % 24;
+	tmp /= 24;
 	int32 year = 0, month = 0, day = 0;
-	FromDaynum(static_cast<int32>(tmp) + ToDaynum(1970,1,1), year, month, day);
+	FromDaynum(static_cast<int32>(tmp) + ToDaynum(1970, 1, 1), year, month, day);
 	UTC result = {};
 	result.year = year;
 	result.month = month;
@@ -182,17 +184,17 @@ Unix UnixFromLocal(Local timeLocal)
 		sys_local.wSecond = static_cast<uint16>(timeLocal.seconds);
 		sys_local.wMilliseconds = 0;
 		DYNAMIC_TIME_ZONE_INFORMATION dtzi{};
-		if(GetDynamicTimeZoneInformation(&dtzi) == TIME_ZONE_ID_INVALID) // WinVista
+		if(GetDynamicTimeZoneInformation(&dtzi) == TIME_ZONE_ID_INVALID)  // WinVista
 		{
 			throw tz_error{};
 		}
 		SYSTEMTIME sys_utc{};
-		if(TzSpecificLocalTimeToSystemTimeEx(&dtzi, &sys_local, &sys_utc) == FALSE) // Win7/Win8
+		if(TzSpecificLocalTimeToSystemTimeEx(&dtzi, &sys_local, &sys_utc) == FALSE)  // Win7/Win8
 		{
 			throw tz_error{};
 		}
 		FILETIME ft{};
-		if(SystemTimeToFileTime(&sys_utc, &ft) == FALSE) // Win 2000
+		if(SystemTimeToFileTime(&sys_utc, &ft) == FALSE)  // Win 2000
 		{
 			throw tz_error{};
 		}
@@ -217,12 +219,12 @@ Unix UnixFromLocal(Local timeLocal)
 		sys_local.wSecond = static_cast<uint16>(timeLocal.seconds);
 		sys_local.wMilliseconds = 0;
 		SYSTEMTIME sys_utc{};
-		if(TzSpecificLocalTimeToSystemTime(nullptr, &sys_local, &sys_utc) == FALSE) // WinXP
+		if(TzSpecificLocalTimeToSystemTime(nullptr, &sys_local, &sys_utc) == FALSE)  // WinXP
 		{
 			throw tz_error{};
 		}
 		FILETIME ft{};
-		if(SystemTimeToFileTime(&sys_utc, &ft) == FALSE) // Win 2000
+		if(SystemTimeToFileTime(&sys_utc, &ft) == FALSE)  // Win 2000
 		{
 			throw tz_error{};
 		}
@@ -262,17 +264,17 @@ Local UnixAsLocal(Unix tp)
 		ft.dwLowDateTime = time_value.LowPart;
 		ft.dwHighDateTime = time_value.HighPart;
 		SYSTEMTIME sys_utc{};
-		if(FileTimeToSystemTime(&ft, &sys_utc) == FALSE) // WinXP
+		if(FileTimeToSystemTime(&ft, &sys_utc) == FALSE)  // WinXP
 		{
 			throw tz_error{};
 		}
 		DYNAMIC_TIME_ZONE_INFORMATION dtzi{};
-		if(GetDynamicTimeZoneInformation(&dtzi) == TIME_ZONE_ID_INVALID) // WinVista
+		if(GetDynamicTimeZoneInformation(&dtzi) == TIME_ZONE_ID_INVALID)  // WinVista
 		{
 			throw tz_error{};
 		}
 		SYSTEMTIME sys_local{};
-		if(SystemTimeToTzSpecificLocalTimeEx(&dtzi, &sys_utc, &sys_local) == FALSE) // Win7/Win8
+		if(SystemTimeToTzSpecificLocalTimeEx(&dtzi, &sys_utc, &sys_local) == FALSE)  // Win7/Win8
 		{
 			throw tz_error{};
 		}
@@ -284,7 +286,7 @@ Local UnixAsLocal(Unix tp)
 		result.minutes = sys_local.wMinute;
 		result.seconds = sys_local.wSecond;
 		return result;
-	} catch(const tz_error&)
+	} catch(const tz_error &)
 	{
 		// nothing
 	}
@@ -298,12 +300,12 @@ Local UnixAsLocal(Unix tp)
 		ft.dwLowDateTime = time_value.LowPart;
 		ft.dwHighDateTime = time_value.HighPart;
 		SYSTEMTIME sys_utc{};
-		if(FileTimeToSystemTime(&ft, &sys_utc) == FALSE) // WinXP
+		if(FileTimeToSystemTime(&ft, &sys_utc) == FALSE)  // WinXP
 		{
 			throw tz_error{};
 		}
 		SYSTEMTIME sys_local{};
-		if(SystemTimeToTzSpecificLocalTime(nullptr, &sys_utc, &sys_local) == FALSE) // Win2000
+		if(SystemTimeToTzSpecificLocalTime(nullptr, &sys_utc, &sys_local) == FALSE)  // Win2000
 		{
 			throw tz_error{};
 		}
@@ -315,7 +317,7 @@ Local UnixAsLocal(Unix tp)
 		result.minutes = sys_local.wMinute;
 		result.seconds = sys_local.wSecond;
 		return result;
-	} catch(const tz_error&)
+	} catch(const tz_error &)
 	{
 		// nothing
 	}
@@ -339,9 +341,9 @@ Local UnixAsLocal(Unix tp)
 #endif
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
-} // namespace nochrono
+}  // namespace nochrono
 
 template <LogicalTimezone TZ>
 static mpt::ustring ToShortenedISO8601Impl(mpt::Date::Gregorian<TZ> date)
@@ -395,10 +397,10 @@ mpt::ustring ToShortenedISO8601(Local date)
 {
 	return ToShortenedISO8601Impl(date);
 }
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
-} // namespace Date
-} // namespace mpt
+}  // namespace Date
+}  // namespace mpt
 
 
 

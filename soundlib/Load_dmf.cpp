@@ -22,14 +22,14 @@ OPENMPT_NAMESPACE_BEGIN
 // DMF header
 struct DMFFileHeader
 {
-	char   signature[4];  // "DDMF"
-	uint8  version;       // 1 - 7 are beta versions, 8 is the official thing, 10 is xtracker32
-	char   tracker[8];    // "XTRACKER", or "SCREAM 3" when converting from S3M, etc.
-	char   songname[30];
-	char   composer[20];
-	uint8  creationDay;
-	uint8  creationMonth;
-	uint8  creationYear;
+	char signature[4];  // "DDMF"
+	uint8 version;      // 1 - 7 are beta versions, 8 is the official thing, 10 is xtracker32
+	char tracker[8];    // "XTRACKER", or "SCREAM 3" when converting from S3M, etc.
+	char songname[30];
+	char composer[20];
+	uint8 creationDay;
+	uint8 creationMonth;
+	uint8 creationYear;
 };
 
 MPT_BINARY_STRUCT(DMFFileHeader, 66)
@@ -69,7 +69,7 @@ MPT_BINARY_STRUCT(DMFChunk, 8)
 struct DMFPatterns
 {
 	uint16le numPatterns;  // 1..1024 patterns
-	uint8le  numTracks;    // 1..32 channels
+	uint8le numTracks;     // 1..32 channels
 };
 
 MPT_BINARY_STRUCT(DMFPatterns, 3)
@@ -77,8 +77,8 @@ MPT_BINARY_STRUCT(DMFPatterns, 3)
 // Pattern header (for each pattern)
 struct DMFPatternHeader
 {
-	uint8le  numTracks;  // 1..32 channels
-	uint8le  beat;       // [hi|lo] -> hi = rows per beat, lo = reserved
+	uint8le numTracks;  // 1..32 channels
+	uint8le beat;       // [hi|lo] -> hi = rows per beat, lo = reserved
 	uint16le numRows;
 	uint32le patternLength;
 	// patttern data follows here ...
@@ -92,21 +92,21 @@ struct DMFSampleHeader
 	enum SampleFlags
 	{
 		// Sample flags
-		smpLoop     = 0x01,
-		smp16Bit    = 0x02,
+		smpLoop = 0x01,
+		smp16Bit = 0x02,
 		smpCompMask = 0x0C,
-		smpComp1    = 0x04,  // Compression type 1
-		smpComp2    = 0x08,  // Compression type 2 (unused)
-		smpComp3    = 0x0C,  // Compression type 3 (ditto)
-		smpLibrary  = 0x80,  // Sample is stored in a library
+		smpComp1 = 0x04,    // Compression type 1
+		smpComp2 = 0x08,    // Compression type 2 (unused)
+		smpComp3 = 0x0C,    // Compression type 3 (ditto)
+		smpLibrary = 0x80,  // Sample is stored in a library
 	};
 
 	uint32le length;
 	uint32le loopStart;
 	uint32le loopEnd;
 	uint16le c3freq;  // 1000..45000hz
-	uint8le  volume;  // 0 = ignore
-	uint8le  flags;
+	uint8le volume;   // 0 = ignore
+	uint8le flags;
 
 	// Convert an DMFSampleHeader to OpenMPT's internal sample representation.
 	void ConvertToMPT(ModSample &mptSmp) const
@@ -146,24 +146,25 @@ struct DMFPatternSettings
 {
 	struct ChannelState
 	{
-		ModCommand::NOTE noteBuffer = NOTE_NONE; // Note buffer
-		ModCommand::NOTE lastNote = NOTE_NONE;   // Last played note on channel
-		uint8 vibratoType = 8;                   // Last used vibrato type on channel
-		uint8 tremoloType = 4;                   // Last used tremolo type on channel
-		uint8 highOffset = 6;                    // Last used high offset on channel
-		bool playDir = false;                    // Sample play direction... false = forward (default)
+		ModCommand::NOTE noteBuffer = NOTE_NONE;  // Note buffer
+		ModCommand::NOTE lastNote = NOTE_NONE;    // Last played note on channel
+		uint8 vibratoType = 8;                    // Last used vibrato type on channel
+		uint8 tremoloType = 4;                    // Last used tremolo type on channel
+		uint8 highOffset = 6;                     // Last used high offset on channel
+		bool playDir = false;                     // Sample play direction... false = forward (default)
 	};
 
-	std::vector<ChannelState> channels; // Memory for each channel's state
-	bool realBPMmode = false;           // true = BPM mode
-	uint8 beat = 0;                     // Rows per beat
-	uint8 tempoTicks = 32;              // Tick mode param
-	uint8 tempoBPM = 120;               // BPM mode param
-	uint8 internalTicks = 6;            // Ticks per row in final pattern
+	std::vector<ChannelState> channels;  // Memory for each channel's state
+	bool realBPMmode = false;            // true = BPM mode
+	uint8 beat = 0;                      // Rows per beat
+	uint8 tempoTicks = 32;               // Tick mode param
+	uint8 tempoBPM = 120;                // BPM mode param
+	uint8 internalTicks = 6;             // Ticks per row in final pattern
 
 	DMFPatternSettings(CHANNELINDEX numChannels)
-	    : channels(numChannels)
-	{ }
+		: channels(numChannels)
+	{
+	}
 };
 
 
@@ -175,7 +176,7 @@ static uint8 DMFporta2MPT(uint8 val, const uint8 internalTicks, const bool hasFi
 	else if((val <= 0x0F && hasFine) || internalTicks < 2)
 		return (val | 0xF0);
 	else
-		return std::max(uint8(1), static_cast<uint8>((val / (internalTicks - 1))));	// no porta on first tick!
+		return std::max(uint8(1), static_cast<uint8>((val / (internalTicks - 1))));  // no porta on first tick!
 }
 
 
@@ -185,13 +186,12 @@ static uint8 DMFslide2MPT(uint8 val, const uint8 internalTicks, const bool up)
 	val = std::max(uint8(1), static_cast<uint8>(val / 4));
 	const bool isFine = (val < 0x0F) || (internalTicks < 2);
 	if(!isFine)
-		val = std::max(uint8(1), static_cast<uint8>((val + internalTicks - 2) / (internalTicks - 1)));	// no slides on first tick! "+ internalTicks - 2" for rounding precision
+		val = std::max(uint8(1), static_cast<uint8>((val + internalTicks - 2) / (internalTicks - 1)));  // no slides on first tick! "+ internalTicks - 2" for rounding precision
 
 	if(up)
 		return (isFine ? 0x0F : 0x00) | (val << 4);
 	else
 		return (isFine ? 0xF0 : 0x00) | (val & 0x0F);
-
 }
 
 
@@ -257,14 +257,12 @@ static void ApplyEffectMemory(const ModCommand *m, ROWINDEX row, CHANNELINDEX nu
 			isSame = true;
 		}
 		if(isTonePortaEffect
-			&& (m->volcmd == VOLCMD_PORTAUP || m->volcmd == VOLCMD_PORTADOWN || m->volcmd == VOLCMD_TONEPORTAMENTO)
-			&& m->vol != 0)
+		   && (m->volcmd == VOLCMD_PORTAUP || m->volcmd == VOLCMD_PORTADOWN || m->volcmd == VOLCMD_TONEPORTAMENTO)
+		   && m->vol != 0)
 		{
 			// Uuh... Don't even try
 			return;
-		} else if(isVolSlideEffect
-			&& (m->volcmd == VOLCMD_FINEVOLUP || m->volcmd == VOLCMD_FINEVOLDOWN || m->volcmd == VOLCMD_VOLSLIDEUP || m->volcmd == VOLCMD_VOLSLIDEDOWN)
-			&& m->vol != 0)
+		} else if(isVolSlideEffect && (m->volcmd == VOLCMD_FINEVOLUP || m->volcmd == VOLCMD_FINEVOLDOWN || m->volcmd == VOLCMD_VOLSLIDEUP || m->volcmd == VOLCMD_VOLSLIDEDOWN) && m->vol != 0)
 		{
 			// Same!
 			return;
@@ -297,16 +295,16 @@ static PATTERNINDEX ConvertDMFPattern(FileReader &file, const uint8 fileVersion,
 		patGlobMask = 0x3F,  // Mask for global effects
 		// Note tracks
 		patCounter = 0x80,  // Pack information for current channel follows
-		patInstr   = 0x40,  // Instrument number present
-		patNote    = 0x20,  // Note present
-		patVolume  = 0x10,  // Volume present
-		patInsEff  = 0x08,  // Instrument effect present
+		patInstr = 0x40,    // Instrument number present
+		patNote = 0x20,     // Note present
+		patVolume = 0x10,   // Volume present
+		patInsEff = 0x08,   // Instrument effect present
 		patNoteEff = 0x04,  // Note effect present
-		patVolEff  = 0x02,  // Volume effect stored
+		patVolEff = 0x02,   // Volume effect stored
 	};
 
 	file.Rewind();
-	
+
 	DMFPatternHeader patHead;
 	if(fileVersion < 3)
 	{
@@ -368,69 +366,69 @@ static PATTERNINDEX ConvertDMFPattern(FileReader &file, const uint8 fileVersion,
 
 			switch(globalInfo)
 			{
-			case 1:  // Set Tick Frame Speed
-				settings.realBPMmode = false;
-				settings.tempoTicks = std::max(uint8(1), globalData);  // Tempo in 1/4 rows per second
-				settings.tempoBPM = 0;                                 // Automatically updated by X-Tracker
-				tempoChange = true;
-				break;
-			case 2:             // Set BPM Speed (real BPM mode)
-				if(globalData)  // DATA = 0 doesn't do anything
-				{
-					settings.realBPMmode = true;
-					settings.tempoBPM = globalData;  // Tempo in real BPM (depends on rows per beat)
+				case 1:  // Set Tick Frame Speed
+					settings.realBPMmode = false;
+					settings.tempoTicks = std::max(uint8(1), globalData);  // Tempo in 1/4 rows per second
+					settings.tempoBPM = 0;                                 // Automatically updated by X-Tracker
+					tempoChange = true;
+					break;
+				case 2:             // Set BPM Speed (real BPM mode)
+					if(globalData)  // DATA = 0 doesn't do anything
+					{
+						settings.realBPMmode = true;
+						settings.tempoBPM = globalData;  // Tempo in real BPM (depends on rows per beat)
+						if(settings.beat != 0)
+						{
+							settings.tempoTicks = static_cast<uint8>(globalData * settings.beat * 15);  // Automatically updated by X-Tracker
+						}
+						tempoChange = true;
+					}
+					break;
+				case 3:  // Set Beat
+					settings.beat = (globalData >> 4);
 					if(settings.beat != 0)
 					{
-						settings.tempoTicks = static_cast<uint8>(globalData * settings.beat * 15);  // Automatically updated by X-Tracker
-					}
-					tempoChange = true;
-				}
-				break;
-			case 3:  // Set Beat
-				settings.beat = (globalData >> 4);
-				if(settings.beat != 0)
-				{
-					// Tempo changes only if we're in real BPM mode
-					tempoChange = settings.realBPMmode;
-				} else
-				{
-					// If beat is 0, change to tick speed mode, but keep current tempo
-					settings.realBPMmode = false;
-				}
-				break;
-			case 4:  // Tick Delay
-				writeDelay = globalData;
-				break;
-			case 5:  // Set External Flag
-				break;
-			case 6:  // Slide Speed Up
-				if(globalData > 0)
-				{
-					uint8 &tempoData = (settings.realBPMmode) ? settings.tempoBPM : settings.tempoTicks;
-					if(tempoData < 256 - globalData)
-					{
-						tempoData += globalData;
+						// Tempo changes only if we're in real BPM mode
+						tempoChange = settings.realBPMmode;
 					} else
 					{
-						tempoData = 255;
+						// If beat is 0, change to tick speed mode, but keep current tempo
+						settings.realBPMmode = false;
 					}
-					tempoChange = true;
-				}
-				break;
-			case 7:  // Slide Speed Down
-				if(globalData > 0)
-				{
-					uint8 &tempoData = (settings.realBPMmode) ? settings.tempoBPM : settings.tempoTicks;
-					if(tempoData > 1 + globalData)
+					break;
+				case 4:  // Tick Delay
+					writeDelay = globalData;
+					break;
+				case 5:  // Set External Flag
+					break;
+				case 6:  // Slide Speed Up
+					if(globalData > 0)
 					{
-						tempoData -= globalData;
-					} else
-					{
-						tempoData = 1;
+						uint8 &tempoData = (settings.realBPMmode) ? settings.tempoBPM : settings.tempoTicks;
+						if(tempoData < 256 - globalData)
+						{
+							tempoData += globalData;
+						} else
+						{
+							tempoData = 255;
+						}
+						tempoChange = true;
 					}
-					tempoChange = true;
-				}
-				break;
+					break;
+				case 7:  // Slide Speed Down
+					if(globalData > 0)
+					{
+						uint8 &tempoData = (settings.realBPMmode) ? settings.tempoBPM : settings.tempoTicks;
+						if(tempoData > 1 + globalData)
+						{
+							tempoData -= globalData;
+						} else
+						{
+							tempoData = 1;
+						}
+						tempoChange = true;
+					}
+					break;
 			}
 		} else
 		{
@@ -533,7 +531,7 @@ static PATTERNINDEX ConvertDMFPattern(FileReader &file, const uint8 fileVersion,
 
 				EffectCommand effect1 = CMD_NONE, effect2 = CMD_NONE, effect3 = CMD_NONE;
 				uint8 effectParam1 = 0, effectParam2 = 0, effectParam3 = 0;
-				bool useMem2 = false, useMem3 = false;	// Effect can use memory if necessary
+				bool useMem2 = false, useMem3 = false;  // Effect can use memory if necessary
 
 				////////////////////////////////////////////////////////////////
 				// 0x10: Volume
@@ -552,71 +550,71 @@ static PATTERNINDEX ConvertDMFPattern(FileReader &file, const uint8 fileVersion,
 
 					switch(command)
 					{
-					case 1:  // Stop Sample
-						m->note = NOTE_NOTECUT;
-						effect1 = CMD_NONE;
-						break;
-					case 2:  // Stop Sample Loop
-						m->note = NOTE_KEYOFF;
-						effect1 = CMD_NONE;
-						break;
-					case 3:  // Instrument Volume Override (aka "Restart")
-						m->note = settings.channels[chn].lastNote;
-						settings.channels[chn].playDir = false;
-						effect1 = CMD_NONE;
-						break;
-					case 4:  // Sample Delay
-						effectParam1 = DMFdelay2MPT(effectParam1, settings.internalTicks);
-						if(effectParam1)
-						{
-							effect1 = CMD_S3MCMDEX;
-							effectParam1 = 0xD0 | (effectParam1);
-						} else
-						{
+						case 1:  // Stop Sample
+							m->note = NOTE_NOTECUT;
 							effect1 = CMD_NONE;
-						}
-						if(m->note == NOTE_NONE)
-						{
+							break;
+						case 2:  // Stop Sample Loop
+							m->note = NOTE_KEYOFF;
+							effect1 = CMD_NONE;
+							break;
+						case 3:  // Instrument Volume Override (aka "Restart")
 							m->note = settings.channels[chn].lastNote;
 							settings.channels[chn].playDir = false;
-						}
-						break;
-					case 5:  // Tremolo Retrig Sample (who invented those stupid effect names?)
-						effectParam1 = std::max(uint8(1), DMFdelay2MPT(effectParam1, settings.internalTicks));
-						effect1 = CMD_RETRIG;
-						settings.channels[chn].playDir = false;
-						break;
-					case 6:  // Offset
-					case 7:  // Offset + 64k
-					case 8:  // Offset + 128k
-					case 9:  // Offset + 192k
-						// Put high offset on previous row
-						if(row > 0 && command != settings.channels[chn].highOffset)
-						{
-							if(sndFile.Patterns[pat].WriteEffect(EffectWriter(CMD_S3MCMDEX, (0xA0 | (command - 6))).Row(row - 1).Channel(chn).RetryPreviousRow()))
+							effect1 = CMD_NONE;
+							break;
+						case 4:  // Sample Delay
+							effectParam1 = DMFdelay2MPT(effectParam1, settings.internalTicks);
+							if(effectParam1)
 							{
-								settings.channels[chn].highOffset = command;
+								effect1 = CMD_S3MCMDEX;
+								effectParam1 = 0xD0 | (effectParam1);
+							} else
+							{
+								effect1 = CMD_NONE;
 							}
-						}
-						effect1 = CMD_OFFSET;
-						if(m->note == NOTE_NONE)
-						{
-							// Offset without note does also work in DMF.
-							m->note = settings.channels[chn].lastNote;
-						}
-						settings.channels[chn].playDir = false;
-						break;
-					case 10:	// Invert Sample play direction ("Tekkno Invert")
-						effect1 = CMD_S3MCMDEX;
-						if(settings.channels[chn].playDir == false)
-							effectParam1 = 0x9F;
-						else
-							effectParam1 = 0x9E;
-						settings.channels[chn].playDir = !settings.channels[chn].playDir;
-						break;
-					default:
-						effect1 = CMD_NONE;
-						break;
+							if(m->note == NOTE_NONE)
+							{
+								m->note = settings.channels[chn].lastNote;
+								settings.channels[chn].playDir = false;
+							}
+							break;
+						case 5:  // Tremolo Retrig Sample (who invented those stupid effect names?)
+							effectParam1 = std::max(uint8(1), DMFdelay2MPT(effectParam1, settings.internalTicks));
+							effect1 = CMD_RETRIG;
+							settings.channels[chn].playDir = false;
+							break;
+						case 6:  // Offset
+						case 7:  // Offset + 64k
+						case 8:  // Offset + 128k
+						case 9:  // Offset + 192k
+							// Put high offset on previous row
+							if(row > 0 && command != settings.channels[chn].highOffset)
+							{
+								if(sndFile.Patterns[pat].WriteEffect(EffectWriter(CMD_S3MCMDEX, (0xA0 | (command - 6))).Row(row - 1).Channel(chn).RetryPreviousRow()))
+								{
+									settings.channels[chn].highOffset = command;
+								}
+							}
+							effect1 = CMD_OFFSET;
+							if(m->note == NOTE_NONE)
+							{
+								// Offset without note does also work in DMF.
+								m->note = settings.channels[chn].lastNote;
+							}
+							settings.channels[chn].playDir = false;
+							break;
+						case 10:  // Invert Sample play direction ("Tekkno Invert")
+							effect1 = CMD_S3MCMDEX;
+							if(settings.channels[chn].playDir == false)
+								effectParam1 = 0x9F;
+							else
+								effectParam1 = 0x9E;
+							settings.channels[chn].playDir = !settings.channels[chn].playDir;
+							break;
+						default:
+							effect1 = CMD_NONE;
+							break;
 					}
 				}
 
@@ -629,88 +627,88 @@ static PATTERNINDEX ConvertDMFPattern(FileReader &file, const uint8 fileVersion,
 
 					switch(command)
 					{
-					case 1:  // Note Finetune (1/16th of a semitone signed 8-bit value, not 1/128th as the interface claims)
-						{
-							const auto fine = std::div(static_cast<int8>(effectParam2) * 8, 128);
-							if(m->IsNote())
-								m->note = static_cast<ModCommand::NOTE>(Clamp(m->note + fine.quot, NOTE_MIN, NOTE_MAX));
-							effect2 = CMD_FINETUNE;
-							effectParam2 = static_cast<uint8>(fine.rem) ^ 0x80;
-						}
-						break;
-					case 2:  // Note Delay (wtf is the difference to Sample Delay?)
-						effectParam2 = DMFdelay2MPT(effectParam2, settings.internalTicks);
-						if(effectParam2)
-						{
-							effect2 = CMD_S3MCMDEX;
-							effectParam2 = 0xD0 | (effectParam2);
-						} else
-						{
-							effect2 = CMD_NONE;
-						}
-						useMem2 = true;
-						break;
-					case 3:  // Arpeggio
-						effect2 = CMD_ARPEGGIO;
-						useMem2 = true;
-						break;
-					case 4:  // Portamento Up
-					case 5:  // Portamento Down
-						effectParam2 = DMFporta2MPT(effectParam2, settings.internalTicks, true);
-						effect2 = (command == 4) ? CMD_PORTAMENTOUP : CMD_PORTAMENTODOWN;
-						useMem2 = true;
-						break;
-					case 6:  // Portamento to Note
-						if(m->note == NOTE_NONE)
-						{
-							m->note = settings.channels[chn].noteBuffer;
-						}
-						effectParam2 = DMFporta2MPT(effectParam2, settings.internalTicks, false);
-						effect2 = CMD_TONEPORTAMENTO;
-						useMem2 = true;
-						break;
-					case 7:  // Scratch to Note (neat! but we don't have such an effect...)
-						m->note = static_cast<ModCommand::NOTE>(Clamp(effectParam2 + 25, NOTE_MIN, NOTE_MAX));
-						effect2 = CMD_TONEPORTAMENTO;
-						effectParam2 = 0xFF;
-						useMem2 = true;
-						break;
-					case 8:   // Vibrato Sine
-					case 9:   // Vibrato Triangle (ramp down should be close enough)
-					case 10:  // Vibrato Square
-						// Put vibrato type on previous row
-						if(row > 0 && command != settings.channels[chn].vibratoType)
-						{
-							if(sndFile.Patterns[pat].WriteEffect(EffectWriter(CMD_S3MCMDEX, (0x30 | (command - 8))).Row(row - 1).Channel(chn).RetryPreviousRow()))
+						case 1:  // Note Finetune (1/16th of a semitone signed 8-bit value, not 1/128th as the interface claims)
 							{
-								settings.channels[chn].vibratoType = command;
+								const auto fine = std::div(static_cast<int8>(effectParam2) * 8, 128);
+								if(m->IsNote())
+									m->note = static_cast<ModCommand::NOTE>(Clamp(m->note + fine.quot, NOTE_MIN, NOTE_MAX));
+								effect2 = CMD_FINETUNE;
+								effectParam2 = static_cast<uint8>(fine.rem) ^ 0x80;
 							}
-						}
-						effect2 = CMD_VIBRATO;
-						effectParam2 = DMFvibrato2MPT(effectParam2, settings.internalTicks);
-						useMem2 = true;
-						break;
-					case 11:  // Note Tremolo
-						effectParam2 = DMFtremor2MPT(effectParam2, settings.internalTicks);
-						effect2 = CMD_TREMOR;
-						useMem2 = true;
-						break;
-					case 12:  // Note Cut
-						effectParam2 = DMFdelay2MPT(effectParam2, settings.internalTicks);
-						if(effectParam2)
-						{
-							effect2 = CMD_S3MCMDEX;
-							effectParam2 = 0xC0 | (effectParam2);
-						} else
-						{
+							break;
+						case 2:  // Note Delay (wtf is the difference to Sample Delay?)
+							effectParam2 = DMFdelay2MPT(effectParam2, settings.internalTicks);
+							if(effectParam2)
+							{
+								effect2 = CMD_S3MCMDEX;
+								effectParam2 = 0xD0 | (effectParam2);
+							} else
+							{
+								effect2 = CMD_NONE;
+							}
+							useMem2 = true;
+							break;
+						case 3:  // Arpeggio
+							effect2 = CMD_ARPEGGIO;
+							useMem2 = true;
+							break;
+						case 4:  // Portamento Up
+						case 5:  // Portamento Down
+							effectParam2 = DMFporta2MPT(effectParam2, settings.internalTicks, true);
+							effect2 = (command == 4) ? CMD_PORTAMENTOUP : CMD_PORTAMENTODOWN;
+							useMem2 = true;
+							break;
+						case 6:  // Portamento to Note
+							if(m->note == NOTE_NONE)
+							{
+								m->note = settings.channels[chn].noteBuffer;
+							}
+							effectParam2 = DMFporta2MPT(effectParam2, settings.internalTicks, false);
+							effect2 = CMD_TONEPORTAMENTO;
+							useMem2 = true;
+							break;
+						case 7:  // Scratch to Note (neat! but we don't have such an effect...)
+							m->note = static_cast<ModCommand::NOTE>(Clamp(effectParam2 + 25, NOTE_MIN, NOTE_MAX));
+							effect2 = CMD_TONEPORTAMENTO;
+							effectParam2 = 0xFF;
+							useMem2 = true;
+							break;
+						case 8:   // Vibrato Sine
+						case 9:   // Vibrato Triangle (ramp down should be close enough)
+						case 10:  // Vibrato Square
+							// Put vibrato type on previous row
+							if(row > 0 && command != settings.channels[chn].vibratoType)
+							{
+								if(sndFile.Patterns[pat].WriteEffect(EffectWriter(CMD_S3MCMDEX, (0x30 | (command - 8))).Row(row - 1).Channel(chn).RetryPreviousRow()))
+								{
+									settings.channels[chn].vibratoType = command;
+								}
+							}
+							effect2 = CMD_VIBRATO;
+							effectParam2 = DMFvibrato2MPT(effectParam2, settings.internalTicks);
+							useMem2 = true;
+							break;
+						case 11:  // Note Tremolo
+							effectParam2 = DMFtremor2MPT(effectParam2, settings.internalTicks);
+							effect2 = CMD_TREMOR;
+							useMem2 = true;
+							break;
+						case 12:  // Note Cut
+							effectParam2 = DMFdelay2MPT(effectParam2, settings.internalTicks);
+							if(effectParam2)
+							{
+								effect2 = CMD_S3MCMDEX;
+								effectParam2 = 0xC0 | (effectParam2);
+							} else
+							{
+								effect2 = CMD_NONE;
+								m->note = NOTE_NOTECUT;
+							}
+							useMem2 = true;
+							break;
+						default:
 							effect2 = CMD_NONE;
-							m->note = NOTE_NOTECUT;
-						}
-						useMem2 = true;
-						break;
-					default:
-						effect2 = CMD_NONE;
-						break;
+							break;
 					}
 				}
 
@@ -723,49 +721,49 @@ static PATTERNINDEX ConvertDMFPattern(FileReader &file, const uint8 fileVersion,
 
 					switch(command)
 					{
-					case 1:  // Volume Slide Up
-					case 2:  // Volume Slide Down
-						effectParam3 = DMFslide2MPT(effectParam3, settings.internalTicks, (command == 1));
-						effect3 = CMD_VOLUMESLIDE;
-						useMem3 = true;
-						break;
-					case 3:  // Volume Tremolo (actually this is Tremor)
-						effectParam3 = DMFtremor2MPT(effectParam3, settings.internalTicks);
-						effect3 = CMD_TREMOR;
-						useMem3 = true;
-						break;
-					case 4:  // Tremolo Sine
-					case 5:  // Tremolo Triangle (ramp down should be close enough)
-					case 6:  // Tremolo Square
-						// Put tremolo type on previous row
-						if(row > 0 && command != settings.channels[chn].tremoloType)
-						{
-							if(sndFile.Patterns[pat].WriteEffect(EffectWriter(CMD_S3MCMDEX, (0x40 | (command - 4))).Row(row - 1).Channel(chn).RetryPreviousRow()))
+						case 1:  // Volume Slide Up
+						case 2:  // Volume Slide Down
+							effectParam3 = DMFslide2MPT(effectParam3, settings.internalTicks, (command == 1));
+							effect3 = CMD_VOLUMESLIDE;
+							useMem3 = true;
+							break;
+						case 3:  // Volume Tremolo (actually this is Tremor)
+							effectParam3 = DMFtremor2MPT(effectParam3, settings.internalTicks);
+							effect3 = CMD_TREMOR;
+							useMem3 = true;
+							break;
+						case 4:  // Tremolo Sine
+						case 5:  // Tremolo Triangle (ramp down should be close enough)
+						case 6:  // Tremolo Square
+							// Put tremolo type on previous row
+							if(row > 0 && command != settings.channels[chn].tremoloType)
 							{
-								settings.channels[chn].tremoloType = command;
+								if(sndFile.Patterns[pat].WriteEffect(EffectWriter(CMD_S3MCMDEX, (0x40 | (command - 4))).Row(row - 1).Channel(chn).RetryPreviousRow()))
+								{
+									settings.channels[chn].tremoloType = command;
+								}
 							}
-						}
-						effect3 = CMD_TREMOLO;
-						effectParam3 = DMFvibrato2MPT(effectParam3, settings.internalTicks);
-						useMem3 = true;
-						break;
-					case 7:  // Set Balance
-						effect3 = CMD_PANNING8;
-						break;
-					case 8:  // Slide Balance Left
-					case 9:  // Slide Balance Right
-						effectParam3 = DMFslide2MPT(effectParam3, settings.internalTicks, (command == 8));
-						effect3 = CMD_PANNINGSLIDE;
-						useMem3 = true;
-						break;
-					case 10:  // Balance Vibrato Left/Right (always sine modulated)
-						effect3 = CMD_PANBRELLO;
-						effectParam3 = DMFvibrato2MPT(effectParam3, settings.internalTicks);
-						useMem3 = true;
-						break;
-					default:
-						effect3 = CMD_NONE;
-						break;
+							effect3 = CMD_TREMOLO;
+							effectParam3 = DMFvibrato2MPT(effectParam3, settings.internalTicks);
+							useMem3 = true;
+							break;
+						case 7:  // Set Balance
+							effect3 = CMD_PANNING8;
+							break;
+						case 8:  // Slide Balance Left
+						case 9:  // Slide Balance Right
+							effectParam3 = DMFslide2MPT(effectParam3, settings.internalTicks, (command == 8));
+							effect3 = CMD_PANNINGSLIDE;
+							useMem3 = true;
+							break;
+						case 10:  // Balance Vibrato Left/Right (always sine modulated)
+							effect3 = CMD_PANBRELLO;
+							effectParam3 = DMFvibrato2MPT(effectParam3, settings.internalTicks);
+							useMem3 = true;
+							break;
+						default:
+							effect3 = CMD_NONE;
+							break;
 					}
 				}
 
@@ -782,7 +780,7 @@ static PATTERNINDEX ConvertDMFPattern(FileReader &file, const uint8 fileVersion,
 					{
 						effect2 = CMD_TONEPORTAMENTO;
 						effectParam2 = 0xFF;
-					} else if(effect3 == CMD_NONE && effect2 != CMD_TONEPORTAMENTO)	// Tone portamentos normally go in effect #2
+					} else if(effect3 == CMD_NONE && effect2 != CMD_TONEPORTAMENTO)  // Tone portamentos normally go in effect #2
 					{
 						effect3 = CMD_TONEPORTAMENTO;
 						effectParam3 = 0xFF;
@@ -835,7 +833,7 @@ static PATTERNINDEX ConvertDMFPattern(FileReader &file, const uint8 fileVersion,
 		if(tempoChange)
 		{
 			tempoChange = false;
-			
+
 			sndFile.Patterns[pat].WriteEffect(EffectWriter(CMD_TEMPO, static_cast<ModCommand::PARAM>(tempo)).Row(row).Channel(0).RetryNextRow());
 			sndFile.Patterns[pat].WriteEffect(EffectWriter(CMD_SPEED, static_cast<ModCommand::PARAM>(speed)).Row(row).RetryNextRow());
 		}
@@ -859,7 +857,7 @@ static PATTERNINDEX ConvertDMFPattern(FileReader &file, const uint8 fileVersion,
 static bool ValidateHeader(const DMFFileHeader &fileHeader)
 {
 	if(std::memcmp(fileHeader.signature, "DDMF", 4)
-		|| !fileHeader.version || fileHeader.version > 10)
+	   || !fileHeader.version || fileHeader.version > 10)
 	{
 		return false;
 	}
@@ -1012,7 +1010,7 @@ bool CSoundFile::ReadDMF(FileReader &file, ModLoadingFlags loadFlags)
 		chunk.Skip(1);
 		m_songMessage.ReadFixedLineLength(chunk, chunk.BytesLeft(), 40, 0);
 	}
-	
+
 	// Read sample headers + data
 	FileReader sampleDataChunk = chunks.GetChunk(DMFChunk::idSMPD);
 	chunk = chunks.GetChunk(DMFChunk::idSMPI);
@@ -1074,10 +1072,10 @@ struct DMFHTree
 	DMFHNode nodes[256]{};
 
 	DMFHTree(FileReader &file)
-	    : file(file)
+		: file(file)
 	{
 	}
-	
+
 	//
 	// tree: [8-bit value][12-bit index][12-bit index] = 32-bit
 	//

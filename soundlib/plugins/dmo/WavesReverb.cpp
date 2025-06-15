@@ -13,7 +13,7 @@
 #ifndef NO_PLUGINS
 #include "WavesReverb.h"
 #include "../../Sndfile.h"
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -22,9 +22,9 @@ OPENMPT_NAMESPACE_BEGIN
 namespace DMO
 {
 
-IMixPlugin* WavesReverb::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
+IMixPlugin *WavesReverb::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
-	return new (std::nothrow) WavesReverb(factory, sndFile, mixStruct);
+	return new(std::nothrow) WavesReverb(factory, sndFile, mixStruct);
 }
 
 
@@ -45,8 +45,8 @@ void WavesReverb::Process(float *pOutL, float *pOutR, uint32 numFrames)
 	if(!m_mixBuffer.Ok())
 		return;
 
-	const float *in[2] = { m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1) };
-	float *out[2] = { m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1) };
+	const float *in[2] = {m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1)};
+	float *out[2] = {m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1)};
 
 	uint32 combPos = m_state.combPos, allpassPos = m_state.allpassPos;
 	uint32 delay0 = (m_delay[0] + combPos + 1) & 0xFFF;
@@ -62,8 +62,8 @@ void WavesReverb::Process(float *pOutL, float *pOutR, uint32 numFrames)
 
 	for(uint32 i = numFrames; i != 0; i--)
 	{
-		const float leftIn  = *(in[0])++ + 1e-30f;	// Prevent denormals
-		const float rightIn = *(in[1])++ + 1e-30f;	// Prevent denormals
+		const float leftIn = *(in[0])++ + 1e-30f;   // Prevent denormals
+		const float rightIn = *(in[1])++ + 1e-30f;  // Prevent denormals
 
 		// Advance buffer index for the four comb filters
 		delay0 = (delay0 - 1) & 0xFFF;
@@ -76,7 +76,7 @@ void WavesReverb::Process(float *pOutL, float *pOutR, uint32 numFrames)
 		float &delay3new = m_state.comb[delay3][3];
 
 		float r1, r2;
-		
+
 		r1 = delay1new * 0.61803401f + m_state.allpass1[delay4][0] * m_coeffs[0];
 		r2 = m_state.allpass1[delay4][1] * m_coeffs[0] - delay0new * 0.61803401f;
 		m_state.allpass1[allpassPos][0] = r2 * 0.61803401f + delay0new;
@@ -91,10 +91,10 @@ void WavesReverb::Process(float *pOutL, float *pOutR, uint32 numFrames)
 		delay2new = r1;
 		delay3new = r2;
 
-		*(out[0])++ = (leftIn  * m_dryFactor) + delay0new + delay2new;
+		*(out[0])++ = (leftIn * m_dryFactor) + delay0new + delay2new;
 		*(out[1])++ = (rightIn * m_dryFactor) + delay1new + delay3new;
 
-		const float leftWet  = leftIn  * m_wetFactor;
+		const float leftWet = leftIn * m_wetFactor;
 		const float rightWet = rightIn * m_wetFactor;
 		m_state.comb[combPos][0] = (delay0new * m_coeffs[2]) + (delay0old * m_coeffs[3]) + leftWet;
 		m_state.comb[combPos][1] = (delay1new * m_coeffs[4]) + (delay1old * m_coeffs[5]) + rightWet;
@@ -176,10 +176,10 @@ CString WavesReverb::GetParamName(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kRvbInGain: return _T("InGain");
-	case kRvbReverbMix: return _T("ReverbMix");
-	case kRvbReverbTime: return _T("ReverbTime");
-	case kRvbHighFreqRTRatio: return _T("HighFreqRTRatio");
+		case kRvbInGain: return _T("InGain");
+		case kRvbReverbMix: return _T("ReverbMix");
+		case kRvbReverbTime: return _T("ReverbTime");
+		case kRvbHighFreqRTRatio: return _T("HighFreqRTRatio");
 	}
 	return CString();
 }
@@ -189,11 +189,11 @@ CString WavesReverb::GetParamLabel(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kRvbInGain:
-	case kRvbReverbMix:
-		return _T("dB");
-	case kRvbReverbTime:
-		return _T("ms");
+		case kRvbInGain:
+		case kRvbReverbMix:
+			return _T("dB");
+		case kRvbReverbTime:
+			return _T("ms");
 	}
 	return CString();
 }
@@ -204,23 +204,23 @@ CString WavesReverb::GetParamDisplay(PlugParamIndex param)
 	float value = m_param[param];
 	switch(param)
 	{
-	case kRvbInGain:
-	case kRvbReverbMix:
-		value = GainInDecibel(value);
-		break;
-	case kRvbReverbTime:
-		value = ReverbTime();
-		break;
-	case kRvbHighFreqRTRatio:
-		value = HighFreqRTRatio();
-		break;
+		case kRvbInGain:
+		case kRvbReverbMix:
+			value = GainInDecibel(value);
+			break;
+		case kRvbReverbTime:
+			value = ReverbTime();
+			break;
+		case kRvbHighFreqRTRatio:
+			value = HighFreqRTRatio();
+			break;
 	}
 	CString s;
 	s.Format(_T("%.2f"), value);
 	return s;
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 void WavesReverb::RecalculateWavesReverbParams()
@@ -250,11 +250,11 @@ void WavesReverb::RecalculateWavesReverbParams()
 	m_wetFactor = static_cast<float>(std::sqrt(reverbMix) * (4.0 / std::sqrt(sum) * inGain));
 }
 
-} // namespace DMO
+}  // namespace DMO
 
 #else
 MPT_MSVC_WORKAROUND_LNK4221(WavesReverb)
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_END

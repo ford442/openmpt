@@ -55,15 +55,14 @@ std::string ReadStringBuffer(String::ReadWriteMode mode, const char *srcBuffer, 
 		dest.assign(src, src + srcSize);
 
 		// Convert null characters to spaces.
-		std::transform(dest.begin(), dest.end(), dest.begin(), [] (char c) -> char { return (c != '\0') ? c : ' '; });
+		std::transform(dest.begin(), dest.end(), dest.begin(), [](char c) -> char
+		{ return (c != '\0') ? c : ' '; });
 
 		// Trim trailing spaces.
 		dest = mpt::trim_right(dest, std::string(" "));
-
 	}
 
 	return dest;
-
 }
 
 void WriteStringBuffer(String::ReadWriteMode mode, char *destBuffer, const std::size_t destSize, const char *srcBuffer, const std::size_t srcSize)
@@ -103,14 +102,13 @@ void WriteStringBuffer(String::ReadWriteMode mode, char *destBuffer, const std::
 		// Make sure that destination is really null-terminated.
 		SetNullTerminator(destBuffer, destSize);
 	}
-
 }
 
-} // namespace detail
+}  // namespace detail
 
-} // namespace String
+}  // namespace String
 
-} // namespace mpt
+}  // namespace mpt
 
 
 

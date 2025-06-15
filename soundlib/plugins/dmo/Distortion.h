@@ -39,12 +39,12 @@ protected:
 	uint8 m_edge, m_shift;
 
 public:
-	static IMixPlugin* Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
+	static IMixPlugin *Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 	Distortion(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 
 	int32 GetUID() const override { return 0xEF114C90; }
 	int32 GetVersion() const override { return 0; }
-	void Idle() override { }
+	void Idle() override {}
 	uint32 GetLatency() const override { return 0; }
 
 	void Process(float *pOutL, float *pOutR, uint32 numFrames) override;
@@ -53,7 +53,7 @@ public:
 
 	int32 GetNumPrograms() const override { return 0; }
 	int32 GetCurrentProgram() override { return 0; }
-	void SetCurrentProgram(int32) override { }
+	void SetCurrentProgram(int32) override {}
 
 	PlugParamIndex GetNumParameters() const override { return kDistNumParameters; }
 	PlugParamValue GetParameter(PlugParamIndex index) override;
@@ -74,7 +74,7 @@ public:
 	CString GetParamDisplay(PlugParamIndex param) override;
 
 	CString GetCurrentProgramName() override { return CString(); }
-	void SetCurrentProgramName(const CString &) override { }
+	void SetCurrentProgramName(const CString &) override {}
 	CString GetProgramName(int32) override { return CString(); }
 
 	bool HasEditor() const override { return false; }
@@ -89,8 +89,8 @@ protected:
 	void RecalculateDistortionParams();
 };
 
-} // namespace DMO
+}  // namespace DMO
 
 OPENMPT_NAMESPACE_END
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS

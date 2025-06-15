@@ -23,12 +23,12 @@ namespace DMO
 {
 
 // cppcheck-suppress duplInheritedMember
-IMixPlugin* Flanger::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
+IMixPlugin *Flanger::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
-	return new (std::nothrow) Flanger(factory, sndFile, mixStruct, false);
+	return new(std::nothrow) Flanger(factory, sndFile, mixStruct, false);
 }
 
-IMixPlugin* Flanger::CreateLegacy(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
+IMixPlugin *Flanger::CreateLegacy(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
 	return new(std::nothrow) Flanger(factory, sndFile, mixStruct, true);
 }
@@ -79,13 +79,13 @@ CString Flanger::GetParamName(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kFlangerWetDryMix: return _T("WetDryMix");
-	case kFlangerWaveShape: return _T("WaveShape");
-	case kFlangerFrequency: return _T("Frequency");
-	case kFlangerDepth: return _T("Depth");
-	case kFlangerPhase: return _T("Phase");
-	case kFlangerFeedback: return _T("Feedback");
-	case kFlangerDelay: return _T("Delay");
+		case kFlangerWetDryMix: return _T("WetDryMix");
+		case kFlangerWaveShape: return _T("WaveShape");
+		case kFlangerFrequency: return _T("Frequency");
+		case kFlangerDepth: return _T("Depth");
+		case kFlangerPhase: return _T("Phase");
+		case kFlangerFeedback: return _T("Feedback");
+		case kFlangerDelay: return _T("Delay");
 	}
 	return CString();
 }
@@ -95,16 +95,16 @@ CString Flanger::GetParamLabel(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kFlangerWetDryMix:
-	case kFlangerDepth:
-	case kFlangerFeedback:
-		return _T("%");
-	case kFlangerFrequency:
-		return _T("Hz");
-	case kFlangerPhase:
-		return mpt::ToCString(MPT_UTF8("\xC2\xB0"));  // U+00B0 DEGREE SIGN
-	case kFlangerDelay:
-		return _T("ms");
+		case kFlangerWetDryMix:
+		case kFlangerDepth:
+		case kFlangerFeedback:
+			return _T("%");
+		case kFlangerFrequency:
+			return _T("Hz");
+		case kFlangerPhase:
+			return mpt::ToCString(MPT_UTF8("\xC2\xB0"));  // U+00B0 DEGREE SIGN
+		case kFlangerDelay:
+			return _T("ms");
 	}
 	return CString();
 }
@@ -116,43 +116,43 @@ CString Flanger::GetParamDisplay(PlugParamIndex param)
 	float value = m_param[param];
 	switch(param)
 	{
-	case kFlangerWetDryMix:
-	case kFlangerDepth:
-		value *= 100.0f;
-		break;
-	case kFlangerFrequency:
-		value = FrequencyInHertz();
-		break;
-	case kFlangerWaveShape:
-		return (value < 1) ? _T("Triangle") : _T("Sine");
-		break;
-	case kFlangerPhase:
-		switch(Phase())
-		{
-		case 0: return _T("-180");
-		case 1: return _T("-90");
-		case 2: return _T("0");
-		case 3: return _T("90");
-		case 4: return _T("180");
-		}
-		break;
-	case kFlangerFeedback:
-		value = Feedback();
-		break;
-	case kFlangerDelay:
-		value = Delay();
+		case kFlangerWetDryMix:
+		case kFlangerDepth:
+			value *= 100.0f;
+			break;
+		case kFlangerFrequency:
+			value = FrequencyInHertz();
+			break;
+		case kFlangerWaveShape:
+			return (value < 1) ? _T("Triangle") : _T("Sine");
+			break;
+		case kFlangerPhase:
+			switch(Phase())
+			{
+				case 0: return _T("-180");
+				case 1: return _T("-90");
+				case 2: return _T("0");
+				case 3: return _T("90");
+				case 4: return _T("180");
+			}
+			break;
+		case kFlangerFeedback:
+			value = Feedback();
+			break;
+		case kFlangerDelay:
+			value = Delay();
 	}
 	s.Format(_T("%.2f"), value);
 	return s;
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
-} // namespace DMO
+}  // namespace DMO
 
 #else
 MPT_MSVC_WORKAROUND_LNK4221(Flanger)
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_END

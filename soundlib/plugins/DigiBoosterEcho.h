@@ -29,7 +29,7 @@ public:
 	// Our settings chunk for file I/O, as it will be written to files
 	struct PluginChunk
 	{
-		char  id[4];
+		char id[4];
 		uint8 param[kEchoNumParameters];
 
 		static PluginChunk Create(uint8 delay, uint8 feedback, uint8 mix, uint8 cross)
@@ -65,14 +65,19 @@ protected:
 	PluginChunk m_chunk;
 
 public:
-	static IMixPlugin* Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
+	static IMixPlugin *Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 	DigiBoosterEcho(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 
 	void SaveAllParameters() override;
 	void RestoreAllParameters(int32 program) override;
-	int32 GetUID() const override { int32le id; memcpy(&id, "Echo", 4); return id; }
+	int32 GetUID() const override
+	{
+		int32le id;
+		memcpy(&id, "Echo", 4);
+		return id;
+	}
 	int32 GetVersion() const override { return 0; }
-	void Idle() override { }
+	void Idle() override {}
 	uint32 GetLatency() const override { return 0; }
 
 	void Process(float *pOutL, float *pOutR, uint32 numFrames) override;
@@ -81,7 +86,7 @@ public:
 
 	int32 GetNumPrograms() const override { return 0; }
 	int32 GetCurrentProgram() override { return 0; }
-	void SetCurrentProgram(int32) override { }
+	void SetCurrentProgram(int32) override {}
 
 	PlugParamIndex GetNumParameters() const override { return kEchoNumParameters; }
 	PlugParamValue GetParameter(PlugParamIndex index) override;
@@ -103,7 +108,7 @@ public:
 	CString GetParamDisplay(PlugParamIndex param) override;
 
 	CString GetCurrentProgramName() override { return CString(); }
-	void SetCurrentProgramName(const CString &) override { }
+	void SetCurrentProgramName(const CString &) override {}
 	CString GetProgramName(int32) override { return CString(); }
 
 	bool HasEditor() const override { return false; }
@@ -122,4 +127,4 @@ protected:
 
 OPENMPT_NAMESPACE_END
 
-#endif // NO_PLUGINS
+#endif  // NO_PLUGINS

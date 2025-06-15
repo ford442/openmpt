@@ -36,15 +36,15 @@ struct SNDMIXPLUGINSTATE
 	// dwFlags flags
 	enum PluginStateFlags
 	{
-		psfMixReady      = 0x01, // Set when cleared
-		psfHasInput      = 0x02, // Set when plugin has non-silent input
-		psfSilenceBypass = 0x04, // Bypass because of silence detection
+		psfMixReady = 0x01,       // Set when cleared
+		psfHasInput = 0x02,       // Set when plugin has non-silent input
+		psfSilenceBypass = 0x04,  // Bypass because of silence detection
 	};
 
-	mixsample_t *pMixBuffer = nullptr; // Stereo effect send buffer
-	uint32 dwFlags = 0;                // PluginStateFlags
-	uint32 inputSilenceCount = 0;      // How much silence has been processed? (for plugin auto-turnoff)
-	mixsample_t nVolDecayL = 0, nVolDecayR = 0; // End of sample click removal
+	mixsample_t *pMixBuffer = nullptr;           // Stereo effect send buffer
+	uint32 dwFlags = 0;                          // PluginStateFlags
+	uint32 inputSilenceCount = 0;                // How much silence has been processed? (for plugin auto-turnoff)
+	mixsample_t nVolDecayL = 0, nVolDecayR = 0;  // End of sample click removal
 
 	void ResetSilence()
 	{
@@ -67,14 +67,14 @@ protected:
 	SNDMIXPLUGIN *m_pMixStruct;
 #ifdef MODPLUG_TRACKER
 	CAbstractVstEditor *m_pEditor = nullptr;
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 public:
 	SNDMIXPLUGINSTATE m_MixState;
-	PluginMixBuffer<float, MIXBUFFERSIZE> m_mixBuffer;	// Float buffers (input and output) for plugins
+	PluginMixBuffer<float, MIXBUFFERSIZE> m_mixBuffer;  // Float buffers (input and output) for plugins
 
 protected:
-	mixsample_t m_MixBuffer[MIXBUFFERSIZE * 2 + 2];		// Stereo interleaved input (sample mixer renders here)
+	mixsample_t m_MixBuffer[MIXBUFFERSIZE * 2 + 2];  // Stereo interleaved input (sample mixer renders here)
 
 	float m_fGain = 1.0f;
 	PLUGINDEX m_nSlot = 0;
@@ -90,8 +90,8 @@ public:
 	// Combine with note value sent to IMixPlugin::MidiCommand
 	enum MidiNoteFlag : uint16
 	{
-		MIDI_NOTE_MASK     = 0x0FF,
-		MIDI_NOTE_OFF      = 0x100,  // Send note-off for a specific note
+		MIDI_NOTE_MASK = 0x0FF,
+		MIDI_NOTE_OFF = 0x100,       // Send note-off for a specific note
 		MIDI_NOTE_ARPEGGIO = 0x200,  // Note is part of an arpeggio, don't store it as the last triggered note
 	};
 
@@ -111,7 +111,7 @@ public:
 
 	void SetSlot(PLUGINDEX slot);
 	inline PLUGINDEX GetSlot() const { return m_nSlot; }
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 	inline VSTPluginLib &GetPluginFactory() const { return m_Factory; }
 	// Returns the next instance of the same plugin
@@ -152,15 +152,15 @@ public:
 	// MIDI event handling
 	bool MidiSend(uint32 midiCode);
 	virtual bool MidiSend(mpt::const_byte_span /*midiData*/) { return true; }
-	virtual void MidiCC(MIDIEvents::MidiCC /*nController*/, uint8 /*nParam*/, CHANNELINDEX /*trackChannel*/) { }
+	virtual void MidiCC(MIDIEvents::MidiCC /*nController*/, uint8 /*nParam*/, CHANNELINDEX /*trackChannel*/) {}
 	virtual void MidiPitchBendRaw(int32 /*pitchbend*/, CHANNELINDEX /*trackChannel*/) {}
-	virtual void MidiPitchBend(int32 /*increment*/, int8 /*pwd*/, CHANNELINDEX /*trackChannel*/) { }
-	virtual void MidiTonePortamento(int32 /*increment*/, uint8 /*newNote*/, int8 /*pwd*/, CHANNELINDEX /*trackChannel*/) { }
-	virtual void MidiVibrato(int32 /*depth*/, int8 /*pwd*/, CHANNELINDEX /*trackerChn*/) { }
-	virtual void MidiCommand(const ModInstrument &/*instr*/, uint16 /*note*/, uint16 /*vol*/, CHANNELINDEX /*trackChannel*/) { }
-	virtual void HardAllNotesOff() { }
+	virtual void MidiPitchBend(int32 /*increment*/, int8 /*pwd*/, CHANNELINDEX /*trackChannel*/) {}
+	virtual void MidiTonePortamento(int32 /*increment*/, uint8 /*newNote*/, int8 /*pwd*/, CHANNELINDEX /*trackChannel*/) {}
+	virtual void MidiVibrato(int32 /*depth*/, int8 /*pwd*/, CHANNELINDEX /*trackerChn*/) {}
+	virtual void MidiCommand(const ModInstrument & /*instr*/, uint16 /*note*/, uint16 /*vol*/, CHANNELINDEX /*trackChannel*/) {}
+	virtual void HardAllNotesOff() {}
 	virtual bool IsNotePlaying(uint8 /*note*/, CHANNELINDEX /*trackerChn*/) { return false; }
-	virtual void MoveChannel(CHANNELINDEX /*from*/, CHANNELINDEX /*to*/) { }
+	virtual void MoveChannel(CHANNELINDEX /*from*/, CHANNELINDEX /*to*/) {}
 
 	// Modify parameter by given amount. Only needs to be re-implemented if plugin architecture allows this to be performed atomically.
 	virtual void ModifyParameter(PlugParamIndex nIndex, PlugParamValue diff, PlayState &playState, CHANNELINDEX chn);
@@ -172,7 +172,11 @@ public:
 	// Tell the plugin that there is a discontinuity between the previous and next render call (e.g. aftert jumping around in the module)
 	virtual void PositionChanged() = 0;
 	virtual void Bypass(bool = true);
-	bool ToggleBypass() { Bypass(!IsBypassed()); return IsBypassed(); }
+	bool ToggleBypass()
+	{
+		Bypass(!IsBypassed());
+		return IsBypassed();
+	}
 	virtual bool IsInstrument() const = 0;
 	virtual bool CanRecieveMidiEvents() = 0;
 	// If false is returned, mixing this plugin can be skipped if its input are currently completely silent.
@@ -191,8 +195,8 @@ public:
 	virtual CString GetDefaultEffectName() = 0;
 
 	// Cache a range of names, in case one-by-one retrieval would be slow (e.g. when using plugin bridge)
-	virtual void CacheProgramNames(int32 /*firstProg*/, int32 /*lastProg*/) { }
-	virtual void CacheParameterNames(int32 /*firstParam*/, int32 /*lastParam*/) { }
+	virtual void CacheProgramNames(int32 /*firstProg*/, int32 /*lastProg*/) {}
+	virtual void CacheParameterNames(int32 /*firstParam*/, int32 /*lastParam*/) {}
 
 	// Allowed value range for a parameter
 	virtual std::pair<PlugParamValue, PlugParamValue> GetParamUIRange(PlugParamIndex /*param*/) { return {0.0f, 1.0f}; }
@@ -234,7 +238,7 @@ public:
 	using ChunkData = mpt::const_byte_span;
 	virtual bool ProgramsAreChunks() const { return false; }
 	virtual ChunkData GetChunk(bool /*isBank*/) { return ChunkData(); }
-	virtual void SetChunk(const ChunkData &/*chunk*/, bool /*isBank*/) { }
+	virtual void SetChunk(const ChunkData & /*chunk*/, bool /*isBank*/) {}
 
 	virtual void BeginSetProgram(int32 /*program*/ = -1) {}
 	virtual void EndSetProgram() {}
@@ -260,8 +264,8 @@ protected:
 	{
 		// Pitch wheel constants
 		kPitchBendShift = 12,  // Use lowest 12 bits for fractional part and vibrato flag => 16.11 fixed point precision
-		kPitchBendMask  = (~1),
-		kVibratoFlag    = 1,
+		kPitchBendMask = (~1),
+		kVibratoFlag = 1,
 	};
 
 	struct PlugInstrChannel
@@ -270,9 +274,13 @@ protected:
 		uint16 currentProgram = uint16_max;
 		uint16 currentBank = uint16_max;
 		uint8 lastNote = 0 /* NOTE_NONE */;
-		uint8  noteOnMap[128][MAX_CHANNELS];
+		uint8 noteOnMap[128][MAX_CHANNELS];
 
-		void ResetProgram(bool oldBehaviour) { currentProgram = oldBehaviour ? 0 : uint16_max; currentBank = oldBehaviour ? 0 : uint16_max; }
+		void ResetProgram(bool oldBehaviour)
+		{
+			currentProgram = oldBehaviour ? 0 : uint16_max;
+			currentBank = oldBehaviour ? 0 : uint16_max;
+		}
 	};
 
 	std::array<PlugInstrChannel, 16> m_MidiCh;  // MIDI channel state
@@ -310,5 +318,4 @@ protected:
 
 OPENMPT_NAMESPACE_END
 
-#endif // NO_PLUGINS
-
+#endif  // NO_PLUGINS

@@ -18,7 +18,7 @@ OPENMPT_NAMESPACE_BEGIN
 
 IMixPlugin *SymMODEcho::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
-	return new (std::nothrow) SymMODEcho(factory, sndFile, mixStruct);
+	return new(std::nothrow) SymMODEcho(factory, sndFile, mixStruct);
 }
 
 
@@ -31,7 +31,7 @@ SymMODEcho::SymMODEcho(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN 
 }
 
 
-void SymMODEcho::Process(float* pOutL, float* pOutR, uint32 numFrames)
+void SymMODEcho::Process(float *pOutL, float *pOutR, uint32 numFrames)
 {
 	const float *srcL = m_mixBuffer.GetInputBuffer(0), *srcR = m_mixBuffer.GetInputBuffer(1);
 	float *outL = m_mixBuffer.GetOutputBuffer(0), *outR = m_mixBuffer.GetOutputBuffer(1);
@@ -183,12 +183,12 @@ std::pair<PlugParamValue, PlugParamValue> SymMODEcho::GetParamUIRange(PlugParamI
 
 CString SymMODEcho::GetParamName(PlugParamIndex param)
 {
-	switch (param)
+	switch(param)
 	{
-	case kEchoType: return _T("Type");
-	case kEchoDelay: return _T("Delay");
-	case kEchoFeedback: return _T("Feedback");
-	case kEchoNumParameters: break;
+		case kEchoType: return _T("Type");
+		case kEchoDelay: return _T("Delay");
+		case kEchoFeedback: return _T("Feedback");
+		case kEchoNumParameters: break;
 	}
 	return {};
 }
@@ -208,28 +208,28 @@ CString SymMODEcho::GetParamDisplay(PlugParamIndex param)
 {
 	switch(static_cast<Parameters>(param))
 	{
-	case kEchoType:
-		switch(GetDSPType())
-		{
-			case DSPType::Off: return _T("Off");
-			case DSPType::Normal: return _T("Normal");
-			case DSPType::Cross: return _T("Cross");
-			case DSPType::Cross2: return _T("Cross 2");
-			case DSPType::Center: return _T("Center");
-			case DSPType::NumTypes: break;
-		}
-		break;
-	case kEchoDelay:
-		return mpt::cfmt::val(m_chunk.param[kEchoDelay]);
-	case kEchoFeedback:
-		return mpt::cfmt::flt(m_feedback * 100.0f, 4);
-	case kEchoNumParameters:
-		break;
+		case kEchoType:
+			switch(GetDSPType())
+			{
+				case DSPType::Off: return _T("Off");
+				case DSPType::Normal: return _T("Normal");
+				case DSPType::Cross: return _T("Cross");
+				case DSPType::Cross2: return _T("Cross 2");
+				case DSPType::Center: return _T("Center");
+				case DSPType::NumTypes: break;
+			}
+			break;
+		case kEchoDelay:
+			return mpt::cfmt::val(m_chunk.param[kEchoDelay]);
+		case kEchoFeedback:
+			return mpt::cfmt::flt(m_feedback * 100.0f, 4);
+		case kEchoNumParameters:
+			break;
 	}
 	return {};
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 IMixPlugin::ChunkData SymMODEcho::GetChunk(bool)
@@ -239,7 +239,7 @@ IMixPlugin::ChunkData SymMODEcho::GetChunk(bool)
 }
 
 
-void SymMODEcho::SetChunk(const ChunkData& chunk, bool)
+void SymMODEcho::SetChunk(const ChunkData &chunk, bool)
 {
 	auto data = chunk.data();
 	if(chunk.size() == sizeof(chunk) && !memcmp(data, "Echo", 4))
@@ -267,4 +267,4 @@ void SymMODEcho::RecalculateEchoParams()
 
 OPENMPT_NAMESPACE_END
 
-#endif // NO_PLUGINS
+#endif  // NO_PLUGINS

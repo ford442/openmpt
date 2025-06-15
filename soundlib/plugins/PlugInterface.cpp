@@ -31,7 +31,7 @@
 #include "mpt/io_file_read/inputfile_filecursor.hpp"
 #include "mpt/io_file/outputfile.hpp"
 #include "mpt/fs/fs.hpp"
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 #include "../../soundlib/AudioCriticalSection.h"
 #include "mpt/base/aligned_array.hpp"
@@ -47,9 +47,15 @@ OPENMPT_NAMESPACE_BEGIN
 
 
 #ifdef MODPLUG_TRACKER
-CModDoc *IMixPlugin::GetModDoc() { return m_SndFile.GetpModDoc(); }
-const CModDoc *IMixPlugin::GetModDoc() const { return m_SndFile.GetpModDoc(); }
-#endif // MODPLUG_TRACKER
+CModDoc *IMixPlugin::GetModDoc()
+{
+	return m_SndFile.GetpModDoc();
+}
+const CModDoc *IMixPlugin::GetModDoc() const
+{
+	return m_SndFile.GetpModDoc();
+}
+#endif  // MODPLUG_TRACKER
 
 
 IMixPlugin::IMixPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
@@ -71,7 +77,7 @@ IMixPlugin::~IMixPlugin()
 #ifdef MODPLUG_TRACKER
 	CloseEditor();
 	CriticalSection cs;
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 	m_pMixStruct->pMixPlugin = nullptr;
 	m_SndFile.m_loadedPlugins--;
 	m_pMixStruct = nullptr;
@@ -133,7 +139,7 @@ CString IMixPlugin::GetFormattedParamValue(PlugParamIndex param)
 CString IMixPlugin::GetFormattedProgramName(int32 index)
 {
 	CString rawname = GetProgramName(index);
-	
+
 	// Let's start counting at 1 for the program name (as most MIDI hardware / software does)
 	index++;
 
@@ -161,7 +167,7 @@ void IMixPlugin::GetEditorPos(int32 &x, int32 &y) const
 }
 
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 bool IMixPlugin::IsBypassed() const
@@ -200,7 +206,7 @@ void IMixPlugin::Bypass(bool bypass)
 #ifdef MODPLUG_TRACKER
 	if(m_SndFile.GetpModDoc())
 		m_SndFile.GetpModDoc()->UpdateAllViews(PluginHint(m_nSlot + 1).Info());
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 }
 
 
@@ -213,9 +219,9 @@ double IMixPlugin::GetOutputLatency() const
 }
 
 
-void IMixPlugin::ProcessMixOps(float * MPT_RESTRICT pOutL, float * MPT_RESTRICT pOutR, float * MPT_RESTRICT leftPlugOutput, float * MPT_RESTRICT rightPlugOutput, uint32 numFrames)
+void IMixPlugin::ProcessMixOps(float *MPT_RESTRICT pOutL, float *MPT_RESTRICT pOutR, float *MPT_RESTRICT leftPlugOutput, float *MPT_RESTRICT rightPlugOutput, uint32 numFrames)
 {
-/*	float *leftPlugOutput;
+	/*	float *leftPlugOutput;
 	float *rightPlugOutput;
 
 	if(m_Effect.numOutputs == 1)
@@ -256,74 +262,74 @@ void IMixPlugin::ProcessMixOps(float * MPT_RESTRICT pOutL, float * MPT_RESTRICT 
 	wetRatio *= m_fGain;
 	dryRatio *= m_fGain;
 
-	float * MPT_RESTRICT plugInputL = m_mixBuffer.GetInputBuffer(0);
-	float * MPT_RESTRICT plugInputR = m_mixBuffer.GetInputBuffer(1);
+	float *MPT_RESTRICT plugInputL = m_mixBuffer.GetInputBuffer(0);
+	float *MPT_RESTRICT plugInputR = m_mixBuffer.GetInputBuffer(1);
 
 	// Mix operation
 	switch(mixop)
 	{
 
-	// Default mix
-	case PluginMixMode::Default:
-	case PluginMixMode::Instrument:
-		for(uint32 i = 0; i < numFrames; i++)
-		{
-			pOutL[i] += leftPlugOutput[i] * wetRatio + plugInputL[i] * dryRatio;
-			pOutR[i] += rightPlugOutput[i] * wetRatio + plugInputR[i] * dryRatio;
-		}
-		break;
+		// Default mix
+		case PluginMixMode::Default:
+		case PluginMixMode::Instrument:
+			for(uint32 i = 0; i < numFrames; i++)
+			{
+				pOutL[i] += leftPlugOutput[i] * wetRatio + plugInputL[i] * dryRatio;
+				pOutR[i] += rightPlugOutput[i] * wetRatio + plugInputR[i] * dryRatio;
+			}
+			break;
 
-	// Wet subtract
-	case PluginMixMode::WetSubtract:
-		for(uint32 i = 0; i < numFrames; i++)
-		{
-			pOutL[i] += plugInputL[i] - leftPlugOutput[i] * wetRatio;
-			pOutR[i] += plugInputR[i] - rightPlugOutput[i] * wetRatio;
-		}
-		break;
+		// Wet subtract
+		case PluginMixMode::WetSubtract:
+			for(uint32 i = 0; i < numFrames; i++)
+			{
+				pOutL[i] += plugInputL[i] - leftPlugOutput[i] * wetRatio;
+				pOutR[i] += plugInputR[i] - rightPlugOutput[i] * wetRatio;
+			}
+			break;
 
-	// Dry subtract
-	case PluginMixMode::DrySubtract:
-		for(uint32 i = 0; i < numFrames; i++)
-		{
-			pOutL[i] += leftPlugOutput[i] - plugInputL[i] * dryRatio;
-			pOutR[i] += rightPlugOutput[i] - plugInputR[i] * dryRatio;
-		}
-		break;
+		// Dry subtract
+		case PluginMixMode::DrySubtract:
+			for(uint32 i = 0; i < numFrames; i++)
+			{
+				pOutL[i] += leftPlugOutput[i] - plugInputL[i] * dryRatio;
+				pOutR[i] += rightPlugOutput[i] - plugInputR[i] * dryRatio;
+			}
+			break;
 
-	// Mix subtract
-	case PluginMixMode::MixSubtract:
-		for(uint32 i = 0; i < numFrames; i++)
-		{
-			pOutL[i] -= leftPlugOutput[i] - plugInputL[i] * wetRatio;
-			pOutR[i] -= rightPlugOutput[i] - plugInputR[i] * wetRatio;
-		}
-		break;
+		// Mix subtract
+		case PluginMixMode::MixSubtract:
+			for(uint32 i = 0; i < numFrames; i++)
+			{
+				pOutL[i] -= leftPlugOutput[i] - plugInputL[i] * wetRatio;
+				pOutR[i] -= rightPlugOutput[i] - plugInputR[i] * wetRatio;
+			}
+			break;
 
-	// Middle subtract
-	case PluginMixMode::MiddleSubtract:
-		for(uint32 i = 0; i < numFrames; i++)
-		{
-			float middle = (pOutL[i] + plugInputL[i] + pOutR[i] + plugInputR[i]) * 0.5f;
-			pOutL[i] -= middle - leftPlugOutput[i] * wetRatio + middle - plugInputL[i];
-			pOutR[i] -= middle - rightPlugOutput[i] * wetRatio + middle - plugInputR[i];
-		}
-		break;
+		// Middle subtract
+		case PluginMixMode::MiddleSubtract:
+			for(uint32 i = 0; i < numFrames; i++)
+			{
+				float middle = (pOutL[i] + plugInputL[i] + pOutR[i] + plugInputR[i]) * 0.5f;
+				pOutL[i] -= middle - leftPlugOutput[i] * wetRatio + middle - plugInputL[i];
+				pOutR[i] -= middle - rightPlugOutput[i] * wetRatio + middle - plugInputR[i];
+			}
+			break;
 
-	// Left / Right balance
-	case PluginMixMode::LRBalance:
-		if(m_pMixStruct->IsExpandedMix())
-		{
-			wetRatio /= 2.0f;
-			dryRatio /= 2.0f;
-		}
+		// Left / Right balance
+		case PluginMixMode::LRBalance:
+			if(m_pMixStruct->IsExpandedMix())
+			{
+				wetRatio /= 2.0f;
+				dryRatio /= 2.0f;
+			}
 
-		for(uint32 i = 0; i < numFrames; i++)
-		{
-			pOutL[i] += wetRatio * (leftPlugOutput[i] - plugInputL[i]) + dryRatio * (plugInputR[i] - rightPlugOutput[i]);
-			pOutR[i] += dryRatio * (leftPlugOutput[i] - plugInputL[i]) + wetRatio * (plugInputR[i] - rightPlugOutput[i]);
-		}
-		break;
+			for(uint32 i = 0; i < numFrames; i++)
+			{
+				pOutL[i] += wetRatio * (leftPlugOutput[i] - plugInputL[i]) + dryRatio * (plugInputR[i] - rightPlugOutput[i]);
+				pOutR[i] += dryRatio * (leftPlugOutput[i] - plugInputL[i]) + wetRatio * (plugInputR[i] - rightPlugOutput[i]);
+			}
+			break;
 	}
 
 	// If dry mix is ticked, we add the unprocessed buffer,
@@ -349,7 +355,7 @@ float IMixPlugin::RenderSilence(uint32 numFrames)
 		Resume();
 	}
 
-	float out[2][MIXBUFFERSIZE]; // scratch buffers
+	float out[2][MIXBUFFERSIZE];  // scratch buffers
 	float maxVal = 0.0f;
 	m_mixBuffer.ClearInputBuffers(MIXBUFFERSIZE);
 
@@ -440,7 +446,7 @@ size_t IMixPlugin::GetInputPlugList(std::vector<IMixPlugin *> &list)
 size_t IMixPlugin::GetInputInstrumentList(std::vector<INSTRUMENTINDEX> &list)
 {
 	list.clear();
-	const PLUGINDEX nThisMixPlug = m_nSlot + 1;		//m_nSlot is position in mixplug array.
+	const PLUGINDEX nThisMixPlug = m_nSlot + 1;  //m_nSlot is position in mixplug array.
 
 	for(INSTRUMENTINDEX ins = 0; ins <= m_SndFile.GetNumInstruments(); ins++)
 	{
@@ -458,9 +464,9 @@ size_t IMixPlugin::GetInputChannelList(std::vector<CHANNELINDEX> &list)
 {
 	list.clear();
 
-	PLUGINDEX nThisMixPlug = m_nSlot + 1;		//m_nSlot is position in mixplug array.
+	PLUGINDEX nThisMixPlug = m_nSlot + 1;  //m_nSlot is position in mixplug array.
 	const CHANNELINDEX chnCount = m_SndFile.GetNumChannels();
-	for(CHANNELINDEX nChn=0; nChn<chnCount; nChn++)
+	for(CHANNELINDEX nChn = 0; nChn < chnCount; nChn++)
 	{
 		if(m_SndFile.ChnSettings[nChn].nMixPlugin == nThisMixPlug)
 		{
@@ -469,29 +475,28 @@ size_t IMixPlugin::GetInputChannelList(std::vector<CHANNELINDEX> &list)
 	}
 
 	return list.size();
-
 }
 
 
 void IMixPlugin::SaveAllParameters()
 {
-	if (m_pMixStruct == nullptr)
+	if(m_pMixStruct == nullptr)
 	{
 		return;
 	}
 	m_pMixStruct->defaultProgram = -1;
-	
+
 	// Default implementation: Save all parameter values
 	PlugParamIndex numParams = std::min(GetNumParameters(), static_cast<PlugParamIndex>((std::numeric_limits<uint32>::max() - sizeof(uint32)) / sizeof(IEEE754binary32LE)));
 	uint32 nLen = numParams * sizeof(IEEE754binary32LE);
-	if (!nLen) return;
+	if(!nLen) return;
 	nLen += sizeof(uint32);
 
 	try
 	{
 		m_pMixStruct->pluginData.resize(nLen);
 		auto memFile = std::make_pair(mpt::as_span(m_pMixStruct->pluginData), mpt::IO::Offset(0));
-		mpt::IO::WriteIntLE<uint32>(memFile, 0);	// Plugin data type
+		mpt::IO::WriteIntLE<uint32>(memFile, 0);  // Plugin data type
 		BeginGetProgram();
 		for(PlugParamIndex i = 0; i < numParams; i++)
 		{
@@ -541,14 +546,14 @@ void IMixPlugin::ToggleEditor()
 		return;
 	initializing = true;
 
-	if (m_pEditor)
+	if(m_pEditor)
 	{
 		CloseEditor();
 	} else
 	{
 		m_pEditor = OpenEditor();
 
-		if (m_pEditor)
+		if(m_pEditor)
 			m_pEditor->OpenEditor(CMainFrame::GetMainFrame());
 	}
 	initializing = false;
@@ -573,7 +578,7 @@ void IMixPlugin::CloseEditor()
 {
 	if(m_pEditor)
 	{
-		if (m_pEditor->m_hWnd) m_pEditor->DoClose();
+		if(m_pEditor->m_hWnd) m_pEditor->DoClose();
 		delete m_pEditor;
 		m_pEditor = nullptr;
 	}
@@ -613,7 +618,7 @@ void IMixPlugin::AutomateParameter(PlugParamIndex param)
 
 		// Learn macro
 		int macroToLearn = vstEditor->GetLearnMacro();
-		if (macroToLearn > -1)
+		if(macroToLearn > -1)
 		{
 			modDoc->LearnMacro(macroToLearn, param);
 			vstEditor->SetLearnMacro(-1);
@@ -645,11 +650,12 @@ bool IMixPlugin::SaveProgram()
 	progName = mpt::SanitizePathComponent(progName);
 
 	FileDialog dlg = SaveFileDialog()
-		.DefaultExtension("fxb")
-		.DefaultFilename(progName)
-		.ExtensionFilter("VST Plugin Programs (*.fxp)|*.fxp|"
-			"VST Plugin Banks (*.fxb)|*.fxb||")
-		.WorkingDirectory(defaultDir);
+						 .DefaultExtension("fxb")
+						 .DefaultFilename(progName)
+						 .ExtensionFilter(
+							 "VST Plugin Programs (*.fxp)|*.fxp|"
+							 "VST Plugin Banks (*.fxb)|*.fxb||")
+						 .WorkingDirectory(defaultDir);
 	if(!dlg.Show(m_pEditor)) return false;
 
 	if(useDefaultDir)
@@ -668,7 +674,6 @@ bool IMixPlugin::SaveProgram()
 			return true;
 	} catch(const std::exception &)
 	{
-		
 	}
 	Reporting::Error("Error saving preset.", m_pEditor);
 	return false;
@@ -687,12 +692,13 @@ bool IMixPlugin::LoadProgram(mpt::PathString fileName)
 	if(fileName.empty())
 	{
 		FileDialog dlg = OpenFileDialog()
-			.DefaultExtension("fxp")
-			.ExtensionFilter("VST Plugin Programs and Banks (*.fxp,*.fxb)|*.fxp;*.fxb|"
-			"VST Plugin Programs (*.fxp)|*.fxp|"
-			"VST Plugin Banks (*.fxb)|*.fxb|"
-			"All Files|*.*||")
-			.WorkingDirectory(defaultDir);
+							 .DefaultExtension("fxp")
+							 .ExtensionFilter(
+								 "VST Plugin Programs and Banks (*.fxp,*.fxb)|*.fxp;*.fxb|"
+								 "VST Plugin Programs (*.fxp)|*.fxp|"
+								 "VST Plugin Banks (*.fxb)|*.fxb|"
+								 "All Files|*.*||")
+							 .WorkingDirectory(defaultDir);
 		if(!dlg.Show(m_pEditor)) return false;
 
 		if(useDefaultDir)
@@ -728,7 +734,7 @@ bool IMixPlugin::LoadProgram(mpt::PathString fileName)
 }
 
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 ////////////////////////////////////////////////////////////////////
@@ -741,7 +747,7 @@ IMidiPlugin::IMidiPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGI
 {
 	for(auto &chn : m_MidiCh)
 	{
-		chn.midiPitchBendPos = EncodePitchBendParam(MIDIEvents::pitchBendCentre); // centre pitch bend on all channels
+		chn.midiPitchBendPos = EncodePitchBendParam(MIDIEvents::pitchBendCentre);  // centre pitch bend on all channels
 		chn.ResetProgram(sndFile.m_playBehaviour[kPluginDefaultProgramAndBank1]);
 	}
 }
@@ -786,7 +792,7 @@ void IMidiPlugin::MidiCC(MIDIEvents::MidiCC nController, uint8 nParam, CHANNELIN
 	const auto midiCh = GetMidiChannel(trackChannel);
 
 	if(m_SndFile.m_playBehaviour[kMIDICCBugEmulation])
-		MidiSend(MIDIEvents::Event(MIDIEvents::evControllerChange, midiCh, nParam, static_cast<uint8>(nController)));	// param and controller are swapped (old broken implementation)
+		MidiSend(MIDIEvents::Event(MIDIEvents::evControllerChange, midiCh, nParam, static_cast<uint8>(nController)));  // param and controller are swapped (old broken implementation)
 	else
 		MidiSend(MIDIEvents::CC(nController, midiCh, nParam));
 }
@@ -1078,4 +1084,4 @@ void SNDMIXPLUGIN::Destroy()
 
 OPENMPT_NAMESPACE_END
 
-#endif // NO_PLUGINS
+#endif  // NO_PLUGINS

@@ -31,41 +31,41 @@ void set_global_prng(mpt::thread_safe_prng<mpt::default_prng> *prng)
 	g_global_prng = prng;
 }
 
-mpt::random_device & global_random_device()
+mpt::random_device &global_random_device()
 {
 	return *g_rd;
 }
 
-mpt::thread_safe_prng<mpt::default_prng> & global_prng()
+mpt::thread_safe_prng<mpt::default_prng> &global_prng()
 {
 	return *g_global_prng;
 }
 
 #else
 
-mpt::random_device & global_random_device()
+mpt::random_device &global_random_device()
 {
 #if MPT_COMPILER_CLANG
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexit-time-destructors"
-#endif // MPT_COMPILER_CLANG
+#endif  // MPT_COMPILER_CLANG
 	static mpt::random_device g_rd;
 #if MPT_COMPILER_CLANG
 #pragma clang diagnostic pop
-#endif // MPT_COMPILER_CLANG
+#endif  // MPT_COMPILER_CLANG
 	return g_rd;
 }
 
-mpt::thread_safe_prng<mpt::default_prng> & global_prng()
+mpt::thread_safe_prng<mpt::default_prng> &global_prng()
 {
 #if MPT_COMPILER_CLANG
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexit-time-destructors"
-#endif // MPT_COMPILER_CLANG
+#endif  // MPT_COMPILER_CLANG
 	static mpt::thread_safe_prng<mpt::default_prng> g_global_prng(mpt::make_prng<mpt::default_prng>(global_random_device()));
 #if MPT_COMPILER_CLANG
 #pragma clang diagnostic pop
-#endif // MPT_COMPILER_CLANG
+#endif  // MPT_COMPILER_CLANG
 	return g_global_prng;
 }
 
@@ -79,8 +79,8 @@ void reinit_global_random()
 }
 #endif  // MPT_BUILD_FUZZER
 
-#endif // MODPLUG_TRACKER && !MPT_BUILD_WINESUPPORT
+#endif  // MODPLUG_TRACKER && !MPT_BUILD_WINESUPPORT
 
-} // namespace mpt
+}  // namespace mpt
 
 OPENMPT_NAMESPACE_END

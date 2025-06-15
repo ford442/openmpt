@@ -15,9 +15,9 @@
 #include "../../Sndfile.h"
 #ifdef MODPLUG_TRACKER
 #include "../../../sounddsp/Reverb.h"
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 #include "mpt/base/numbers.hpp"
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -72,9 +72,9 @@ MPT_FORCEINLINE float I3DL2Reverb::DelayLine::Get() const
 }
 
 
-IMixPlugin* I3DL2Reverb::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
+IMixPlugin *I3DL2Reverb::Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct)
 {
-	return new (std::nothrow) I3DL2Reverb(factory, sndFile, mixStruct);
+	return new(std::nothrow) I3DL2Reverb(factory, sndFile, mixStruct);
 }
 
 
@@ -115,8 +115,8 @@ void I3DL2Reverb::Process(float *pOutL, float *pOutR, uint32 numFrames)
 	if(!m_ok || !m_mixBuffer.Ok())
 		return;
 
-	const float *in[2] = { m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1) };
-	float *out[2] = { m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1) };
+	const float *in[2] = {m_mixBuffer.GetInputBuffer(0), m_mixBuffer.GetInputBuffer(1)};
+	float *out[2] = {m_mixBuffer.GetOutputBuffer(0), m_mixBuffer.GetOutputBuffer(1)};
 
 	uint32 frames = numFrames;
 	if(!(m_quality & kFullSampleRate) && m_remain && frames > 0)
@@ -129,7 +129,7 @@ void I3DL2Reverb::Process(float *pOutL, float *pOutR, uint32 numFrames)
 		in[1]++;
 		m_remain = false;
 	}
-	
+
 	while(frames > 0)
 	{
 		// Apply room filter and insert into early reflection delay lines
@@ -145,10 +145,10 @@ void I3DL2Reverb::Process(float *pOutL, float *pOutR, uint32 numFrames)
 
 		// Early reflections (left)
 		float earlyL = m_delayLines[15].Get(m_earlyTaps[0][1]) * 0.68f
-			- m_delayLines[15].Get(m_earlyTaps[0][2]) * 0.5f
-			- m_delayLines[15].Get(m_earlyTaps[0][3]) * 0.62f
-			- m_delayLines[15].Get(m_earlyTaps[0][4]) * 0.5f
-			- m_delayLines[15].Get(m_earlyTaps[0][5]) * 0.62f;
+					 - m_delayLines[15].Get(m_earlyTaps[0][2]) * 0.5f
+					 - m_delayLines[15].Get(m_earlyTaps[0][3]) * 0.62f
+					 - m_delayLines[15].Get(m_earlyTaps[0][4]) * 0.5f
+					 - m_delayLines[15].Get(m_earlyTaps[0][5]) * 0.62f;
 		if(m_quality & kMoreDelayLines)
 		{
 			float earlyL2 = earlyL;
@@ -208,13 +208,13 @@ void I3DL2Reverb::Process(float *pOutL, float *pOutR, uint32 numFrames)
 		m_delayLines[0].Set(reverbL2 - reverbL1 * m_diffusion);
 		reverbL3 -= reverbL1 * 0.38f;
 		m_filterHist[15] = reverbL1;
-		
+
 		// Early reflections (right)
 		float earlyR = m_delayLines[16].Get(m_earlyTaps[1][1]) * 0.707f
-			- m_delayLines[16].Get(m_earlyTaps[1][2]) * 0.6f
-			- m_delayLines[16].Get(m_earlyTaps[1][3]) * 0.5f
-			- m_delayLines[16].Get(m_earlyTaps[1][4]) * 0.6f
-			- m_delayLines[16].Get(m_earlyTaps[1][5]) * 0.5f;
+					 - m_delayLines[16].Get(m_earlyTaps[1][2]) * 0.6f
+					 - m_delayLines[16].Get(m_earlyTaps[1][3]) * 0.5f
+					 - m_delayLines[16].Get(m_earlyTaps[1][4]) * 0.6f
+					 - m_delayLines[16].Get(m_earlyTaps[1][5]) * 0.5f;
 		if(m_quality & kMoreDelayLines)
 		{
 			float earlyR2 = earlyR;
@@ -252,7 +252,7 @@ void I3DL2Reverb::Process(float *pOutL, float *pOutR, uint32 numFrames)
 
 		reverbR1 = m_delayLines[18].Get() * m_delayCoeffs[12][0];
 		m_filterHist[18] = (m_filterHist[18] - reverbR1) * m_delayCoeffs[12][1] + reverbR1;
-			
+
 		m_filterHist[7] = (m_filterHist[7] - m_delayLines[7].Get()) * m_delayCoeffs[7][1] + m_delayLines[7].Get();
 		reverbR1 = m_filterHist[18] * m_diffusion + m_filterHist[7] * m_delayCoeffs[7][0];
 		m_delayLines[7].Set(m_filterHist[18] - reverbR1 * m_diffusion);
@@ -385,7 +385,7 @@ void I3DL2Reverb::PositionChanged()
 		m_delayLines[9].Init(48, 5, sampleRate, m_delayTaps[9]);
 		m_delayLines[10].Init(36, 5, sampleRate, m_delayTaps[10]);
 		m_delayLines[11].Init(25, 5, sampleRate, m_delayTaps[11]);
-		m_delayLines[12].Init(0, 0, 0);	// Dummy for array index consistency with both tap and coefficient arrays
+		m_delayLines[12].Init(0, 0, 0);  // Dummy for array index consistency with both tap and coefficient arrays
 		m_delayLines[13].Init(3, 0, sampleRate, m_delayTaps[13]);
 		m_delayLines[14].Init(3, 0, sampleRate, m_delayTaps[14]);
 		m_delayLines[15].Init(407, 1, sampleRate);
@@ -407,19 +407,19 @@ CString I3DL2Reverb::GetParamName(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kI3DL2ReverbRoom: return _T("Room");
-	case kI3DL2ReverbRoomHF: return _T("RoomHF");
-	case kI3DL2ReverbRoomRolloffFactor: return _T("RoomRolloffFactor");
-	case kI3DL2ReverbDecayTime: return _T("DecayTime");
-	case kI3DL2ReverbDecayHFRatio: return _T("DecayHFRatio");
-	case kI3DL2ReverbReflections: return _T("Reflections");
-	case kI3DL2ReverbReflectionsDelay: return _T("ReflectionsDelay");
-	case kI3DL2ReverbReverb: return _T("Reverb");
-	case kI3DL2ReverbReverbDelay: return _T("ReverbDelay");
-	case kI3DL2ReverbDiffusion: return _T("Diffusion");
-	case kI3DL2ReverbDensity: return _T("Density");
-	case kI3DL2ReverbHFReference: return _T("HFRefrence");
-	case kI3DL2ReverbQuality: return _T("Quality");
+		case kI3DL2ReverbRoom: return _T("Room");
+		case kI3DL2ReverbRoomHF: return _T("RoomHF");
+		case kI3DL2ReverbRoomRolloffFactor: return _T("RoomRolloffFactor");
+		case kI3DL2ReverbDecayTime: return _T("DecayTime");
+		case kI3DL2ReverbDecayHFRatio: return _T("DecayHFRatio");
+		case kI3DL2ReverbReflections: return _T("Reflections");
+		case kI3DL2ReverbReflectionsDelay: return _T("ReflectionsDelay");
+		case kI3DL2ReverbReverb: return _T("Reverb");
+		case kI3DL2ReverbReverbDelay: return _T("ReverbDelay");
+		case kI3DL2ReverbDiffusion: return _T("Diffusion");
+		case kI3DL2ReverbDensity: return _T("Density");
+		case kI3DL2ReverbHFReference: return _T("HFRefrence");
+		case kI3DL2ReverbQuality: return _T("Quality");
 	}
 	return CString();
 }
@@ -429,20 +429,20 @@ CString I3DL2Reverb::GetParamLabel(PlugParamIndex param)
 {
 	switch(param)
 	{
-	case kI3DL2ReverbRoom:
-	case kI3DL2ReverbRoomHF:
-	case kI3DL2ReverbReflections:
-	case kI3DL2ReverbReverb:
-		return _T("dB");
-	case kI3DL2ReverbDecayTime:
-	case kI3DL2ReverbReflectionsDelay:
-	case kI3DL2ReverbReverbDelay:
-		return _T("s");
-	case kI3DL2ReverbDiffusion:
-	case kI3DL2ReverbDensity:
-		return _T("%");
-	case kI3DL2ReverbHFReference:
-		return _T("Hz");
+		case kI3DL2ReverbRoom:
+		case kI3DL2ReverbRoomHF:
+		case kI3DL2ReverbReflections:
+		case kI3DL2ReverbReverb:
+			return _T("dB");
+		case kI3DL2ReverbDecayTime:
+		case kI3DL2ReverbReflectionsDelay:
+		case kI3DL2ReverbReverbDelay:
+			return _T("s");
+		case kI3DL2ReverbDiffusion:
+		case kI3DL2ReverbDensity:
+			return _T("%");
+		case kI3DL2ReverbHFReference:
+			return _T("Hz");
 	}
 	return CString();
 }
@@ -450,23 +450,23 @@ CString I3DL2Reverb::GetParamLabel(PlugParamIndex param)
 
 CString I3DL2Reverb::GetParamDisplay(PlugParamIndex param)
 {
-	static constexpr const TCHAR * const modes[] = { _T("LQ"), _T("LQ+"), _T("HQ"), _T("HQ+") };
+	static constexpr const TCHAR *const modes[] = {_T("LQ"), _T("LQ+"), _T("HQ"), _T("HQ+")};
 	float value = m_param[param];
 	switch(param)
 	{
-	case kI3DL2ReverbRoom: value = Room() * 0.01f; break;
-	case kI3DL2ReverbRoomHF: value = RoomHF() * 0.01f; break;
-	case kI3DL2ReverbRoomRolloffFactor: value = RoomRolloffFactor(); break;
-	case kI3DL2ReverbDecayTime: value = DecayTime(); break;
-	case kI3DL2ReverbDecayHFRatio: value = DecayHFRatio(); break;
-	case kI3DL2ReverbReflections: value = Reflections() * 0.01f; break;
-	case kI3DL2ReverbReflectionsDelay: value = ReflectionsDelay(); break;
-	case kI3DL2ReverbReverb: value = Reverb() * 0.01f; break;
-	case kI3DL2ReverbReverbDelay: value = ReverbDelay(); break;
-	case kI3DL2ReverbDiffusion: value = Diffusion(); break;
-	case kI3DL2ReverbDensity: value = Density(); break;
-	case kI3DL2ReverbHFReference: value = HFReference(); break;
-	case kI3DL2ReverbQuality: return modes[Quality() % 4u];
+		case kI3DL2ReverbRoom: value = Room() * 0.01f; break;
+		case kI3DL2ReverbRoomHF: value = RoomHF() * 0.01f; break;
+		case kI3DL2ReverbRoomRolloffFactor: value = RoomRolloffFactor(); break;
+		case kI3DL2ReverbDecayTime: value = DecayTime(); break;
+		case kI3DL2ReverbDecayHFRatio: value = DecayHFRatio(); break;
+		case kI3DL2ReverbReflections: value = Reflections() * 0.01f; break;
+		case kI3DL2ReverbReflectionsDelay: value = ReflectionsDelay(); break;
+		case kI3DL2ReverbReverb: value = Reverb() * 0.01f; break;
+		case kI3DL2ReverbReverbDelay: value = ReverbDelay(); break;
+		case kI3DL2ReverbDiffusion: value = Diffusion(); break;
+		case kI3DL2ReverbDensity: value = Density(); break;
+		case kI3DL2ReverbHFReference: value = HFReference(); break;
+		case kI3DL2ReverbQuality: return modes[Quality() % 4u];
 	}
 	CString s;
 	s.Format(_T("%.2f"), value);
@@ -485,7 +485,7 @@ CString I3DL2Reverb::GetProgramName(int32 program)
 	return mpt::ToCString(GetReverbPresetName(program));
 }
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 void I3DL2Reverb::RecalculateI3DL2ReverbParams()
@@ -521,10 +521,20 @@ void I3DL2Reverb::SetDelayTaps()
 {
 	// Early reflections
 	static constexpr float delays[] =
-	{
-		1.0000f, 1.0000f, 0.0000f, 0.1078f, 0.1768f, 0.2727f,
-		0.3953f, 0.5386f, 0.6899f, 0.8306f, 0.9400f, 0.9800f,
-	};
+		{
+			1.0000f,
+			1.0000f,
+			0.0000f,
+			0.1078f,
+			0.1768f,
+			0.2727f,
+			0.3953f,
+			0.5386f,
+			0.6899f,
+			0.8306f,
+			0.9400f,
+			0.9800f,
+		};
 
 	const float sampleRate = m_effectiveSampleRate;
 	const float reflectionsDelay = ReflectionsDelay();
@@ -570,7 +580,7 @@ void I3DL2Reverb::SetDecayCoeffs()
 	levelRtmp *= CalcDecayCoeffs(10);
 	levelL += levelLtmp * 0.04f;
 	levelR += levelRtmp * 0.04f;
-	
+
 	if(m_quality & kMoreDelayLines)
 	{
 		levelLtmp *= CalcDecayCoeffs(3);
@@ -634,11 +644,11 @@ float I3DL2Reverb::CalcDecayCoeffs(int32 index)
 	return diff2 + c1 / (1.0f - diff2 * c1) * (1.0f - diff2) * (1.0f - diff2);
 }
 
-} // namespace DMO
+}  // namespace DMO
 
 #else
 MPT_MSVC_WORKAROUND_LNK4221(I3DL2Reverb)
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_END

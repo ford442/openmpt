@@ -17,11 +17,11 @@ struct _667FileHeader
 {
 	using InstrName = std::array<char, 8>;
 
-	char      magic[2];  // 'gf' (0x6667, ha ha)
+	char magic[2];  // 'gf' (0x6667, ha ha)
 	InstrName names[64];
-	uint8     speed;
-	uint8     numOrders;
-	uint16le  patOffsets[128];  // Relative to end of instrument definitions
+	uint8 speed;
+	uint8 numOrders;
+	uint16le patOffsets[128];  // Relative to end of instrument definitions
 
 	bool IsValid() const
 	{
@@ -95,11 +95,16 @@ bool CSoundFile::Read667(FileReader &file, ModLoadingFlags loadFlags)
 		// Reorder OPL patch bytes (interleave modulator and carrier)
 		const auto fm = file.ReadArray<uint8, 11>();
 		OPLPatch patch{{}};
-		patch[0] = fm[1]; patch[1] = fm[6];
-		patch[2] = fm[2]; patch[3] = fm[7];
-		patch[4] = fm[3]; patch[5] = fm[8];
-		patch[6] = fm[4]; patch[7] = fm[9];
-		patch[8] = fm[5]; patch[9] = fm[10];
+		patch[0] = fm[1];
+		patch[1] = fm[6];
+		patch[2] = fm[2];
+		patch[3] = fm[7];
+		patch[4] = fm[3];
+		patch[5] = fm[8];
+		patch[6] = fm[4];
+		patch[7] = fm[9];
+		patch[8] = fm[5];
+		patch[9] = fm[10];
 		patch[10] = fm[0];
 
 		ModSample &mptSmp = Samples[smp];

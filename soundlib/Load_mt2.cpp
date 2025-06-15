@@ -1079,7 +1079,7 @@ bool CSoundFile::ReadMT2(FileReader &file, ModLoadingFlags loadFlags)
 			std::vector<MT2Group> groups;
 			file.ReadVector(groups, insHeader.numSamples);
 
-			ModInstrument *mptIns = Instruments[ins + 1];
+			ModInstrument *mptIns = Instruments[ins + 1].get();
 			// Instruments with plugin assignments never play samples at the same time!
 			if(mptIns == nullptr || mptIns->nMixPlug != 0)
 				continue;

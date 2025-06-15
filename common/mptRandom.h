@@ -16,7 +16,7 @@
 #include "mpt/mutex/mutex.hpp"
 #ifdef MODPLUG_TRACKER
 #include "mpt/random/crand.hpp"
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 #include "mpt/random/default_engines.hpp"
 #include "mpt/random/device.hpp"
 #include "mpt/random/engine.hpp"
@@ -60,7 +60,7 @@ public:
 	using result_type = typename Trng::result_type;
 public:
 	template <typename Trd>
-	explicit thread_safe_prng(Trd & rd)
+	explicit thread_safe_prng(Trd &rd)
 		: Trng(mpt::make_prng<Trng>(rd))
 	{
 		return;
@@ -97,12 +97,12 @@ public:
 //  Use deterministic seeding
 using random_device = deterministic_random_device;
 
-#else // !MPT_BUILD_FUZZER
+#else  // !MPT_BUILD_FUZZER
 
 // mpt::random_device always generates 32 bits of entropy
 using random_device = mpt::sane_random_device;
 
-#endif // MPT_BUILD_FUZZER
+#endif  // MPT_BUILD_FUZZER
 
 
 #ifdef MPT_BUILD_FUZZER
@@ -125,8 +125,8 @@ using good_prng = good_engine;
 using default_prng = mpt::good_prng;
 
 
-mpt::random_device & global_random_device();
-mpt::thread_safe_prng<mpt::default_prng> & global_prng();
+mpt::random_device &global_random_device();
+mpt::thread_safe_prng<mpt::default_prng> &global_prng();
 
 #ifdef MPT_BUILD_FUZZER
 void reinit_global_random();
@@ -135,10 +135,10 @@ void reinit_global_random();
 #if defined(MODPLUG_TRACKER) && !defined(MPT_BUILD_WINESUPPORT)
 void set_global_random_device(mpt::random_device *rd);
 void set_global_prng(mpt::thread_safe_prng<mpt::default_prng> *rng);
-#endif // MODPLUG_TRACKER && !MPT_BUILD_WINESUPPORT
+#endif  // MODPLUG_TRACKER && !MPT_BUILD_WINESUPPORT
 
 
-} // namespace mpt
+}  // namespace mpt
 
 
 OPENMPT_NAMESPACE_END

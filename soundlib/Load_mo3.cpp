@@ -1370,9 +1370,12 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 	if(m_nType == MOD_TYPE_XM)
 	{
 		// Transfer XM instrument vibrato to samples
-		for(INSTRUMENTINDEX ins = 0; ins < m_nInstruments; ins++)
+		for(INSTRUMENTINDEX i = 0; i < m_nInstruments; i++)
 		{
-			PropagateXMAutoVibrato(ins + 1, static_cast<VibratoType>(instrVibrato[ins].type.get()), instrVibrato[ins].sweep, instrVibrato[ins].depth, instrVibrato[ins].rate);
+			if(ModInstrument *ins = Instruments[i + 1].get()) // Applied .get() here
+			{
+				PropagateXMAutoVibrato(i + 1, static_cast<VibratoType>(instrVibrato[i].type.get()), instrVibrato[i].sweep, instrVibrato[i].depth, instrVibrato[i].rate);
+			}
 		}
 	}
 
@@ -1513,7 +1516,7 @@ bool CSoundFile::ReadMO3(FileReader &file, ModLoadingFlags loadFlags)
 			// These fixes are only applied when the OpenMPT version number is not known, as otherwise the song upgrade feature will take care of it.
 			for(INSTRUMENTINDEX i = 1; i <= GetNumInstruments(); i++)
 			{
-				if(ModInstrument *ins = Instruments[i])
+				if(ModInstrument *ins = Instruments[i].get())
 				{
 					// Fix pitch / filter envelope being shortened by one tick (for files before v1.20)
 					ins->GetEnvelope(ENV_PITCH).Convert(MOD_TYPE_XM, GetType());

@@ -38,8 +38,8 @@ protected:
 
 public:
 	// cppcheck-suppress duplInheritedMember
-	static IMixPlugin* Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
-	static IMixPlugin* CreateLegacy(VSTPluginLib& factory, CSoundFile& sndFile, SNDMIXPLUGIN &mixStruct);
+	static IMixPlugin *Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
+	static IMixPlugin *CreateLegacy(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 	Flanger(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct, const bool legacy);
 
 	int32 GetUID() const override { return 0xEFCA3D92; }
@@ -65,8 +65,8 @@ protected:
 	int Phase() const override { return mpt::saturate_round<uint32>(m_param[kFlangerPhase] * 4.0f); }
 };
 
-} // namespace DMO
+}  // namespace DMO
 
 OPENMPT_NAMESPACE_END
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS

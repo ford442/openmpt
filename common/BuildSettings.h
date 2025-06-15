@@ -33,26 +33,26 @@
 #define MPT_INLINE_NS mpt_libopenmpt
 #else
 #error "either MODPLUG_TRACKER or LIBOPENMPT_BUILD has to be defined"
-#endif // MODPLUG_TRACKER || LIBOPENMPT_BUILD
+#endif  // MODPLUG_TRACKER || LIBOPENMPT_BUILD
 
 
 
 #if defined(MODPLUG_TRACKER)
 
 #if defined(MPT_BUILD_RETRO)
-#define OPENMPT_BUILD_VARIANT "Retro"
+#define OPENMPT_BUILD_VARIANT         "Retro"
 #define OPENMPT_BUILD_VARIANT_MONIKER " RETRO"
 #else
 #if MPT_OS_WINDOWS
 #if MPT_WINNT_AT_LEAST(MPT_WIN_10)
-#define OPENMPT_BUILD_VARIANT "Standard"
+#define OPENMPT_BUILD_VARIANT         "Standard"
 #define OPENMPT_BUILD_VARIANT_MONIKER ""
 #else
-#define OPENMPT_BUILD_VARIANT "Legacy"
+#define OPENMPT_BUILD_VARIANT         "Legacy"
 #define OPENMPT_BUILD_VARIANT_MONIKER ""
 #endif
 #else
-#define OPENMPT_BUILD_VARIANT "Unknown"
+#define OPENMPT_BUILD_VARIANT         "Unknown"
 #define OPENMPT_BUILD_VARIANT_MONIKER ""
 #endif
 #endif
@@ -73,7 +73,7 @@
 #endif
 #endif
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 
@@ -140,7 +140,7 @@
 // (HACK) Define to build without any plugin support
 //#define NO_PLUGINS
 
-#endif // MODPLUG_TRACKER
+#endif  // MODPLUG_TRACKER
 
 
 
@@ -154,7 +154,7 @@
 #define LIBOPENMPT_NO_DEPRECATE
 #endif
 
-#if (defined(_DEBUG) || defined(DEBUG)) && !defined(MPT_BUILD_DEBUG)
+#if(defined(_DEBUG) || defined(DEBUG)) && !defined(MPT_BUILD_DEBUG)
 #define MPT_BUILD_DEBUG
 #endif
 
@@ -190,15 +190,15 @@
 #define NO_AGC
 //#define NO_PLUGINS
 
-#endif // LIBOPENMPT_BUILD
+#endif  // LIBOPENMPT_BUILD
 
 
 
 #if MPT_OS_WINDOWS
 
-	#ifndef MPT_ENABLE_CHARSET_LOCALE
-	#define MPT_ENABLE_CHARSET_LOCALE
-	#endif
+#ifndef MPT_ENABLE_CHARSET_LOCALE
+#define MPT_ENABLE_CHARSET_LOCALE
+#endif
 
 #elif MPT_OS_LINUX
 
@@ -214,16 +214,16 @@
 
 
 
-#define MPT_TIME_UTC_ON_DISK 0
+#define MPT_TIME_UTC_ON_DISK         0
 #define MPT_TIME_UTC_ON_DISK_VERSION MPT_V("1.31.00.13")
 
 
 
 // fixing stuff up
 
-#if defined(MPT_BUILD_ANALYZED) || defined(MPT_BUILD_CHECKED) 
+#if defined(MPT_BUILD_ANALYZED) || defined(MPT_BUILD_CHECKED)
 #ifdef NO_ASSERTS
-#undef NO_ASSERTS // static or dynamic analyzers want assertions on
+#undef NO_ASSERTS  // static or dynamic analyzers want assertions on
 #endif
 #endif
 
@@ -248,11 +248,11 @@
 #define MPT_WANT_ARCH_INTRINSICS_X86_SSE
 #define MPT_WANT_ARCH_INTRINSICS_X86_SSE2
 
-#endif // arch
-#endif // MPT_ENABLE_ARCH_INTRINSICS
+#endif  // arch
+#endif  // MPT_ENABLE_ARCH_INTRINSICS
 
 #if defined(ENABLE_TESTS) && defined(MODPLUG_NO_FILESAVE)
-#undef MODPLUG_NO_FILESAVE // tests recommend file saving
+#undef MODPLUG_NO_FILESAVE  // tests recommend file saving
 #endif
 
 #if defined(MPT_WITH_ZLIB) && defined(MPT_WITH_MINIZ)
@@ -261,27 +261,27 @@
 #endif
 
 #if !MPT_OS_WINDOWS && defined(MPT_WITH_MEDIAFOUNDATION)
-#undef MPT_WITH_MEDIAFOUNDATION // MediaFoundation requires Windows
+#undef MPT_WITH_MEDIAFOUNDATION  // MediaFoundation requires Windows
 #endif
 
 #if !MPT_COMPILER_MSVC && !MPT_COMPILER_CLANG && defined(MPT_WITH_MEDIAFOUNDATION)
-#undef MPT_WITH_MEDIAFOUNDATION // MediaFoundation requires MSVC or Clang due to ATL (no MinGW support)
+#undef MPT_WITH_MEDIAFOUNDATION  // MediaFoundation requires MSVC or Clang due to ATL (no MinGW support)
 #endif
 
-#if (defined(MPT_WITH_MPG123) || defined(MPT_WITH_MINIMP3)) && !defined(MPT_ENABLE_MP3_SAMPLES)
+#if(defined(MPT_WITH_MPG123) || defined(MPT_WITH_MINIMP3)) && !defined(MPT_ENABLE_MP3_SAMPLES)
 #define MPT_ENABLE_MP3_SAMPLES
 #endif
 
 #if defined(ENABLE_TESTS)
-#define MPT_ENABLE_FILEIO // Test suite requires PathString for file loading.
+#define MPT_ENABLE_FILEIO  // Test suite requires PathString for file loading.
 #endif
 
 #if defined(MODPLUG_TRACKER) && !defined(MPT_ENABLE_FILEIO)
-#define MPT_ENABLE_FILEIO // Tracker requires disk file io
+#define MPT_ENABLE_FILEIO  // Tracker requires disk file io
 #endif
 
 #if defined(MPT_EXTERNAL_SAMPLES) && !defined(MPT_ENABLE_FILEIO)
-#define MPT_ENABLE_FILEIO // External samples require disk file io
+#define MPT_ENABLE_FILEIO  // External samples require disk file io
 #endif
 
 #if defined(NO_PLUGINS)
@@ -323,10 +323,12 @@
 #endif
 
 #ifndef OPENMPT_NAMESPACE_BEGIN
-#define OPENMPT_NAMESPACE_BEGIN namespace OPENMPT_NAMESPACE {
+#define OPENMPT_NAMESPACE_BEGIN \
+	namespace OPENMPT_NAMESPACE \
+	{
 #endif
 #ifndef OPENMPT_NAMESPACE_END
-#define OPENMPT_NAMESPACE_END   }
+#define OPENMPT_NAMESPACE_END }
 #endif
 
 #endif
@@ -342,15 +344,15 @@
 #define WIN32_LEAN_AND_MEAN
 
 // windows.h excludes
-#define NOMEMMGR          // GMEM_*, LMEM_*, GHND, LHND, associated routines
+#define NOMEMMGR  // GMEM_*, LMEM_*, GHND, LHND, associated routines
 #ifndef NOMINMAX
-#define NOMINMAX          // Macros min(a,b) and max(a,b)
+#define NOMINMAX  // Macros min(a,b) and max(a,b)
 #endif
-#define NOSERVICE         // All Service Controller routines, SERVICE_ equates, etc.
-#define NOCOMM            // COMM driver routines
-#define NOKANJI           // Kanji support stuff.
-#define NOPROFILER        // Profiler interface.
-#define NOMCX             // Modem Configuration Extensions
+#define NOSERVICE   // All Service Controller routines, SERVICE_ equates, etc.
+#define NOCOMM      // COMM driver routines
+#define NOKANJI     // Kanji support stuff.
+#define NOPROFILER  // Profiler interface.
+#define NOMCX       // Modem Configuration Extensions
 
 // mmsystem.h excludes
 #define MMNODRV
@@ -373,7 +375,7 @@
 #define NONEWIC
 #define NOBITMAP
 
-#endif // MPT_OS_WINDOWS
+#endif  // MPT_OS_WINDOWS
 
 
 
@@ -399,13 +401,14 @@
 
 OPENMPT_NAMESPACE_BEGIN
 
-namespace mpt {
+namespace mpt
+{
 
 #ifndef MPT_NO_NAMESPACE
 using namespace ::mpt;
 #endif
 
-} // namespace mpt
+}  // namespace mpt
 
 OPENMPT_NAMESPACE_END
 

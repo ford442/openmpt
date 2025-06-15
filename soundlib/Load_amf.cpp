@@ -26,7 +26,7 @@ OPENMPT_NAMESPACE_BEGIN
 // ASYLUM AMF File Header
 struct AsylumFileHeader
 {
-	char  signature[32];
+	char signature[32];
 	uint8 defaultSpeed;
 	uint8 defaultTempo;
 	uint8 numSamples;
@@ -41,10 +41,10 @@ MPT_BINARY_STRUCT(AsylumFileHeader, 38)
 // ASYLUM AMF Sample Header
 struct AsylumSampleHeader
 {
-	char     name[22];
-	uint8le  finetune;
-	uint8le  defaultVolume;
-	int8le   transpose;
+	char name[22];
+	uint8le finetune;
+	uint8le defaultVolume;
+	int8le transpose;
 	uint32le length;
 	uint32le loopStart;
 	uint32le loopLength;
@@ -73,8 +73,7 @@ MPT_BINARY_STRUCT(AsylumSampleHeader, 37)
 static bool ValidateHeader(const AsylumFileHeader &fileHeader)
 {
 	if(std::memcmp(fileHeader.signature, "ASYLUM Music Format V1.0\0", 25)
-		|| fileHeader.numSamples > 64
-		)
+	   || fileHeader.numSamples > 64)
 	{
 		return false;
 	}
@@ -205,7 +204,7 @@ bool CSoundFile::ReadAMF_Asylum(FileReader &file, ModLoadingFlags loadFlags)
 // DSMI AMF magic bytes
 struct AMFFileSignature
 {
-	char  amf[3];  // "AMF" for regular AMF files, "DMF" for the compact format found in Webfoot games
+	char amf[3];  // "AMF" for regular AMF files, "DMF" for the compact format found in Webfoot games
 	uint8 version;
 
 	bool IsValidAMF() const
@@ -227,10 +226,10 @@ MPT_BINARY_STRUCT(AMFFileSignature, 4)
 // DSMI AMF File Header
 struct AMFFileHeader
 {
-	uint8le  numSamples;
-	uint8le  numOrders;
+	uint8le numSamples;
+	uint8le numOrders;
 	uint16le numTracks;
-	uint8le  numChannels;  // v9+
+	uint8le numChannels;  // v9+
 
 	bool IsValid(const uint8 version) const
 	{
@@ -256,13 +255,13 @@ MPT_BINARY_STRUCT(AMFFileHeader, 5)
 // DSMI AMF Sample Header (v1-v9)
 struct AMFSampleHeaderOld
 {
-	uint8le  type;
-	char     name[32];
-	char     filename[13];
+	uint8le type;
+	char name[32];
+	char filename[13];
 	uint32le index;
 	uint16le length;
 	uint16le sampleRate;
-	uint8le  volume;
+	uint8le volume;
 	uint16le loopStart;
 	uint16le loopEnd;
 
@@ -288,13 +287,13 @@ MPT_BINARY_STRUCT(AMFSampleHeaderOld, 59)
 // DSMI AMF Sample Header (v10+)
 struct AMFSampleHeaderNew
 {
-	uint8le  type;
-	char     name[32];
-	char     filename[13];
+	uint8le type;
+	char name[32];
+	char filename[13];
 	uint32le index;
 	uint32le length;
 	uint16le sampleRate;
-	uint8le  volume;
+	uint8le volume;
 	uint32le loopStart;
 	uint32le loopEnd;
 
@@ -328,12 +327,12 @@ struct AMFSampleHeaderCompact
 {
 	using uint24le = mpt::uint24le;
 
-	uint8le  type;
-	char     leftOverFirstCharOfSampleName;
+	uint8le type;
+	char leftOverFirstCharOfSampleName;
 	uint32le index;
 	uint32le length;
 	uint16le sampleRate;
-	uint8le  volume;
+	uint8le volume;
 	uint32le loopStart;
 	uint24le loopEnd;
 
@@ -393,14 +392,32 @@ static void AMFReadPattern(CPattern &pattern, CHANNELINDEX chn, FileReader &file
 		{
 			// Effect
 			static constexpr EffectCommand effTrans[] =
-			{
-				CMD_NONE,         CMD_SPEED,        CMD_VOLUMESLIDE,    CMD_VOLUME,
-				CMD_PORTAMENTOUP, CMD_NONE,         CMD_TONEPORTAMENTO, CMD_TREMOR,
-				CMD_ARPEGGIO,     CMD_VIBRATO,      CMD_TONEPORTAVOL,   CMD_VIBRATOVOL,
-				CMD_PATTERNBREAK, CMD_POSITIONJUMP, CMD_NONE,           CMD_RETRIG,
-				CMD_OFFSET,       CMD_VOLUMESLIDE,  CMD_PORTAMENTOUP,   CMD_S3MCMDEX,
-				CMD_S3MCMDEX,     CMD_TEMPO,        CMD_PORTAMENTOUP,   CMD_PANNING8,
-			};
+				{
+					CMD_NONE,
+					CMD_SPEED,
+					CMD_VOLUMESLIDE,
+					CMD_VOLUME,
+					CMD_PORTAMENTOUP,
+					CMD_NONE,
+					CMD_TONEPORTAMENTO,
+					CMD_TREMOR,
+					CMD_ARPEGGIO,
+					CMD_VIBRATO,
+					CMD_TONEPORTAVOL,
+					CMD_VIBRATOVOL,
+					CMD_PATTERNBREAK,
+					CMD_POSITIONJUMP,
+					CMD_NONE,
+					CMD_RETRIG,
+					CMD_OFFSET,
+					CMD_VOLUMESLIDE,
+					CMD_PORTAMENTOUP,
+					CMD_S3MCMDEX,
+					CMD_S3MCMDEX,
+					CMD_TEMPO,
+					CMD_PORTAMENTOUP,
+					CMD_PANNING8,
+				};
 
 			uint8 param = value;
 			EffectCommand cmd = CMD_NONE;
@@ -410,102 +427,102 @@ static void AMFReadPattern(CPattern &pattern, CHANNELINDEX chn, FileReader &file
 			// Fix some commands...
 			switch(command & 0x7F)
 			{
-			// 02: Volume Slide
-			// 0A: Tone Porta + Vol Slide
-			// 0B: Vibrato + Vol Slide
-			case 0x02:
-			case 0x0A:
-			case 0x0B:
-				if(param & 0x80)
-					param = (-static_cast<int8>(param)) & 0x0F;
-				else
-					param = (param & 0x0F) << 4;
-				break;
-
-			// 03: Volume
-			case 0x03:
-				param = std::min(param, uint8(64));
-				if(m.volcmd == VOLCMD_NONE || m.volcmd == VOLCMD_VOLUME)
-				{
-					m.volcmd = VOLCMD_VOLUME;
-					m.vol = param;
-					cmd = CMD_NONE;
-				}
-				break;
-
-			// 04: Porta Up/Down
-			case 0x04:
-				if(param & 0x80)
-					param = (-static_cast<int8>(param)) & 0x7F;
-				else
-					cmd = CMD_PORTAMENTODOWN;
-				break;
-
-			// 11: Fine Volume Slide
-			case 0x11:
-				if(param)
-				{
+				// 02: Volume Slide
+				// 0A: Tone Porta + Vol Slide
+				// 0B: Vibrato + Vol Slide
+				case 0x02:
+				case 0x0A:
+				case 0x0B:
 					if(param & 0x80)
-						param = static_cast<uint8>(0xF0 | ((-static_cast<int8>(param)) & 0x0F));
+						param = (-static_cast<int8>(param)) & 0x0F;
 					else
-						param = 0x0F | ((param & 0x0F) << 4);
-				} else
-				{
-					cmd = CMD_NONE;
-				}
-				break;
+						param = (param & 0x0F) << 4;
+					break;
 
-			// 12: Fine Portamento
-			// 16: Extra Fine Portamento
-			case 0x12:
-			case 0x16:
-				if(param)
-				{
-					cmd = (param & 0x80) ? CMD_PORTAMENTOUP : CMD_PORTAMENTODOWN;
-					if(param & 0x80)
+				// 03: Volume
+				case 0x03:
+					param = std::min(param, uint8(64));
+					if(m.volcmd == VOLCMD_NONE || m.volcmd == VOLCMD_VOLUME)
 					{
-						param = ((-static_cast<int8>(param)) & 0x0F);
-					}
-					param |= (command == 0x16) ? 0xE0 : 0xF0;
-				} else
-				{
-					cmd = CMD_NONE;
-				}
-				break;
-
-			// 13: Note Delay
-			case 0x13:
-				param = 0xD0 | (param & 0x0F);
-				break;
-
-			// 14: Note Cut
-			case 0x14:
-				param = 0xC0 | (param & 0x0F);
-				break;
-
-			// 17: Panning
-			case 0x17:
-				if(param == 100)
-				{
-					// History lesson intermission: According to Otto Chrons, he remembers that he added support
-					// for 8A4 / XA4 "surround" panning in DMP for MOD and S3M files before any other trackers did,
-					// So DSMI / DMP are most likely the original source of these 7-bit panning + surround commands!
-					param = 0xA4;
-				} else
-				{
-					param = static_cast<uint8>(std::clamp(static_cast<int8>(param) + 64, 0, 128));
-					if(m.command != CMD_NONE)
-					{
-						// Move to volume column if required
-						if(m.volcmd == VOLCMD_NONE || m.volcmd == VOLCMD_PANNING)
-						{
-							m.volcmd = VOLCMD_PANNING;
-							m.vol = param / 2;
-						}
+						m.volcmd = VOLCMD_VOLUME;
+						m.vol = param;
 						cmd = CMD_NONE;
 					}
-				}
-				break;
+					break;
+
+				// 04: Porta Up/Down
+				case 0x04:
+					if(param & 0x80)
+						param = (-static_cast<int8>(param)) & 0x7F;
+					else
+						cmd = CMD_PORTAMENTODOWN;
+					break;
+
+				// 11: Fine Volume Slide
+				case 0x11:
+					if(param)
+					{
+						if(param & 0x80)
+							param = static_cast<uint8>(0xF0 | ((-static_cast<int8>(param)) & 0x0F));
+						else
+							param = 0x0F | ((param & 0x0F) << 4);
+					} else
+					{
+						cmd = CMD_NONE;
+					}
+					break;
+
+				// 12: Fine Portamento
+				// 16: Extra Fine Portamento
+				case 0x12:
+				case 0x16:
+					if(param)
+					{
+						cmd = (param & 0x80) ? CMD_PORTAMENTOUP : CMD_PORTAMENTODOWN;
+						if(param & 0x80)
+						{
+							param = ((-static_cast<int8>(param)) & 0x0F);
+						}
+						param |= (command == 0x16) ? 0xE0 : 0xF0;
+					} else
+					{
+						cmd = CMD_NONE;
+					}
+					break;
+
+				// 13: Note Delay
+				case 0x13:
+					param = 0xD0 | (param & 0x0F);
+					break;
+
+				// 14: Note Cut
+				case 0x14:
+					param = 0xC0 | (param & 0x0F);
+					break;
+
+				// 17: Panning
+				case 0x17:
+					if(param == 100)
+					{
+						// History lesson intermission: According to Otto Chrons, he remembers that he added support
+						// for 8A4 / XA4 "surround" panning in DMP for MOD and S3M files before any other trackers did,
+						// So DSMI / DMP are most likely the original source of these 7-bit panning + surround commands!
+						param = 0xA4;
+					} else
+					{
+						param = static_cast<uint8>(std::clamp(static_cast<int8>(param) + 64, 0, 128));
+						if(m.command != CMD_NONE)
+						{
+							// Move to volume column if required
+							if(m.volcmd == VOLCMD_NONE || m.volcmd == VOLCMD_PANNING)
+							{
+								m.volcmd = VOLCMD_PANNING;
+								m.vol = param / 2;
+							}
+							cmd = CMD_NONE;
+						}
+					}
+					break;
 			}
 
 			if(cmd != CMD_NONE)
@@ -554,7 +571,7 @@ bool CSoundFile::ReadAMF_DSMI(FileReader &file, ModLoadingFlags loadFlags)
 	AMFFileSignature fileSignature;
 	if(!file.ReadStruct(fileSignature))
 		return false;
-	
+
 	char title[32] = {};
 	bool isDMF = false;
 	if(fileSignature.IsValidAMF() && file.CanRead(sizeof(title)))
@@ -563,13 +580,13 @@ bool CSoundFile::ReadAMF_DSMI(FileReader &file, ModLoadingFlags loadFlags)
 		isDMF = true;
 	else
 		return false;
-	
+
 	AMFFileHeader fileHeader;
 	if(!file.ReadStructPartial(fileHeader, AMFFileHeader::GetHeaderSize(fileSignature.version)))
 		return false;
 	if(!fileHeader.IsValid(fileSignature.version))
 		return false;
-	
+
 	if(loadFlags == onlyVerifyHeader)
 		return true;
 
@@ -703,7 +720,7 @@ bool CSoundFile::ReadAMF_DSMI(FileReader &file, ModLoadingFlags loadFlags)
 			sampleMap[smp - 1] = sample.index;
 		}
 	}
-	
+
 	// Read Track Mapping Table
 	std::vector<uint16le> trackMap;
 	if(!file.ReadVector(trackMap, fileHeader.numTracks))

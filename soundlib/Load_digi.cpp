@@ -16,20 +16,20 @@ OPENMPT_NAMESPACE_BEGIN
 // DIGI File Header
 struct DIGIFileHeader
 {
-	char     signature[20];
-	char     versionStr[4];	// Supposed to be "V1.6" or similar, but other values like "TAP!" have been found as well.
-	uint8be  versionInt;	// e.g. 0x16 = 1.6
-	uint8be  numChannels;
-	uint8be  packEnable;
-	char     unknown[19];
-	uint8be  lastPatIndex;
-	uint8be  lastOrdIndex;
-	uint8be  orders[128];
+	char signature[20];
+	char versionStr[4];  // Supposed to be "V1.6" or similar, but other values like "TAP!" have been found as well.
+	uint8be versionInt;  // e.g. 0x16 = 1.6
+	uint8be numChannels;
+	uint8be packEnable;
+	char unknown[19];
+	uint8be lastPatIndex;
+	uint8be lastOrdIndex;
+	uint8be orders[128];
 	uint32be smpLength[31];
 	uint32be smpLoopStart[31];
 	uint32be smpLoopLength[31];
-	uint8be  smpVolume[31];
-	uint8be  smpFinetune[31];
+	uint8be smpVolume[31];
+	uint8be smpFinetune[31];
 };
 
 MPT_BINARY_STRUCT(DIGIFileHeader, 610)
@@ -43,25 +43,25 @@ static void ReadDIGIPatternEntry(FileReader &file, ModCommand &m)
 	{
 		switch(m.param & 0xF0)
 		{
-		case 0x30:
-			// E3x: Play sample backwards (E30 stops sample when it reaches the beginning, any other value plays it from the beginning including regular loop)
-			// The play direction is also reset if a new note is played on the other channel linked to this channel.
-			// The behaviour is rather broken when there is no note next to the ommand.
-			m.command = CMD_DIGIREVERSESAMPLE;
-			m.param &= 0x0F;
-			break;
-		case 0x40:
-			// E40: Stop playing sample
-			if(m.param == 0x40)
-			{
-				m.note = NOTE_NOTECUT;
-				m.command = CMD_NONE;
-			}
-			break;
-		case 0x80:
-			// E8x: High sample offset
-			m.command = CMD_S3MCMDEX;
-			m.param = 0xA0 | (m.param & 0x0F);
+			case 0x30:
+				// E3x: Play sample backwards (E30 stops sample when it reaches the beginning, any other value plays it from the beginning including regular loop)
+				// The play direction is also reset if a new note is played on the other channel linked to this channel.
+				// The behaviour is rather broken when there is no note next to the ommand.
+				m.command = CMD_DIGIREVERSESAMPLE;
+				m.param &= 0x0F;
+				break;
+			case 0x40:
+				// E40: Stop playing sample
+				if(m.param == 0x40)
+				{
+					m.note = NOTE_NOTECUT;
+					m.command = CMD_NONE;
+				}
+				break;
+			case 0x80:
+				// E8x: High sample offset
+				m.command = CMD_S3MCMDEX;
+				m.param = 0xA0 | (m.param & 0x0F);
 		}
 	} else if(m.command == CMD_PANNING8)
 	{
@@ -74,9 +74,9 @@ static void ReadDIGIPatternEntry(FileReader &file, ModCommand &m)
 static bool ValidateHeader(const DIGIFileHeader &fileHeader)
 {
 	if(std::memcmp(fileHeader.signature, "DIGI Booster module\0", 20)
-		|| !fileHeader.numChannels
-		|| fileHeader.numChannels > 8
-		|| fileHeader.lastOrdIndex > 127)
+	   || !fileHeader.numChannels
+	   || fileHeader.numChannels > 8
+	   || fileHeader.lastOrdIndex > 127)
 	{
 		return false;
 	}
@@ -143,7 +143,7 @@ bool CSoundFile::ReadDIGI(FileReader &file, ModLoadingFlags loadFlags)
 			sample.uFlags.set(CHN_LOOP);
 		}
 		sample.SanitizeLoops();
-	
+
 		sample.nVolume = std::min(fileHeader.smpVolume[smp].get(), uint8(64)) * 4;
 		sample.nFineTune = MOD2XMFineTune(fileHeader.smpFinetune[smp]);
 	}
@@ -182,7 +182,7 @@ bool CSoundFile::ReadDIGI(FileReader &file, ModLoadingFlags loadFlags)
 			// Compressed patterns are stored in row-major order...
 			for(ROWINDEX row = 0; row < 64; row++)
 			{
-				
+
 				uint8 bit = 0x80;
 				for(ModCommand &m : Patterns[pat].GetRow(row))
 				{

@@ -29,7 +29,7 @@
 #include <windows.h>
 #endif
 
-#endif // MODPLUG_TRACKER && MPT_OS_WINDOWS
+#endif  // MODPLUG_TRACKER && MPT_OS_WINDOWS
 
 
 
@@ -60,7 +60,10 @@ public:
 #else
 		prefix = P_("OpenMPT");
 #endif
-		m_Path = mpt::PathString::FromNative(mpt::IO::unique_tempfilename{mpt::IO::unique_basename{prefix, mpt::UUID::GenerateLocalUseOnly(mpt::global_prng())}, fileNameExtension});
+		m_Path = mpt::PathString::FromNative(mpt::IO::unique_tempfilename{
+			mpt::IO::unique_basename{prefix, mpt::UUID::GenerateLocalUseOnly(mpt::global_prng())},
+            fileNameExtension
+        });
 	}
 public:
 	mpt::PathString GetPathname() const
@@ -113,7 +116,7 @@ public:
 			return;
 		}
 		if(::CreateDirectory(mpt::support_long_path(dirname.AsNative()).c_str(), nullptr) == 0)
-		{ // fail
+		{  // fail
 			dirname = mpt::PathString();
 		}
 	}
@@ -132,11 +135,11 @@ public:
 
 
 
-#endif // MODPLUG_TRACKER && MPT_OS_WINDOWS
+#endif  // MODPLUG_TRACKER && MPT_OS_WINDOWS
 
 
 
-} // namespace mpt
+}  // namespace mpt
 
 
 

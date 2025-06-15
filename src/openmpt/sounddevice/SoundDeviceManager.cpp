@@ -473,7 +473,7 @@ std::unique_ptr<SoundDevice::IBase> Manager::CreateSoundDevice(SoundDevice::Iden
 	}
 	if(!result->Init(m_AppInfo))
 	{
-		result.reset(); // replaces delete result; result = nullptr;
+		result.reset();  // replaces delete result; result = nullptr;
 		return nullptr;
 	}
 	m_DeviceCaps[identifier] = result->GetDeviceCaps();  // update cached caps

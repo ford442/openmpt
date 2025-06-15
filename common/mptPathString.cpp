@@ -42,7 +42,7 @@ mpt::PathString AbsolutePathToRelative(const mpt::PathString &path, const mpt::P
 	if(!_tcsncicmp(relativeTo.AsNative().c_str(), path.AsNative().c_str(), relativeTo.AsNative().length()))
 	{
 		// Path is OpenMPT's directory or a sub directory ("C:\OpenMPT\Somepath" => ".\Somepath")
-		result = mpt::PathString::FromNative(L<char_type>(".\\")); // ".\"
+		result = mpt::PathString::FromNative(L<char_type>(".\\"));  // ".\"
 		result += mpt::PathString::FromNative(path.AsNative().substr(relativeTo.AsNative().length()));
 	} else if(!_tcsncicmp(relativeTo.AsNative().c_str(), path.AsNative().c_str(), 2))
 	{
@@ -67,7 +67,8 @@ mpt::PathString RelativePathToAbsolute(const mpt::PathString &path, const mpt::P
 	{
 		// Network / UNC paths
 		return result;
-	} if(path.length() >= 1 && path.AsNative()[0] == L<char_type>('\\'))
+	}
+	if(path.length() >= 1 && path.AsNative()[0] == L<char_type>('\\'))
 	{
 		// Path is on the same drive as relativeTo ("\Somepath\" => "C:\Somepath\")
 		result = mpt::PathString::FromNative(relativeTo.AsNative().substr(0, 2));
@@ -75,7 +76,7 @@ mpt::PathString RelativePathToAbsolute(const mpt::PathString &path, const mpt::P
 	} else if(path.length() >= 2 && path.AsNative().substr(0, 2) == L<char_type>(".\\"))
 	{
 		// Path is in relativeTo or a sub directory (".\Somepath\" => "C:\OpenMPT\Somepath\")
-		result = relativeTo; // "C:\OpenMPT\"
+		result = relativeTo;  // "C:\OpenMPT\"
 		result += mpt::PathString::FromNative(path.AsNative().substr(2));
 	} else if(path.length() < 3 || path.AsNative()[1] != L<char_type>(':') || path.AsNative()[2] != L<char_type>('\\'))
 	{
@@ -88,11 +89,11 @@ mpt::PathString RelativePathToAbsolute(const mpt::PathString &path, const mpt::P
 
 
 
-#endif // MODPLUG_TRACKER && MPT_OS_WINDOWS
+#endif  // MODPLUG_TRACKER && MPT_OS_WINDOWS
 
 
 
-} // namespace mpt
+}  // namespace mpt
 
 
 

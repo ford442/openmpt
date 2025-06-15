@@ -11,7 +11,7 @@
 #include "stdafx.h"
 #include "Profiler.h"
 
-#include <memory> // For std::unique_ptr
+#include <memory>  // For std::unique_ptr
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -25,7 +25,8 @@ public:
 	Profile &profile;
 	Profile::Data data;
 	double usage;
-	Statistics(Profile &p) : profile(p)
+	Statistics(Profile &p)
+		: profile(p)
 	{
 		usage = 0.0;
 		Update();
@@ -48,14 +49,14 @@ public:
 
 struct ProfileBlock
 {
-	class Profile * profile;
-	const char * name;
+	class Profile *profile;
+	const char *name;
 	std::unique_ptr<Statistics> stats;
 };
 
 static constexpr std::size_t MAX_PROFILES = 1024;
 
-static ProfileBlock Profiles[ MAX_PROFILES ];
+static ProfileBlock Profiles[MAX_PROFILES];
 
 static std::size_t NextProfile = 0;
 
@@ -73,10 +74,12 @@ static void RegisterProfile(Profile *newprofile)
 
 static void UnregisterProfile(Profile *oldprofile)
 {
-	for(std::size_t i=0; i<NextProfile; i++) {
-		if(Profiles[i].profile == oldprofile) {
+	for(std::size_t i = 0; i < NextProfile; i++)
+	{
+		if(Profiles[i].profile == oldprofile)
+		{
 			Profiles[i].profile = 0;
-			Profiles[i].stats.reset(); // Replaces delete and nullptr assignment
+			Profiles[i].stats.reset();  // Replaces delete and nullptr assignment
 		}
 	}
 }
@@ -84,7 +87,7 @@ static void UnregisterProfile(Profile *oldprofile)
 
 void Profiler::Update()
 {
-	for(std::size_t i=0; i<NextProfile; i++)
+	for(std::size_t i = 0; i < NextProfile; i++)
 	{
 		if(!Profiles[i].stats)
 		{
@@ -100,7 +103,7 @@ void Profiler::Update()
 std::string Profiler::DumpProfiles()
 {
 	std::string ret;
-	for(std::size_t i=0; i<NextProfile; i++)
+	for(std::size_t i = 0; i < NextProfile; i++)
 	{
 		if(Profiles[i].stats)
 		{
@@ -108,9 +111,9 @@ std::string Profiler::DumpProfiles()
 			std::string cat;
 			switch(stats.profile.Category)
 			{
-			case Profiler::GUI: cat = "GUI"; break;
-			case Profiler::Audio: cat = "Audio"; break;
-			case Profiler::Notify: cat = "Notify"; break;
+				case Profiler::GUI: cat = "GUI"; break;
+				case Profiler::Audio: cat = "Audio"; break;
+				case Profiler::Notify: cat = "Notify"; break;
 			}
 			ret += cat + " " + std::string(stats.profile.Name) + ": " + mpt::afmt::right(6, mpt::afmt::fix(stats.usage * 100.0, 3)) + "%\r\n";
 		}
@@ -124,7 +127,7 @@ std::vector<double> Profiler::DumpCategories()
 {
 	std::vector<double> ret;
 	ret.resize(Profiler::CategoriesCount);
-	for(std::size_t i=0; i<NextProfile; i++)
+	for(std::size_t i = 0; i < NextProfile; i++)
 	{
 		if(Profiles[i].stats)
 		{
@@ -153,7 +156,9 @@ uint64 Profile::GetFrequency() const
 }
 
 
-Profile::Profile(Profiler::Category category, const char *name) : Category(category), Name(name)
+Profile::Profile(Profiler::Category category, const char *name)
+	: Category(category)
+	, Name(name)
 {
 	data.Calls = 0;
 	data.Sum = 0;
@@ -211,11 +216,11 @@ void Profile::Leave()
 }
 
 
-#else // !USE_PROFILER
+#else  // !USE_PROFILER
 
 MPT_MSVC_WORKAROUND_LNK4221(Profiler)
 
-#endif // USE_PROFILER
+#endif  // USE_PROFILER
 
 
 OPENMPT_NAMESPACE_END

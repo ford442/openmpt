@@ -64,14 +64,14 @@ public:
 	{
 		uint64 Calls;
 		uint64 Sum;
-		int64  Overhead;
+		int64 Overhead;
 		uint64 Start;
 	};
 public:
 	Data data;
 	uint64 EnterTime;
 	Profiler::Category Category;
-	const char * const Name;
+	const char *const Name;
 	uint64 GetTime() const;
 	uint64 GetFrequency() const;
 public:
@@ -85,7 +85,11 @@ public:
 	private:
 		Profile &profile;
 	public:
-		Scope(Profile &p) : profile(p) { profile.Enter(); }
+		Scope(Profile &p)
+			: profile(p)
+		{
+			profile.Enter();
+		}
 		~Scope() { profile.Leave(); }
 	};
 public:
@@ -94,15 +98,15 @@ public:
 
 
 #define OPENMPT_PROFILE_SCOPE(cat, name) \
-	static Profile OPENMPT_PROFILE_VAR(cat, name);\
+	static Profile OPENMPT_PROFILE_VAR(cat, name); \
 	Profile::Scope OPENMPT_PROFILE_SCOPE_VAR(OPENMPT_PROFILE_VAR); \
-/**/
+	/**/
 
 
 #define OPENMPT_PROFILE_FUNCTION(cat) OPENMPT_PROFILE_SCOPE(cat, __func__)
 
 
-#else // !USE_PROFILER
+#else  // !USE_PROFILER
 
 
 class Profiler
@@ -112,17 +116,23 @@ public:
 	{
 		CategoriesCount
 	};
-	static std::vector<std::string> GetCategoryNames() { return std::vector<std::string>(); } 
+	static std::vector<std::string> GetCategoryNames() { return std::vector<std::string>(); }
 public:
-	static void Update() { }
+	static void Update() {}
 	static std::string DumpProfiles() { return std::string(); }
 	static std::vector<double> DumpCategories() { return std::vector<double>(); }
 };
-#define OPENMPT_PROFILE_SCOPE(cat, name) do { } while(0)
-#define OPENMPT_PROFILE_FUNCTION(cat) do { } while(0)
+#define OPENMPT_PROFILE_SCOPE(cat, name) \
+	do \
+	{ \
+	} while(0)
+#define OPENMPT_PROFILE_FUNCTION(cat) \
+	do \
+	{ \
+	} while(0)
 
 
-#endif // USE_PROFILER
+#endif  // USE_PROFILER
 
 
 OPENMPT_NAMESPACE_END

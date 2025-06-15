@@ -38,13 +38,13 @@ protected:
 	} m_alignedBuffer;
 	union
 	{
-		int16 i16[MIXBUFFERSIZE * 2 + 16];		// 16-bit PCM Stereo interleaved
-		float f32[MIXBUFFERSIZE * 2 + 16];		// 32-bit Float Stereo interleaved
+		int16 i16[MIXBUFFERSIZE * 2 + 16];  // 16-bit PCM Stereo interleaved
+		float f32[MIXBUFFERSIZE * 2 + 16];  // 32-bit Float Stereo interleaved
 	} m_interleavedBuffer;
 	bool m_useFloat;
 
 public:
-	static IMixPlugin* Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
+	static IMixPlugin *Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 
 protected:
 	DMOPlugin(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct, IMediaObject *pMO, IMediaObjectInPlace *pMOIP, uint32 uid);
@@ -53,14 +53,14 @@ protected:
 public:
 	int32 GetUID() const override { return m_uid; }
 	int32 GetVersion() const override { return 2; }
-	void Idle() override { }
+	void Idle() override {}
 	uint32 GetLatency() const override;
 
 	void Process(float *pOutL, float *pOutR, uint32 numFrames) override;
 
 	int32 GetNumPrograms() const override { return 0; }
 	int32 GetCurrentProgram() override { return 0; }
-	void SetCurrentProgram(int32 /*nIndex*/) override { }
+	void SetCurrentProgram(int32 /*nIndex*/) override {}
 
 	PlugParamIndex GetNumParameters() const override;
 	PlugParamValue GetParameter(PlugParamIndex index) override;
@@ -70,9 +70,9 @@ public:
 	void Suspend() override;
 	void PositionChanged() override;
 
-	bool IsInstrument() const  override { return false; }
-	bool CanRecieveMidiEvents()  override { return false; }
-	bool ShouldProcessSilence()  override { return true; }
+	bool IsInstrument() const override { return false; }
+	bool CanRecieveMidiEvents() override { return false; }
+	bool ShouldProcessSilence() override { return true; }
 
 #ifdef MODPLUG_TRACKER
 	CString GetDefaultEffectName() override { return CString(); }
@@ -83,7 +83,7 @@ public:
 
 	// TODO we could simply add our own preset mechanism. But is it really useful for these plugins?
 	CString GetCurrentProgramName() override { return CString(); }
-	void SetCurrentProgramName(const CString &) override { }
+	void SetCurrentProgramName(const CString &) override {}
 	CString GetProgramName(int32) override { return CString(); }
 
 	bool HasEditor() const override { return false; }
@@ -95,5 +95,4 @@ public:
 
 OPENMPT_NAMESPACE_END
 
-#endif // MPT_WITH_DMO
-
+#endif  // MPT_WITH_DMO

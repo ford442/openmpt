@@ -27,53 +27,53 @@ static void ReadAMSPattern(CPattern &pattern, bool newVersion, FileReader &patte
 {
 	enum
 	{
-		emptyRow		= 0xFF,	// No commands on row
-		endOfRowMask	= 0x80,	// If set, no more commands on this row
-		noteMask		= 0x40,	// If set, no note+instr in this command
-		channelMask		= 0x1F,	// Mask for extracting channel
+		emptyRow = 0xFF,      // No commands on row
+		endOfRowMask = 0x80,  // If set, no more commands on this row
+		noteMask = 0x40,      // If set, no note+instr in this command
+		channelMask = 0x1F,   // Mask for extracting channel
 
 		// Note flags
-		readNextCmd		= 0x80,	// One more command follows
-		noteDataMask	= 0x7F,	// Extract note
+		readNextCmd = 0x80,   // One more command follows
+		noteDataMask = 0x7F,  // Extract note
 
 		// Command flags
-		volCommand		= 0x40,	// Effect is compressed volume command
-		commandMask		= 0x3F,	// Command or volume mask
+		volCommand = 0x40,   // Effect is compressed volume command
+		commandMask = 0x3F,  // Command or volume mask
 	};
 
 	// Effect translation table for extended (non-Protracker) effects
 	static constexpr EffectCommand effTrans[] =
-	{
-		CMD_S3MCMDEX,		// Forward / Backward
-		CMD_PORTAMENTOUP,	// Extra fine slide up
-		CMD_PORTAMENTODOWN,	// Extra fine slide up
-		CMD_RETRIG,			// Retrigger
-		CMD_NONE,
-		CMD_TONEPORTAVOL,	// Toneporta with fine volume slide
-		CMD_VIBRATOVOL,		// Vibrato with fine volume slide
-		CMD_NONE,
-		CMD_PANNINGSLIDE,
-		CMD_NONE,
-		CMD_VOLUMESLIDE,	// Two times finder volume slide than Axx
-		CMD_NONE,
-		CMD_CHANNELVOLUME,	// Channel volume (0...127)
-		CMD_PATTERNBREAK,	// Long pattern break (in hex)
-		CMD_S3MCMDEX,		// Fine slide commands
-		CMD_NONE,			// Fractional BPM
-		CMD_KEYOFF,			// Key off at tick xx
-		CMD_PORTAMENTOUP,	// Porta up, but uses all octaves (?)
-		CMD_PORTAMENTODOWN,	// Porta down, but uses all octaves (?)
-		CMD_NONE,
-		CMD_NONE,
-		CMD_NONE,
-		CMD_NONE,
-		CMD_NONE,
-		CMD_NONE,
-		CMD_NONE,
-		CMD_GLOBALVOLSLIDE,	// Global volume slide
-		CMD_NONE,
-		CMD_GLOBALVOLUME,	// Global volume (0... 127)
-	};
+		{
+			CMD_S3MCMDEX,        // Forward / Backward
+			CMD_PORTAMENTOUP,    // Extra fine slide up
+			CMD_PORTAMENTODOWN,  // Extra fine slide up
+			CMD_RETRIG,          // Retrigger
+			CMD_NONE,
+			CMD_TONEPORTAVOL,  // Toneporta with fine volume slide
+			CMD_VIBRATOVOL,    // Vibrato with fine volume slide
+			CMD_NONE,
+			CMD_PANNINGSLIDE,
+			CMD_NONE,
+			CMD_VOLUMESLIDE,  // Two times finder volume slide than Axx
+			CMD_NONE,
+			CMD_CHANNELVOLUME,   // Channel volume (0...127)
+			CMD_PATTERNBREAK,    // Long pattern break (in hex)
+			CMD_S3MCMDEX,        // Fine slide commands
+			CMD_NONE,            // Fractional BPM
+			CMD_KEYOFF,          // Key off at tick xx
+			CMD_PORTAMENTOUP,    // Porta up, but uses all octaves (?)
+			CMD_PORTAMENTODOWN,  // Porta down, but uses all octaves (?)
+			CMD_NONE,
+			CMD_NONE,
+			CMD_NONE,
+			CMD_NONE,
+			CMD_NONE,
+			CMD_NONE,
+			CMD_NONE,
+			CMD_GLOBALVOLSLIDE,  // Global volume slide
+			CMD_NONE,
+			CMD_GLOBALVOLUME,  // Global volume (0... 127)
+		};
 
 	ModCommand dummy;
 	for(ROWINDEX row = 0; row < pattern.GetNumRows(); row++)
@@ -133,31 +133,31 @@ static void ReadAMSPattern(CPattern &pattern, bool newVersion, FileReader &patte
 						// Post-fix some commands
 						switch(m.command)
 						{
-						case CMD_PANNING8:
-							// 4-Bit panning
-							m.command = CMD_PANNING8;
-							m.param = (m.param & 0x0F) * 0x11;
-							break;
+							case CMD_PANNING8:
+								// 4-Bit panning
+								m.command = CMD_PANNING8;
+								m.param = (m.param & 0x0F) * 0x11;
+								break;
 
-						case CMD_VOLUME:
-							m.command = CMD_NONE;
-							m.volcmd = VOLCMD_VOLUME;
-							m.vol = static_cast<ModCommand::VOL>(std::min((m.param + 1) / 2, 64));
-							break;
-
-						case CMD_MODCMDEX:
-							if(m.param == 0x80)
-							{
-								// Break sample loop (cut after loop)
+							case CMD_VOLUME:
 								m.command = CMD_NONE;
-							} else
-							{
-								m.ExtendedMODtoS3MEffect();
-							}
-							break;
+								m.volcmd = VOLCMD_VOLUME;
+								m.vol = static_cast<ModCommand::VOL>(std::min((m.param + 1) / 2, 64));
+								break;
 
-						default:
-							break;
+							case CMD_MODCMDEX:
+								if(m.param == 0x80)
+								{
+									// Break sample loop (cut after loop)
+									m.command = CMD_NONE;
+								} else
+								{
+									m.ExtendedMODtoS3MEffect();
+								}
+								break;
+
+							default:
+								break;
 						}
 					} else if(effect < 0x10 + mpt::array_size<decltype(effTrans)>::size)
 					{
@@ -167,63 +167,63 @@ static void ReadAMSPattern(CPattern &pattern, bool newVersion, FileReader &patte
 						// Post-fix some commands
 						switch(effect)
 						{
-						case 0x10:
-							// Play sample forwards / backwards
-							if(m.param <= 0x01)
-							{
-								m.param |= 0x9E;
-							} else
-							{
-								m.command = CMD_NONE;
-							}
-							break;
+							case 0x10:
+								// Play sample forwards / backwards
+								if(m.param <= 0x01)
+								{
+									m.param |= 0x9E;
+								} else
+								{
+									m.command = CMD_NONE;
+								}
+								break;
 
-						case 0x11:
-						case 0x12:
-							// Extra fine slides
-							m.param = static_cast<ModCommand::PARAM>(std::min(uint8(0x0F), m.param) | 0xE0);
-							break;
+							case 0x11:
+							case 0x12:
+								// Extra fine slides
+								m.param = static_cast<ModCommand::PARAM>(std::min(uint8(0x0F), m.param) | 0xE0);
+								break;
 
-						case 0x15:
-						case 0x16:
-							// Fine slides
-							m.param = static_cast<ModCommand::PARAM>((std::min(0x10, m.param + 1) / 2) | 0xF0);
-							break;
+							case 0x15:
+							case 0x16:
+								// Fine slides
+								m.param = static_cast<ModCommand::PARAM>((std::min(0x10, m.param + 1) / 2) | 0xF0);
+								break;
 
-						case 0x1E:
-							// More fine slides
-							switch(m.param >> 4)
-							{
-							case 0x1:
-								// Fine porta up
-								m.command = CMD_PORTAMENTOUP;
-								m.param |= 0xF0;
+							case 0x1E:
+								// More fine slides
+								switch(m.param >> 4)
+								{
+									case 0x1:
+										// Fine porta up
+										m.command = CMD_PORTAMENTOUP;
+										m.param |= 0xF0;
+										break;
+									case 0x2:
+										// Fine porta down
+										m.command = CMD_PORTAMENTODOWN;
+										m.param |= 0xF0;
+										break;
+									case 0xA:
+										// Extra fine volume slide up
+										m.command = CMD_VOLUMESLIDE;
+										m.param = static_cast<ModCommand::PARAM>(((((m.param & 0x0F) + 1) / 2) << 4) | 0x0F);
+										break;
+									case 0xB:
+										// Extra fine volume slide down
+										m.command = CMD_VOLUMESLIDE;
+										m.param = static_cast<ModCommand::PARAM>((((m.param & 0x0F) + 1) / 2) | 0xF0);
+										break;
+									default:
+										m.command = CMD_NONE;
+										break;
+								}
 								break;
-							case 0x2:
-								// Fine porta down
-								m.command = CMD_PORTAMENTODOWN;
-								m.param |= 0xF0;
-								break;
-							case 0xA:
-								// Extra fine volume slide up
-								m.command = CMD_VOLUMESLIDE;
-								m.param = static_cast<ModCommand::PARAM>(((((m.param & 0x0F) + 1) / 2) << 4) | 0x0F);
-								break;
-							case 0xB:
-								// Extra fine volume slide down
-								m.command = CMD_VOLUMESLIDE;
-								m.param = static_cast<ModCommand::PARAM>((((m.param & 0x0F) + 1) / 2) | 0xF0);
-								break;
-							default:
-								m.command = CMD_NONE;
-								break;
-							}
-							break;
 
-						case 0x1C:
-							// Adjust channel volume range
-							m.param = static_cast<ModCommand::PARAM>(std::min((m.param + 1) / 2, 64));
-							break;
+							case 0x1C:
+								// Adjust channel volume range
+								m.param = static_cast<ModCommand::PARAM>(std::min((m.param + 1) / 2, 64));
+								break;
 						}
 					}
 
@@ -260,13 +260,13 @@ static void ReadAMSPattern(CPattern &pattern, bool newVersion, FileReader &patte
 // AMS File Header
 struct AMSFileHeader
 {
-	uint8le  versionLow;
-	uint8le  versionHigh;
-	uint8le  channelConfig;
-	uint8le  numSamps;
+	uint8le versionLow;
+	uint8le versionHigh;
+	uint8le channelConfig;
+	uint8le numSamps;
 	uint16le numPats;
 	uint16le numOrds;
-	uint8le  midiChannels;
+	uint8le midiChannels;
 	uint16le extraSize;
 };
 
@@ -278,18 +278,18 @@ struct AMSSampleHeader
 {
 	enum SampleFlags
 	{
-		smp16BitOld	= 0x04,	// AMS 1.0 (at least according to docs, I yet have to find such a file)
-		smp16Bit	= 0x80,	// AMS 1.1+
-		smpPacked	= 0x03,
+		smp16BitOld = 0x04,  // AMS 1.0 (at least according to docs, I yet have to find such a file)
+		smp16Bit = 0x80,     // AMS 1.1+
+		smpPacked = 0x03,
 	};
 
 	uint32le length;
 	uint32le loopStart;
 	uint32le loopEnd;
-	uint8le  panFinetune;	// High nibble = pan position, low nibble = finetune value
+	uint8le panFinetune;  // High nibble = pan position, low nibble = finetune value
 	uint16le sampleRate;
-	uint8le  volume;		// 0...127
-	uint8le  flags;			// See SampleFlags
+	uint8le volume;  // 0...127
+	uint8le flags;   // See SampleFlags
 
 	// Convert sample header to OpenMPT's internal format.
 	void ConvertToMPT(ModSample &mptSmp) const
@@ -473,7 +473,7 @@ bool CSoundFile::ReadAMS(FileReader &file, ModLoadingFlags loadFlags)
 		textOut = mpt::ToCharset(mpt::Charset::CP437, mpt::Charset::CP437AMS, textOut);
 
 		// Packed text doesn't include any line breaks!
-		m_songMessage.ReadFixedLineLength(mpt::byte_cast<const std::byte*>(textOut.c_str()), textOut.length(), 76, 0);
+		m_songMessage.ReadFixedLineLength(mpt::byte_cast<const std::byte *>(textOut.c_str()), textOut.length(), 76, 0);
 	}
 
 	// Read Order List
@@ -517,15 +517,15 @@ struct AMS2FileHeader
 {
 	enum FileFlags
 	{
-		linearSlides	= 0x40,
+		linearSlides = 0x40,
 	};
 
-	uint8le  versionLow;		// Version of format (Hi = MainVer, Low = SubVer e.g. 0202 = 2.02)
-	uint8le  versionHigh;		// ditto
-	uint8le  numIns;			// Nr of Instruments (0-255)
-	uint16le numPats;			// Nr of Patterns (1-1024)
-	uint16le numOrds;			// Nr of Positions (1-65535)
-	// Rest of header differs between format revision 2.01 and 2.02
+	uint8le versionLow;   // Version of format (Hi = MainVer, Low = SubVer e.g. 0202 = 2.02)
+	uint8le versionHigh;  // ditto
+	uint8le numIns;       // Nr of Instruments (0-255)
+	uint16le numPats;     // Nr of Patterns (1-1024)
+	uint16le numOrds;     // Nr of Positions (1-65535)
+						  // Rest of header differs between format revision 2.01 and 2.02
 };
 
 MPT_BINARY_STRUCT(AMS2FileHeader, 7)
@@ -534,11 +534,11 @@ MPT_BINARY_STRUCT(AMS2FileHeader, 7)
 // AMS2 Instument Envelope
 struct AMS2Envelope
 {
-	uint8 speed;		// Envelope speed (currently not supported, always the same as current BPM)
-	uint8 sustainPoint;	// Envelope sustain point
-	uint8 loopStart;	// Envelope loop Start
-	uint8 loopEnd;		// Envelope loop End
-	uint8 numPoints;	// Envelope length
+	uint8 speed;         // Envelope speed (currently not supported, always the same as current BPM)
+	uint8 sustainPoint;  // Envelope sustain point
+	uint8 loopStart;     // Envelope loop Start
+	uint8 loopEnd;       // Envelope loop End
+	uint8 numPoints;     // Envelope length
 
 	// Read envelope and do partial conversion.
 	void ConvertToMPT(InstrumentEnvelope &mptEnv, FileReader &file)
@@ -580,23 +580,23 @@ struct AMS2Instrument
 {
 	enum EnvelopeFlags
 	{
-		envLoop		= 0x01,
-		envSustain	= 0x02,
-		envEnabled	= 0x04,
-		
-		// Flag shift amounts
-		volEnvShift	= 0,
-		panEnvShift	= 1,
-		vibEnvShift	= 2,
+		envLoop = 0x01,
+		envSustain = 0x02,
+		envEnabled = 0x04,
 
-		vibAmpMask	= 0x3000,
-		vibAmpShift	= 12,
-		fadeOutMask	= 0xFFF,
+		// Flag shift amounts
+		volEnvShift = 0,
+		panEnvShift = 1,
+		vibEnvShift = 2,
+
+		vibAmpMask = 0x3000,
+		vibAmpShift = 12,
+		fadeOutMask = 0xFFF,
 	};
 
-	uint8le  shadowInstr;	// Shadow Instrument. If non-zero, the value=the shadowed inst.
-	uint16le vibampFadeout;	// Vib.Amplify + Volume fadeout in one variable!
-	uint16le envFlags;		// See EnvelopeFlags
+	uint8le shadowInstr;     // Shadow Instrument. If non-zero, the value=the shadowed inst.
+	uint16le vibampFadeout;  // Vib.Amplify + Volume fadeout in one variable!
+	uint16le envFlags;       // See EnvelopeFlags
 
 	void ApplyFlags(InstrumentEnvelope &mptEnv, EnvelopeFlags shift) const
 	{
@@ -614,7 +614,6 @@ struct AMS2Instrument
 			mptEnv.dwFlags.reset(ENV_LOOP);
 		}
 	}
-
 };
 
 MPT_BINARY_STRUCT(AMS2Instrument, 5)
@@ -625,22 +624,22 @@ struct AMS2SampleHeader
 {
 	enum SampleFlags
 	{
-		smpPacked	= 0x03,
-		smp16Bit	= 0x04,
-		smpLoop		= 0x08,
-		smpBidiLoop	= 0x10,
-		smpReverse	= 0x40,
+		smpPacked = 0x03,
+		smp16Bit = 0x04,
+		smpLoop = 0x08,
+		smpBidiLoop = 0x10,
+		smpReverse = 0x40,
 	};
 
 	uint32le length;
 	uint32le loopStart;
 	uint32le loopEnd;
-	uint16le sampledRate;		// Whyyyy?
-	uint8le  panFinetune;		// High nibble = pan position, low nibble = finetune value
-	uint16le c4speed;			// Why is all of this so redundant?
-	int8le   relativeTone;		// q.e.d.
-	uint8le  volume;			// 0...127
-	uint8le  flags;			// See SampleFlags
+	uint16le sampledRate;  // Whyyyy?
+	uint8le panFinetune;   // High nibble = pan position, low nibble = finetune value
+	uint16le c4speed;      // Why is all of this so redundant?
+	int8le relativeTone;   // q.e.d.
+	uint8le volume;        // 0...127
+	uint8le flags;         // See SampleFlags
 
 	// Convert sample header to OpenMPT's internal format.
 	void ConvertToMPT(ModSample &mptSmp) const
@@ -683,11 +682,11 @@ MPT_BINARY_STRUCT(AMS2SampleHeader, 20)
 // AMS2 Song Description Header
 struct AMS2Description
 {
-	uint32le packedLen;		// Including header
+	uint32le packedLen;  // Including header
 	uint32le unpackedLen;
-	uint8le  packRoutine;	// 01
-	uint8le  preProcessing;	// None!
-	uint8le  packingMethod;	// RLE
+	uint8le packRoutine;    // 01
+	uint8le preProcessing;  // None!
+	uint8le packingMethod;  // RLE
 };
 
 MPT_BINARY_STRUCT(AMS2Description, 11)
@@ -806,10 +805,10 @@ bool CSoundFile::ReadAMS2(FileReader &file, ModLoadingFlags loadFlags)
 	std::vector<uint16> sampleSettings;    // Shadow sample map... Lo byte = Instrument, Hi byte, lo nibble = Sample index in instrument, Hi byte, hi nibble = Sample pack status
 	enum
 	{
-		instrIndexMask		= 0xFF,    // Shadow instrument
-		sampleIndexMask		= 0x7F00,  // Sample index in instrument
-		sampleIndexShift	= 8,
-		packStatusMask		= 0x8000,  // If bit is set, sample is packed
+		instrIndexMask = 0xFF,     // Shadow instrument
+		sampleIndexMask = 0x7F00,  // Sample index in instrument
+		sampleIndexShift = 8,
+		packStatusMask = 0x8000,  // If bit is set, sample is packed
 	};
 
 	static_assert(MAX_INSTRUMENTS > 255);
@@ -817,7 +816,7 @@ bool CSoundFile::ReadAMS2(FileReader &file, ModLoadingFlags loadFlags)
 	{
 		ModInstrument *instrument = AllocateInstrument(ins);
 		if(instrument == nullptr
-			|| !file.ReadSizedString<uint8le, mpt::String::spacePadded>(instrument->name))
+		   || !file.ReadSizedString<uint8le, mpt::String::spacePadded>(instrument->name))
 		{
 			break;
 		}
@@ -827,8 +826,8 @@ bool CSoundFile::ReadAMS2(FileReader &file, ModLoadingFlags loadFlags)
 		sampleAssignment.fill(0);  // Only really needed for v2.0, where the lowest and highest octave aren't cleared.
 
 		if(numSamples == 0
-			|| (fileHeader.versionLow > 0 && !file.ReadArray(sampleAssignment))  // v2.01+: 120 Notes
-			|| (fileHeader.versionLow == 0 && !file.ReadRaw(mpt::as_span(sampleAssignment).subspan(12, 96)).size()))  // v2.0: 96 Notes
+		   || (fileHeader.versionLow > 0 && !file.ReadArray(sampleAssignment))                                       // v2.01+: 120 Notes
+		   || (fileHeader.versionLow == 0 && !file.ReadRaw(mpt::as_span(sampleAssignment).subspan(12, 96)).size()))  // v2.0: 96 Notes
 		{
 			continue;
 		}
@@ -888,8 +887,8 @@ bool CSoundFile::ReadAMS2(FileReader &file, ModLoadingFlags loadFlags)
 			m_szNames[firstSmp + smp] = sampleName;
 
 			uint16 settings = (instrHeader.shadowInstr & instrIndexMask)
-				| ((smp << sampleIndexShift) & sampleIndexMask)
-				| ((sampleHeader.flags & AMS2SampleHeader::smpPacked) ? packStatusMask : 0);
+							| ((smp << sampleIndexShift) & sampleIndexMask)
+							| ((sampleHeader.flags & AMS2SampleHeader::smpPacked) ? packStatusMask : 0);
 			sampleSettings.push_back(settings);
 		}
 
@@ -943,7 +942,7 @@ bool CSoundFile::ReadAMS2(FileReader &file, ModLoadingFlags loadFlags)
 		}
 		textOut = mpt::ToCharset(mpt::Charset::CP437, mpt::Charset::CP437AMS2, textOut);
 		// Packed text doesn't include any line breaks!
-		m_songMessage.ReadFixedLineLength(mpt::byte_cast<const std::byte*>(textOut.c_str()), textOut.length(), 74, 0);
+		m_songMessage.ReadFixedLineLength(mpt::byte_cast<const std::byte *>(textOut.c_str()), textOut.length(), 74, 0);
 	}
 
 	// Read Order List
@@ -1001,7 +1000,7 @@ bool CSoundFile::ReadAMS2(FileReader &file, ModLoadingFlags loadFlags)
 	{
 		INSTRUMENTINDEX sourceInstr = (sampleSettings[smp] & instrIndexMask);
 		if(sourceInstr == 0
-			|| --sourceInstr >= firstSample.size())
+		   || --sourceInstr >= firstSample.size())
 		{
 			continue;
 		}
@@ -1101,7 +1100,7 @@ void AMSUnpack(mpt::const_byte_span source, mpt::byte_span dest, int8 packCharac
 	// Delta Unpack
 	{
 		int8 old = 0;
-		uint8 *out = mpt::byte_cast<uint8*>(dest.data());
+		uint8 *out = mpt::byte_cast<uint8 *>(dest.data());
 		for(size_t i = depackSize; i != 0; i--)
 		{
 			int pos = static_cast<uint8>(*out);

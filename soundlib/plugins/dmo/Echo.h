@@ -30,11 +30,11 @@ protected:
 		kEchoNumParameters
 	};
 
-	std::vector<float> m_delayLine;	// Echo delay line
+	std::vector<float> m_delayLine;  // Echo delay line
 	float m_param[kEchoNumParameters];
-	uint32 m_bufferSize;			// Delay line length in frames
-	uint32 m_writePos;				// Current write position in the delay line
-	uint32 m_delayTime[2];			// In frames
+	uint32 m_bufferSize;    // Delay line length in frames
+	uint32 m_writePos;      // Current write position in the delay line
+	uint32 m_delayTime[2];  // In frames
 	uint32 m_sampleRate;
 
 	// Echo calculation coefficients
@@ -42,21 +42,21 @@ protected:
 	bool m_crossEcho;
 
 public:
-	static IMixPlugin* Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
+	static IMixPlugin *Create(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 	Echo(VSTPluginLib &factory, CSoundFile &sndFile, SNDMIXPLUGIN &mixStruct);
 
 	int32 GetUID() const override { return 0xEF3E932C; }
 	int32 GetVersion() const override { return 0; }
-	void Idle() override { }
+	void Idle() override {}
 	uint32 GetLatency() const override { return 0; }
 
-	void Process(float *pOutL, float *pOutR, uint32 numFrames)override;
+	void Process(float *pOutL, float *pOutR, uint32 numFrames) override;
 
 	float RenderSilence(uint32) override { return 0.0f; }
 
 	int32 GetNumPrograms() const override { return 0; }
 	int32 GetCurrentProgram() override { return 0; }
-	void SetCurrentProgram(int32) override { }
+	void SetCurrentProgram(int32) override {}
 
 	PlugParamIndex GetNumParameters() const override { return kEchoNumParameters; }
 	PlugParamValue GetParameter(PlugParamIndex index) override;
@@ -78,7 +78,7 @@ public:
 	CString GetParamDisplay(PlugParamIndex param) override;
 
 	CString GetCurrentProgramName() override { return CString(); }
-	void SetCurrentProgramName(const CString &) override { }
+	void SetCurrentProgramName(const CString &) override {}
 	CString GetProgramName(int32) override { return CString(); }
 
 	bool HasEditor() const override { return false; }
@@ -91,8 +91,8 @@ protected:
 	void RecalculateEchoParams();
 };
 
-} // namespace DMO
+}  // namespace DMO
 
 OPENMPT_NAMESPACE_END
 
-#endif // !NO_PLUGINS
+#endif  // !NO_PLUGINS
