@@ -721,7 +721,7 @@ void CSoundFile::UpgradeModule()
 				&& Instruments[i]->VolEnv.dwFlags[ENV_SUSTAIN]
 				&& Instruments[i]->VolEnv.nReleaseNode > Instruments[i]->VolEnv.nSustainEnd)
 			{
-				m_playBehaviour.set(kReleaseNodePastSustainBug);
+				m_playBehaviour.set(kLegacyReleaseNode);
 				break;
 			}
 		}
