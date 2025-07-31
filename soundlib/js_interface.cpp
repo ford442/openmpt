@@ -24,7 +24,7 @@
 
 // The single-header JSON library
 // Make sure this path is correct for your project structure.
-#include "nlohmann/json.hpp"
+#include "../../include/nlohmann/json.hpp"
 
 // Use the Emscripten and nlohmann namespaces
 using namespace emscripten;
