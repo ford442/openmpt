@@ -9,6 +9,7 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include <cstring>
 
 // Core libopenmpt headers
 #include "soundlib/Sndfile.h"
@@ -47,9 +48,9 @@ std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         sndFile.Create(MOD_TYPE_XM, j.value("channels", 4));
         
         // --- Set Song Properties ---
-        sndFile.m_songName = j.value("songName", "AI Song");
-        sndFile.m_nDefaultSpeed = j.value("speed", 6);
-        sndFile.m_nDefaultTempo.Set(j.value("tempo", 125.0));
+        sndFile.SetTitle(j.value("songName", "AI Song"));
+        sndFile.Order.SetDefaultSpeed(j.value("speed", 6));
+        sndFile.Order.SetDefaultTempo(TEMPO(j.value("tempo", 125.0)));
         
         // --- Create Instruments and Samples ---
         if (j.contains("instruments")) {
@@ -59,8 +60,7 @@ std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
 
                 if(instIndex >= MAX_INSTRUMENTS) continue;
 
-                sndFile.Instruments[instIndex] = new (std::nothrow) ModInstrument();
-                ModInstrument *pInst = sndFile.Instruments[instIndex];
+                ModInstrument *pInst = sndFile.AllocateInstrument(instIndex);
                 if (!pInst) continue;
                 
                 pInst->name = inst_json.value("name", "Instrument");
@@ -82,9 +82,9 @@ std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
                     
                     if (!sample_data.empty()) {
                         sample.nLength = sample_data.size();
-                        sample.pSample = sndFile.AllocateSample(sample.nLength);
-                        if(sample.pSample) {
-                            memcpy(sample.pSample, sample_data.data(), sample.nLength);
+                        if(sample.AllocateSample())
+                        {
+                            std::memcpy(sample.pSample, sample_data.data(), sample.nLength);
                         }
                         
                         sample.nLoopStart = sample_json.value("loopStart", 0);
@@ -101,7 +101,7 @@ std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         if (j.contains("patterns")) {
             for (size_t i = 0; i < j["patterns"].size(); ++i) {
                 const auto& pattern_json = j["patterns"][i];
-                sndFile.Patterns.Insert(i, pattern_json.value("rows", 64));
+                if(!sndFile.Patterns.Insert(i, pattern_json.value("rows", 64))) continue;
                 CPattern &pattern = sndFile.Patterns[i];
 
                 if (pattern_json.contains("data")) {
@@ -128,7 +128,7 @@ std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         // --- Save to Memory ---
         std::stringstream memStream;
         // Use the correct save function from XMTools.h, which is part of soundlib
-        if(!CSoundFile::SaveXM(sndFile, memStream, false))
+        if(!sndFile.SaveXM(memStream, false))
         {
             return {}; // Saving failed
         }
