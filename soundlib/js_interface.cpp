@@ -14,7 +14,7 @@
 
 // Core libopenmpt headers
 #include "soundlib/Sndfile.h"
-#include "soundlib/mod_specifications.hh"
+#include "soundlib/mod_specifications.h"
 #include "soundlib/ModInstrument.h"
 #include "soundlib/ModSample.h"
 #include "soundlib/pattern.h"
