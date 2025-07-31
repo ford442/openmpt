@@ -5,6 +5,7 @@
  * then uses libopenmpt's internal classes to construct a valid module file in memory.
  * Finally, it uses Emscripten's embind to expose this function to the JavaScript world.
  */
+#include "common/stdafx.h"
 
 #include <string>
 #include <vector>
