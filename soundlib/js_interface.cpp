@@ -17,9 +17,7 @@
 #include "soundlib/ModSample.h"
 #include "soundlib/pattern.h"
 #include "soundlib/patternContainer.h"
-// This header is needed for the file saving functions
-#include "mptrack/Moddoc.h"
-
+#include "soundlib/XMTools.h" // For saving XM files
 
 // Emscripten binding header
 #include <emscripten/bind.h>
@@ -33,9 +31,6 @@ using json = nlohmann::json;
 
 // Bring the OpenMPT namespace into scope to resolve type errors
 using namespace OpenMPT;
-
-// Forward declaration for the saving function
-bool SaveModule(const CSoundFile &sndFile, std::ostream &oStream);
 
 /**
  * @brief Creates a complete module file in memory from a JSON description.
@@ -54,7 +49,7 @@ std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         // --- Set Song Properties ---
         sndFile.m_songName = j.value("songName", "AI Song");
         sndFile.m_nDefaultSpeed = j.value("speed", 6);
-        sndFile.SetTempo(TEMPO(j.value("tempo", 125.0)), true);
+        sndFile.m_nDefaultTempo.Set(j.value("tempo", 125.0));
         
         // --- Create Instruments and Samples ---
         if (j.contains("instruments")) {
@@ -132,7 +127,8 @@ std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
 
         // --- Save to Memory ---
         std::stringstream memStream;
-        if(!SaveModule(sndFile, memStream))
+        // Use the correct save function from XMTools.h, which is part of soundlib
+        if(!CSoundFile::SaveXM(sndFile, memStream, false))
         {
             return {}; // Saving failed
         }
