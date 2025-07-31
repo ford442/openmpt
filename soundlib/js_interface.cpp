@@ -122,19 +122,26 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         // --- Set Pattern Order ---
         if (j.contains("patternOrder")) {
             std::vector<PATTERNINDEX> order = j["patternOrder"].get<std::vector<PATTERNINDEX>>();
-            sndFile.Order().assign(order.begin(), order.end());
+            sndFile.Order().clear();
+            for(auto pat : order)
+            {
+                sndFile.Order().push_back(pat);
+            }
         }
 
         // --- Save to Memory ---
-        std::stringstream memStream;
-        // Use the correct save function from XMTools.h, which is part of soundlib
-        if(!sndFile.SaveXM(memStream, false))
-        {
-            return {}; // Saving failed
-        }
-        
-        std::string const& s = memStream.str();
-        return std::vector<char>(s.begin(), s.end());
+        // The SaveXM function is not available in the Emscripten build configuration.
+        // This is likely because the necessary dependencies for file saving are disabled.
+        // To get this to work, the build configuration for emscripten needs to be
+        // updated to include file saving support.
+        // std::stringstream memStream;
+        // if(!sndFile.SaveXM(memStream, false))
+        // {
+        //     return {}; // Saving failed
+        // }
+        // std::string const& s = memStream.str();
+        // return std::vector<char>(s.begin(), s.end());
+        return {};
 
     } catch (const json::exception& e) {
         // MPT_LOG_GLOBAL(LogWarning, "JSON", "JSON parsing error: " + std::string(e.what()));
