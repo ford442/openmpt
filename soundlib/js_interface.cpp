@@ -38,7 +38,7 @@ using namespace OpenMPT;
  * @param json_string A string containing the JSON object describing the song.
  * @return A std::vector<char> containing the bytes of the generated module file.
  */
-std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
+static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
     CSoundFile sndFile;
     
     try {
@@ -49,8 +49,8 @@ std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         
         // --- Set Song Properties ---
         sndFile.SetTitle(j.value("songName", "AI Song"));
-        sndFile.Order.SetDefaultSpeed(j.value("speed", 6));
-        sndFile.Order.SetDefaultTempo(TEMPO(j.value("tempo", 125.0)));
+        sndFile.Order().SetDefaultSpeed(j.value("speed", 6));
+        sndFile.Order().SetDefaultTempo(TEMPO(j.value("tempo", 125.0)));
         
         // --- Create Instruments and Samples ---
         if (j.contains("instruments")) {
@@ -84,7 +84,7 @@ std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
                         sample.nLength = sample_data.size();
                         if(sample.AllocateSample())
                         {
-                            std::memcpy(sample.pSample, sample_data.data(), sample.nLength);
+                            std::memcpy(sample.samplev(), sample_data.data(), sample.nLength);
                         }
                         
                         sample.nLoopStart = sample_json.value("loopStart", 0);
@@ -122,7 +122,7 @@ std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         // --- Set Pattern Order ---
         if (j.contains("patternOrder")) {
             std::vector<PATTERNINDEX> order = j["patternOrder"].get<std::vector<PATTERNINDEX>>();
-            sndFile.Order.assign(order);
+            sndFile.Order().assign(order.begin(), order.end());
         }
 
         // --- Save to Memory ---
