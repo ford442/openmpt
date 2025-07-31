@@ -62,7 +62,7 @@ std::vector<HKL> GetKeyboardLayouts()
 #endif
 
 #ifdef MPT_COMMANDSET_LOGGING
-#define LOG_COMMANDSET(x) MPT_LOG_GLOBAL(LogDebug, "CommandSet", x)
+#define LOG_COMMANDSET(x) MPT_LOG_GLOBAL(LogDebug, "CommandSet", (x))
 #else
 #define LOG_COMMANDSET(x) do { } while(0)
 #endif
@@ -954,6 +954,10 @@ static constexpr struct
 	{2117, kcToggleRecordMIDIPitchBend, _T("Toggle Record MIDI Pitch Bend")},
 	{2118, kcToggleRecordMIDICCs, _T("Toggle Record MIDI CCs")},
 	{2119, kcToggleMetronome, _T("Toggle Metronome")},
+	{2120, kcPatternExpand, _T("Expand Pattern")},
+	{2121, kcPatternShrink, _T("Shrink Pattern")},
+	{2122, kcSampleToggleNormalLoop, _T("Toggle Loop")},
+	{2123, kcSampleToggleSustainLoop, _T("Toggle Sustain Loop")},
 };
 // clang-format on
 

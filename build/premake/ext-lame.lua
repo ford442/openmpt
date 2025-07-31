@@ -69,16 +69,17 @@
 			}
 		end
 	filter {}
-	filter { "architecture:x86" }
-		defines {
-			"HAVE_XMMINTRIN_H",
-		}
-		if _OPTIONS["windows-version"] ~= "winxp" then
-			-- WinXP builds do not use SSE2 by default
+	if _OPTIONS["windows-version"] ~= "winxp" then
+		-- WinXP builds do not use SSE2 by default
+		filter {}
+		filter { "architecture:x86" }
 			defines {
+				"HAVE_XMMINTRIN_H",
 				"MIN_ARCH_SSE",
 			}
-		end
+		filter {}
+	end
+	filter {}
 	filter { "architecture:x86_64" }
 		defines {
 			"HAVE_XMMINTRIN_H",

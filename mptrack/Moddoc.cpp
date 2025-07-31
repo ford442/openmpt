@@ -144,7 +144,7 @@ CModDoc::CModDoc()
 	, m_InstrumentUndo(*this)
 {
 	// Set the creation date of this file (or the load time if we're loading an existing file)
-	m_creationTime = mpt::Date::UnixNow();
+	m_creationTime = mpt::chrono::default_system_clock::now();
 
 	ReinitRecordState();
 
@@ -1611,7 +1611,7 @@ LRESULT CModDoc::ActivateView(UINT nIdView, DWORD dwParam)
 		CView *pView = pMDIActive->GetActiveView();
 		if ((pView) && (pView->GetDocument() == this))
 		{
-			return ((CChildFrame *)pMDIActive)->ActivateView(nIdView, dwParam);
+			return static_cast<CChildFrame*>(pMDIActive)->ActivateView(nIdView, dwParam);
 		}
 	}
 	POSITION pos = GetFirstViewPosition();
@@ -1690,7 +1690,7 @@ void CModDoc::OnFileWaveConvert(ORDERINDEX nMinOrder, ORDERINDEX nMaxOrder, cons
 
 	if ((!pMainFrm) || (!m_SndFile.GetType()) || encFactories.empty()) return;
 
-	CWaveConvert wsdlg(pMainFrm, nMinOrder, nMaxOrder, m_SndFile.Order().GetLengthTailTrimmed() - 1, m_SndFile, encFactories);
+	CWaveConvert wsdlg(pMainFrm, nMinOrder, nMaxOrder, m_SndFile.Order().GetLengthTailTrimmed() - 1, *this, encFactories);
 	{
 		BypassInputHandler bih;
 		wsdlg.m_Settings.normalize = TrackerSettings::Instance().ExportNormalize;
@@ -3070,14 +3070,26 @@ CString CModDoc::GetPatternViewInstrumentName(INSTRUMENTINDEX nInstr,
 }
 
 
-mpt::tstring CModDoc::FormatSubsongName(const SubSong &song)
+mpt::tstring CModDoc::FormatSubsongName(const std::vector<SubSong> &songs, size_t subSong)
 {
+	if(subSong >= songs.size())
+		return {};
+	const SubSong &song = songs[subSong];
+	size_t subsongInSequence = 1;
+	for(size_t i = 1; i <= subSong; i++)
+	{
+		if(songs[subSong - i].sequence == song.sequence)
+			subsongInSequence++;
+		else
+			break;
+	}
 	const auto sequenceName = m_SndFile.Order(song.sequence).GetName();
 	const auto startPattern = m_SndFile.Order(song.sequence).PatternAt(song.startOrder);
 	const auto orderName = startPattern ? startPattern->GetName() : std::string{};
-	return MPT_TFORMAT("Sequence {}{}\nOrder {} to {}{}")(
+	return MPT_TFORMAT("Sequence {}{}, Song {}\nOrder {} to {}{}")(
 		song.sequence + 1,
 		sequenceName.empty() ? mpt::tstring{} : MPT_TFORMAT(" ({})")(sequenceName),
+		subsongInSequence,
 		song.startOrder,
 		song.endOrder,
 		orderName.empty() ? mpt::tstring{} : MPT_TFORMAT(" ({})")(mpt::ToWin(m_SndFile.GetCharsetInternal(), orderName)));
@@ -3234,6 +3246,34 @@ void CModDoc::UpdateOPLInstrument(SAMPLEINDEX smp)
 			m_SndFile.m_opl->Patch(chn, patch);
 		}
 	}
+}
+
+
+size_t CModDoc::GetSubsongForCurrentEditPos(const std::vector<SubSong> &subsongs) const
+{
+	const SEQUENCEINDEX seq = m_SndFile.Order.GetCurrentSequenceIndex();
+	ORDERINDEX ord = 0;
+	if(auto *lastActiveFrame = CChildFrame::LastActiveFrame(); lastActiveFrame != nullptr && lastActiveFrame->GetActiveDocument() == this)
+	{
+		if(lastActiveFrame->IsPatternView())
+			lastActiveFrame->SaveAllViewStates();
+		ord = lastActiveFrame->GetPatternViewState().nOrder;
+	}
+
+	// Note: This is just an estimation. If subsongs have overlapping order ranges
+	// (like in Unreal Engine modules where the first pattern of each subsong is found at the start of the order list),
+	// then we may return the wrong subsong index.
+	size_t candidate = subsongs.size();
+	for(size_t i = 0; i < subsongs.size(); i++)
+	{
+		const SubSong &subsong = subsongs[i];
+		if(subsong.sequence != seq)
+			continue;
+		if(mpt::is_in_range(ord, subsong.startOrder, subsong.endOrder))
+			return i;
+		candidate = i;
+	}
+	return candidate;
 }
 
 

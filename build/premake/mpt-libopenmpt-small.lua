@@ -60,6 +60,8 @@
 	excludes {
 		"../../src/mpt/crypto/**.cpp",
 		"../../src/mpt/crypto/**.hpp",
+		"../../src/mpt/filemode/**.cpp",
+		"../../src/mpt/filemode/**.hpp",
 		"../../src/mpt/fs/**.cpp",
 		"../../src/mpt/fs/**.hpp",
 		"../../src/mpt/json/**.cpp",
@@ -68,6 +70,8 @@
 		"../../src/mpt/library/**.hpp",
 		"../../src/mpt/main/**.cpp",
 		"../../src/mpt/main/**.hpp",
+		"../../src/mpt/terminal/**.cpp",
+		"../../src/mpt/terminal/**.hpp",
 		"../../src/mpt/test/**.cpp",
 		"../../src/mpt/test/**.hpp",
 		"../../src/mpt/uuid_namespace/**.cpp",

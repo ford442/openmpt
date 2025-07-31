@@ -15,7 +15,12 @@
 		"MPT_WITH_FLAC",
 		"MPT_WITH_PORTAUDIO",
 	}
-	
+
+	if _ACTION < "vs2022" then
+		mpt_use_pthread_win32()
+		defines { "MPT_WITH_PTHREAD" }
+	end
+
 	files {
 		"../../openmpt123/openmpt123.manifest",
 	}
@@ -27,17 +32,22 @@
   }
   files {
    "../../src/mpt/base/*.hpp",
+   "../../src/mpt/chrono/*.hpp",
    "../../src/mpt/detect/*.hpp",
    "../../src/mpt/exception/*.hpp",
+   "../../src/mpt/filemode/*.hpp",
    "../../src/mpt/format/*.hpp",
    "../../src/mpt/io/*.hpp",
    "../../src/mpt/io_file/*.hpp",
    "../../src/mpt/main/*.hpp",
+   "../../src/mpt/out_of_memory/*.hpp",
    "../../src/mpt/parse/*.hpp",
    "../../src/mpt/path/*.hpp",
    "../../src/mpt/random/*.hpp",
    "../../src/mpt/string/*.hpp",
    "../../src/mpt/string_transcode/*.hpp",
+   "../../src/mpt/terminal/**.cpp",
+   "../../src/mpt/terminal/**.hpp",
    "../../openmpt123/*.cpp",
    "../../openmpt123/*.hpp",
   }

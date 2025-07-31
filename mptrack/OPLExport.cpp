@@ -17,7 +17,7 @@
 #include "Reporting.h"
 #include "resource.h"
 #include "TrackerSettings.h"
-#include "../common/GzipWriter.h"
+#include "../misc/GzipWriter.h"
 #include "../soundlib/OPL.h"
 #include "../soundlib/Tagging.h"
 #include "mpt/io_file/outputfile.hpp"
@@ -362,6 +362,7 @@ public:
 		, m_modDoc{modDoc}
 		, m_subSongs{modDoc.GetSoundFile().GetAllSubSongs()}
 	{
+		m_selectedSong = m_modDoc.GetSubsongForCurrentEditPos(m_subSongs);
 	}
 
 	BOOL OnInitDialog() override
@@ -454,7 +455,7 @@ public:
 		const auto subsongText = GetDlgItem(IDC_SUBSONG);
 		if(subsongText == nullptr || m_selectedSong >= m_subSongs.size())
 			return;
-		subsongText->SetWindowText(m_modDoc.FormatSubsongName(m_subSongs[m_selectedSong]).c_str());
+		subsongText->SetWindowText(m_modDoc.FormatSubsongName(m_subSongs, m_selectedSong).c_str());
 	}
 
 	void DoConversion(const mpt::PathString &fileName)

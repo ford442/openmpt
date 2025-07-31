@@ -174,25 +174,7 @@
 				"OPUS_X86_MAY_HAVE_SSE4_1=1",
 			}
 			filter {}
-			filter { "architecture:x86", "configurations:Checked" }
-				defines {
-					"OPUS_X86_PRESUME_SSE",
-					"OPUS_X86_PRESUME_SSE2",
-				}
-			filter {}
-			filter { "architecture:x86", "configurations:CheckedShared" }
-				defines {
-					"OPUS_X86_PRESUME_SSE",
-					"OPUS_X86_PRESUME_SSE2",
-				}
-			filter {}
-			filter { "architecture:x86", "configurations:Release" }
-				defines {
-					"OPUS_X86_PRESUME_SSE",
-					"OPUS_X86_PRESUME_SSE2",
-				}
-			filter {}
-			filter { "architecture:x86", "configurations:ReleaseShared" }
+			filter { "architecture:x86" }
 				defines {
 					"OPUS_X86_PRESUME_SSE",
 					"OPUS_X86_PRESUME_SSE2",
@@ -232,6 +214,26 @@
 			}
 		filter {}
 		filter { "architecture:arm64" }
+			excludes {
+				"../../include/opus/celt/arm/celt_fft_ne10.c",
+				"../../include/opus/celt/arm/celt_mdct_ne10.c",
+				"../../include/opus/celt/arm/celt_neon_intr.c",
+				"../../include/opus/celt/arm/pitch_neon_intr.c",
+				"../../include/opus/dnn/arm/nnet_dotprod.c",
+				"../../include/opus/dnn/arm/nnet_neon.c",
+			}
+			defines {
+				--"OPUS_HAVE_RTCD=1",
+				--"CPU_INFO_BY_C=1",
+				--"OPUS_ARM_MAY_HAVE_DOTPROD=1",
+				--"OPUS_ARM_MAY_HAVE_EDSP=1",
+				--"OPUS_ARM_MAY_HAVE_MEDIA=1",
+				--"OPUS_ARM_MAY_HAVE_NEON=1",
+				--"OPUS_ARM_MAY_HAVE_NEON_INTR=1",
+				--"OPUS_ARM_PRESUME_NEON_INTR=1",
+			}
+		filter {}
+		filter { "architecture:arm64ec" }
 			excludes {
 				"../../include/opus/celt/arm/celt_fft_ne10.c",
 				"../../include/opus/celt/arm/celt_mdct_ne10.c",

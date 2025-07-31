@@ -136,24 +136,24 @@ namespace Test {
 
 
 
-static MPT_NOINLINE void TestVersion();
-static MPT_NOINLINE void TestTypes();
-static MPT_NOINLINE void TestMisc1();
-static MPT_NOINLINE void TestMisc2();
-static MPT_NOINLINE void TestRandom();
-static MPT_NOINLINE void TestCharsets();
-static MPT_NOINLINE void TestPathNative();
-static MPT_NOINLINE void TestPathForeign();
-static MPT_NOINLINE void TestStringFormatting();
-static MPT_NOINLINE void TestSettings();
-static MPT_NOINLINE void TestStringIO();
-static MPT_NOINLINE void TestMIDIEvents();
-static MPT_NOINLINE void TestSampleConversion();
-static MPT_NOINLINE void TestITCompression();
-static MPT_NOINLINE void TestPCnoteSerialization();
-static MPT_NOINLINE void TestLoadSaveFile();
-static MPT_NOINLINE void TestEditing();
-static MPT_NOINLINE void TestMIDIMacroParser();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestVersion();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestTypes();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMisc1();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMisc2();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestRandom();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestCharsets();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathNative();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeign();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringFormatting();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSettings();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringIO();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMIDIEvents();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSampleConversion();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestITCompression();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPCnoteSerialization();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestLoadSaveFile();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestEditing();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMIDIMacroParser();
 
 
 
@@ -512,7 +512,7 @@ static void RemoveFile(const mpt::PathString &filename)
 
 
 // Test if functions related to program version data work
-static MPT_NOINLINE void TestVersion()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestVersion()
 {
 	//Verify that macros and functions work.
 	{
@@ -666,7 +666,7 @@ static MPT_NOINLINE void TestVersion()
 
 
 // Test if data types are interpreted correctly
-static MPT_NOINLINE void TestTypes()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestTypes()
 {
 
 	static_assert(sizeof(std::uintptr_t) == sizeof(void*));
@@ -784,7 +784,7 @@ static void TestFloatFormats(Tfloat x)
 
 
 
-static MPT_NOINLINE void TestStringFormatting()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringFormatting()
 {
 	VERIFY_EQUAL(mpt::afmt::val(1.5f), "1.5");
 	VERIFY_EQUAL(mpt::afmt::val(true), "1");
@@ -1044,7 +1044,7 @@ static MPT_NOINLINE void TestStringFormatting()
 
 
 static int64 TestDate1(int s, int m, int h, unsigned int D, unsigned int M, int Y) {
-	return mpt::Date::UnixAsSeconds(mpt::Date::UnixFromUTC(mpt::Date::UTC{Y,M,D,h,m,s}));
+	return mpt::chrono::default_system_clock::to_unix_seconds(mpt::Date::default_from_UTC(mpt::Date::UTC{Y,M,D,h,m,s}));
 }
 
 static mpt::Date::UTC TestDate2(int s, int m, int h, unsigned int D, unsigned int M, int Y) {
@@ -1052,7 +1052,7 @@ static mpt::Date::UTC TestDate2(int s, int m, int h, unsigned int D, unsigned in
 }
 
 
-static MPT_NOINLINE void TestMisc1()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMisc1()
 {
 
 	VERIFY_EQUAL(ModCommand::IsPcNote(NOTE_MAX), false);
@@ -1173,7 +1173,7 @@ static MPT_NOINLINE void TestMisc1()
 }
 
 
-static MPT_NOINLINE void TestMisc2()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMisc2()
 {
 
 	// Check for completeness of supported effect list in mod specifications
@@ -1317,30 +1317,30 @@ static MPT_NOINLINE void TestMisc2()
 	VERIFY_EQUAL(    1413064016, TestDate1( 56, 46, 21, 11, 10, 2014 ));
 	VERIFY_EQUAL(    1413064100, TestDate1( 20, 48, 21, 11, 10, 2014 ));
 
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(             0)), TestDate2(  0,  0,  0,  1,  1, 1970 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(          3600)), TestDate2(  0,  0,  1,  1,  1, 1970 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(         86400)), TestDate2(  0,  0,  0,  2,  1, 1970 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(      31536000)), TestDate2(  0,  0,  0,  1,  1, 1971 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(     100000000)), TestDate2( 40, 46,  9,  3,  3, 1973 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(     951782400)), TestDate2(  0,  0,  0, 29,  2, 2000 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1000000000)), TestDate2( 40, 46,  1,  9,  9, 2001 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1044057600)), TestDate2(  0,  0,  0,  1,  2, 2003 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1044144000)), TestDate2(  0,  0,  0,  2,  2, 2003 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1046476800)), TestDate2(  0,  0,  0,  1,  3, 2003 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1064966400)), TestDate2(  0,  0,  0,  1, 10, 2003 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1077926399)), TestDate2( 59, 59, 23, 27,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1077926400)), TestDate2(  0,  0,  0, 28,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1077926410)), TestDate2( 10,  0,  0, 28,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078012799)), TestDate2( 59, 59, 23, 28,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078012800)), TestDate2(  0,  0,  0, 29,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078012820)), TestDate2( 20,  0,  0, 29,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078099199)), TestDate2( 59, 59, 23, 29,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078099200)), TestDate2(  0,  0,  0,  1,  3, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078099230)), TestDate2( 30,  0,  0,  1,  3, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078185599)), TestDate2( 59, 59, 23,  1,  3, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1096588800)), TestDate2(  0,  0,  0,  1, 10, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1413064016)), TestDate2( 56, 46, 21, 11, 10, 2014 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1413064100)), TestDate2( 20, 48, 21, 11, 10, 2014 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(             0)), TestDate2(  0,  0,  0,  1,  1, 1970 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(          3600)), TestDate2(  0,  0,  1,  1,  1, 1970 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(         86400)), TestDate2(  0,  0,  0,  2,  1, 1970 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(      31536000)), TestDate2(  0,  0,  0,  1,  1, 1971 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(     100000000)), TestDate2( 40, 46,  9,  3,  3, 1973 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(     951782400)), TestDate2(  0,  0,  0, 29,  2, 2000 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1000000000)), TestDate2( 40, 46,  1,  9,  9, 2001 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1044057600)), TestDate2(  0,  0,  0,  1,  2, 2003 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1044144000)), TestDate2(  0,  0,  0,  2,  2, 2003 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1046476800)), TestDate2(  0,  0,  0,  1,  3, 2003 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1064966400)), TestDate2(  0,  0,  0,  1, 10, 2003 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1077926399)), TestDate2( 59, 59, 23, 27,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1077926400)), TestDate2(  0,  0,  0, 28,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1077926410)), TestDate2( 10,  0,  0, 28,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078012799)), TestDate2( 59, 59, 23, 28,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078012800)), TestDate2(  0,  0,  0, 29,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078012820)), TestDate2( 20,  0,  0, 29,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078099199)), TestDate2( 59, 59, 23, 29,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078099200)), TestDate2(  0,  0,  0,  1,  3, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078099230)), TestDate2( 30,  0,  0,  1,  3, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078185599)), TestDate2( 59, 59, 23,  1,  3, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1096588800)), TestDate2(  0,  0,  0,  1, 10, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1413064016)), TestDate2( 56, 46, 21, 11, 10, 2014 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1413064100)), TestDate2( 20, 48, 21, 11, 10, 2014 ));
 
 
 #ifdef MODPLUG_TRACKER
@@ -1551,7 +1551,7 @@ static MPT_NOINLINE void TestMisc2()
 }
 
 
-static MPT_NOINLINE void TestRandom()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestRandom()
 {
 
 	#ifdef FLAKY_TESTS
@@ -1604,7 +1604,7 @@ static MPT_NOINLINE void TestRandom()
 }
 
 
-static MPT_NOINLINE void TestPathNative()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathNative()
 {
 
 	// Path splitting
@@ -1865,7 +1865,7 @@ static MPT_NOINLINE void TestPathNative()
 
 #if !defined(MPT_EMSCRIPTEN_TEST_PATH_CRASH)
 
-static MPT_NOINLINE void TestPathForeignWindowsNT()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeignWindowsNT()
 {
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::WindowsNT>>>;
@@ -2028,7 +2028,7 @@ static MPT_NOINLINE void TestPathForeignWindowsNT()
 	}
 }
 
-static MPT_NOINLINE void TestPathForeignWindows9x()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeignWindows9x()
 {
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::Windows9x>>>;
@@ -2175,7 +2175,7 @@ static MPT_NOINLINE void TestPathForeignWindows9x()
 	}
 }
 
-static MPT_NOINLINE void TestPathForeignDOSDJGPP()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeignDOSDJGPP()
 {
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::DOS_DJGPP>>>;
@@ -2282,7 +2282,7 @@ static MPT_NOINLINE void TestPathForeignDOSDJGPP()
 	}
 }
 
-static MPT_NOINLINE void TestPathForeignPOSIX()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeignPOSIX()
 {
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::Posix>>>;
@@ -2343,7 +2343,7 @@ static MPT_NOINLINE void TestPathForeignPOSIX()
 #endif // !MPT_EMSCRIPTEN_TEST_PATH_CRASH
 
 
-static MPT_NOINLINE void TestPathForeign()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeign()
 {
 
 #if !defined(MPT_EMSCRIPTEN_TEST_PATH_CRASH)
@@ -2423,7 +2423,7 @@ static MPT_NOINLINE void TestPathForeign()
 
 
 
-static MPT_NOINLINE void TestCharsets()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestCharsets()
 {
 
 	// Path conversions
@@ -2599,7 +2599,7 @@ namespace Test {
 #endif // MODPLUG_TRACKER
 
 
-static MPT_NOINLINE void TestSettings()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSettings()
 {
 
 #ifdef MODPLUG_TRACKER
@@ -2679,7 +2679,7 @@ static MPT_NOINLINE void TestSettings()
 
 
 // Test MIDI Event generating / reading
-static MPT_NOINLINE void TestMIDIEvents()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMIDIEvents()
 {
 	uint32 midiEvent;
 
@@ -2966,24 +2966,24 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 #ifdef MODPLUG_TRACKER
 	if(sndFile.GetTimezoneInternal() == mpt::Date::LogicalTimezone::UTC)
 	{
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).year, 2011);
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).month, 6);
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).day, 14);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).year, 2011);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).month, 6);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).day, 14);
 #if MPT_CXX_AT_LEAST(20) && !defined(MPT_LIBCXX_QUIRK_NO_CHRONO) && !defined(MPT_LIBCXX_QUIRK_NO_CHRONO_DATE)
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
 #else
 #if defined(MPT_FALLBACK_TIMEZONE_WINDOWS_HISTORIC)
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
 #elif defined(MPT_FALLBACK_TIMEZONE_WINDOWS_CURRENT)
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
 #elif defined(MPT_FALLBACK_TIMEZONE_C)
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 22);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 22);
 #else
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 22);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 22);
 #endif
 #endif
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).minutes, 8);
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).seconds, 32);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).minutes, 8);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).seconds, 32);
 	} else
 #endif // MODPLUG_TRACKER
 	{
@@ -3690,7 +3690,7 @@ static void SaveMOD(const TSoundFileContainer &sndFile, const mpt::PathString &f
 
 
 // Test file loading and saving
-static MPT_NOINLINE void TestLoadSaveFile()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestLoadSaveFile()
 {
 	if(!ShouldRunTests())
 	{
@@ -3925,7 +3925,7 @@ static MPT_NOINLINE void TestLoadSaveFile()
 
 
 // Test various editing features
-static MPT_NOINLINE void TestEditing()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestEditing()
 {
 #ifdef MODPLUG_TRACKER
 	auto modDoc = static_cast<CModDoc *>(theApp.GetModDocTemplate()->CreateNewDocument());
@@ -4025,7 +4025,7 @@ static void RunITCompressionTest(const std::vector<int8> &sampleData, FlagSet<Ch
 }
 
 
-static MPT_NOINLINE void TestITCompression()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestITCompression()
 {
 	// Test loading / saving of IT-compressed samples
 	constexpr int sampleDataSize = 131072;
@@ -4132,7 +4132,7 @@ static void GenerateCommands(CPattern& pat, const double dProbPcs, const double 
 
 
 // Test PC note serialization
-static MPT_NOINLINE void TestPCnoteSerialization()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPCnoteSerialization()
 {
 	FileReader file;
 	mpt::heap_value<CSoundFile> pSndFile;
@@ -4195,7 +4195,7 @@ static inline std::size_t strnlen(const char *str, std::size_t n)
 
 // Test String I/O functionality
 
-static MPT_NOINLINE void TestStringIO1()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringIO1()
 {
 
 #if MPT_COMPILER_MSVC
@@ -4453,7 +4453,7 @@ static MPT_NOINLINE void TestStringIO1()
 	}
 }
 
-static MPT_NOINLINE void TestStringIO2()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringIO2()
 {
 	{
 	
@@ -4567,13 +4567,13 @@ static MPT_NOINLINE void TestStringIO2()
 	}
 }
 
-static MPT_NOINLINE void TestStringIO()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringIO()
 {
 	TestStringIO1();
 	TestStringIO2();
 }
 
-static MPT_NOINLINE void TestSampleConversion()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSampleConversion()
 {
 	// Signed 8-Bit Integer PCM
 	// Unsigned 8-Bit Integer PCM

@@ -298,6 +298,9 @@ if _OPTIONS["group"] == "openmpt123" then
 solution "openmpt123"
 	startproject "openmpt123"
 
+if _ACTION < "vs2022" then
+ dofile "../../build/premake/ext-pthread-win32.lua"
+end
  dofile "../../build/premake/ext-flac.lua"
  dofile "../../build/premake/ext-mpg123.lua"
  dofile "../../build/premake/ext-ogg.lua"
@@ -330,6 +333,9 @@ solution "OpenMPT-UTF8"
  dofile "../../build/premake/ext-asiomodern.lua"
 if _OPTIONS["windows-version"] == "winxp" then
  dofile "../../build/premake/ext-cryptopp.lua"
+end
+if _ACTION < "vs2022" then
+ dofile "../../build/premake/ext-pthread-win32.lua"
 end
  dofile "../../build/premake/ext-flac.lua"
  dofile "../../build/premake/ext-lame.lua"
@@ -366,6 +372,9 @@ solution "OpenMPT-ANSI"
 if _OPTIONS["windows-version"] == "winxp" then
  dofile "../../build/premake/ext-cryptopp.lua"
 end
+if _ACTION < "vs2022" then
+ dofile "../../build/premake/ext-pthread-win32.lua"
+end
  dofile "../../build/premake/ext-flac.lua"
  dofile "../../build/premake/ext-lame.lua"
  dofile "../../build/premake/ext-lhasa.lua"
@@ -400,6 +409,9 @@ solution "OpenMPT"
  dofile "../../build/premake/ext-asiomodern.lua"
 if _OPTIONS["windows-version"] == "winxp" then
  dofile "../../build/premake/ext-cryptopp.lua"
+end
+if _ACTION < "vs2022" then
+ dofile "../../build/premake/ext-pthread-win32.lua"
 end
  dofile "../../build/premake/ext-flac.lua"
  dofile "../../build/premake/ext-lame.lua"
@@ -440,16 +452,21 @@ if _OPTIONS["windows-family"] == "uwp" then
 			premake.w('<AppContainerApplication>true</AppContainerApplication>')
 			premake.w('<ApplicationType>Windows Store</ApplicationType>')
 			premake.w('<ApplicationTypeRevision>10.0</ApplicationTypeRevision>')
-			premake.w('<WindowsTargetPlatformVersion Condition=" \'$(WindowsTargetPlatformVersion)\' == \'\' ">10.0.22000.0</WindowsTargetPlatformVersion>')
-			premake.w('<WindowsTargetPlatformMinVersion>10.0.17134.0</WindowsTargetPlatformMinVersion>')
+			if _OPTIONS["windows-version"] == "win10" then
+				premake.w('<WindowsTargetPlatformVersion Condition=" \'$(WindowsTargetPlatformVersion)\' == \'\' ">10.0.22621.0</WindowsTargetPlatformVersion>')
+				premake.w('<WindowsTargetPlatformMinVersion>10.0.19045.0</WindowsTargetPlatformMinVersion>')
+			elseif _OPTIONS["windows-version"] == "win11" then
+				premake.w('<WindowsTargetPlatformVersion Condition=" \'$(WindowsTargetPlatformVersion)\' == \'\' ">10.0.26100.0</WindowsTargetPlatformVersion>')
+				premake.w('<WindowsTargetPlatformMinVersion>10.0.22631.0</WindowsTargetPlatformMinVersion>')
+			end
 		elseif _ACTION == 'vs2019' then
 			premake.w('<DefaultLanguage>en-US</DefaultLanguage>')
 			premake.w('<MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>')
 			premake.w('<AppContainerApplication>true</AppContainerApplication>')
 			premake.w('<ApplicationType>Windows Store</ApplicationType>')
 			premake.w('<ApplicationTypeRevision>10.0</ApplicationTypeRevision>')
-			premake.w('<WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>')
-			premake.w('<WindowsTargetPlatformMinVersion>10.0.10240.0</WindowsTargetPlatformMinVersion>')
+			premake.w('<WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>')
+			premake.w('<WindowsTargetPlatformMinVersion>10.0.19045.0</WindowsTargetPlatformMinVersion>')
 		end
 	end
 

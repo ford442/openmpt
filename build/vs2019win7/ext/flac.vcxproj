@@ -56,7 +56,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>flac</RootNamespace>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
-    <WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -269,12 +269,13 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -292,8 +293,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -315,8 +316,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -344,8 +345,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -372,8 +373,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -401,8 +402,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC__NO_DLL;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -429,12 +430,13 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/wd4101 /wd4244 /wd4267 /wd4334 /wd6001 /wd6011 /wd6031 /wd6297 /wd6386 /wd26110 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -453,8 +455,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -477,8 +479,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -508,8 +510,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -538,8 +540,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -569,8 +571,8 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0601;NTDDI_VERSION=0x06010000;FLAC__HAS_OGG=1;PACKAGE_VERSION="1.5.0";FLAC_API_EXPORTS;FLAC__HAS_X86INTRIN;FLAC__USE_AVX;PTW32_CLEANUP_SEH;HAVE_PTHREAD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\include\ogg\include;..\..\..\include\flac\include;..\..\..\include\flac\src\libFLAC\include;..\..\..\include\pthread-win32;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -676,6 +678,9 @@
   <ItemGroup>
     <ProjectReference Include="ogg.vcxproj">
       <Project>{D8D5E11C-F959-49EF-B741-B3F6DE52DED8}</Project>
+    </ProjectReference>
+    <ProjectReference Include="pthread-win32.vcxproj">
+      <Project>{2F5B53AA-AB47-4B76-9913-87210353D8E4}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

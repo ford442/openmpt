@@ -19,6 +19,15 @@
     <Filter Include="include">
       <UniqueIdentifier>{89AF369E-F58E-B539-FEA6-40106A051C9B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\SignalsmithStretch">
+      <UniqueIdentifier>{58A08AD3-44B0-36A4-AD69-9BC29998253D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\SignalsmithStretch\SignalsmithStretch">
+      <UniqueIdentifier>{C71027C1-3381-293A-FC9F-A3C268CF613B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\SignalsmithStretch\signalsmith-linear">
+      <UniqueIdentifier>{12DE7E03-7E4E-817C-476D-FB04B39CB97D}</UniqueIdentifier>
+    </Filter>
     <Filter Include="include\nlohmann-json">
       <UniqueIdentifier>{5A0436C9-C670-F1C3-8F64-8921FB8F132C}</UniqueIdentifier>
     </Filter>
@@ -108,6 +117,9 @@
     </Filter>
     <Filter Include="src\mpt\check">
       <UniqueIdentifier>{7A65E07D-E625-5CB4-AF60-A5311BE0A090}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mpt\chrono">
+      <UniqueIdentifier>{8569F439-7137-E83F-5ACB-58664638C4A4}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\mpt\crc">
       <UniqueIdentifier>{94D615E1-008C-8ED6-8980-88ADF53485DA}</UniqueIdentifier>
@@ -288,9 +300,6 @@
     <ClInclude Include="..\..\common\FileReaderFwd.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\GzipWriter.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\common\Logging.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -353,6 +362,18 @@
     </ClInclude>
     <ClInclude Include="..\..\common\versionNumber.h">
       <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\zlib_helper.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\SignalsmithStretch\SignalsmithStretch\signalsmith-stretch.h">
+      <Filter>include\SignalsmithStretch\SignalsmithStretch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\SignalsmithStretch\signalsmith-linear\fft.h">
+      <Filter>include\SignalsmithStretch\signalsmith-linear</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\SignalsmithStretch\signalsmith-linear\stft.h">
+      <Filter>include\SignalsmithStretch\signalsmith-linear</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\nlohmann-json\include\nlohmann\adl_serializer.hpp">
       <Filter>include\nlohmann-json\include\nlohmann</Filter>
@@ -491,6 +512,9 @@
     </ClInclude>
     <ClInclude Include="..\..\include\nlohmann-json\include\nlohmann\thirdparty\hedley\hedley_undef.hpp">
       <Filter>include\nlohmann-json\include\nlohmann\thirdparty\hedley</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\misc\GzipWriter.h">
+      <Filter>misc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\misc\WriteMemoryDump.h">
       <Filter>misc</Filter>
@@ -1098,6 +1122,9 @@
     <ClInclude Include="..\..\src\mpt\arch\arch.hpp">
       <Filter>src\mpt\arch</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\arch\feature_fence.hpp">
+      <Filter>src\mpt\arch</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\arch\feature_flags.hpp">
       <Filter>src\mpt\arch</Filter>
     </ClInclude>
@@ -1271,6 +1298,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\check\windows.hpp">
       <Filter>src\mpt\check</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\chrono\system_clock.hpp">
+      <Filter>src\mpt\chrono</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\chrono\unix_clock.hpp">
+      <Filter>src\mpt\chrono</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\crc\crc.hpp">
       <Filter>src\mpt\crc</Filter>
@@ -1618,6 +1651,9 @@
       <Filter>src\mpt\uuid_namespace</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\openmpt\all\BuildSettings.hpp">
+      <Filter>src\openmpt\all</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\openmpt\all\BuildSettingsCompiler.hpp">
       <Filter>src\openmpt\all</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\openmpt\all\PlatformFixes.hpp">

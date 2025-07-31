@@ -671,6 +671,7 @@ CModToMidi::CModToMidi(CModDoc &modDoc, CWnd *parent)
 			}
 		}
 	}
+	m_selectedSong = m_modDoc.GetSubsongForCurrentEditPos(m_subSongs);
 }
 
 
@@ -964,7 +965,7 @@ void CModToMidi::UpdateSubsongName()
 	const auto subsongText = GetDlgItem(IDC_SUBSONG);
 	if(subsongText == nullptr || m_selectedSong >= m_subSongs.size())
 		return;
-	subsongText->SetWindowText(m_modDoc.FormatSubsongName(m_subSongs[m_selectedSong]).c_str());
+	subsongText->SetWindowText(m_modDoc.FormatSubsongName(m_subSongs, m_selectedSong).c_str());
 }
 
 

@@ -103,7 +103,7 @@ public:
 	DECLARE_SERIAL(CViewSample)
 
 protected:
-	MPT_NOINLINE void SetModified(SampleHint hint, bool updateAll, bool waveformModified);
+	MPT_ATTR_NOINLINE MPT_DECL_NOINLINE void SetModified(SampleHint hint, bool updateAll, bool waveformModified);
 	void UpdateScrollSize() { UpdateScrollSize(m_nZoom, true); }
 	void UpdateScrollSize(int newZoom, bool forceRefresh, SmpLength centeredSample = SmpLength(-1));
 	void UpdateOPLEditor();
@@ -122,8 +122,10 @@ protected:
 	void SetCurSel(SmpLength nBegin, SmpLength nEnd);
 	void ScrollToPosition(int x);
 	void DrawPositionMarks();
-	void DrawSampleData1(HDC hdc, int ymed, int cx, int cy, SmpLength len, SampleFlags uFlags, const void *pSampleData);
-	void DrawSampleData2(HDC hdc, int ymed, int cx, int cy, SmpLength len, SampleFlags uFlags, const void *pSampleData);
+	template <typename Tsample>
+	void DrawSampleData1(HDC hdc, int ymed, int cx, int cy, SmpLength len, SampleFlags uFlags, const Tsample *psample);
+	template <typename Tsample>
+	void DrawSampleData2(HDC hdc, int ymed, int cx, int cy, SmpLength len, SampleFlags uFlags, const Tsample *psample);
 	void DrawNcButton(CDC *pDC, UINT nBtn);
 	bool GetNcButtonRect(UINT button, CRect &rect) const;
 	UINT GetNcButtonAtPoint(CPoint point, CRect *outRect = nullptr) const;

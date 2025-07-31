@@ -23,8 +23,12 @@
    "../../common/versionNumber.h",
   }
 	excludes {
+		"../../src/mpt/filemode/**.cpp",
+		"../../src/mpt/filemode/**.hpp",
 		"../../src/mpt/main/**.cpp",
 		"../../src/mpt/main/**.hpp",
+		"../../src/mpt/terminal/**.cpp",
+		"../../src/mpt/terminal/**.hpp",
 		"../../src/openmpt/fileformat_base/**.cpp",
 		"../../src/openmpt/fileformat_base/**.hpp",
 		"../../src/openmpt/soundbase/**.cpp",
@@ -87,8 +91,12 @@
    "../../common/versionNumber.h",
   }
 	excludes {
+		"../../src/mpt/filemode/**.cpp",
+		"../../src/mpt/filemode/**.hpp",
 		"../../src/mpt/main/**.cpp",
 		"../../src/mpt/main/**.hpp",
+		"../../src/mpt/terminal/**.cpp",
+		"../../src/mpt/terminal/**.hpp",
 		"../../src/openmpt/fileformat_base/**.cpp",
 		"../../src/openmpt/fileformat_base/**.hpp",
 		"../../src/openmpt/soundbase/**.cpp",

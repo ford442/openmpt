@@ -88,6 +88,9 @@
     <Filter Include="src\mpt\check">
       <UniqueIdentifier>{7A65E07D-E625-5CB4-AF60-A5311BE0A090}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\mpt\chrono">
+      <UniqueIdentifier>{8569F439-7137-E83F-5ACB-58664638C4A4}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\mpt\crc">
       <UniqueIdentifier>{94D615E1-008C-8ED6-8980-88ADF53485DA}</UniqueIdentifier>
     </Filter>
@@ -246,9 +249,6 @@
     <ClInclude Include="..\..\common\FileReaderFwd.h">
       <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\GzipWriter.h">
-      <Filter>common</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\common\Logging.h">
       <Filter>common</Filter>
     </ClInclude>
@@ -310,6 +310,9 @@
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\versionNumber.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\zlib_helper.h">
       <Filter>common</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\asiomodern\include\ASIOModern\ASIO.hpp">
@@ -480,6 +483,9 @@
     <ClInclude Include="..\..\include\nlohmann-json\include\nlohmann\thirdparty\hedley\hedley_undef.hpp">
       <Filter>include\nlohmann-json\include\nlohmann\thirdparty\hedley</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\misc\GzipWriter.h">
+      <Filter>misc</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\misc\WriteMemoryDump.h">
       <Filter>misc</Filter>
     </ClInclude>
@@ -523,6 +529,9 @@
       <Filter>mptrack\wine</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\arch\arch.hpp">
+      <Filter>src\mpt\arch</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\arch\feature_fence.hpp">
       <Filter>src\mpt\arch</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\arch\feature_flags.hpp">
@@ -698,6 +707,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\check\windows.hpp">
       <Filter>src\mpt\check</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\chrono\system_clock.hpp">
+      <Filter>src\mpt\chrono</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\chrono\unix_clock.hpp">
+      <Filter>src\mpt\chrono</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\crc\crc.hpp">
       <Filter>src\mpt\crc</Filter>
@@ -1045,6 +1060,9 @@
       <Filter>src\mpt\uuid_namespace</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\openmpt\all\BuildSettings.hpp">
+      <Filter>src\openmpt\all</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\openmpt\all\BuildSettingsCompiler.hpp">
       <Filter>src\openmpt\all</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\openmpt\all\PlatformFixes.hpp">

@@ -80,7 +80,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>PluginBridgeLegacy</RootNamespace>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
-    <WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -415,6 +415,7 @@
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -767,6 +768,7 @@
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -1115,6 +1117,7 @@
     <ClInclude Include="..\..\pluginBridge\BridgeCommon.h" />
     <ClInclude Include="..\..\pluginBridge\BridgeOpCodes.h" />
     <ClInclude Include="..\..\src\mpt\arch\arch.hpp" />
+    <ClInclude Include="..\..\src\mpt\arch\feature_fence.hpp" />
     <ClInclude Include="..\..\src\mpt\arch\feature_flags.hpp" />
     <ClInclude Include="..\..\src\mpt\arch\x86_amd64.hpp" />
     <ClInclude Include="..\..\src\mpt\audio\sample.hpp" />
@@ -1173,6 +1176,8 @@
     <ClInclude Include="..\..\src\mpt\check\libcxx.hpp" />
     <ClInclude Include="..\..\src\mpt\check\mfc.hpp" />
     <ClInclude Include="..\..\src\mpt\check\windows.hpp" />
+    <ClInclude Include="..\..\src\mpt\chrono\system_clock.hpp" />
+    <ClInclude Include="..\..\src\mpt\chrono\unix_clock.hpp" />
     <ClInclude Include="..\..\src\mpt\crc\crc.hpp" />
     <ClInclude Include="..\..\src\mpt\crc\tests\tests_crc.hpp" />
     <ClInclude Include="..\..\src\mpt\crypto\config.hpp" />
@@ -1289,6 +1294,7 @@
     <ClInclude Include="..\..\src\mpt\uuid_namespace\tests\tests_uuid_namespace.hpp" />
     <ClInclude Include="..\..\src\mpt\uuid_namespace\uuid_namespace.hpp" />
     <ClInclude Include="..\..\src\openmpt\all\BuildSettings.hpp" />
+    <ClInclude Include="..\..\src\openmpt\all\BuildSettingsCompiler.hpp" />
     <ClInclude Include="..\..\src\openmpt\all\PlatformFixes.hpp" />
     <ClInclude Include="..\..\src\openmpt\base\Endian.hpp" />
     <ClInclude Include="..\..\src\openmpt\base\FlagSet.hpp" />

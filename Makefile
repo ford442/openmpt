@@ -360,6 +360,9 @@ endif
 ifeq ($(UNAME_S),OpenBSD)
 HOST_FLAVOUR=OPENBSD
 endif
+ifeq ($(UNAME_S),DragonFly)
+HOST_FLAVOUR=DRAGONFLY
+endif
 ifeq ($(UNAME_S),Haiku)
 HOST_FLAVOUR=HAIKU
 endif
@@ -408,6 +411,8 @@ TAR_C=tar -c -N
 else
 TAR_C=tar -c -F pax -N
 endif
+else ifeq ($(findstring DragonFly,$(UNAME_S)),DragonFly)
+TAR_C=tar -c --format pax --numeric-owner --uname "" --gname "" --uid 0 --gid 0
 else ifeq ($(findstring BSD,$(UNAME_S)),BSD)
 TAR_C=tar -c --format pax --numeric-owner --uname "" --gname "" --uid 0 --gid 0
 else
@@ -2106,12 +2111,14 @@ bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar: b
 	svn export ./src/mpt/base                     bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/base
 	svn export ./src/mpt/binary                   bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/binary
 	svn export ./src/mpt/check                    bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/check
+	svn export ./src/mpt/chrono                   bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/chrono
 	svn export ./src/mpt/crc                      bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/crc
 	#svn export ./src/mpt/crypto                   bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/crypto
 	svn export ./src/mpt/detect                   bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/detect
 	svn export ./src/mpt/endian                   bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/endian
 	svn export ./src/mpt/environment              bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/environment
 	svn export ./src/mpt/exception                bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/exception
+	svn export ./src/mpt/filemode                 bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/filemode
 	svn export ./src/mpt/format                   bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/format
 	#svn export ./src/mpt/fs                       bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/fs
 	svn export ./src/mpt/io                       bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io
@@ -2133,6 +2140,7 @@ bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION).makefile.tar: b
 	svn export ./src/mpt/string                   bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/string
 	svn export ./src/mpt/string_transcode         bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/string_transcode
 	svn export ./src/mpt/system_error             bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/system_error
+	svn export ./src/mpt/terminal                 bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/terminal
 	svn export ./src/mpt/test                     bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/test
 	svn export ./src/mpt/uuid                     bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/uuid
 	#svn export ./src/mpt/uuid_namespace           bin/$(FLAVOUR_DIR)dist-tar/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/uuid_namespace
@@ -2209,12 +2217,14 @@ bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip: bin/$
 	svn export ./src/mpt/base                     bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/base                     --native-eol CRLF
 	svn export ./src/mpt/binary                   bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/binary                   --native-eol CRLF
 	svn export ./src/mpt/check                    bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/check                    --native-eol CRLF
+	svn export ./src/mpt/chrono                   bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/chrono                   --native-eol CRLF
 	svn export ./src/mpt/crc                      bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/crc                      --native-eol CRLF
 	#svn export ./src/mpt/crypto                   bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/crypto                   --native-eol CRLF
 	svn export ./src/mpt/detect                   bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/detect                   --native-eol CRLF
 	svn export ./src/mpt/endian                   bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/endian                   --native-eol CRLF
 	svn export ./src/mpt/environment              bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/environment              --native-eol CRLF
 	svn export ./src/mpt/exception                bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/exception                --native-eol CRLF
+	svn export ./src/mpt/filemode                 bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/filemode                 --native-eol CRLF
 	svn export ./src/mpt/format                   bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/format                   --native-eol CRLF
 	#svn export ./src/mpt/fs                       bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/fs                       --native-eol CRLF
 	svn export ./src/mpt/io                       bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/io                       --native-eol CRLF
@@ -2236,6 +2246,7 @@ bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip: bin/$
 	svn export ./src/mpt/string                   bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/string                   --native-eol CRLF
 	svn export ./src/mpt/string_transcode         bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/string_transcode         --native-eol CRLF
 	svn export ./src/mpt/system_error             bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/system_error             --native-eol CRLF
+	svn export ./src/mpt/terminal                 bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/terminal                 --native-eol CRLF
 	svn export ./src/mpt/test                     bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/test                     --native-eol CRLF
 	svn export ./src/mpt/uuid                     bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/uuid                     --native-eol CRLF
 	#svn export ./src/mpt/uuid_namespace           bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/src/mpt/uuid_namespace           --native-eol CRLF
@@ -2260,6 +2271,7 @@ bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION).msvc.zip: bin/$
 	svn export ./include/flac                     bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/include/flac                     --native-eol CRLF
 	svn export ./include/portaudio                bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/include/portaudio                --native-eol CRLF
 	svn export ./include/ogg                      bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/include/ogg                      --native-eol CRLF
+	svn export ./include/pthread-win32            bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/include/pthread-win32            --native-eol CRLF
 	svn export ./include/pugixml                  bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/include/pugixml                  --native-eol CRLF
 	svn export ./include/stb_vorbis               bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/include/stb_vorbis               --native-eol CRLF
 	svn export ./include/vorbis                   bin/$(FLAVOUR_DIR)dist-zip/libopenmpt-$(DIST_LIBOPENMPT_VERSION)/include/vorbis                   --native-eol CRLF

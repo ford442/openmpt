@@ -406,7 +406,7 @@ template<> inline Resampling::AmigaFilter FromSettingValue(const SettingValue &v
 template<> inline SettingValue ToSettingValue(const NewFileAction &val) { return SettingValue(int32(val)); }
 template<> inline NewFileAction FromSettingValue(const SettingValue &val) { return NewFileAction(val.as<int32>()); }
 
-enum class MainToolBarItem : uint8
+enum class MainToolBarItem : uint32
 {
 	Octave = 0x01,
 	Tempo = 0x02,
@@ -414,8 +414,13 @@ enum class MainToolBarItem : uint8
 	RowsPerBeat = 0x08,
 	GlobalVolume = 0x10,
 	VUMeter = 0x20,
+	IconsFile = 0x40,
+	IconsEdit = 0x80,
+	IconsPlayback = 0x100,
+	IconsMisc = 0x200,
 
-	Default = Octave | Tempo | Speed | RowsPerBeat | GlobalVolume | VUMeter
+	AllIcons = IconsFile | IconsEdit | IconsPlayback | IconsMisc,
+	Default = Octave | Tempo | Speed | RowsPerBeat | GlobalVolume | VUMeter | AllIcons
 };
 DECLARE_FLAGSET(MainToolBarItem)
 
@@ -559,14 +564,14 @@ template<> inline ProcessPriorityClass FromSettingValue(const SettingValue &val)
 }
 
 
-template<> inline SettingValue ToSettingValue(const mpt::Date::Unix &val)
+template<> inline SettingValue ToSettingValue(const mpt::chrono::default_system_clock::time_point &val)
 {
-	return SettingValue(mpt::ufmt::val(mpt::Date::UnixAsSeconds(val)), "UnixTime");
+	return SettingValue(mpt::ufmt::val(mpt::chrono::default_system_clock::to_unix_seconds(val)), "UnixTime");
 }
-template<> inline mpt::Date::Unix FromSettingValue(const SettingValue &val)
+template<> inline mpt::chrono::default_system_clock::time_point FromSettingValue(const SettingValue &val)
 {
 	MPT_ASSERT(val.GetTypeTag() == "UnixTime");
-	return mpt::Date::UnixFromSeconds(mpt::parse<int64>(val.as<mpt::ustring>()));
+	return mpt::chrono::default_system_clock::from_unix_seconds(mpt::parse<int64>(val.as<mpt::ustring>()));
 }
 
 struct FontSetting
@@ -989,7 +994,7 @@ public:
 
 	Setting<bool> UpdateEnabled;
 	Setting<bool> UpdateInstallAutomatically;
-	Setting<mpt::Date::Unix> UpdateLastUpdateCheck;
+	Setting<mpt::chrono::default_system_clock::time_point> UpdateLastUpdateCheck;
 	Setting<int32> UpdateUpdateCheckPeriod_DEPRECATED;
 	Setting<int32> UpdateIntervalDays;
 	Setting<uint32> UpdateChannel;

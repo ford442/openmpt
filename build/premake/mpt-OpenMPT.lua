@@ -63,6 +63,10 @@ end
 	defines { "MPT_WITH_OPUSFILE" }
 	mpt_use_portaudio()
 	defines { "MPT_WITH_PORTAUDIO" }
+	if _ACTION < "vs2022" then
+		mpt_use_pthread_win32()
+		defines { "MPT_WITH_PTHREAD" }
+	end
 	mpt_use_r8brain()
 	defines { "MPT_WITH_R8BRAIN" }
 	mpt_use_rtaudio()
@@ -119,8 +123,12 @@ end
    "../../pluginBridge/BridgeWrapper.h",
   }
 	excludes {
+		"../../src/mpt/filemode/**.cpp",
+		"../../src/mpt/filemode/**.hpp",
 		"../../src/mpt/main/**.cpp",
 		"../../src/mpt/main/**.hpp",
+		"../../src/mpt/terminal/**.cpp",
+		"../../src/mpt/terminal/**.hpp",
 	}
   files {
    "../../mptrack/mptrack.rc",

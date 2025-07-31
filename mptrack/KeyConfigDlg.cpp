@@ -509,7 +509,7 @@ void COptionsKeyboard::UpdateShortcutList(int category)
 	}
 
 	const auto curSelection = m_lbnCommandKeys.GetSelectionMark();
-	CommandID curCommand = (curSelection >= 0) ? static_cast<CommandID>(m_lbnCommandKeys.GetItemData(curSelection)) : kcNull;
+	const CommandID curCommand = (curSelection >= 0) ? static_cast<CommandID>(m_lbnCommandKeys.GetItemData(curSelection)) : kcNull;
 	m_lbnCommandKeys.SetRedraw(FALSE);
 	m_lbnCommandKeys.DeleteAllItems();
 	if(m_listGrouped)
@@ -520,6 +520,7 @@ void COptionsKeyboard::UpdateShortcutList(int category)
 
 	int currentGroup = -1;
 	int itemID = -1;
+	int itemToSelect = -1;
 
 	for(int cat = firstCat; cat <= lastCat; cat++)
 	{
@@ -583,6 +584,8 @@ void COptionsKeyboard::UpdateShortcutList(int category)
 							catName = _T("------ ") + range.name + _T(" ------");
 						lvi.pszText = const_cast<TCHAR *>(catName.GetString());
 						m_lbnCommandKeys.InsertItem(&lvi);
+						if(itemToSelect == -1)
+							itemToSelect = itemID;
 					}
 				}
 
@@ -614,20 +617,23 @@ void COptionsKeyboard::UpdateShortcutList(int category)
 					lvi.iGroupId = currentGroup;
 					m_lbnCommandKeys.InsertItem(&lvi);
 					m_lbnCommandKeys.SetItemText(itemID, 1, m_localCmdSet->GetKeyTextFromCommand(com));
+					if(itemToSelect == -1)
+						itemToSelect = itemID;
 
 					if(curCommand == com)
 					{
 						// Keep selection on previously selected string
-						m_lbnCommandKeys.SetSelectionMark(itemID);
+						itemToSelect = itemID;
 					}
 				}
 			}
 		}
 	}
 
-	if(m_lbnCommandKeys.GetSelectionMark() == -1)
+	if(itemToSelect != -1)
 	{
-		m_lbnCommandKeys.SetSelectionMark(0);
+		m_lbnCommandKeys.SetSelectionMark(itemToSelect);
+		m_lbnCommandKeys.SetItemState(itemToSelect, LVIS_SELECTED, LVIS_SELECTED);
 	}
 	m_lbnCommandKeys.SetRedraw(TRUE);
 	OnCommandKeySelChanged();
@@ -895,6 +901,8 @@ void COptionsKeyboard::OnSetKeyChoice(const CWnd *source)
 		event |= kKeyEventRepeat;
 	if(m_bKeyUp.GetCheck() != BST_UNCHECKED)
 		event |= kKeyEventUp;
+	if(event == kKeyEventNone)
+		event = kKeyEventDown;
 
 	KeyCombination kc(CCommandSet::ContextFromCommand(cmd), m_eCustHotKey.mod, m_eCustHotKey.code, event);
 	//detect invalid input
@@ -902,11 +910,6 @@ void COptionsKeyboard::OnSetKeyChoice(const CWnd *source)
 	{
 		Reporting::Warning("You need to say to which key you'd like to map this command to.", "Invalid key data", this);
 		return;
-	}
-	if(!kc.EventType())
-	{
-		::MessageBeep(MB_ICONWARNING);
-		kc.EventType(kKeyEventDown);
 	}
 
 	bool add = true, updateAll = false;

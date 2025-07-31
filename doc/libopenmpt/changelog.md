@@ -7,10 +7,15 @@ is just a high-level summary.
 
 ### libopenmpt 0.9.0-pre
 
+ *  [**New**] libopenmpt: New APIs for retrieving the sequence (order list) to
+    which the currently playing subsong belongs:
+    `openmpt::module::get_current sequence()` (C++) and
+    `openmpt_module_get_current_sequence()` (C). 
+
  *  libopenmpt now always uses architecture-specific SIMD intrinsics when
     available. This currently only enables the SSE2 implementation for Reverb.
-
- *  openmpt123.exe now has an application icon.
+ *  openmpt123: Bigger than 80x25 text modes are now supported on DOS.
+ *  openmpt123: openmpt123.exe now has an application icon.
 
 ### libopenmpt 0.8.0 (2025-05-31)
 

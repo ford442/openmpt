@@ -345,7 +345,7 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 	// Update
 	, UpdateEnabled(conf, UL_("Update"), UL_("Enabled"), true)
 	, UpdateInstallAutomatically(conf, UL_("Update"), UL_("InstallAutomatically"), false)
-	, UpdateLastUpdateCheck(conf, UL_("Update"), UL_("LastUpdateCheck"), mpt::Date::Unix{})
+	, UpdateLastUpdateCheck(conf, UL_("Update"), UL_("LastUpdateCheck"), mpt::chrono::default_system_clock::time_point{})
 	, UpdateUpdateCheckPeriod_DEPRECATED(conf, UL_("Update"), UL_("UpdateCheckPeriod"), 7)
 	, UpdateIntervalDays(conf, UL_("Update"), UL_("UpdateCheckIntervalDays"), 7)
 	, UpdateChannel(conf, UL_("Update"), UL_("Channel"), UpdateChannelRelease)
@@ -855,7 +855,7 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 	}
 	if(storedVersion < MPT_V("1.31.00.12"))
 	{
-		UpdateLastUpdateCheck = mpt::Date::Unix{};
+		UpdateLastUpdateCheck = mpt::chrono::default_system_clock::time_point{};
 	}
 #endif // MPT_ENABLE_UPDATE
 
@@ -912,6 +912,15 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 
 	// Migrate Tuning data
 	MigrateTunings(storedVersion);
+
+	// At least one icon group must be visible, otherwise the toolbar collapses.
+	// If all icon groups are gone, just re-activate them all. This also serves as an upgrade path from older versions where icons were always visible.
+	FlagSet<MainToolBarItem> toolbarItems = mainToolBarVisibleItems.Get();
+	if(!toolbarItems[MainToolBarItem::AllIcons])
+	{
+		toolbarItems.set(MainToolBarItem::AllIcons);
+		mainToolBarVisibleItems = toolbarItems.value().as_enum();
+	}
 
 	// Sanitize MIDI import data
 	if(midiImportPatternLen < ModSpecs::mptm.patternRowsMin || midiImportPatternLen > ModSpecs::mptm.patternRowsMax)

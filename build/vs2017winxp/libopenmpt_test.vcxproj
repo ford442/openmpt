@@ -300,7 +300,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -312,7 +312,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -333,7 +333,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -344,7 +344,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -365,7 +365,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -380,7 +380,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -403,7 +403,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -417,7 +417,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -440,7 +440,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -456,7 +456,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -478,7 +478,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -493,7 +493,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -515,7 +515,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -527,7 +527,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -547,7 +547,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -558,7 +558,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_DEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -578,7 +578,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -593,7 +593,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -616,7 +616,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
@@ -630,7 +630,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;NDEBUG;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -653,7 +653,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -669,7 +669,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0501;NTDDI_VERSION=0x05010300;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"x86\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -691,7 +691,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -706,7 +706,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
-      <PreprocessorDefinitions>MPT_BUILD_RETRO;MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MPT_CHECK_CXX_IGNORE_PREPROCESSOR;DEBUG;MPT_BUILD_CHECKED;MPT_BUILD_MSVC;WIN32;NOMINMAX;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES=1;_CRT_SECURE_CPP_OVERLOAD_STANDARD_NAMES_COUNT=1;_WIN32_WINNT=0x0502;NTDDI_VERSION=0x05020200;MPG123_NO_LARGENAME;LINK_MPG123_DLL;ZLIB_DLL;MPT_WITH_MPG123;MPT_WITH_OGG;MPT_WITH_VORBIS;MPT_WITH_VORBISFILE;MPT_WITH_ZLIB;LIBOPENMPT_BUILD;LIBOPENMPT_BUILD_TEST;VER_ARCHNAME=\"amd64\";MPT_BUILD_VER_FILENAME=\"libopenmpt_test.exe\";MPT_BUILD_VER_FILEDESC=\"libopenmpt_test\";MPT_BUILD_VER_EXE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\include\mpg123\src\include;..\..\include\ogg\include;..\..\include\vorbis\include;..\..\include\zlib;..\..;..\..\src;..\..\common;$(IntDir)\svn_version;$(IntDir)\svn_version;..\svn_version;$(ProjDir)\..\..\build\svn_version;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
@@ -730,7 +730,6 @@
     <ClInclude Include="..\..\common\ComponentManager.h" />
     <ClInclude Include="..\..\common\FileReader.h" />
     <ClInclude Include="..\..\common\FileReaderFwd.h" />
-    <ClInclude Include="..\..\common\GzipWriter.h" />
     <ClInclude Include="..\..\common\Logging.h" />
     <ClInclude Include="..\..\common\Profiler.h" />
     <ClInclude Include="..\..\common\misc_util.h" />
@@ -752,6 +751,7 @@
     <ClInclude Include="..\..\common\stdafx.h" />
     <ClInclude Include="..\..\common\version.h" />
     <ClInclude Include="..\..\common\versionNumber.h" />
+    <ClInclude Include="..\..\common\zlib_helper.h" />
     <ClInclude Include="..\..\libopenmpt\libopenmpt.h" />
     <ClInclude Include="..\..\libopenmpt\libopenmpt.hpp" />
     <ClInclude Include="..\..\libopenmpt\libopenmpt_config.h" />
@@ -848,6 +848,7 @@
     <ClInclude Include="..\..\soundlib\tuningbase.h" />
     <ClInclude Include="..\..\soundlib\tuningcollection.h" />
     <ClInclude Include="..\..\src\mpt\arch\arch.hpp" />
+    <ClInclude Include="..\..\src\mpt\arch\feature_fence.hpp" />
     <ClInclude Include="..\..\src\mpt\arch\feature_flags.hpp" />
     <ClInclude Include="..\..\src\mpt\arch\x86_amd64.hpp" />
     <ClInclude Include="..\..\src\mpt\audio\sample.hpp" />
@@ -906,6 +907,8 @@
     <ClInclude Include="..\..\src\mpt\check\libcxx.hpp" />
     <ClInclude Include="..\..\src\mpt\check\mfc.hpp" />
     <ClInclude Include="..\..\src\mpt\check\windows.hpp" />
+    <ClInclude Include="..\..\src\mpt\chrono\system_clock.hpp" />
+    <ClInclude Include="..\..\src\mpt\chrono\unix_clock.hpp" />
     <ClInclude Include="..\..\src\mpt\crc\crc.hpp" />
     <ClInclude Include="..\..\src\mpt\crc\tests\tests_crc.hpp" />
     <ClInclude Include="..\..\src\mpt\detect\dl.hpp" />
@@ -973,6 +976,7 @@
     <ClInclude Include="..\..\src\mpt\io_read\filereader.hpp" />
     <ClInclude Include="..\..\src\mpt\io_write\buffer.hpp" />
     <ClInclude Include="..\..\src\mpt\main\main.hpp" />
+    <ClInclude Include="..\..\src\mpt\main\stdio_tokens.hpp" />
     <ClInclude Include="..\..\src\mpt\mutex\mutex.hpp" />
     <ClInclude Include="..\..\src\mpt\osinfo\class.hpp" />
     <ClInclude Include="..\..\src\mpt\osinfo\dos_memory.hpp" />
@@ -1012,6 +1016,7 @@
     <ClInclude Include="..\..\src\mpt\uuid\tests\tests_uuid.hpp" />
     <ClInclude Include="..\..\src\mpt\uuid\uuid.hpp" />
     <ClInclude Include="..\..\src\openmpt\all\BuildSettings.hpp" />
+    <ClInclude Include="..\..\src\openmpt\all\BuildSettingsCompiler.hpp" />
     <ClInclude Include="..\..\src\openmpt\all\PlatformFixes.hpp" />
     <ClInclude Include="..\..\src\openmpt\base\Endian.hpp" />
     <ClInclude Include="..\..\src\openmpt\base\FlagSet.hpp" />
