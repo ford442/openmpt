@@ -48,9 +48,9 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         sndFile.Create(MOD_TYPE_XM, j.value("channels", 4));
         
         // --- Set Song Properties ---
-        sndFile.SetTitle(j.value("songName", "AI Song"));
-        sndFile.Order().SetDefaultSpeed(j.value("speed", 6));
-        sndFile.Order().SetDefaultTempo(TEMPO(j.value("tempo", 125.0)));
+        sndFile.m_songName = j.value("songName", "AI Song");
+        sndFile.m_nDefaultSpeed = j.value("speed", 6);
+        sndFile.m_nDefaultTempo.Set(j.value("tempo", 125.0));
         
         // --- Create Instruments and Samples ---
         if (j.contains("instruments")) {
@@ -131,7 +131,8 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
 
         // --- Save to Memory ---
         std::stringstream memStream;
-        if(!CSoundFile::SaveXM(sndFile, memStream, false))
+        // Use the static Save function from the XMTools class
+        if(!XMTools::Save(sndFile, memStream))
         {
             return {}; // Saving failed
         }
