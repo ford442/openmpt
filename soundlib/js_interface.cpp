@@ -131,7 +131,6 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
 
         // --- Save to Memory ---
         std::stringstream memStream;
-        // Use the static SaveXM function from the CSoundFile class
         if(!CSoundFile::SaveXM(sndFile, memStream, false))
         {
             return {}; // Saving failed
