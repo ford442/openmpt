@@ -42,7 +42,7 @@ using namespace OpenMPT;
  * @return A std::vector<char> containing the bytes of the generated module file.
  * Emscripten will automatically convert this to a JavaScript Uint8Array.
  */
-std.vector<char> CreateModuleFromJSON(const std::string &json_string) {
+std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
     CSoundFile sndFile;
     
     try {
@@ -85,7 +85,6 @@ std.vector<char> CreateModuleFromJSON(const std::string &json_string) {
                         std::vector<int8_t> sample_data = sample_json["data"].get<std::vector<int8_t>>();
                         
                         if (!sample_data.empty()) {
-                            // Use the correct function to read sample data from a memory pointer
                             sndFile.ReadSample(sampleIndex, reinterpret_cast<const char*>(sample_data.data()), sample_data.size());
                             sample.nLength = sample_data.size();
                             sample.nLoopStart = sample_json.value("loopStart", 0);
@@ -129,7 +128,6 @@ std.vector<char> CreateModuleFromJSON(const std::string &json_string) {
 
         // --- Save to Memory ---
         std::stringstream memStream;
-        // Use the correct save function from the CSoundFile class
         sndFile.SaveXM(memStream, false);
         
         std::string const& s = memStream.str();
