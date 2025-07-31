@@ -1,7 +1,8 @@
 /**
  * js_interface.cpp
  * This file uses the specific API required by the user's libopenmpt branch,
- * combining direct member access and specific public methods.
+ * combining direct member access and specific public methods. It uses the
+ * Emscripten virtual filesystem to handle file saving.
  */
 
 #include "common/stdafx.h"
@@ -13,12 +14,11 @@
 
 // Core libopenmpt headers
 #include "soundlib/Sndfile.h"
-#include "soundlib/mod_specifications.h"
+#include "soundlib/mod_specifications.hh"
 #include "soundlib/ModInstrument.h"
 #include "soundlib/ModSample.h"
 #include "soundlib/pattern.h"
 #include "soundlib/patternContainer.h"
-#include "soundlib/XMTools.h" // For saving XM files
 
 // Emscripten binding header
 #include <emscripten/bind.h>
@@ -48,9 +48,9 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         sndFile.Create(MOD_TYPE_XM, j.value("channels", 4));
         
         // --- Set Song Properties ---
-        sndFile.SetTitle(j.value("songName", "AI Song"));
-        sndFile.Order().SetDefaultSpeed(j.value("speed", 6));
-        sndFile.Order().SetDefaultTempo(TEMPO(j.value("tempo", 125.0)));
+        sndFile.m_songName = j.value("songName", "AI Song");
+        sndFile.m_nDefaultSpeed = j.value("speed", 6);
+        sndFile.m_nDefaultTempo.Set(j.value("tempo", 125.0));
         
         // --- Create Instruments and Samples ---
         if (j.contains("instruments")) {
@@ -60,7 +60,8 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
 
                 if(instIndex >= MAX_INSTRUMENTS) continue;
 
-                ModInstrument *pInst = sndFile.AllocateInstrument(instIndex);
+                sndFile.Instruments[instIndex] = new (std::nothrow) ModInstrument();
+                ModInstrument *pInst = sndFile.Instruments[instIndex];
                 if (!pInst) continue;
                 
                 pInst->name = inst_json.value("name", "Instrument");
@@ -82,9 +83,9 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
                     
                     if (!sample_data.empty()) {
                         sample.nLength = sample_data.size();
-                        if(sample.AllocateSample())
-                        {
-                            std::memcpy(sample.samplev(), sample_data.data(), sample.nLength);
+                        sample.pSample = sndFile.AllocateSample(sample.nLength);
+                        if(sample.pSample) {
+                            std::memcpy(sample.pSample, sample_data.data(), sample.nLength);
                         }
                         
                         sample.nLoopStart = sample_json.value("loopStart", 0);
@@ -122,23 +123,25 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         // --- Set Pattern Order ---
         if (j.contains("patternOrder")) {
             std::vector<PATTERNINDEX> order = j["patternOrder"].get<std::vector<PATTERNINDEX>>();
-            sndFile.Order().clear();
-            for(auto pat : order)
-            {
-                sndFile.Order().push_back(pat);
-            }
+            sndFile.Order.assign(order);
         }
 
-        // --- Save to Memory ---
-        std::stringstream memStream;
-        // The SaveXM function is a static member of CSoundFile in this version.
-        // This will only compile if file saving is enabled in your build configuration.
-        if(!CSoundFile::SaveXM(sndFile, memStream, false))
-        {
-            return {}; // Saving failed
+        // --- Save to Memory via Virtual Filesystem ---
+        const std::string tempFilename = "/working/temp_module.xm";
+        if(!sndFile.SaveXM(mpt::PathString::FromUTF8(tempFilename), false)) {
+            // Saving failed
+            return {};
         }
-        std::string const& s = memStream.str();
-        return std::vector<char>(s.begin(), s.end());
+
+        // Read the file back from the virtual filesystem into a buffer
+        std::ifstream inFile(tempFilename, std::ios::binary | std::ios::ate);
+        std::streamsize size = inFile.tellg();
+        inFile.seekg(0, std::ios::beg);
+
+        std::vector<char> buffer(size);
+        if (inFile.read(buffer.data(), size)) {
+            return buffer;
+        }
 
     } catch (const json::exception& e) {
         // MPT_LOG_GLOBAL(LogWarning, "JSON", "JSON parsing error: " + std::string(e.what()));
