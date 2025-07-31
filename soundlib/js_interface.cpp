@@ -12,10 +12,12 @@
 
 // Core libopenmpt headers
 #include "soundlib/Sndfile.h"
-#include "soundlib/mod_instrument.h"
-#include "soundlib/mod_sample.h"
+// Corrected include paths based on your repository structure
+#include "soundlib/ModInstrument.h"
+#include "soundlib/ModSample.h"
 #include "soundlib/pattern.h"
 #include "soundlib/patternContainer.h"
+#include "soundlib/mod_specifications.h" // Includes constants like MAX_INSTRUMENTNAME
 
 // Emscripten binding header
 #include <emscripten/bind.h>
@@ -63,21 +65,26 @@ std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
                 // For simplicity, we'll map one sample to each instrument
                 if (inst_json.contains("sample")) {
                     const auto& sample_json = inst_json["sample"];
-                    ModSample &sample = sndFile.GetSample(i + 1);
-                    
-                    strncpy(sample.name, sample_json.value("name", "Sample").c_str(), MAX_SAMPLENAME);
-                    
-                    // Get sample data from JSON (assuming it's an array of numbers)
-                    std::vector<int8_t> sample_data = sample_json["data"].get<std::vector<int8_t>>();
-                    
-                    if (!sample_data.empty()) {
-                        sndFile.ReadSample(i + 1, reinterpret_cast<const char*>(sample_data.data()), sample_data.size(), 0);
-                        sample.nLength = sample_data.size();
-                        sample.nLoopStart = sample_json.value("loopStart", 0);
-                        sample.nLoopEnd = sample_json.value("loopEnd", sample.nLength);
-                        sample.uFlags.set(CHN_LOOP, sample_json.value("loop", true));
-                        sample.nVolume = sample_json.value("volume", 256); // 256 is max
-                        sample.nPan = sample_json.value("pan", 128);       // 128 is center
+                    // We need to get the sample index for this instrument
+                    SAMPLEINDEX sampleIndex = sndFile.GetNextFreeSample();
+                    if(sampleIndex > 0 && sampleIndex <= sndFile.GetNumSamples()) {
+                        pInst->AssignSample(sampleIndex);
+                        ModSample &sample = sndFile.GetSample(sampleIndex);
+                        
+                        strncpy(sample.name, sample_json.value("name", "Sample").c_str(), MAX_SAMPLENAME);
+                        
+                        // Get sample data from JSON (assuming it's an array of numbers)
+                        std::vector<int8_t> sample_data = sample_json["data"].get<std::vector<int8_t>>();
+                        
+                        if (!sample_data.empty()) {
+                            sndFile.ReadSample(sampleIndex, reinterpret_cast<const char*>(sample_data.data()), sample_data.size(), 0);
+                            sample.nLength = sample_data.size();
+                            sample.nLoopStart = sample_json.value("loopStart", 0);
+                            sample.nLoopEnd = sample_json.value("loopEnd", sample.nLength);
+                            sample.uFlags.set(CHN_LOOP, sample_json.value("loop", true));
+                            sample.nVolume = sample_json.value("volume", 256); // 256 is max
+                            sample.nPan = sample_json.value("pan", 128);       // 128 is center
+                        }
                     }
                 }
             }
