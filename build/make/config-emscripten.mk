@@ -140,7 +140,7 @@ LDFLAGS  += -DNDEBUG=1 \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-math-errno \
 -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_HEAP=512mb \
 -rtlib=compiler-rt -sENVIRONMENT=web -sASYNCIFY=0 -sMALLOC='emmalloc' \
---output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0 -sASSERTIONS=0
+--output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0 -sASSERTIONS=0 -lembind
 
 
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
