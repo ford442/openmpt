@@ -18,24 +18,25 @@
    "../../include/pugixml/src/pugiconfig.hpp",
    "../../include/pugixml/src/pugixml.hpp",
   }
-  filter { "action:vs*" }
-    buildoptions { "/wd6054", "/wd28182" } -- /analyze
-  filter {}
+	filter {}
+	if MPT_COMPILER_MSVC or MPT_COMPILER_CLANGCL then
+		buildoptions { "/wd6054", "/wd28182" } -- /analyze
+	end
+	filter {}
 
 function mpt_use_pugixml ()
 	filter {}
-	filter { "action:vs*" }
-		includedirs {
-			"../../include/pugixml/src",
-		}
-	filter { "not action:vs*" }
-		externalincludedirs {
-			"../../include/pugixml/src",
-		}
+	dependencyincludedirs {
+		"../../include/pugixml/src",
+	}
 	filter {}
-	filter { "configurations:*Shared" }
-		defines { "PUGIXML_API=__declspec(dllimport)" }
-	filter { "not configurations:*Shared" }
+	if MPT_OS_WINDOWS then
+		filter {}
+		filter { "configurations:*Shared" }
+			defines { "PUGIXML_API=__declspec(dllimport)" }
+		filter { "not configurations:*Shared" }
+		filter {}
+	end
 	filter {}
 	links {
 		"pugixml",

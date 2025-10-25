@@ -45,23 +45,20 @@
    "../../include/lhasa/lib/public/lha_reader.h",
    "../../include/lhasa/lib/public/lhasa.h",
   }
-  filter { "action:vs*" }
-    buildoptions { "/wd4244", "/wd4267" }
-  filter {}
+	filter {}
+	if MPT_COMPILER_MSVC or MPT_COMPILER_CLANGCL then
+		buildoptions { "/wd4244", "/wd4267" }
+	end
+	filter {}
   filter { "kind:SharedLib" }
    files { "../../build/premake/def/ext-lhasa.def" }
   filter {}
 
 function mpt_use_lhasa ()
 	filter {}
-	filter { "action:vs*" }
-		includedirs {
-			"../../include/lhasa/lib/public",
-		}
-	filter { "not action:vs*" }
-		externalincludedirs {
-			"../../include/lhasa/lib/public",
-		}
+	dependencyincludedirs {
+		"../../include/lhasa/lib/public",
+	}
 	filter {}
 	links {
 		"lhasa",

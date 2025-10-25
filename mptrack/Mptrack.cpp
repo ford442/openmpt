@@ -1511,6 +1511,8 @@ BOOL CTrackApp::InitInstanceImpl(CMPTCommandLineInfo &cmdInfo)
 		Test::DoTests();
 #endif
 
+	theApp.GetSettings().Flush();
+
 	if(TrackerSettings::Instance().m_SoundSettingsOpenDeviceAtStartup)
 	{
 		pMainFrame->InitPreview();
@@ -2092,7 +2094,7 @@ void ErrorBox(UINT nStringID, CWnd *parent)
 		str.Format(_T("Resource string %u not found."), nStringID);
 	}
 	MPT_ASSERT(resourceLoaded);
-	Reporting::CustomNotification(str, _T("Error!"), MB_OK | MB_ICONERROR, parent);
+	Reporting::Error(str, _T("Error!"), parent);
 }
 
 
@@ -2437,8 +2439,6 @@ void CTrackApp::UninitializeDXPlugins()
 {
 	if(!m_pPluginManager) return;
 
-#ifndef NO_PLUGINS
-
 	size_t plugIndex = 0;
 	for(auto &plug : *m_pPluginManager)
 	{
@@ -2471,7 +2471,6 @@ void CTrackApp::UninitializeDXPlugins()
 		}
 	}
 	theApp.GetSettings().Write(U_("VST Plugins"), U_("NumPlugins"), static_cast<uint32>(plugIndex));
-#endif // NO_PLUGINS
 
 	delete m_pPluginManager;
 	m_pPluginManager = nullptr;

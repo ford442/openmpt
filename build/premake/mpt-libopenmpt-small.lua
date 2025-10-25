@@ -1,4 +1,8 @@
- 
+
+include_dependency "ext-minimp3.lua"
+include_dependency "ext-miniz.lua"
+include_dependency "ext-stb_vorbis.lua"
+
  project "libopenmpt-small"
   uuid "25560abd-41fc-444c-9e71-f8502bc7ee96"
   language "C++"
@@ -107,7 +111,7 @@
 		resdefines { "MPT_BUILD_VER_EXE" }
 	filter {}
 
-	if _OPTIONS["charset"] ~= "Unicode" then
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 	end
 
@@ -121,18 +125,17 @@
 
 function mpt_use_libopenmpt_small ()
 	filter {}
-	filter { "action:vs*" }
-		includedirs {
-			"../..",
-		}
-	filter { "not action:vs*" }
-		externalincludedirs {
-			"../..",
-		}
+	dependencyincludedirs {
+		"../..",
+	}
 	filter {}
-	filter { "configurations:*Shared" }
-		defines { "LIBOPENMPT_USE_DLL" }
-	filter { "not configurations:*Shared" }
+	if MPT_OS_WINDOWS then
+		filter {}
+		filter { "configurations:*Shared" }
+			defines { "LIBOPENMPT_USE_DLL" }
+		filter { "not configurations:*Shared" }
+		filter {}
+	end
 	filter {}
 	links {
 		"libopenmpt-small",

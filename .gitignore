@@ -44,6 +44,11 @@
 /build/vs2017winxp/Release
 /build/vs2017winxpansi/*.user
 /build/vs2017winxpansi/.vs
+/build/vs2017winxpx64/*.user
+/build/vs2017winxpx64/.vs
+/build/vs2017winxpx64/Debug
+/build/vs2017winxpx64/OpenMPT-custom.*
+/build/vs2017winxpx64/Release
 /build/vs2019win7/*.user
 /build/vs2019win7/.vs
 /build/vs2022win10/*.user
@@ -332,6 +337,8 @@
 /include/lame/mpglib/Makefile.in
 /include/lame/mpglib/README
 /include/lame/mpglib/depcomp
+/include/lhasa/.github
+/include/lhasa/.lvimrc
 /include/lhasa/m4
 /include/lhasa/test
 /include/minimp3/*.d
@@ -758,6 +765,9 @@
 /include/rtaudio/doc
 /include/rtaudio/include
 /include/rtaudio/install.txt
+/include/rtaudio/m4
+/include/rtaudio/meson.build
+/include/rtaudio/meson_options.txt
 /include/rtaudio/rtaudio.pc.in
 /include/rtaudio/rtaudio_c.cpp
 /include/rtaudio/rtaudio_c.h

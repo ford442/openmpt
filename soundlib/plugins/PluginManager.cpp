@@ -10,8 +10,6 @@
 
 #include "stdafx.h"
 
-#ifndef NO_PLUGINS
-
 #include "PluginManager.h"
 #include "PlugInterface.h"
 #include "../../common/version.h"
@@ -565,6 +563,10 @@ std::vector<VSTPluginLib *> CVstPluginManager::AddPlugin(const mpt::PathString &
 		CVstPluginManager::ReportPlugException(MPT_UFORMAT("Exception {} while trying to load plugin \"{}\"!\n")(mpt::ufmt::HEX0<8>(exception), fileName));
 	}
 
+#else // !MPT_WITH_VST
+
+	MPT_UNUSED(maskCrashes);
+
 #endif // MPT_WITH_VST
 
 	// Now it should be safe to assume that this plugin loaded properly. :)
@@ -826,5 +828,3 @@ void CVstPluginManager::ReportPlugException(const mpt::ustring &msg)
 #endif // MODPLUG_TRACKER
 
 OPENMPT_NAMESPACE_END
-
-#endif // NO_PLUGINS

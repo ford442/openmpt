@@ -145,9 +145,11 @@ BEGIN_MESSAGE_MAP(CViewSample, CModScrollView)
 	ON_COMMAND(ID_SAMPLE_ADDSILENCE,		&CViewSample::OnAddSilence)
 	ON_COMMAND(ID_SAMPLE_GRID,				&CViewSample::OnChangeGridSize)
 	ON_COMMAND(ID_SAMPLE_QUICKFADE,			&CViewSample::OnQuickFade)
-	ON_COMMAND(ID_SAMPLE_SLICE,				&CViewSample::OnSampleSlice)
+	ON_COMMAND(ID_SAMPLE_SLICE,				&CViewSample::OnSampleSliceCuePoints)
+	ON_COMMAND(ID_SAMPLE_SLICE_GRID,		&CViewSample::OnSampleSliceGrid)
 	ON_COMMAND(ID_SAMPLE_INSERT_CUEPOINT,	&CViewSample::OnSampleInsertCuePoint)
 	ON_COMMAND(ID_SAMPLE_DELETE_CUEPOINT,	&CViewSample::OnSampleDeleteCuePoint)
+	ON_COMMAND(ID_SAMPLE_SEND_TO_NEW_SLOT,	&CViewSample::OnSendSelectionToNewSlot)
 	ON_COMMAND(ID_SAMPLE_TIMELINE_SECONDS,	&CViewSample::OnTimelineFormatSeconds)
 	ON_COMMAND(ID_SAMPLE_TIMELINE_SAMPLES,	&CViewSample::OnTimelineFormatSamples)
 	ON_COMMAND(ID_SAMPLE_TIMELINE_SAMPLES_POW2, &CViewSample::OnTimelineFormatSamplesPow2)
@@ -2274,10 +2276,11 @@ void CViewSample::OnRButtonUp(UINT, CPoint pt)
 		{
 			if (m_dwEndSel >= m_dwBeginSel + 4)
 			{
-				::AppendMenu(hMenu, MF_STRING | (CanZoomSelection() ? 0 : MF_GRAYED), ID_SAMPLE_ZOOMONSEL, ih->GetKeyTextFromCommand(kcSampleZoomSelection, _T("Zoom")));
-				::AppendMenu(hMenu, MF_STRING, ID_SAMPLE_SETLOOP, _T("Set As Loop"));
+				::AppendMenu(hMenu, MF_STRING | (CanZoomSelection() ? 0 : MF_GRAYED), ID_SAMPLE_ZOOMONSEL, ih->GetKeyTextFromCommand(kcSampleZoomSelection, _T("&Zoom")));
+				::AppendMenu(hMenu, MF_STRING, ID_SAMPLE_SETLOOP, _T("Set As &Loop"));
 				if (sndFile.GetType() & (MOD_TYPE_IT|MOD_TYPE_MPT))
-					::AppendMenu(hMenu, MF_STRING, ID_SAMPLE_SETSUSTAINLOOP, _T("Set As Sustain Loop"));
+					::AppendMenu(hMenu, MF_STRING, ID_SAMPLE_SETSUSTAINLOOP, _T("Set As &Sustain Loop"));
+				::AppendMenu(hMenu, MF_STRING, ID_SAMPLE_SEND_TO_NEW_SLOT, ih->GetKeyTextFromCommand(kcSampleSendSelectionToNew, _T("Send to &New Sample Slot")));
 				::AppendMenu(hMenu, MF_SEPARATOR, 0, _T(""));
 			} else
 			{
@@ -2331,7 +2334,9 @@ void CViewSample::OnRButtonUp(UINT, CPoint pt)
 						}
 						wsprintf(s, _T("Set Sample Cu&e to:\t%s"), pos.GetString());
 						::AppendMenu(hMenu, MF_POPUP, reinterpret_cast<UINT_PTR>(hCueMenu), s);
-						::AppendMenu(hMenu, MF_STRING | (hasValidCues ? 0 : MF_GRAYED), ID_SAMPLE_SLICE, ih->GetKeyTextFromCommand(kcSampleSlice, _T("Slice at cue points")));
+						::AppendMenu(hMenu, MF_STRING | (hasValidCues ? 0 : MF_GRAYED), ID_SAMPLE_SLICE, ih->GetKeyTextFromCommand(kcSampleSliceCuePoints, _T("Slice at cue points")));
+						if(m_nGridSegments > 1)
+							::AppendMenu(hMenu, MF_STRING, ID_SAMPLE_SLICE_GRID, ih->GetKeyTextFromCommand(kcSampleSliceGrid, _T("Slice at grid")));
 					}
 
 					::AppendMenu(hMenu, MF_SEPARATOR, 0, _T(""));
@@ -3015,6 +3020,43 @@ void CViewSample::OnMonoConvert(ctrlSmp::StereoToMonoMode convert)
 		}
 	}
 	EndWaitCursor();
+}
+
+
+void CViewSample::OnSendSelectionToNewSlot()
+{
+	CModDoc *modDoc = GetDocument();
+	if(modDoc == nullptr || m_nSample > modDoc->GetNumSamples())
+		return;
+	CSoundFile &sndFile = modDoc->GetSoundFile();
+	const ModSample &sourceSmp = sndFile.GetSample(m_nSample);
+	LimitMax(m_dwBeginSel, sourceSmp.nLength);
+	LimitMax(m_dwEndSel, sourceSmp.nLength);
+	if(!sourceSmp.HasSampleData() || sourceSmp.uFlags[CHN_ADLIB] || m_dwEndSel <= m_dwBeginSel)
+		return;
+
+	const SAMPLEINDEX newSample = modDoc->InsertSample();
+	if(newSample == SAMPLEINDEX_INVALID)
+		return;
+
+	CriticalSection cs;
+	modDoc->GetSampleUndo().PrepareUndo(newSample, sundo_replace, "Send Selection to New Sample Slot");
+	ModSample &targetSmp = sndFile.GetSample(newSample);
+	targetSmp = sourceSmp;
+	targetSmp.nLoopStart = targetSmp.nLoopEnd = 0;
+	targetSmp.nSustainStart = targetSmp.nSustainEnd = 0;
+	targetSmp.uFlags.reset(CHN_LOOP | CHN_SUSTAINLOOP | CHN_PINGPONGLOOP | CHN_PINGPONGSUSTAIN | SMP_KEEPONDISK);
+	targetSmp.RemoveAllCuePoints();
+	if(!targetSmp.CopyWaveform(sourceSmp, m_dwBeginSel, m_dwEndSel))
+	{
+		targetSmp.pData.pSample = nullptr;
+		targetSmp.nLength = 0;
+	}
+	targetSmp.PrecomputeLoops(sndFile, false);
+	sndFile.m_szNames[newSample] = sndFile.m_szNames[m_nSample];
+	cs.Leave();
+	modDoc->SetModified();
+	modDoc->UpdateAllViews(nullptr, SampleHint(newSample).Info().Data().Names());
 }
 
 
@@ -3788,6 +3830,7 @@ LRESULT CViewSample::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		case kcSampleMonoLeft:	OnMonoConvertLeft(); return wParam;
 		case kcSampleMonoRight:	OnMonoConvertRight(); return wParam;
 		case kcSampleMonoSplit:	OnMonoConvertSplit(); return wParam;
+		case kcSampleSendSelectionToNew: OnSendSelectionToNewSlot(); return wParam;
 
 		case kcSampleReverse:			PostCtrlMessage(IDC_SAMPLE_REVERSE); return wParam;
 		case kcSampleSilence:			PostCtrlMessage(IDC_SAMPLE_SILENCE); return wParam;
@@ -3800,7 +3843,8 @@ LRESULT CViewSample::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		case kcSampleAutotune:			PostCtrlMessage(IDC_SAMPLE_AUTOTUNE); return wParam;
 		case kcSampleQuickFade:			PostCtrlMessage(IDC_SAMPLE_QUICKFADE); return wParam;
 		case kcSampleStereoSep:			PostCtrlMessage(IDC_SAMPLE_STEREOSEPARATION); return wParam;
-		case kcSampleSlice:				OnSampleSlice(); return wParam;
+		case kcSampleSliceCuePoints:	OnSampleSliceCuePoints(); return wParam;
+		case kcSampleSliceGrid:			OnSampleSliceGrid(); return wParam;
 		case kcSampleToggleDrawing:		OnDrawingToggle(); return wParam;
 		case kcSampleResize:			OnAddSilence(); return wParam;
 		case kcSampleGrid:				OnChangeGridSize(); return wParam;
@@ -3909,13 +3953,12 @@ void CViewSample::PlayOrSetCuePoint(size_t cue)
 }
 
 
-void CViewSample::OnSampleSlice()
+void CViewSample::OnSampleSliceCuePoints()
 {
-	CModDoc *modDoc = GetDocument();
+	const CModDoc *modDoc = GetDocument();
 	if(modDoc == nullptr || m_nSample > modDoc->GetNumSamples())
 		return;
-	CSoundFile &sndFile = modDoc->GetSoundFile();
-	ModSample &sample = sndFile.GetSample(m_nSample);
+	const ModSample &sample = modDoc->GetSoundFile().GetSample(m_nSample);
 	if(!sample.HasSampleData() || sample.uFlags[CHN_ADLIB])
 		return;
 
@@ -3938,9 +3981,41 @@ void CViewSample::OnSampleSlice()
 	cues[NUM_CUES] = 0;
 	cues[NUM_CUES + 1] = sample.nLength;
 	std::sort(cues.begin(), cues.end());
+	OnSampleSlice(mpt::as_span(cues));
+}
+
+
+void CViewSample::OnSampleSliceGrid()
+{
+	const CModDoc *modDoc = GetDocument();
+	if(modDoc == nullptr || m_nSample > modDoc->GetNumSamples() || m_nGridSegments < 2)
+		return;
+	const ModSample &sample = modDoc->GetSoundFile().GetSample(m_nSample);
+	if(!sample.HasSampleData() || sample.uFlags[CHN_ADLIB])
+		return;
+
+	std::vector<SmpLength> slicePoints(m_nGridSegments + 1);
+	const auto samplesPerSegment = static_cast<double>(sample.nLength) / m_nGridSegments;
+	for (SmpLength i = 0; i <= m_nGridSegments; i++)
+	{
+		slicePoints[i] = mpt::saturate_round<SmpLength>(i * samplesPerSegment);
+	}
+	OnSampleSlice(mpt::as_span(slicePoints));
+}
+
+
+void CViewSample::OnSampleSlice(mpt::span<SmpLength> cues)
+{
+	CModDoc *modDoc = GetDocument();
+	if(modDoc == nullptr || m_nSample > modDoc->GetNumSamples())
+		return;
+	CSoundFile &sndFile = modDoc->GetSoundFile();
+	ModSample &sample = sndFile.GetSample(m_nSample);
+	if(!sample.HasSampleData() || sample.uFlags[CHN_ADLIB])
+		return;
 
 	// Now slice the sample at each cue point
-	for(std::size_t i = 1; i < std::size(cues) - 1; i++)
+	for(size_t i = 1; i < cues.size() - 1; i++)
 	{
 		const SmpLength cue  = cues[i];
 		if(cue > cues[i - 1] && cue < cues[i + 1])
@@ -3952,13 +4027,13 @@ void CViewSample::OnSampleSlice()
 			ModSample &newSample = sndFile.GetSample(nextSmp);
 			newSample = sample;
 			newSample.RemoveAllCuePoints();
-			newSample.nLength = cues[i + 1] - cues[i];
+			newSample.uFlags.reset(SMP_KEEPONDISK);
 			newSample.pData.pSample = nullptr;
 			sndFile.m_szNames[nextSmp] = sndFile.m_szNames[m_nSample];
-			if(newSample.AllocateSample() > 0)
+			if(newSample.CopyWaveform(sample, cues[i], cues[i + 1]))
 			{
 				Util::DeleteRange(SmpLength(0), cues[i] - SmpLength(1), newSample.nLoopStart, newSample.nLoopEnd);
-				memcpy(newSample.sampleb(), sample.sampleb() + cues[i] * sample.GetBytesPerSample(), newSample.nLength * sample.GetBytesPerSample());
+				Util::DeleteRange(SmpLength(0), cues[i] - SmpLength(1), newSample.nSustainStart, newSample.nSustainEnd);
 				newSample.PrecomputeLoops(sndFile, false);
 
 				if(sndFile.GetNumInstruments() > 0)
@@ -3973,6 +4048,7 @@ void CViewSample::OnSampleSlice()
 	modDoc->GetSampleUndo().PrepareUndo(m_nSample, sundo_delete, "Slice Sample", cues[1], sample.nLength);
 	SampleEdit::ResizeSample(sample, cues[1], sndFile);
 	sample.PrecomputeLoops(sndFile, true);
+	sample.uFlags.reset(SMP_KEEPONDISK);
 	SetModified(SampleHint().Info().Data().Names(), true, true);
 	modDoc->UpdateAllViews(this, SampleHint().Info().Data().Names(), this);
 	modDoc->UpdateAllViews(this, InstrumentHint().Info().Envelope().Names(), this);

@@ -231,9 +231,6 @@ void CMainFrame::Initialize()
 	#ifndef MPT_WITH_DMO
 		title += _T(" NO_DMO");
 	#endif
-	#ifdef NO_PLUGINS
-		title += _T(" NO_PLUGINS");
-	#endif
 	SetTitle(title);
 	OnUpdateFrameTitle(false);
 
@@ -1469,11 +1466,8 @@ void CMainFrame::UnsetPlaybackSoundFile()
 	MPT_ASSERT_ALWAYS(!gpSoundDevice || !gpSoundDevice->IsPlaying());
 	if(m_pSndFile)
 	{
+		CriticalSection cs;
 		m_pSndFile->SuspendPlugins();
-		if(m_pSndFile->GetpModDoc())
-		{
-			m_wndTree.UpdatePlayPos(m_pSndFile->GetpModDoc(), nullptr);
-		}
 		m_pSndFile->m_PlayState.m_flags.reset(SONG_PAUSED);
 		if(m_pSndFile == &m_WaveFile)
 		{
@@ -1490,6 +1484,11 @@ void CMainFrame::UnsetPlaybackSoundFile()
 					chn.position.Set(0);
 				}
 			}
+		}
+		cs.Leave();
+		if(m_pSndFile->GetpModDoc())
+		{
+			m_wndTree.UpdatePlayPos(m_pSndFile->GetpModDoc(), nullptr);
 		}
 	}
 	m_pSndFile = nullptr;
@@ -2148,7 +2147,6 @@ void CMainFrame::OnViewOptions()
 
 void CMainFrame::OnPluginManager()
 {
-#ifndef NO_PLUGINS
 	PLUGINDEX nPlugslot = PLUGINDEX_INVALID;
 	CModDoc* pModDoc = GetActiveDoc();
 
@@ -2176,7 +2174,6 @@ void CMainFrame::OnPluginManager()
 		CChildFrame *pActiveChild = (CChildFrame *)MDIGetActive();
 		pActiveChild->ForceRefresh();
 	}
-#endif // NO_PLUGINS
 }
 
 
@@ -3255,8 +3252,8 @@ void CMainFrame::UpdateMetronomeSamples()
 
 void CMainFrame::UpdateMetronomeVolume()
 {
-	const float linear = std::pow(10.0f, TrackerSettings::Instance().metronomeVolume / 20.0f);
-	const uint16 volume = std::clamp(mpt::saturate_round<uint16>(linear * 256.0f), uint16(0), uint16(256));
+	const float linear = CModDoc::DecibelsToLinear(TrackerSettings::Instance().metronomeVolume, 256.0f);
+	const uint16 volume = std::clamp(mpt::saturate_round<uint16>(linear), uint16(0), uint16(256));
 	CriticalSection cs;
 	m_metronomeBeat.nVolume = m_metronomeMeasure.nVolume = volume;
 }

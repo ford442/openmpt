@@ -1,4 +1,9 @@
 
+include_dependency "ext-mpg123.lua"
+include_dependency "ext-ogg.lua"
+include_dependency "ext-vorbis.lua"
+include_dependency "ext-zlib.lua"
+
  project "libopenmpt_test"
   uuid "0A313F63-131E-46A0-931D-23C3A3D488F2"
   language "C++"
@@ -113,7 +118,7 @@
 		resdefines { "MPT_BUILD_VER_EXE" }
 	filter {}
 
-	if _OPTIONS["charset"] ~= "Unicode" then
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 	end
 

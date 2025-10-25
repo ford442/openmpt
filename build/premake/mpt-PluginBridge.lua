@@ -1,9 +1,15 @@
 
+include_dependency "../../build/premake/ext-vst.lua"
+
  project "PluginBridge"
   uuid "1A147336-891E-49AC-9EAD-A750599A224C"
   language "C++"
   vpaths { ["*"] = "../../" }
   mpt_kind "GUI"
+
+	mpt_use_vst()
+	defines { "MPT_WITH_VST" }
+
   includedirs {
    "../../src",
    "../../common",
@@ -50,8 +56,7 @@
 	}
   defines { "MODPLUG_TRACKER" }
   dpiawareness "None"
-	characterset "Unicode"
-	if _OPTIONS["charset"] ~= "Unicode" then
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 	end
   warnings "Extra"
@@ -72,6 +77,10 @@
   language "C++"
   vpaths { ["*"] = "../../" }
   mpt_kind "GUI"
+
+	mpt_use_vst()
+	defines { "MPT_WITH_VST" }
+
   includedirs {
    "../../src",
    "../../common",
@@ -129,8 +138,7 @@
 	filter { "action:vs*", "architecture:ARM64" }
 		-- dataexecutionprevention "Off" -- not supported by windows loader on arm64
 	filter {}
-	characterset "Unicode"
-	if _OPTIONS["charset"] ~= "Unicode" then
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 	end
   warnings "Extra"
