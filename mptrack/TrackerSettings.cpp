@@ -199,6 +199,7 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 	, commentsFont(conf, UL_("Display"), UL_("Comments Font"), FontSetting(UL_("Courier New"), 120))
 	, mainToolBarVisibleItems(conf, UL_("Display"), UL_("MainToolBarVisibleItems"), MainToolBarItem::Default)
 	, treeViewOnLeft(conf, UL_("Display"), UL_("TreeViewOnLeft"), true)
+	, quickStartGroupsCollapsed(conf, UL_("Display"), UL_("QuickStartGroupsExpanded"), 0)
 	// Misc
 	, defaultModType(conf, UL_("Misc"), UL_("DefaultModType"), MOD_TYPE_IT)
 	, defaultNewFileAction(conf, UL_("Misc"), UL_("DefaultNewFileAction"), nfDefaultFormat)
@@ -869,6 +870,11 @@ TrackerSettings::TrackerSettings(SettingsContainer &conf)
 			device = mpt::ToUpperCase(device);
 			m_SoundDeviceIdentifier = device;
 		}
+	}
+
+	if(storedVersion < MPT_V("1.33.00.15"))
+	{
+		conf.Remove(U_("VST Plugins"), U_("FailedPlugin"));
 	}
 
 	// Effects

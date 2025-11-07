@@ -965,6 +965,7 @@ enum CommandID : int
 	kcSampleMonoLeft,
 	kcSampleMonoRight,
 	kcSampleMonoSplit,
+	kcSampleSendSelectionToNew,
 	kcSampleStereoSep,
 	kcSampleUpsample,
 	kcSampleDownsample,
@@ -979,8 +980,9 @@ enum CommandID : int
 
 	kcStartSampleCues,
 	kcEndSampleCues = kcStartSampleCues + 8,
-	kcSampleSlice,
-	kcEndSampleCueGroup = kcSampleSlice,
+	kcSampleSliceCuePoints,
+	kcSampleSliceGrid,
+	kcEndSampleCueGroup = kcSampleSliceGrid,
 
 	kcSampStartNotes,
 	kcSampEndNotes = kcSampStartNotes + kcCommandSetNumNotes,
@@ -997,6 +999,8 @@ enum CommandID : int
 	kcTreeViewDuplicate,
 	kcTreeViewDelete,
 	kcTreeViewDeletePermanently,
+	kcTreeViewMoveUp,
+	kcTreeViewMoveDown,
 	kcTreeViewRename,
 	kcTreeViewSendToEditorInsertNew,
 	kcTreeViewFolderUp,

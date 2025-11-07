@@ -459,6 +459,11 @@ void CSoundDeviceWithThread::InternalStop()
 #if MPT_OS_LINUX || MPT_OS_MACOSX_OR_IOS || MPT_OS_FREEBSD
 
 
+#if MPT_COMPILER_CLANG
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-private-field"
+#endif  // MPT_COMPILER_CLANG
+
 class ThreadPriorityGuardImpl
 {
 
@@ -594,6 +599,11 @@ public:
 	}
 };
 
+#if MPT_COMPILER_CLANG
+#pragma clang diagnostic pop
+#endif  // MPT_COMPILER_CLANG
+
+
 
 ThreadPriorityGuard::ThreadPriorityGuard(ILogger &logger, bool active, bool realtime, int niceness, int rt_priority)
 	: impl(std::make_unique<ThreadPriorityGuardImpl>(logger, active, realtime, niceness, rt_priority))
@@ -618,7 +628,7 @@ ThreadBase::ThreadBase(ILogger &logger, SoundDevice::Info info, SoundDevice::Sys
 bool ThreadBase::InternalStart()
 {
 	m_ThreadStopRequest.store(false);
-	m_Thread = std::move(std::thread(&ThreadProcStatic, this));
+	m_Thread = std::thread(&ThreadProcStatic, this);
 	m_ThreadStarted.wait();
 	m_ThreadStarted.post();
 	return true;
@@ -646,7 +656,7 @@ void ThreadBase::InternalStop()
 {
 	m_ThreadStopRequest.store(true);
 	m_Thread.join();
-	m_Thread = std::move(std::thread());
+	m_Thread = std::thread();
 	m_ThreadStopRequest.store(false);
 }
 

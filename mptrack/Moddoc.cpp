@@ -48,9 +48,7 @@
 #include "../soundlib/modsmp_ctrl.h"
 #include "../tracklib/SampleEdit.h"
 
-#ifndef NO_PLUGINS
 #include "AbstractVstEditor.h"
-#endif
 
 #include "mpt/binary/hex.hpp"
 #include "mpt/base/numbers.hpp"
@@ -671,6 +669,7 @@ void CModDoc::InitializeMod()
 	{
 		const bool isAmiga = (defaultType != MOD_TYPE_MOD_PC);
 		m_SndFile.m_SongFlags.set(SONG_ISAMIGA | SONG_AMIGALIMITS | SONG_PT_MODE, isAmiga);
+		m_SndFile.m_SongFlags.set(SONG_FORMAT_NO_VOLCOL);
 		m_SndFile.m_playBehaviour.set(kMODOneShotLoops, isAmiga);
 		m_SndFile.m_playBehaviour.set(kMODSampleSwap, isAmiga);
 		m_SndFile.m_playBehaviour.set(kMODOutOfRangeNoteDelay, isAmiga);
@@ -1651,7 +1650,6 @@ void CModDoc::UpdateAllViews(CView *pSender, UpdateHint hint, CObject *pHint)
 		if(instance != nullptr && pHint != instance && instance->GetDocument() == this)
 			instance->Update(hint, pHint);
 	}
-#ifndef NO_PLUGINS
 	if(hint.GetType()[HINT_MIXPLUGINS | HINT_PLUGINNAMES])
 	{
 		for(auto &plug : m_SndFile.m_MixPlugins)
@@ -1663,7 +1661,6 @@ void CModDoc::UpdateAllViews(CView *pSender, UpdateHint hint, CObject *pHint)
 			}
 		}
 	}
-#endif
 }
 
 
@@ -2031,13 +2028,9 @@ void CModDoc::OnFileWaveConvert(ORDERINDEX nMinOrder, ORDERINDEX nMaxOrder)
 
 void CModDoc::OnFileMidiConvert()
 {
-#ifndef NO_PLUGINS
 	CModToMidi mididlg(*this, CMainFrame::GetMainFrame());
 	BypassInputHandler bih;
 	mididlg.DoModal();
-#else
-	Reporting::Error("In order to use MIDI export, OpenMPT must be built with plugin support.");
-#endif // NO_PLUGINS
 }
 
 //HACK: This is a quick fix. Needs to be better integrated into player and GUI.
@@ -3204,6 +3197,12 @@ double CModDoc::LinearToDecibels(double value, double valueAtZeroDB)
 
 	double changeFactor = value / valueAtZeroDB;
 	return 20.0 * std::log10(changeFactor);
+}
+
+
+double CModDoc::DecibelsToLinear(double value, double valueAtZeroDB)
+{
+	return valueAtZeroDB * std::pow(10.0, value / 20.0);
 }
 
 

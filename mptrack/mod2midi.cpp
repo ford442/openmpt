@@ -30,8 +30,6 @@
 
 #include <sstream>
 
-#ifndef NO_PLUGINS
-
 OPENMPT_NAMESPACE_BEGIN
 
 namespace MidiExport
@@ -739,7 +737,7 @@ BOOL CModToMidi::OnInitDialog()
 	CheckDlgButton(IDC_CHECK1, s_overlappingInstruments ? BST_CHECKED : BST_UNCHECKED);
 
 	// Subsongs
-	CheckRadioButton(IDC_RADIO4, IDC_RADIO5, IDC_RADIO4);
+	CheckRadioButton(IDC_RADIO4, IDC_RADIO5, (m_subSongs.size() <= 1) ? IDC_RADIO4 : IDC_RADIO5);
 
 	static_cast<CSpinButtonCtrl *>(GetDlgItem(IDC_SPIN2))->SetRange32(1, static_cast<int>(m_subSongs.size()));
 	SetDlgItemInt(IDC_EDIT1, static_cast<UINT>(m_selectedSong + 1), FALSE);
@@ -1063,5 +1061,3 @@ void CModToMidi::DoConversion(const mpt::PathString &fileName)
 }
 
 OPENMPT_NAMESPACE_END
-
-#endif // NO_PLUGINS
