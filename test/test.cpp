@@ -2651,9 +2651,12 @@ MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSettings()
 	VERIFY_EQUAL(SettingPath(U_("a"),U_("b")) < SettingPath(U_("a"),U_("c")), true);
 	VERIFY_EQUAL(!(SettingPath(U_("c"),U_("b")) < SettingPath(U_("a"),U_("c"))), true);
 
-	{
-		DefaultSettingsContainer conf;
+	const mpt::PathString filename = theApp.GetConfigPath() + P_("test.ini");
 
+	DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+
+	{
+		IniFileSettingsContainer conf{filename};
 		int32 foobar = conf.Read(U_("Test"), U_("bar"), 23);
 		conf.Write(U_("Test"), U_("bar"), 64);
 		conf.Write(U_("Test"), U_("bar"), 42);
@@ -2663,58 +2666,74 @@ MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSettings()
 	}
 
 	{
-		DefaultSettingsContainer conf;
-
+		IniFileSettingsContainer conf{filename};
 		int32 foobar = conf.Read(U_("Test"), U_("bar"), 28);
 		VERIFY_EQUAL(foobar, 42);
 		conf.Write(U_("Test"), U_("bar"), 43);
 	}
 
 	{
-		DefaultSettingsContainer conf;
-
+		IniFileSettingsContainer conf{filename};
 		int32 foobar = conf.Read(U_("Test"), U_("bar"), 123);
 		VERIFY_EQUAL(foobar, 43);
 		conf.Write(U_("Test"), U_("bar"), 88);
 	}
 
 	{
-		DefaultSettingsContainer conf;
-
+		IniFileSettingsContainer conf{filename};
 		Setting<int> foo(conf, U_("Test"), U_("bar"), 99);
-
 		VERIFY_EQUAL(foo, 88);
-
 		foo = 7;
-
 	}
 
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		Setting<int> foo(conf, U_("Test"), U_("bar"), 99);
 		VERIFY_EQUAL(foo, 7);
 	}
 
-
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		conf.Read(U_("Test"), U_("struct"), std::string(""));
 		conf.Write(U_("Test"), U_("struct"), std::string(""));
 	}
 
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		CustomSettingsTestType dummy = conf.Read(U_("Test"), U_("struct"), CustomSettingsTestType(1.0f, 1.0f));
 		dummy = CustomSettingsTestType(0.125f, 32.0f);
 		conf.Write(U_("Test"), U_("struct"), dummy);
 	}
 
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		Setting<CustomSettingsTestType> dummyVar(conf, U_("Test"), U_("struct"), CustomSettingsTestType(1.0f, 1.0f));
 		CustomSettingsTestType dummy = dummyVar;
 		VERIFY_EQUAL(dummy.x, 0.125f);
 		VERIFY_EQUAL(dummy.y, 32.0f);
+	}
+
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream(); 
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("[S1]")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=1")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=2")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("bar1=a")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("[S1]")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=3")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=4")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("bar2=a")));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("S1"), U_("foo")}, 0).as<int>(), 1);
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("S1"), U_("bar1")}, U_("empty")).as<mpt::ustring>(), U_("a"));
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("S1"), U_("bar2")}, U_("empty")).as<mpt::ustring>(), U_("empty"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
 	}
 
 #endif // MODPLUG_TRACKER
