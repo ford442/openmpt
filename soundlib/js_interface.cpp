@@ -1,6 +1,6 @@
 /**
  * js_interface.cpp
- * * Fixes for Create() and IsValid() based on your branch's API.
+ * * Fixes for byte_span, FileReader, loadCompleteModule, and typo.
  */
 
 #include "common/stdafx.h"
@@ -8,6 +8,7 @@
 #include <vector>
 #include <sstream>
 #include <cstring> 
+#include <cstddef> // For std::byte
 
 // Core libopenmpt headers
 #include "soundlib/Sndfile.h"
@@ -17,9 +18,12 @@
 #include "soundlib/pattern.h"
 #include "soundlib/patternContainer.h"
 
-// *** FIX 1: ADD THESE INCLUDES ***
-#include "mpt/io/io.hpp"
-#include "mpt/base/span.hpp"
+// mpt includes
+#include "mpt/IO/IO.h"
+#include "mpt/base/span.h"
+
+// *** FIX 2: Include the full FileReader definition ***
+#include "common/FileReader.h"
 
 // Emscripten headers
 #include <emscripten/bind.h>
@@ -42,40 +46,31 @@ using namespace OpenMPT;
  */
 class ModulePlayer {
 private:
-    // The core libopenmpt object that holds the song
     CSoundFile m_sndFile;
     bool m_isLoaded = false;
 
 public:
-    ModulePlayer() {
-        // Constructor
-    }
+    ModulePlayer() { }
 
-    /**
-     * @brief Loads a module file from a byte array (e.g., from JS File object).
-     * @param fileData A std::vector<char> containing the raw bytes of an .xm, .mod, etc.
-     * @return true on success, false on failure.
-     */
     bool loadModule(const std::vector<char>& fileData) {
         if (fileData.empty()) {
             return false;
         }
 
-        // *** FIX 1: Wrap the memory buffer in a FileReader ***
-        // Create a "file cursor" pointing to our memory buffer
-        ::mpt::IO::FileCursor fileCursor(::mpt::byte_span(fileData.data(), fileData.size()));
-        // Create the FileReader object that CSoundFile::Create expects
+        // *** FIX 1: Correctly create a const_byte_span ***
+        ::mpt::const_byte_span byteSpan(
+            reinterpret_cast<const std::byte*>(fileData.data()), 
+            fileData.size()
+        );
+        ::mpt::IO::FileCursor fileCursor(byteSpan);
+        
         FileReader fileReader(fileCursor);
         
-        // Now, call Create with the FileReader
-        m_isLoaded = m_sndFile.Create(fileReader, loadCompleteModule);
+        // *** FIX 3: Use fully qualified enum name ***
+        m_isLoaded = m_sndFile.Create(fileReader, ModLoadingFlags::loadCompleteModule);
         return m_isLoaded;
     }
 
-    /**
-     * @brief Gets the song title (as a quick test).
-     * @return The song title string.
-     */
     std::string getSongTitle() {
         if (!m_isLoaded) {
             return "No module loaded";
@@ -83,10 +78,6 @@ public:
         return m_sndFile.GetTitle();
     }
 
-    /**
-     * @brief Gets basic song info as a JSON string.
-     * @return A JSON string with song properties.
-     */
     std::string getSongInfo() {
         if (!m_isLoaded) {
             return "{}";
@@ -102,14 +93,7 @@ public:
         return j.dump();
     }
 
-    /**
-     * @brief Gets a single pattern's data as a JSON string.
-     * This is how you'd get "note data".
-     * @param patternIndex The index of the pattern (0-based).
-     * @return A JSON string representing the pattern.
-     */
     std::string getPatternData(PATTERNINDEX patternIndex) {
-        // *** FIX 2: Use GetNumPatterns() for validation ***
         if (!m_isLoaded || patternIndex >= m_sndFile.Patterns.GetNumPatterns()) {
             return "{}";
         }
@@ -144,26 +128,18 @@ public:
 
 
 // --- Emscripten Bindings ---
-// This is the "bridge" that makes your C++ code available to JavaScript.
 EMSCRIPTEN_BINDINGS(my_module) {
 
-    // First, we must "register" std::vector<char> so JS can understand it
     register_vector<char>("VectorChar");
 
-    // Next, we bind our ModulePlayer class
     class_<ModulePlayer>("ModulePlayer")
-        .constructor<>() // Exposes the C++ constructor
-        
-        // Exposes the loadModule function.
+        .constructor<>()
         .function("loadModule", &ModulePlayer::loadModule)
-        
-        // Exposes the getSongTitle function.
         .function("getSongTitle", &ModulePlayer::getSongTitle)
-
-        // Exposes the getSongInfo function.
-        .function("getSongInfo", &ModuleCPlayer::getSongInfo)
-
-        // Exposes the getPatternData function.
+        
+        // *** FIX 4: Corrected typo ***
+        .function("getSongInfo", &ModulePlayer::getSongInfo)
+        
         .function("getPatternData", &ModulePlayer::getPatternData)
         ;
 }
