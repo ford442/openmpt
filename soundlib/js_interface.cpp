@@ -67,7 +67,7 @@ public:
         OpenMPT::FileReader fileReader(byteSpan);
         
         // *** FIX 2: Use the plain enum value with its namespace ***
-        m_isLoaded = m_sndFile.Create(fileReader, OpenMPT::ModLoadingFlags::loadCompleteModule);
+        m_isLoaded = m_sndFile.Create(fileReader, loadCompleteModule);    
         return m_isLoaded;
     }
 
