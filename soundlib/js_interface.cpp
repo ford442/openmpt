@@ -63,7 +63,7 @@ public:
 
         // *** FIX 1: Wrap the memory buffer in a FileReader ***
         // Create a "file cursor" pointing to our memory buffer
-        mpt::IO::FileCursor fileCursor = mpt::IO::make_file_cursor(mpt::byte_span(fileData.data(), fileData.size()));
+        ::mpt::IO::FileCursor fileCursor = ::mpt::IO::make_file_cursor(::mpt::byte_span(fileData.data(), fileData.size()));
         // Create the FileReader object that CSoundFile::Create expects
         FileReader fileReader(fileCursor);
         
