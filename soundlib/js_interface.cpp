@@ -21,8 +21,8 @@
 #include "soundlib/patternContainer.h"
 
 // mpt includes
-#include "mpt/IO/IO.h"
-#include "mpt/base/span.h"
+#include "mpt/io/io.hpp"
+#include "mpt/base/span.hpp"
 
 // Full FileReader definition
 #include "common/FileReader.h"
