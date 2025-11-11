@@ -1,7 +1,6 @@
 /**
  * js_interface.cpp
- * * New structure focused on loading and reading module data
- * in preparation for realtime playback and synth capabilities.
+ * * Fixes for Create() and IsValid() based on your branch's API.
  */
 
 #include "common/stdafx.h"
@@ -17,6 +16,10 @@
 #include "soundlib/ModSample.h"
 #include "soundlib/pattern.h"
 #include "soundlib/patternContainer.h"
+
+// *** FIX 1: ADD THESE INCLUDES ***
+#include "mpt/IO/IO.h"
+#include "mpt/base/span.h"
 
 // Emscripten headers
 #include <emscripten/bind.h>
@@ -45,7 +48,7 @@ private:
 
 public:
     ModulePlayer() {
-        // Constructor: You could initialize settings here
+        // Constructor
     }
 
     /**
@@ -58,8 +61,14 @@ public:
             return false;
         }
 
-        // CSoundFile::Create takes a pointer and a size
-        m_isLoaded = m_sndFile.Create(fileData.data(), fileData.size());
+        // *** FIX 1: Wrap the memory buffer in a FileReader ***
+        // Create a "file cursor" pointing to our memory buffer
+        mpt::IO::FileCursor fileCursor = mpt::IO::make_file_cursor(mpt::byte_span(fileData.data(), fileData.size()));
+        // Create the FileReader object that CSoundFile::Create expects
+        FileReader fileReader(fileCursor);
+        
+        // Now, call Create with the FileReader
+        m_isLoaded = m_sndFile.Create(fileReader, loadCompleteModule);
         return m_isLoaded;
     }
 
@@ -100,7 +109,8 @@ public:
      * @return A JSON string representing the pattern.
      */
     std::string getPatternData(PATTERNINDEX patternIndex) {
-        if (!m_isLoaded || !m_sndFile.Patterns.IsValid(patternIndex)) {
+        // *** FIX 2: Use GetNumPatterns() for validation ***
+        if (!m_isLoaded || patternIndex >= m_sndFile.Patterns.GetNumPatterns()) {
             return "{}";
         }
 
@@ -130,23 +140,11 @@ public:
         j["data"] = notes;
         return j.dump();
     }
-
-    // --- FUTURE LIVE SYNTH FUNCTIONS ---
-    // We can add these later!
-    
-    /**
-     * @brief (Future) Triggers a note on a specific channel.
-     */
-    // void playNote(int note, int instrument, int channel) {
-    //    if (!m_isLoaded) return;
-    //    // This requires more setup (e.g., m_sndFile.PlayNote(...))
-    // }
 };
 
 
 // --- Emscripten Bindings ---
 // This is the "bridge" that makes your C++ code available to JavaScript.
-// It belongs at the end of your file, in the global scope.
 EMSCRIPTEN_BINDINGS(my_module) {
 
     // First, we must "register" std::vector<char> so JS can understand it
@@ -157,28 +155,15 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .constructor<>() // Exposes the C++ constructor
         
         // Exposes the loadModule function.
-        // JS will call: player.loadModule(myVectorChar)
         .function("loadModule", &ModulePlayer::loadModule)
         
         // Exposes the getSongTitle function.
-        // JS will call: let title = player.getSongTitle()
         .function("getSongTitle", &ModulePlayer::getSongTitle)
 
         // Exposes the getSongInfo function.
-        // JS will call: let infoJson = player.getSongInfo()
-        .function("getSongInfo", &ModulePlayer::getSongInfo)
+        .function("getSongInfo", &ModuleCPlayer::getSongInfo)
 
         // Exposes the getPatternData function.
-        // JS will call: let patternJson = player.getPatternData(0)
         .function("getPatternData", &ModulePlayer::getPatternData)
         ;
 }
-
-// --- (Your previous file-saving code can be left commented out down here) ---
-/*
-EM_JS(void, download_file, (const char* filename, ...
-...
-static std::vector<char> CreateModuleFromJSON(const std::string &json_string) { ...
-...
-static void GenerateAndDownloadModule(const std::string &json_string, ...) { ...
-*/
