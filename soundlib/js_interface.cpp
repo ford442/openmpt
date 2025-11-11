@@ -1,6 +1,8 @@
 /**
  * js_interface.cpp
- * * Fixes for byte_span, FileReader, loadCompleteModule, and typo.
+ * * Removed "using namespace OpenMPT;" and added explicit namespaces.
+ * * Fixed FileCursor construction by using FileReader alias directly.
+ * * Fixed ModLoadingFlags by using the plain enum value.
  */
 
 #include "common/stdafx.h"
@@ -19,10 +21,10 @@
 #include "soundlib/patternContainer.h"
 
 // mpt includes
-#include "mpt/io/io.hpp"
-#include "mpt/base/span.hpp"
+#include "mpt/IO/IO.h"
+#include "mpt/base/span.h"
 
-// *** FIX 2: Include the full FileReader definition ***
+// Full FileReader definition
 #include "common/FileReader.h"
 
 // Emscripten headers
@@ -36,9 +38,7 @@
 using namespace emscripten;
 using json = nlohmann::json;
 
-// Bring the OpenMPT namespace into scope to resolve type errors
-using namespace OpenMPT;
-
+// NOTE: We have REMOVED "using namespace OpenMPT;" to avoid ambiguity.
 
 /**
  * @brief A class to hold and interact with a single module.
@@ -46,7 +46,8 @@ using namespace OpenMPT;
  */
 class ModulePlayer {
 private:
-    CSoundFile m_sndFile;
+    // *** FIX: Added OpenMPT:: namespace prefix ***
+    OpenMPT::CSoundFile m_sndFile;
     bool m_isLoaded = false;
 
 public:
@@ -57,17 +58,16 @@ public:
             return false;
         }
 
-        // *** FIX 1: Correctly create a const_byte_span ***
         ::mpt::const_byte_span byteSpan(
             reinterpret_cast<const std::byte*>(fileData.data()), 
             fileData.size()
         );
-        ::mpt::IO::FileCursor fileCursor(byteSpan);
         
-        FileReader fileReader(fileCursor);
+        // *** FIX 1: Construct the FileReader alias directly from the span ***
+        OpenMPT::FileReader fileReader(byteSpan);
         
-        // *** FIX 3: Use fully qualified enum name ***
-        m_isLoaded = m_sndFile.Create(fileReader, ModLoadingFlags::loadCompleteModule);
+        // *** FIX 2: Use the plain enum value with its namespace ***
+        m_isLoaded = m_sndFile.Create(fileReader, OpenMPT::loadCompleteModule);
         return m_isLoaded;
     }
 
@@ -93,20 +93,25 @@ public:
         return j.dump();
     }
 
-    std::string getPatternData(PATTERNINDEX patternIndex) {
+    // *** FIX: Added OpenMPT:: namespace prefix ***
+    std::string getPatternData(OpenMPT::PATTERNINDEX patternIndex) {
         if (!m_isLoaded || patternIndex >= m_sndFile.Patterns.GetNumPatterns()) {
             return "{}";
         }
 
-        CPattern& pattern = m_sndFile.Patterns[patternIndex];
+        // *** FIX: Added OpenMPT:: namespace prefix ***
+        OpenMPT::CPattern& pattern = m_sndFile.Patterns[patternIndex];
         json j;
         j["pattern"] = patternIndex;
         j["rows"] = pattern.GetNumRows();
         
         json notes = json::array();
-        for (ROWINDEX row = 0; row < pattern.GetNumRows(); ++row) {
-            for (CHANNELINDEX chn = 0; chn < m_sndFile.GetNumChannels(); ++chn) {
-                ModCommand& m = *pattern.GetpModCommand(row, chn);
+        // *** FIX: Added OpenMPT:: namespace prefix ***
+        for (OpenMPT::ROWINDEX row = 0; row < pattern.GetNumRows(); ++row) {
+            // *** FIX: Added OpenMPT:: namespace prefix ***
+            for (OpenMPT::CHANNELINDEX chn = 0; chn < m_sndFile.GetNumChannels(); ++chn) {
+                // *** FIX: Added OpenMPT:: namespace prefix ***
+                OpenMPT::ModCommand& m = *pattern.GetpModCommand(row, chn);
                 if (!m.IsEmpty()) {
                     json note_event;
                     note_event["row"] = row;
@@ -136,10 +141,7 @@ EMSCRIPTEN_BINDINGS(my_module) {
         .constructor<>()
         .function("loadModule", &ModulePlayer::loadModule)
         .function("getSongTitle", &ModulePlayer::getSongTitle)
-        
-        // *** FIX 4: Corrected typo ***
         .function("getSongInfo", &ModulePlayer::getSongInfo)
-        
         .function("getPatternData", &ModulePlayer::getPatternData)
         ;
 }
