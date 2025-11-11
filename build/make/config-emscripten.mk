@@ -141,6 +141,7 @@ LDFLAGS  += -DNDEBUG=1 -Iinclude \
 -sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_HEAP=512mb \
 -rtlib=compiler-rt -sENVIRONMENT=web -sASYNCIFY=0 -sMALLOC='emmalloc' \
 --output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0 -sASSERTIONS=0 -lembind
+CXXFLAGS += -DMPT_ENABLE_SAVECREATE_XM -DMPT_ENABLE_SAVING
 
 
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
