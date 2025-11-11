@@ -18,8 +18,8 @@
 #include "soundlib/patternContainer.h"
 
 // *** FIX 1: ADD THESE INCLUDES ***
-#include "mpt/io/io.h"
-#include "mpt/base/span.h"
+#include "mpt/io/io.hpp"
+#include "mpt/base/span.hpp"
 
 // Emscripten headers
 #include <emscripten/bind.h>
