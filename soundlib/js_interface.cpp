@@ -20,8 +20,9 @@
 #include "soundlib/patternContainer.h"
 #include "soundlib/XMTools.h"
 
-// Emscripten binding header
+// Emscripten headers
 #include <emscripten/bind.h>
+#include <emscripten.h> // <-- ADD THIS INCLUDE
 
 // The single-header JSON library
 #include "include/nlohmann/json.hpp"
@@ -32,6 +33,28 @@ using json = nlohmann::json;
 
 // Bring the OpenMPT namespace into scope to resolve type errors
 using namespace OpenMPT;
+
+// --- Emscripten JavaScript Download Function ---
+// (This is the exact code you provided)
+EM_JS(void, download_file, (const char* filename, const char* mime_type, const void* buffer, size_t buffer_size), {
+  // Convert C strings to JS strings
+  var js_filename = UTF8ToString(filename);
+  var js_mime_type = UTF8ToString(mime_type);
+
+  // Create a Blob from the data buffer in the Wasm heap
+  var blob = new Blob([new Uint8Array(Module.HEAPU8.buffer, buffer, buffer_size)], { type: js_mime_type });
+
+  // Create a temporary anchor element
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = js_filename;
+  document.body.appendChild(a);
+
+  // Trigger the download and clean up
+  a.click();
+  document.body.removeChild(a);
+});
+
 
 /**
  * @brief Creates a complete module file in memory from a JSON description.
@@ -130,8 +153,8 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         }
 
         // --- Save to Memory ---
-        // NOTE: This will only compile if file saving support is enabled in your build configuration.
-        // The error "use of undeclared identifier 'XMTools'" indicates that it is currently disabled.
+        // NOTE: This now relies on MPT_ENABLE_SAVECREATE_XM being set
+        // during the libopenmpt build.
         std::stringstream memStream;
         if(!XMTools::Save(sndFile, memStream))
         {
@@ -148,8 +171,25 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
     return {}; // Return empty vector on failure
 }
 
+/**
+ * @brief Wrapper function to be called from JS.
+ * Generates the module and triggers a download.
+ * @param json_string The JSON describing the song.
+ * @param filename The desired output filename (e.g., "song.xm").
+ */
+static void GenerateAndDownloadModule(const std::string &json_string, const std::string &filename) {
+    std::vector<char> module_data = CreateModuleFromJSON(json_string);
+    
+    if (!module_data.empty()) {
+        // Use the EM_JS function to trigger the download
+        download_file(filename.c_str(), "audio/x-mod", module_data.data(), module_data.size());
+    }
+}
+
 // --- Emscripten Bindings ---
 EMSCRIPTEN_BINDINGS(my_module_exporter) {
-    function("CreateModuleFromJSON", &CreateModuleFromJSON);
-    register_vector<char>("VectorChar");
+    // Expose the new wrapper function to JavaScript
+    function("GenerateAndDownloadModule", &GenerateAndDownloadModule);
+    
+    // We no longer need to expose CreateModuleFromJSON or VectorChar directly
 }
