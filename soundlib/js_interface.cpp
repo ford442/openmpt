@@ -130,17 +130,13 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
         }
 
         // --- Save to Memory ---
+        // NOTE: This will only compile if file saving support is enabled in your build configuration.
+        // The error "use of undeclared identifier 'XMTools'" indicates that it is currently disabled.
         std::stringstream memStream;
-        
-        // ** FIX APPLIED HERE **
-        // We use the general CSoundFile::SaveFile method instead of the
-        // format-specific XMTools::Save, which is disabled in this build.
-        // We specify MOD_CONTAINER_XM to save as an XM file.
-        if(!sndFile.SaveFile(memStream, MOD_CONTAINER_XM))
+        if(!XMTools::Save(sndFile, memStream))
         {
             return {}; // Saving failed
         }
-        
         std::string const& s = memStream.str();
         return std::vector<char>(s.begin(), s.end());
 
@@ -150,4 +146,10 @@ static std::vector<char> CreateModuleFromJSON(const std::string &json_string) {
     }
     
     return {}; // Return empty vector on failure
+}
+
+// --- Emscripten Bindings ---
+EMSCRIPTEN_BINDINGS(my_module_exporter) {
+    function("CreateModuleFromJSON", &CreateModuleFromJSON);
+    register_vector<char>("VectorChar");
 }
