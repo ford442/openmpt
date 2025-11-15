@@ -137,7 +137,7 @@ LDFLAGS  += -DNDEBUG=1 -Iinclude -s MODULARIZE=1 \
 -ffp-contract=off -ffp-model=strict -stdlib=libc++ -sALLOW_UNIMPLEMENTED_SYSCALLS=1 \
 -fno-fast-math -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-math-errno \
--sWASM=1 -s WASM_ASYNC_COMPILATION=0 -sWASM_WORKERS=1 -sAUDIO_WORKLET=1 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_HEAP=512mb \
+-sWASM=1 -s WASM_ASYNC_COMPILATION=0 -sWASM_WORKERS=1 -sAUDIO_WORKLET=1 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=1 \
 -rtlib=compiler-rt -sENVIRONMENT=web -sASYNCIFY=0 -sMALLOC='mimalloc' \
 --output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0 -sASSERTIONS=0 --bind
 
