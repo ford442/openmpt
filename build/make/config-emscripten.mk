@@ -129,17 +129,15 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new3)
 LINK_SIMD_FLAGS = --enable-simd -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128 -mavx2 -mrelaxed-simd -fopenmp-simd
 SIMD_FLAGS = -DSIMD=AVX -msse4.2 -msimd128 -mavx2 -mrelaxed-simd -fopenmp-simd
-CPPFLAGS += -DMPT_BUILD_AUDIOWORKLETPROCESSOR -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants -Iinclude
-CXXFLAGS += -DMPT_ENABLE_SAVECREATE_XM -DMPT_ENABLE_SAVING -s EXPORT_ES6=1 -s SINGLE_FILE=1 -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants -Iinclude
-CFLAGS   += -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants -Iinclude
+CPPFLAGS += -DMPT_BUILD_AUDIOWORKLETPROCESSOR -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -Iinclude
+CXXFLAGS += -DMPT_ENABLE_SAVECREATE_XM -DMPT_ENABLE_SAVING -s EXPORT_ES6=1 -s SINGLE_FILE=1 -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -Iinclude
+CFLAGS   += -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -Iinclude
 LDFLAGS  += -DNDEBUG=1 -Iinclude -s MODULARIZE=1 \
 -sTRUSTED_TYPES=1 -pipe -dead-strip -mtune=wasm32 -polly -polly-position=before-vectorizer \
--ffp-contract=off -ffp-model=strict -stdlib=libc++ -sALLOW_UNIMPLEMENTED_SYSCALLS=1 \
--fno-fast-math -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
--matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-math-errno \
+-ffp-contract=off -ffp-model=strict -stdlib=libc++ -fno-fast-math \
 -sWASM=1 -s WASM_ASYNC_COMPILATION=0 -sWASM_WORKERS=1 -sAUDIO_WORKLET=1 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=1 \
--rtlib=compiler-rt -sENVIRONMENT=web -sASYNCIFY=0 -sMALLOC='mimalloc' \
---output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0 -sASSERTIONS=0 --bind
+-rtlib=compiler-rt -sENVIRONMENT=web -sMALLOC='mimalloc' -s SINGLE_FILE=1  -sWASMFS=1 -sWASM_BIGINT=1 \
+--output_eol linux --use-preload-plugins --closureFriendly -sASSERTIONS=0 --bind
 
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new2)
 LINK_SIMD_FLAGS = --enable-simd -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128 -mavx2 -mrelaxed-simd -fopenmp-simd
