@@ -225,14 +225,19 @@
 	filter { "configurations:Debug" }
    defines { "DEBUG" }
    defines { "MPT_BUILD_DEBUG" }
-	filter { "configurations:Debug", "architecture:ARM" }
-		symbols "On"
-	filter { "configurations:Debug", "architecture:ARM64" }
-		symbols "On"
-	filter { "configurations:Debug", "architecture:ARM64EC" }
-		symbols "On"
-	filter { "configurations:Debug", "architecture:not ARM", "architecture:not ARM64", "architecture:not ARM64EC" }
-		symbols "FastLink"
+	if MPT_MSVC_AT_LEAST(2017) and MPT_MSVC_BEFORE(2026) then
+		filter { "configurations:Debug", "architecture:ARM" }
+			symbols "On"
+		filter { "configurations:Debug", "architecture:ARM64" }
+			symbols "On"
+		filter { "configurations:Debug", "architecture:ARM64EC" }
+			symbols "On"
+		filter { "configurations:Debug", "architecture:not ARM", "architecture:not ARM64", "architecture:not ARM64EC" }
+			symbols "FastLink"
+	else
+		filter { "configurations:Debug" }
+			symbols "On"
+	end
 	filter { "configurations:Debug" }
 		if not MPT_OS_WINDOWS_WINRT then
 			staticruntime "On"
@@ -296,7 +301,8 @@
    defines { "NDEBUG" }
    symbols "On"
 		if MPT_COMPILER_MSVC then
-			linktimeoptimization "On"
+			linktimeoptimization "Default"
+			linktimeoptimization2 "Fast"
 		end
 		if MPT_MSVC_AT_LEAST(2022) then
 			buildoptions { "/Gw" }
@@ -380,6 +386,8 @@
 			else
 				systemversion "10.0.26100.0"
 			end
+		filter { "action:vs2026" }
+			systemversion "10.0.26100.0"
 		filter {}
 	end
 

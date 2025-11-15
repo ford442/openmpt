@@ -15,6 +15,7 @@
 #ifdef ENABLE_TESTS
 
 #ifdef LIBOPENMPT_BUILD
+#include "mpt/arch/arch.hpp"
 #include "mpt/arch/x86_amd64.hpp"
 #endif
 #include "mpt/base/check_platform.hpp"
@@ -264,7 +265,12 @@ void DoTests()
 		#endif // !MPT_LIBC_QUIRK_NO_FENV
 		#if MPT_ARCH_X86 || MPT_ARCH_AMD64
 			{
-				const mpt::arch::x86::floating_point::control_state fpstate = mpt::arch::x86::floating_point::get_state();
+				const mpt::arch::x86::floating_point::control_state fpstate =
+					#if MPT_ARCH_X86
+						mpt::arch::x86::floating_point::get_state(mpt::arch::get_cpu_info());
+					#else
+						mpt::arch::x86::floating_point::get_state();
+					#endif
 				if(fpstate.x87_level)
 				{
 					auto format_rounding = [](uint16 fcw) {
@@ -2713,6 +2719,7 @@ MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSettings()
 		VERIFY_EQUAL(dummy.y, 32.0f);
 	}
 
+	// test duplicate sections and keys
 	{
 		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
 		{
@@ -2735,6 +2742,63 @@ MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSettings()
 		}
 		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
 	}
+
+	// test last value without line ending
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream();
+			mpt::IO::WriteTextCRLF(outputstream, "[Test]");
+			mpt::IO::WriteText(outputstream, mpt::ToCharset(mpt::Charset::UTF8, MPT_UTF8("Foo=bar")));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("Test"), U_("Foo")}, U_("")).as<mpt::ustring>(), U_("bar"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+	}
+
+	// test Unicode in UTF-16LE-BOM mode
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream();
+			auto WriteUTF16LE = [](auto & outputstream, mpt::span<const WCHAR> data) {
+					mpt::IO::WriteRaw(outputstream, reinterpret_cast<const std::byte*>(data.data()), data.size() * 2);
+				};
+			std::vector<WCHAR> utf16lebom = {0xfeff};
+			WriteUTF16LE(outputstream, mpt::as_span(utf16lebom));
+			WriteUTF16LE(outputstream, mpt::as_span(std::wstring(L"[Test]\r\n")));
+			WriteUTF16LE(outputstream, mpt::as_span(mpt::ToWide(MPT_UTF8("Umlauts=\xC3\xA4\r\n"))));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("Test"), U_("Umlauts")}, U_("")).as<mpt::ustring>(), MPT_UTF8("\xC3\xA4"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+	}
+
+#if 0
+	// test Unicode in UTF-8-BOM mode, Wine-only
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream();
+			std::vector<std::byte> utf8bom = {mpt::byte_cast<std::byte>(static_cast<uint8>(0xEF)), mpt::byte_cast<std::byte>(static_cast<uint8>(0xBB)), mpt::byte_cast<std::byte>(static_cast<uint8>(0xBF))};
+			mpt::IO::WriteRaw(outputstream, mpt::as_span(utf8bom));
+			mpt::IO::WriteTextCRLF(outputstream, "[Test]");
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::UTF8, MPT_UTF8("Umlauts=\xC3\xA4")));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("Test"), U_("Umlauts")}, U_("")).as<mpt::ustring>(), MPT_UTF8("\xC3\xA4"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+	}
+#endif
 
 #endif // MODPLUG_TRACKER
 

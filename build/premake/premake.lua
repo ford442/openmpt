@@ -130,6 +130,51 @@ end)
 
 
 premake.api.register {
+	name = "linktimeoptimization2",
+	scope = "config",
+	kind = "string",
+	allowed = {
+		"Default",
+		"On",
+		"Off",
+		"Fast",
+	}
+}
+
+function premake.vstudio.vc2010.wholeProgramOptimization2(cfg)
+	if cfg.linktimeoptimization2 == "On" then
+		premake.vstudio.vc2010.element("WholeProgramOptimization", nil, "true")
+	elseif cfg.linktimeoptimization2 == "Fast" then
+		premake.vstudio.vc2010.element("WholeProgramOptimization", nil, "true")
+	elseif cfg.linktimeoptimization2 == "Off" then
+		premake.vstudio.vc2010.element("WholeProgramOptimization", nil, "false")
+	end
+end
+
+function premake.vstudio.vc2010.linkTimeCodeGeneration2(cfg)
+	if cfg.linktimeoptimization2 == "On" then
+		premake.vstudio.vc2010.element("LinkTimeCodeGeneration", nil, "UseLinkTimeCodeGeneration")
+	elseif cfg.linktimeoptimization2 == "Fast" then
+		premake.vstudio.vc2010.element("LinkTimeCodeGeneration", nil, "UseFastLinkTimeCodeGeneration")
+	end
+end
+
+premake.override(premake.vstudio.vc2010.elements, "configurationProperties", function(base, prj)
+	local calls = base(prj)
+	table.insertafter(calls, premake.vstudio.vc2010.wholeProgramOptimization, premake.vstudio.vc2010.wholeProgramOptimization2)
+	return calls
+end)
+
+premake.override(premake.vstudio.vc2010.elements, "link", function(base, prj)
+	local calls = base(prj)
+	table.insertafter(calls, premake.vstudio.vc2010.linkTimeCodeGeneration, premake.vstudio.vc2010.linkTimeCodeGeneration2)
+	return calls
+end)
+
+
+
+
+premake.api.register {
 	name = "dataexecutionprevention",
 	scope = "config",
 	kind = "string",
@@ -382,11 +427,23 @@ end
 
 function MPT_WIN_PLATFORMS(v)
 	if MPT_WIN_AT_LEAST(MPT_WIN["11"]) then
-		return { "x86", "x86_64", "arm64", "arm64ec" }
+		if MPT_MSVC_AT_LEAST(2019) then
+			return { "x86", "x86_64", "arm64", "arm64ec" }
+		else
+			return { "x86", "x86_64", "arm64" }
+		end
 	elseif MPT_WIN_AT_LEAST(MPT_WIN["10_1709"]) then
-		return { "x86", "x86_64", "arm", "arm64" }
+		if MPT_MSVC_BEFORE(2026) then
+			return { "x86", "x86_64", "arm", "arm64" }
+		else
+			return { "x86", "x86_64", "arm64" }
+		end
 	elseif MPT_WIN_AT_LEAST(MPT_WIN["8"]) then
-		return { "x86", "x86_64", "arm" }
+		if MPT_MSVC_BEFORE(2026) then
+			return { "x86", "x86_64", "arm" }
+		else
+			return { "x86", "x86_64" }
+		end
 	elseif MPT_WIN_AT_LEAST(MPT_WIN["XP64"]) then
 		return { "x86", "x86_64" }
 	elseif MPT_WIN_AT_LEAST(MPT_WIN["XP"]) then
@@ -636,7 +693,19 @@ if MPT_OS_WINDOWS_WINRT then
 	require('vstudio')
 
 	local function mptGlobalsUWP(prj)
-		if _ACTION == 'vs2022' then
+		if _ACTION == 'vs2026' then
+			premake.w('<DefaultLanguage>en-US</DefaultLanguage>')
+			premake.w('<MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>')
+			premake.w('<AppContainerApplication>true</AppContainerApplication>')
+			premake.w('<ApplicationType>Windows Store</ApplicationType>')
+			premake.w('<ApplicationTypeRevision>10.0</ApplicationTypeRevision>')
+			premake.w('<WindowsTargetPlatformVersion Condition=" \'$(WindowsTargetPlatformVersion)\' == \'\' ">10.0.26100.0</WindowsTargetPlatformVersion>')
+			if MPT_WIN_AT_LEAST(MPT_WIN["11"]) then
+				premake.w('<WindowsTargetPlatformMinVersion>10.0.22631.0</WindowsTargetPlatformMinVersion>')
+			elseif MPT_WIN_AT_LEAST(MPT_WIN["10"]) then
+				premake.w('<WindowsTargetPlatformMinVersion>10.0.19045.0</WindowsTargetPlatformMinVersion>')
+			end
+		elseif _ACTION == 'vs2022' then
 			premake.w('<DefaultLanguage>en-US</DefaultLanguage>')
 			premake.w('<MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>')
 			premake.w('<AppContainerApplication>true</AppContainerApplication>')
