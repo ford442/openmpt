@@ -130,9 +130,9 @@ else ifeq ($(EMSCRIPTEN_TARGET),1it1-new3)
 LINK_SIMD_FLAGS = --enable-simd -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128 -mavx2 -mrelaxed-simd -fopenmp-simd
 SIMD_FLAGS = -DSIMD=AVX -msse4.2 -msimd128 -mavx2 -mrelaxed-simd -fopenmp-simd
 CPPFLAGS += -DMPT_BUILD_AUDIOWORKLETPROCESSOR -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -Iinclude
-CXXFLAGS += -DMPT_ENABLE_SAVECREATE_XM -DMPT_ENABLE_SAVING -s EXPORT_ES6=1 -s SINGLE_FILE=1 -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -Iinclude
-CFLAGS   += -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -Iinclude
-LDFLAGS  += -DNDEBUG=1 -Iinclude -s MODULARIZE=1 \
+CXXFLAGS += -mbulk-memory -matomics -DMPT_ENABLE_SAVECREATE_XM -DMPT_ENABLE_SAVING -s EXPORT_ES6=1 -s SINGLE_FILE=1 -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -Iinclude
+CFLAGS   += -mbulk-memory -matomics -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -Iinclude
+LDFLAGS  += -mbulk-memory -matomics -DNDEBUG=1 -Iinclude -s MODULARIZE=1 \
 -sTRUSTED_TYPES=1 -pipe -dead-strip -mtune=wasm32 -polly -polly-position=before-vectorizer \
 -ffp-contract=off -ffp-model=strict -stdlib=libc++ -fno-fast-math \
 -sWASM=1 -s WASM_ASYNC_COMPILATION=0 -sWASM_WORKERS=1 -sAUDIO_WORKLET=1 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=1 \
