@@ -136,7 +136,7 @@ LDFLAGS  += -DNDEBUG=1 -Iinclude -s MODULARIZE=1 \
 -sTRUSTED_TYPES=1 -pipe -dead-strip -mtune=wasm32 -polly -polly-position=before-vectorizer \
 -ffp-contract=off -ffp-model=strict -stdlib=libc++ -fno-fast-math \
 -sWASM=1 -s WASM_ASYNC_COMPILATION=0 -sWASM_WORKERS=1 -sAUDIO_WORKLET=1 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=1 \
--rtlib=compiler-rt -sENVIRONMENT=web -sMALLOC='mimalloc' -s SINGLE_FILE=1  -sWASMFS=1 -sWASM_BIGINT=1 \
+-rtlib=compiler-rt -sENVIRONMENT=web -sMALLOC='mimalloc' -sWASMFS=1 -sWASM_BIGINT=1 \
 --output_eol linux --use-preload-plugins --closureFriendly -sASSERTIONS=0 --bind
 
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new2)
