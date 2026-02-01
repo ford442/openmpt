@@ -1,6 +1,38 @@
 
-if charset == "Unicode" then
-if stringmode == "WCHAR" then
+include_dependency "../../build/premake/sys-dmo.lua"
+include_dependency "../../build/premake/sys-mfc.lua"
+include_dependency "../../build/premake/ext-ancient.lua"
+if MPT_MSVC_AT_LEAST(2019) then
+include_dependency "../../build/premake/ext-asiomodern.lua"
+end
+if MPT_WIN_BEFORE(MPT_WIN["7"]) then
+include_dependency "../../build/premake/ext-cryptopp.lua"
+end
+include_dependency "../../build/premake/ext-flac.lua"
+include_dependency "../../build/premake/ext-lame.lua"
+include_dependency "../../build/premake/ext-lhasa.lua"
+include_dependency "../../build/premake/ext-minizip.lua"
+include_dependency "../../build/premake/ext-mpg123.lua"
+include_dependency "../../build/premake/ext-nlohmann-json.lua"
+include_dependency "../../build/premake/ext-ogg.lua"
+include_dependency "../../build/premake/ext-opus.lua"
+include_dependency "../../build/premake/ext-opusenc.lua"
+include_dependency "../../build/premake/ext-opusfile.lua"
+include_dependency "../../build/premake/ext-portaudio.lua"
+if MPT_MSVC_BEFORE(2022) then
+include_dependency "../../build/premake/ext-pthread-win32.lua"
+end
+include_dependency "../../build/premake/ext-r8brain.lua"
+include_dependency "../../build/premake/ext-rtaudio.lua"
+include_dependency "../../build/premake/ext-rtmidi.lua"
+include_dependency "../../build/premake/ext-SignalsmithStretch.lua"
+include_dependency "../../build/premake/ext-UnRAR.lua"
+include_dependency "../../build/premake/ext-vorbis.lua"
+include_dependency "../../build/premake/ext-vst.lua"
+include_dependency "../../build/premake/ext-zlib.lua"
+
+if not charset or charset == "Unicode" then
+if not stringmode or stringmode == "WCHAR" then
   project "OpenMPT"
 	uuid "37FC32A4-8DDC-4A9C-A30C-62989DD8ACE9"
 else
@@ -14,33 +46,39 @@ end
   language "C++"
   vpaths { ["*"] = "../../" }
   mpt_kind "GUI"
-if stringmode == "UTF8" then
+if stringmode and stringmode == "UTF8" then
    targetname "OpenMPT-UTF8"
-elseif charset == "MBCS" then
+elseif charset and charset == "MBCS" then
    targetname "OpenMPT-ANSI"
 else
    targetname "OpenMPT"
 end
   filter {}
 	
-	mpt_use_mfc()
+	if _OPTIONS["windows-charset"] == "Unicode" then
+		mpt_use_mfc(charset or "Unicode")
+	else
+		mpt_use_mfc(_OPTIONS["windows-charset"])
+	end
 	defines { "MPT_WITH_MFC" }
-	if _OPTIONS["windows-version"] == "winxp" then
+	if MPT_WIN_BEFORE(MPT_WIN["7"]) then
 		defines { "MPT_WITH_DIRECTSOUND" }
 	end
 
 	mpt_use_ancient()
 	defines { "MPT_WITH_ANCIENT" }
-	if _OPTIONS["windows-version"] ~= "winxp" and not _OPTIONS["clang"] then
+	if MPT_MSVC_AT_LEAST(2019) then
 		-- disabled for VS2017 because of multiple initialization of inline variables
 		-- https://developercommunity.visualstudio.com/t/static-inline-variable-gets-destroyed-multiple-tim/297876
 		mpt_use_asiomodern()
 		defines { "MPT_WITH_ASIO" }
 	end
-	if _OPTIONS["windows-version"] == "winxp" then
+	if MPT_WIN_BEFORE(MPT_WIN["7"]) then
 		mpt_use_cryptopp()
 		defines { "MPT_WITH_CRYPTOPP" }
 	end
+	mpt_use_dmo()
+	defines { "MPT_WITH_DMO" }
 	mpt_use_flac()
 	defines { "MPT_WITH_FLAC" }
 	mpt_use_lame()
@@ -63,6 +101,10 @@ end
 	defines { "MPT_WITH_OPUSFILE" }
 	mpt_use_portaudio()
 	defines { "MPT_WITH_PORTAUDIO" }
+	if MPT_MSVC_BEFORE(2022) then
+		mpt_use_pthread_win32()
+		defines { "MPT_WITH_PTHREAD" }
+	end
 	mpt_use_r8brain()
 	defines { "MPT_WITH_R8BRAIN" }
 	mpt_use_rtaudio()
@@ -75,6 +117,8 @@ end
 	defines { "MPT_WITH_UNRAR" }
 	mpt_use_vorbis()
 	defines { "MPT_WITH_VORBIS", "MPT_WITH_VORBISENC", "MPT_WITH_VORBISFILE" }
+	mpt_use_vst()
+	defines { "MPT_WITH_VST" }
 	mpt_use_zlib()
 	defines { "MPT_WITH_ZLIB" }
 	
@@ -119,8 +163,12 @@ end
    "../../pluginBridge/BridgeWrapper.h",
   }
 	excludes {
+		"../../src/mpt/filemode/**.cpp",
+		"../../src/mpt/filemode/**.hpp",
 		"../../src/mpt/main/**.cpp",
 		"../../src/mpt/main/**.hpp",
+		"../../src/mpt/terminal/**.cpp",
+		"../../src/mpt/terminal/**.hpp",
 	}
   files {
    "../../mptrack/mptrack.rc",
@@ -143,24 +191,22 @@ end
 
   defines { "MODPLUG_TRACKER" }
   dpiawareness "None"
-	if _OPTIONS["charset"] ~= "Unicode" then
-		defines { "NO_WARN_MBCS_MFC_DEPRECATION" }
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 	else
 		characterset(charset)
-		if charset == "Unicode" then
-		else
+		if charset and charset ~= "Unicode" then
 			defines { "NO_WARN_MBCS_MFC_DEPRECATION" }
 			defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 		end
 	end
-	if stringmode == "UTF8" then
+	if stringmode and stringmode == "UTF8" then
 		defines { "MPT_USTRING_MODE_UTF8_FORCE" }
 	end
 
   warnings "Extra"
   filter {}
-	if _OPTIONS["windows-version"] ~= "winxp" then
+	if MPT_WIN_AT_LEAST(MPT_WIN["7"]) then
   linkoptions {
    "/DELAYLOAD:mf.dll",
    "/DELAYLOAD:mfplat.dll",

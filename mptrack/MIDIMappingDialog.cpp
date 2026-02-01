@@ -22,7 +22,6 @@
 #include "../soundlib/mod_specifications.h"
 #include "../soundlib/plugins/PlugInterface.h"
 
-#ifndef NO_PLUGINS
 
 OPENMPT_NAMESPACE_BEGIN
 
@@ -284,6 +283,7 @@ void CMIDIMappingDialog::OnSelectionChanged(NMHDR *pNMHDR, LRESULT * /*pResult*/
 	int i;
 	if(pNMHDR != nullptr)
 	{
+		// cppcheck-suppress dangerousTypeCast
 		NMLISTVIEW *nmlv = (NMLISTVIEW *)pNMHDR;
 
 		if(((nmlv->uOldState ^ nmlv->uNewState) & INDEXTOSTATEIMAGEMASK(3)) != 0 && nmlv->uOldState != 0)
@@ -498,5 +498,3 @@ void CMIDIMappingDialog::SetModified()
 
 
 OPENMPT_NAMESPACE_END
-
-#endif // NO_PLUGINS

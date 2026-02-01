@@ -56,7 +56,7 @@ Context::Context(mpt::OS::Wine::VersionContext versionContext)
 	{
 		throw mpt::Wine::Exception("Unknown Wine version detected.");
 	}
-	m_Kernel32 = std::make_shared<std::optional<mpt::library>>(mpt::library::load({ mpt::library::path_search::system, mpt::library::path_prefix::none, MPT_NATIVE_PATH("kernel32.dll"), mpt::library::path_suffix::none }));
+	m_Kernel32 = std::make_shared<std::optional<mpt::library>>(mpt::library::load_optional({ mpt::library::path_search::system, mpt::library::path_prefix::none, MPT_NATIVE_PATH("kernel32.dll"), mpt::library::path_suffix::none }));
 	if(!m_Kernel32->has_value())
 	{
 		throw mpt::Wine::Exception("Could not load Wine kernel32.dll.");
@@ -152,6 +152,10 @@ std::string Context::PathToPosix(mpt::PathString windowsPath)
 	result = tmp;
 	HeapFree(GetProcessHeap(), 0, tmp);
 	tmp = nullptr;
+	if(mpt::ends_with(windowsPath.AsNative(), P_("\\").AsNative()) && !mpt::ends_with(result, "/"))
+	{
+		result.push_back('/');
+	}
 	return result;
 }
 
@@ -175,6 +179,10 @@ mpt::PathString Context::PathToWindows(std::string hostPath)
 	result = mpt::PathString::FromWide(tmp);
 	HeapFree(GetProcessHeap(), 0, tmp);
 	tmp = nullptr;
+	if(!mpt::ends_with(hostPath, "/") && !mpt::ends_with(result.AsNative(), P_("\\").AsNative()))
+	{
+		result.append(P_("\\"));
+	}
 	return result;
 }
 
@@ -199,6 +207,10 @@ std::string Context::PathToPosixCanonical(mpt::PathString windowsPath)
 	}
 	std::string trimmedOutput = mpt::trim(output, std::string("\r\n"));
 	result = trimmedOutput;
+	if(mpt::ends_with(windowsPath.AsNative(), P_("\\").AsNative()) && !mpt::ends_with(result, "/"))
+	{
+		result.push_back('/');
+	}
 	return result;
 }
 

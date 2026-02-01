@@ -57,6 +57,10 @@ case $UNAME_S in
     ;;
   esac
   ;;
+ *DragonFly*)
+  TAR_FLAVOUR=libarchive
+  MAKE=gmake
+  ;;
  *BSD*)
   TAR_FLAVOUR=libarchive
   MAKE=gmake
@@ -108,17 +112,20 @@ svn export ./src/mpt/audio                            bin/dist-autotools/src/mpt
 svn export ./src/mpt/base                             bin/dist-autotools/src/mpt/base
 svn export ./src/mpt/binary                           bin/dist-autotools/src/mpt/binary
 svn export ./src/mpt/check                            bin/dist-autotools/src/mpt/check
+svn export ./src/mpt/chrono                           bin/dist-autotools/src/mpt/chrono
 svn export ./src/mpt/crc                              bin/dist-autotools/src/mpt/crc
 #svn export ./src/mpt/crypto                           bin/dist-autotools/src/mpt/crypto
 svn export ./src/mpt/detect                           bin/dist-autotools/src/mpt/detect
 svn export ./src/mpt/endian                           bin/dist-autotools/src/mpt/endian
 svn export ./src/mpt/environment                      bin/dist-autotools/src/mpt/environment
 svn export ./src/mpt/exception                        bin/dist-autotools/src/mpt/exception
+svn export ./src/mpt/filemode                         bin/dist-autotools/src/mpt/filemode
 svn export ./src/mpt/format                           bin/dist-autotools/src/mpt/format
 #svn export ./src/mpt/fs                               bin/dist-autotools/src/mpt/fs
 svn export ./src/mpt/io                               bin/dist-autotools/src/mpt/io
 svn export ./src/mpt/io_file                          bin/dist-autotools/src/mpt/io_file
-svn export ./src/mpt/io_file_adapter                   bin/dist-autotools/src/mpt/io_file_adapter
+svn export ./src/mpt/io_file_adapter                  bin/dist-autotools/src/mpt/io_file_adapter
+#svn export ./src/mpt/io_file_atomic                   bin/dist-autotools/src/mpt/io_file_atomic
 svn export ./src/mpt/io_file_read                     bin/dist-autotools/src/mpt/io_file_read
 svn export ./src/mpt/io_file_unique                   bin/dist-autotools/src/mpt/io_file_unique
 svn export ./src/mpt/io_read                          bin/dist-autotools/src/mpt/io_read
@@ -135,6 +142,7 @@ svn export ./src/mpt/random                           bin/dist-autotools/src/mpt
 svn export ./src/mpt/string                           bin/dist-autotools/src/mpt/string
 svn export ./src/mpt/string_transcode                 bin/dist-autotools/src/mpt/string_transcode
 svn export ./src/mpt/system_error                     bin/dist-autotools/src/mpt/system_error
+svn export ./src/mpt/terminal                         bin/dist-autotools/src/mpt/terminal
 svn export ./src/mpt/test                             bin/dist-autotools/src/mpt/test
 svn export ./src/mpt/uuid                             bin/dist-autotools/src/mpt/uuid
 #svn export ./src/mpt/uuid_namespace                   bin/dist-autotools/src/mpt/uuid_namespace
@@ -184,17 +192,20 @@ cp -r ./src/mpt/audio                                 bin/dist-autotools/src/mpt
 cp -r ./src/mpt/base                                  bin/dist-autotools/src/mpt/base
 cp -r ./src/mpt/binary                                bin/dist-autotools/src/mpt/binary
 cp -r ./src/mpt/check                                 bin/dist-autotools/src/mpt/check
+cp -r ./src/mpt/chrono                                bin/dist-autotools/src/mpt/chrono
 cp -r ./src/mpt/crc                                   bin/dist-autotools/src/mpt/crc
 #cp -r ./src/mpt/crypto                                bin/dist-autotools/src/mpt/crypto
 cp -r ./src/mpt/detect                                bin/dist-autotools/src/mpt/detect
 cp -r ./src/mpt/endian                                bin/dist-autotools/src/mpt/endian
 cp -r ./src/mpt/environment                           bin/dist-autotools/src/mpt/environment
 cp -r ./src/mpt/exception                             bin/dist-autotools/src/mpt/exception
+cp -r ./src/mpt/filemode                              bin/dist-autotools/src/mpt/filemode
 cp -r ./src/mpt/format                                bin/dist-autotools/src/mpt/format
 #cp -r ./src/mpt/fs                                    bin/dist-autotools/src/mpt/fs
 cp -r ./src/mpt/io                                    bin/dist-autotools/src/mpt/io
 cp -r ./src/mpt/io_file                               bin/dist-autotools/src/mpt/io_file
-cp -r ./src/mpt/io_file_adapter                        bin/dist-autotools/src/mpt/io_file_adapter
+cp -r ./src/mpt/io_file_adapter                       bin/dist-autotools/src/mpt/io_file_adapter
+#cp -r ./src/mpt/io_file_atomic                        bin/dist-autotools/src/mpt/io_file_atomic
 cp -r ./src/mpt/io_file_read                          bin/dist-autotools/src/mpt/io_file_read
 cp -r ./src/mpt/io_file_unique                        bin/dist-autotools/src/mpt/io_file_unique
 cp -r ./src/mpt/io_read                               bin/dist-autotools/src/mpt/io_read
@@ -211,6 +222,7 @@ cp -r ./src/mpt/random                                bin/dist-autotools/src/mpt
 cp -r ./src/mpt/string                                bin/dist-autotools/src/mpt/string
 cp -r ./src/mpt/string_transcode                      bin/dist-autotools/src/mpt/string_transcode
 cp -r ./src/mpt/system_error                          bin/dist-autotools/src/mpt/system_error
+cp -r ./src/mpt/terminal                              bin/dist-autotools/src/mpt/terminal
 cp -r ./src/mpt/test                                  bin/dist-autotools/src/mpt/test
 cp -r ./src/mpt/uuid                                  bin/dist-autotools/src/mpt/uuid
 #cp -r ./src/mpt/uuid_namespace                        bin/dist-autotools/src/mpt/uuid_namespace

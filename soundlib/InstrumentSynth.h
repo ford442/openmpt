@@ -63,7 +63,7 @@ struct InstrumentSynth
 			Mupp_SetWaveform,  // Parameter: Source instrument (uint8), waveform (uint8), volume (uint8)
 
 			MED_DefineArpeggio,   // Parameter: Arpeggio note (uint8), arp length or 0 if it's not the first note (uint16)
-			MED_JumpScript,       // Parameter: Script index (uint8), jump target (uint16)
+			MED_JumpScript,       // Parameter: Script index (uint8), jump target (uint16 - JumpMarker ID, not event index!)
 			MED_SetEnvelope,      // Parameter: Envelope index (uint8), loop on/off (uint8), is volume envelope (uint8)
 			MED_SetVolume,        // Parameter: Volume (uint8)
 			MED_SetWaveform,      // Parameter: Waveform (uint8)
@@ -106,7 +106,7 @@ struct InstrumentSynth
 		{
 			Type::Jump, Type::JumpIfTrue, Type::EvaluateLoopCounter,
 			Type::GTK_KeyOff,
-			Type::MED_JumpScript, Type::MED_HoldDecay,
+			Type::MED_HoldDecay,
 			Type::FTM_SetInterrupt,
 		};
 
@@ -203,7 +203,7 @@ struct InstrumentSynth
 		constexpr Event &operator=(const Event &other) noexcept = default;
 		constexpr Event &operator=(Event &&other) noexcept = default;
 
-		MPT_CONSTEXPR20_FUN bool IsJumpEvent() const noexcept
+		MPT_ATTR_ALWAYSINLINE MPT_CONSTEXPR20_FUN bool IsJumpEvent() const noexcept
 		{
 			return mpt::contains(JumpEvents, type);
 		}

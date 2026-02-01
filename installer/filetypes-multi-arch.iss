@@ -71,6 +71,7 @@ Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; V
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".stp"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".stx"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".symmod"; ValueData: ""
+Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".tcb"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".ult"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".umx"; ValueData: ""
 Root: HKA; Subkey: "SOFTWARE\Classes\Applications\OpenMPT.exe\SupportedTypes"; ValueType: string; ValueName: ".unic"; ValueData: ""
@@ -130,6 +131,17 @@ Root: HKA; Subkey: "SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\OpenMPT.
 #define OpenMPTarch "OpenMPTarm64"
 #define OpenMPTarchPath "arm64"
 #define OpenMPTarchFriendly "OpenMPT (arm64)"
+#include "filetypes-multi-arch-per-arch.iss"
+#undef OpenMPTarchFriendly
+#undef OpenMPTarchPath
+#undef OpenMPTarch
+#undef OpenMPTFile
+
+#define Component "archarm64"
+#define OpenMPTFile "OpenMPTFilearm64ec"
+#define OpenMPTarch "OpenMPTarm64ec"
+#define OpenMPTarchPath "arm64ec"
+#define OpenMPTarchFriendly "OpenMPT (arm64ec)"
 #include "filetypes-multi-arch-per-arch.iss"
 #undef OpenMPTarchFriendly
 #undef OpenMPTarchPath

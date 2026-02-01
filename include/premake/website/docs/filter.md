@@ -12,13 +12,13 @@ Any settings that appear after this function in the script will be applied only 
 
 Each keyword must include a prefix to specify which field should be tested. The following field prefixes are currently supported:
 
-  * [action](premake_ACTION.md)
+  * [action](globals/premake_ACTION.md)
   * [architecture](architecture.md)
   * [configurations](configurations.md)
   * [files](files.md)
   * [kind](kind.md)
   * [language](language.md)
-  * [options](premake_OPTIONS.md)
+  * [options](globals/premake_OPTIONS.md)
   * [platforms](platforms.md)
   * [system](system.md)
   * [toolset](toolset.md)
@@ -142,6 +142,8 @@ filter {}
 * When a filter is set, any previous filter operations will become inactive.  In other words, initiating a filter acts as though a reset occurred first, followed by setting a new filter condition.
 
 * Filters can be viewed as a scoping concept.  A currently set filter goes 'out of scope' when either a filter reset operation is invoked or a project definition is started.
+
+* Filters are whitespace sensitive. For example, a filter of `system:not windows` is fundamentally different from `system: not windows`.
 
 ### See Also ###
 

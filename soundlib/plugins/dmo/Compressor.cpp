@@ -12,16 +12,13 @@
 
 #include "stdafx.h"
 
-#ifndef NO_PLUGINS
 #include "../../Sndfile.h"
 #include "Compressor.h"
 #include "DMOUtils.h"
 #include "mpt/base/numbers.hpp"
-#endif // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_BEGIN
 
-#ifndef NO_PLUGINS
 
 namespace DMO
 {
@@ -177,6 +174,8 @@ CString Compressor::GetParamLabel(PlugParamIndex param)
 	case kCompRelease:
 	case kCompPredelay:
 		return _T("ms");
+	case kCompRatio:
+		return _T(": 1");
 	}
 	return CString();
 }
@@ -229,9 +228,5 @@ void Compressor::RecalculateCompressorParams()
 
 } // namespace DMO
 
-#else
-MPT_MSVC_WORKAROUND_LNK4221(Compressor)
-
-#endif // !NO_PLUGINS
 
 OPENMPT_NAMESPACE_END

@@ -1,4 +1,34 @@
 
+include_dependency "ext-portaudio.lua"
+include_dependency "ext-portaudiocpp.lua"
+include_dependency "mpt-libopenmpt.lua"
+
+function mpt_libopenmpt_rc (name)
+	filter {}
+	filter { "action:vs*", "kind:SharedLib or ConsoleApp or WindowedApp" }
+		resdefines {
+			"MPT_BUILD_VER_FILENAME=\"" .. name .. ".dll\"",
+			"MPT_BUILD_VER_FILEDESC=\"" .. name .. "\"",
+		}
+	filter {}
+	filter { "action:vs*", "kind:SharedLib or ConsoleApp or WindowedApp" }
+		resincludedirs {
+			"$(IntDir)/svn_version",
+			"../../build/svn_version",
+			"$(ProjDir)/../../build/svn_version",
+		}
+		files {
+			"../../libopenmpt/libopenmpt_version.rc",
+		}
+	filter {}
+	filter { "action:vs*", "kind:SharedLib" }
+		resdefines { "MPT_BUILD_VER_DLL" }
+	filter {}
+	filter { "action:vs*", "kind:ConsoleApp or WindowedApp" }
+		resdefines { "MPT_BUILD_VER_EXE" }
+	filter {}
+end
+
  project "libopenmpt_example_cxx"
   uuid "ce5b5a74-cdb1-4654-b928-f91725fb57c9"
   language "C++"
@@ -11,6 +41,7 @@
   files {
    "../../examples/libopenmpt_example_cxx.cpp",
   }
+  mpt_libopenmpt_rc("libopenmpt_example_cxx");
   links { "ksuser", "winmm" }
 
  project "libopenmpt_example_c"
@@ -24,6 +55,7 @@
   files {
    "../../examples/libopenmpt_example_c.c",
   }
+  mpt_libopenmpt_rc("libopenmpt_example_c");
   links { "ksuser", "winmm" }
   filter {}
 
@@ -38,6 +70,7 @@
   files {
    "../../examples/libopenmpt_example_c_mem.c",
   }
+  mpt_libopenmpt_rc("libopenmpt_example_c_mem");
   links { "ksuser", "winmm" }
   filter {}
 
@@ -52,6 +85,7 @@
   files {
    "../../examples/libopenmpt_example_c_unsafe.c",
   }
+  mpt_libopenmpt_rc("libopenmpt_example_c_unsafe");
   links { "ksuser", "winmm" }
   filter {}
 
@@ -65,5 +99,6 @@
   files {
    "../../examples/libopenmpt_example_c_probe.c",
   }
+  mpt_libopenmpt_rc("libopenmpt_example_c_probe");
   filter {}
 

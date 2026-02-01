@@ -36,6 +36,10 @@ Makefile
 .cproject
 .settings
 .buildpath
+*.vs
+*.ninja
+*.ninja_deps
+*.ninja_log
 
 *.bbprojectsettings
 Scratchpad.txt
