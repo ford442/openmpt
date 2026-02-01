@@ -11,23 +11,20 @@
   files {
    "../../include/stb_vorbis/stb_vorbis.c",
   }
-  filter { "action:vs*" }
-    buildoptions { "/wd4005", "/wd4100", "/wd4244", "/wd4245", "/wd4701" }
-  filter {}
+	filter {}
+	if MPT_COMPILER_MSVC or MPT_COMPILER_CLANGCL then
+		buildoptions { "/wd4005", "/wd4100", "/wd4244", "/wd4245", "/wd4701" }
+	end
+	filter {}
   filter { "kind:SharedLib" }
    files { "../../build/premake/def/ext-stb_vorbis.def" }
   filter {}
 
 function mpt_use_stbvorbis ()
 	filter {}
-	filter { "action:vs*" }
-		includedirs {
-			"../../include",
-		}
-	filter { "not action:vs*" }
-		externalincludedirs {
-			"../../include",
-		}
+	dependencyincludedirs {
+		"../../include",
+	}
 	filter {}
 	defines {
 		"STB_VORBIS_HEADER_ONLY",

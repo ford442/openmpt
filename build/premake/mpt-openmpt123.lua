@@ -1,4 +1,11 @@
- 
+
+include_dependency "ext-flac.lua"
+include_dependency "ext-portaudio.lua"
+if MPT_MSVC_BEFORE(2022) then
+include_dependency "ext-pthread-win32.lua"
+end
+include_dependency "mpt-libopenmpt.lua"
+
  project "openmpt123"
   uuid "2879F62E-9E2F-4EAB-AE7D-F60C194DD5CB"
   language "C++"
@@ -16,7 +23,7 @@
 		"MPT_WITH_PORTAUDIO",
 	}
 
-	if _ACTION < "vs2022" then
+	if MPT_MSVC_BEFORE(2022) then
 		mpt_use_pthread_win32()
 		defines { "MPT_WITH_PTHREAD" }
 	end
@@ -76,7 +83,7 @@
 		resdefines { "MPT_BUILD_VER_EXE" }
 	filter {}
 
-	if _OPTIONS["charset"] ~= "Unicode" then
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 	end
 
@@ -86,7 +93,7 @@
   }
   
   filter {}
-	if _OPTIONS["windows-family"] ~= "uwp" then
+	if not MPT_OS_WINDOWS_WINRT then
 		filter { "action:vs*" }
 			linkoptions { "wsetargv.obj" }
 		filter {}

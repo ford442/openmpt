@@ -289,6 +289,15 @@ BOOL CCtrlSamples::OnInitDialog()
 			str = _T("+") + mpt::tfmt::dec(i);
 		m_ComboPitch.SetItemData(m_ComboPitch.AddString(str.c_str()), i + 12);
 	}
+
+	COMBOBOXINFO cbi{};
+	cbi.cbSize = sizeof(cbi);
+	GetComboBoxInfo(m_ComboPitch, &cbi);
+	(m_EditPitch.SubclassWindow)(cbi.hwndItem);
+	m_EditPitch.ModifyStyle(0, ES_NUMBER);
+	m_EditPitch.AllowNegative(true);
+	m_EditPitch.AllowFractions(true);
+
 	m_ComboPitch.SetRedraw(TRUE);
 	// Set "unchanged" as default pitch
 	m_ComboPitch.SetCurSel(12);
@@ -558,7 +567,7 @@ static CString EffectiveOPLVolume(double value, double effectiveFactor, const CS
 	if(!playConfig.getDisplayDBValues())
 		return s;
 
-	s += _T(" (") + CModDoc::DecibelsToStrings(dB + effectiveDB + CModDoc::LinearToDecibels(sndFile.m_nVSTiVolume, playConfig.getNormalVSTiVol())) + _T(" effectively)");
+	s += _T(" (") + CModDoc::DecibelsToStrings(dB + effectiveDB + CModDoc::LinearToDecibels(static_cast<float>(sndFile.m_nVSTiVolume), playConfig.getNormalVSTiVol())) + _T(" effectively)");
 	return s;
 }
 
@@ -725,7 +734,17 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 	if(!hintType[HINT_SMPNAMES | HINT_SAMPLEINFO | HINT_MODTYPE]) return;
 
 	const SAMPLEINDEX updateSmp = sampleHint.GetSample();
-	if(updateSmp != m_nSample && updateSmp != 0 && !hintType[HINT_MODTYPE]) return;
+	if(updateSmp != m_nSample && updateSmp != 0 && !hintType[HINT_MODTYPE])
+	{
+		int lower = 0, upper = 0;
+		m_SpinSample.GetRange(lower, upper);
+		if(upper != m_sndFile.GetNumSamples())
+		{
+			m_SpinSample.SetRange(1, m_sndFile.GetNumSamples());
+			m_SpinSample.Invalidate(FALSE);  // In case the spin button was previously disabled
+		}
+		return;
+	}
 
 	const CModSpecifications &specs = m_sndFile.GetModSpecifications();
 	const bool isOPL = IsOPLInstrument();
@@ -825,7 +844,7 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 		DWORD d;
 
 		m_SpinSample.SetRange(1, m_sndFile.GetNumSamples());
-		m_SpinSample.Invalidate(FALSE);	// In case the spin button was previously disabled
+		m_SpinSample.Invalidate(FALSE);  // In case the spin button was previously disabled
 
 		// Length / Type
 		if(isOPL)
@@ -852,6 +871,8 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 			SetDlgItemInt(IDC_EDIT9, sample.nPan / 4u);	//displayed panning with anything but XM is 0-64 so we divide by 4
 		// FineTune / C-4 Speed / BaseNote
 		int transp = 0;
+		m_EditFineTune.AllowNegative(m_sndFile.UseFinetuneAndTranspose());
+		m_EditFineTune.AllowFractions(false);
 		if (!m_sndFile.UseFinetuneAndTranspose())
 		{
 			s = mpt::cfmt::val(sample.nC5Speed);
@@ -1713,7 +1734,7 @@ void CCtrlSamples::ApplyAmplify(const double amp, const double fadeInStart, cons
 
 void CCtrlSamples::OnAmplify()
 {
-	static CAmpDlg::AmpSettings settings { Fade::kLinear, 0, 0, 100, false, false };
+	static CAmpDlg::AmpSettings settings { Fade::kLinear, CAmpDlg::AmpUnit::Percent, 0.0, 0.0, 100.0, false, false };
 
 	CAmpDlg dlg(this, settings);
 	if (dlg.DoModal() != IDOK) return;
@@ -1921,20 +1942,19 @@ void CCtrlSamples::OnPitchShiftTimeStretch()
 	if(!sample.HasSampleData())
 		return;
 	
-	CString text;
-	GetDlgItem(IDC_COMBO4)->GetWindowText(text);
-	const float semitones = mpt::parse<float>(text);
-	const float pitch = std::pow(2.0f, semitones / 12.0f);
+	double semitones = 0.0f;
+	m_EditPitch.GetDecimalValue(semitones);
+	const double pitch = std::pow(2.0, semitones / 12.0);
 
 	double ratio = 100.0;
 	m_EditTimeStretchRatio.GetDecimalValue(ratio);
 
 	const auto grainSize = static_cast<int>(GetDlgItemInt(IDC_COMBO5));
 
-	if(pitch != 1.0f || ratio != 100.0)
+	if(pitch != 1.0 || ratio != 100.0)
 	{
 		auto selection = GetSelectionPoints();
-		DoPitchShiftTimeStretch timeStretch(*this, m_modDoc, m_nSample, selection.nStart, selection.nEnd, pitch, static_cast<float>(ratio / 100.0), grainSize, IsDlgButtonChecked(IDC_CHECK3) != BST_UNCHECKED);
+		DoPitchShiftTimeStretch timeStretch(*this, m_modDoc, m_nSample, selection.nStart, selection.nEnd, static_cast<float>(pitch), static_cast<float>(ratio / 100.0), grainSize, IsDlgButtonChecked(IDC_CHECK3) != BST_UNCHECKED);
 		timeStretch.DoModal();
 		errorCode = timeStretch.m_result;
 		if(selection.selectionActive)

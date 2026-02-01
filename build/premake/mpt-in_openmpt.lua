@@ -1,4 +1,8 @@
 
+include_dependency "sys-mfc.lua"
+include_dependency "ext-winamp.lua"
+include_dependency "mpt-libopenmpt.lua"
+
  project "in_openmpt"
   uuid "D75AEB78-5537-49BD-9085-F92DEEFA84E8"
   language "C++"
@@ -46,11 +50,9 @@
 		resdefines { "MPT_BUILD_VER_EXE" }
 	filter {}
 
-	mpt_use_mfc()
+	defines { "MPT_BUILD_IN_OPENMPT_WINAMP5" }
+	mpt_use_mfc(_OPTIONS["windows-charset"])
 	defines { "MPT_WITH_MFC" }
-	if _OPTIONS["charset"] ~= "Unicode" then
-		defines { "NO_WARN_MBCS_MFC_DEPRECATION" }
-	end
 
   filter {}
   prebuildcommands { "..\\..\\build\\svn_version\\update_svn_version_vs_premake.cmd $(IntDir)" }

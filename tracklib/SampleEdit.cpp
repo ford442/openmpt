@@ -188,7 +188,7 @@ std::pair<int, int> FindMinMax(const int8 *p, SmpLength numSamples, int numChann
 	int minVal = 127;
 	int maxVal = -128;
 #if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
-	if(CPU::HasFeatureSet(CPU::feature::sse2) && CPU::HasModesEnabled(CPU::mode::xmm128sse) && numSamples >= 16)
+	if(CPU::HasFeatureSetAndModesEnabled(CPU::feature::sse2, CPU::mode::xmm128sse) && numSamples >= 16)
 	{
 		mpt::arch::feature_fence_guard arch_feature_guard;
 		sse2_findminmax8(p, numSamples, numChannels, minVal, maxVal);
@@ -213,7 +213,7 @@ std::pair<int, int> FindMinMax(const int16 *p, SmpLength numSamples, int numChan
 	int minVal = 32767;
 	int maxVal = -32768;
 #if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
-	if(CPU::HasFeatureSet(CPU::feature::sse2) && CPU::HasModesEnabled(CPU::mode::xmm128sse) && numSamples >= 8)
+	if(CPU::HasFeatureSetAndModesEnabled(CPU::feature::sse2, CPU::mode::xmm128sse) && numSamples >= 8)
 	{
 		mpt::arch::feature_fence_guard arch_feature_guard;
 		sse2_findminmax16(p, numSamples, numChannels, minVal, maxVal);
@@ -1184,7 +1184,7 @@ SmpLength FindLoopStart(const ModSample &sample, bool sustainLoop, bool goForwar
 	{
 		// Find Next LoopStart Point
 		const SmpLength searchEnd = moveLoop ? sample.nLength - loopLength : (std::max(loopEnd, SmpLength(16)) - 16);
-		for(SmpLength i = sample.nLoopStart + 1; i <= searchEnd; i++)
+		for(SmpLength i = loopStart + 1; i <= searchEnd; i++)
 		{
 			p += inc;
 			if(pingpong)
@@ -1205,7 +1205,7 @@ SmpLength FindLoopStart(const ModSample &sample, bool sustainLoop, bool goForwar
 	} else
 	{
 		// Find Prev LoopStart Point
-		for(SmpLength i = sample.nLoopStart; i;)
+		for(SmpLength i = loopStart; i;)
 		{
 			i--;
 			p -= inc;

@@ -34,6 +34,8 @@
    --"../../include/mpg123/src/libmpg123/calctables.c",
    "../../include/mpg123/src/libmpg123/costabs.h",
    "../../include/mpg123/src/libmpg123/dct64.c",
+   "../../include/mpg123/src/libmpg123/dct64_i386.c",
+   "../../include/mpg123/src/libmpg123/dct64_i486.c",
    "../../include/mpg123/src/libmpg123/decode.h",
    "../../include/mpg123/src/libmpg123/dither.c",
    "../../include/mpg123/src/libmpg123/dither.h",
@@ -83,6 +85,7 @@
    "../../include/mpg123/src/libmpg123/synth.h",
    "../../include/mpg123/src/libmpg123/synth_8bit.c",
    "../../include/mpg123/src/libmpg123/synth_8bit.h",
+   "../../include/mpg123/src/libmpg123/synth_i486.c",
    "../../include/mpg123/src/libmpg123/synth_mono.h",
    "../../include/mpg123/src/libmpg123/synth_ntom.h",
    "../../include/mpg123/src/libmpg123/synth_real.c",
@@ -91,40 +94,36 @@
    "../../include/mpg123/src/libmpg123/tabinit.c",
    --"../../include/mpg123/src/libmpg123/testcpu.c",
   }
-  defines { "DYNAMIC_BUILD", "OPT_GENERIC" }
+  defines { "DYNAMIC_BUILD" }
   links {
    "shlwapi",
   }
-  filter {}
-  filter { "action:vs*" }
-    buildoptions { "/wd4018", "/wd4244", "/wd4267", "/wd4305", "/wd4334" }
-  filter {}
-  filter { "action:vs*" }
-    buildoptions { "/wd6011", "/wd6285", "/wd6297", "/wd6305", "/wd6385", "/wd6386" } -- /analyze
 	filter {}
-		if _OPTIONS["clang"] then
-			buildoptions {
-				"-Wno-unused-function",
-			}
-		end
+	if MPT_COMPILER_MSVC or MPT_COMPILER_CLANGCL then
+		buildoptions { "/wd4018", "/wd4244", "/wd4267", "/wd4305", "/wd4334" }
+		buildoptions { "/wd6011", "/wd6285", "/wd6297", "/wd6305", "/wd6385", "/wd6386" } -- /analyze
+	end
+	filter {}
+	if MPT_COMPILER_CLANGCL or MPT_COMPILER_CLANG then
+		buildoptions {
+			"-Wno-unused-function",
+		}
+	end
 	filter {}
 
 function mpt_use_mpg123 ()
 	filter {}
-	filter { "action:vs*" }
-		includedirs {
-			"../../include/mpg123/src/include",
-		}
-	filter { "not action:vs*" }
-		externalincludedirs {
-			"../../include/mpg123/src/include",
-		}
+	dependencyincludedirs {
+		"../../include/mpg123/src/include",
+	}
 	filter {}
 		defines { "MPG123_NO_LARGENAME" }
 		links {
 			"mpg123",
 		}
-	filter { "action:vs*" }
+	filter {}
+	if MPT_OS_WINDOWS then
 		defines { "LINK_MPG123_DLL" }
+	end
 	filter {}
 end

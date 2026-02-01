@@ -9,11 +9,11 @@ mkdir Licenses
 copy /y ..\src\mpt\LICENSE.BSD-3-Clause.txt                          .\Licenses\License.mpt.BSD-3-Clause.txt || goto error
 copy /y ..\src\mpt\LICENSE.BSL-1.0.txt                               .\Licenses\License.mpt.BSL-1.0.txt || goto error
 copy /y ..\include\ancient\LICENSE                                   .\Licenses\License.ancient.txt || goto error
-copy /y ..\include\ancient\src\BZIP2Table.hpp                        .\Licenses\License.ancient.bzip2.txt || goto error
+copy /y ..\include\ancient\LICENSE.bzip2                             .\Licenses\License.ancient.bzip2.txt || goto error
 copy /y ..\include\cryptopp\License.txt                              .\Licenses\License.CryptoPP.txt || goto error
 copy /y ..\include\flac\COPYING.Xiph                                 .\Licenses\License.FLAC.txt || goto error
 copy /y ..\include\lame\COPYING                                      .\Licenses\License.lame.txt || goto error
-copy /y ..\include\lhasa\COPYING                                     .\Licenses\License.lhasa.txt || goto error
+copy /y ..\include\lhasa\COPYING.md                                  .\Licenses\License.lhasa.txt || goto error
 copy /y ..\include\minimp3\LICENSE                                   .\Licenses\License.minimp3.txt || goto error
 rem copy /y ..\include\miniz\LICENSE                                     .\Licenses\License.miniz.txt || goto error
 copy /y ..\include\mpg123\COPYING                                    .\Licenses\License.mpg123.txt || goto error
@@ -31,7 +31,7 @@ copy /y ..\include\pthread-win32\docs\COPYING.FSF.md                 .\Licenses\
 copy /y ..\include\pthread-win32\docs\CONTRIBUTORS.md                .\Licenses\License.PThread-Win32.CONTRIBUTORS.txt || goto error
 rem copy /y ..\include\pugixml\LICENSE.md                                .\Licenses\License.PugiXML.txt || goto error
 copy /y ..\include\r8brain\LICENSE                                   .\Licenses\License.R8Brain.txt || goto error
-copy /y ..\include\rtaudio\README.md                                 .\Licenses\License.RtAudio.txt || goto error
+copy /y ..\include\rtaudio\LICENSE                                   .\Licenses\License.RtAudio.txt || goto error
 copy /y ..\include\rtkit\rtkit.h                                     .\Licenses\License.RealtimeKit.txt || goto error
 copy /y ..\include\rtmidi\LICENSE                                    .\Licenses\License.RtMidi.txt || goto error
 copy /y ..\include\SignalsmithStretch\SignalsmithStretch\LICENSE.txt .\Licenses\License.SignalsmithStretch.txt || goto error

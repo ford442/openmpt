@@ -15,6 +15,7 @@
 #ifdef ENABLE_TESTS
 
 #ifdef LIBOPENMPT_BUILD
+#include "mpt/arch/arch.hpp"
 #include "mpt/arch/x86_amd64.hpp"
 #endif
 #include "mpt/base/check_platform.hpp"
@@ -86,9 +87,7 @@
 #ifdef LIBOPENMPT_BUILD
 #include "../libopenmpt/libopenmpt_version.h"
 #endif // LIBOPENMPT_BUILD
-#ifndef NO_PLUGINS
 #include "../soundlib/plugins/PlugInterface.h"
-#endif
 #include <sstream>
 #include <limits>
 #ifdef LIBOPENMPT_BUILD
@@ -100,6 +99,7 @@
 #include <stdexcept>
 #ifdef LIBOPENMPT_BUILD
 #include <cfenv>
+#include <cfloat>
 #endif // LIBOPENMPT_BUILD
 #if MPT_COMPILER_MSVC
 #include <tchar.h>
@@ -111,7 +111,24 @@
 #include <zlib.h>
 #elif defined(MPT_WITH_MINIZ)
 #define MINIZ_NO_ZLIB_COMPATIBLE_NAMES
+#if MPT_COMPILER_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4505) // unreferenced function with internal linkage has been removed
+#elif MPT_COMPILER_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#elif MPT_COMPILER_CLANG
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+#endif
 #include <miniz/miniz.h>
+#if MPT_COMPILER_MSVC
+//#pragma warning(pop)
+#elif MPT_COMPILER_GCC
+#pragma GCC diagnostic pop
+#elif MPT_COMPILER_CLANG
+#pragma clang diagnostic pop
+#endif
 #endif
 
 #define MPT_TEST_HAS_FILESYSTEM 1
@@ -237,12 +254,23 @@ void DoTests()
 					}
 					return result;
 				};
-				std::cout << "Rounding mode: " << format_rounding(std::fegetround()) << std::endl;
+				auto get_rounding_mode = []() {
+					#ifdef MPT_COMPILER_QUIRK_WANT_PRAGMA_STDC_FENV_ACCESS
+					#pragma STDC FENV_ACCESS ON
+					#endif
+					return std::fegetround();
+				};
+				std::cout << "Rounding mode: " << format_rounding(get_rounding_mode()) << std::endl;
 			}
 		#endif // !MPT_LIBC_QUIRK_NO_FENV
 		#if MPT_ARCH_X86 || MPT_ARCH_AMD64
 			{
-				const mpt::arch::x86::floating_point::control_state fpstate = mpt::arch::x86::floating_point::get_state();
+				const mpt::arch::x86::floating_point::control_state fpstate =
+					#if MPT_ARCH_X86
+						mpt::arch::x86::floating_point::get_state(mpt::arch::get_cpu_info());
+					#else
+						mpt::arch::x86::floating_point::get_state();
+					#endif
 				if(fpstate.x87_level)
 				{
 					auto format_rounding = [](uint16 fcw) {
@@ -1534,6 +1562,28 @@ MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMisc2()
 		VERIFY_EQUAL(req.host, U_("host"));
 		VERIFY_EQUAL(req.path, U_("/"));
 	}
+	{
+		// https://daniel.haxx.se/blog/2022/09/08/http-http-http-http-http-http-http/
+		URI uri = ParseURI(U_("http://http://http://@http://http://?http://#http://"));
+		// python urllib / RFC 3986
+		VERIFY_EQUAL(uri.scheme, U_("http"));
+		VERIFY_EQUAL(uri.username, U_(""));
+		VERIFY_EQUAL(uri.password, U_(""));
+		VERIFY_EQUAL(uri.host, U_("http"));
+		VERIFY_EQUAL(uri.port, U_(""));
+		VERIFY_EQUAL(uri.path, U_("//http://@http://http://"));
+		VERIFY_EQUAL(uri.query, U_("http://"));
+		VERIFY_EQUAL(uri.fragment, U_("http://"));
+		// curl (broken)
+		//VERIFY_EQUAL(uri.scheme, U_("http"));
+		//VERIFY_EQUAL(uri.username, U_("http"));
+		//VERIFY_EQUAL(uri.password, U_("//http://"));
+		//VERIFY_EQUAL(uri.host, U_("http"));
+		//VERIFY_EQUAL(uri.port, U_(""));
+		//VERIFY_EQUAL(uri.path, U_("//http://"));
+		//VERIFY_EQUAL(uri.query, U_("http://"));
+		//VERIFY_EQUAL(uri.fragment, U_("http://"));
+	}
 
 #endif // MODPLUG_TRACKER
 
@@ -2607,9 +2657,12 @@ MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSettings()
 	VERIFY_EQUAL(SettingPath(U_("a"),U_("b")) < SettingPath(U_("a"),U_("c")), true);
 	VERIFY_EQUAL(!(SettingPath(U_("c"),U_("b")) < SettingPath(U_("a"),U_("c"))), true);
 
-	{
-		DefaultSettingsContainer conf;
+	const mpt::PathString filename = theApp.GetConfigPath() + P_("test.ini");
 
+	DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+
+	{
+		IniFileSettingsContainer conf{filename};
 		int32 foobar = conf.Read(U_("Test"), U_("bar"), 23);
 		conf.Write(U_("Test"), U_("bar"), 64);
 		conf.Write(U_("Test"), U_("bar"), 42);
@@ -2619,59 +2672,133 @@ MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSettings()
 	}
 
 	{
-		DefaultSettingsContainer conf;
-
+		IniFileSettingsContainer conf{filename};
 		int32 foobar = conf.Read(U_("Test"), U_("bar"), 28);
 		VERIFY_EQUAL(foobar, 42);
 		conf.Write(U_("Test"), U_("bar"), 43);
 	}
 
 	{
-		DefaultSettingsContainer conf;
-
+		IniFileSettingsContainer conf{filename};
 		int32 foobar = conf.Read(U_("Test"), U_("bar"), 123);
 		VERIFY_EQUAL(foobar, 43);
 		conf.Write(U_("Test"), U_("bar"), 88);
 	}
 
 	{
-		DefaultSettingsContainer conf;
-
+		IniFileSettingsContainer conf{filename};
 		Setting<int> foo(conf, U_("Test"), U_("bar"), 99);
-
 		VERIFY_EQUAL(foo, 88);
-
 		foo = 7;
-
 	}
 
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		Setting<int> foo(conf, U_("Test"), U_("bar"), 99);
 		VERIFY_EQUAL(foo, 7);
 	}
 
-
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		conf.Read(U_("Test"), U_("struct"), std::string(""));
 		conf.Write(U_("Test"), U_("struct"), std::string(""));
 	}
 
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		CustomSettingsTestType dummy = conf.Read(U_("Test"), U_("struct"), CustomSettingsTestType(1.0f, 1.0f));
 		dummy = CustomSettingsTestType(0.125f, 32.0f);
 		conf.Write(U_("Test"), U_("struct"), dummy);
 	}
 
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		Setting<CustomSettingsTestType> dummyVar(conf, U_("Test"), U_("struct"), CustomSettingsTestType(1.0f, 1.0f));
 		CustomSettingsTestType dummy = dummyVar;
 		VERIFY_EQUAL(dummy.x, 0.125f);
 		VERIFY_EQUAL(dummy.y, 32.0f);
 	}
+
+	// test duplicate sections and keys
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream(); 
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("[S1]")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=1")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=2")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("bar1=a")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("[S1]")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=3")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=4")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("bar2=a")));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("S1"), U_("foo")}, 0).as<int>(), 1);
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("S1"), U_("bar1")}, U_("empty")).as<mpt::ustring>(), U_("a"));
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("S1"), U_("bar2")}, U_("empty")).as<mpt::ustring>(), U_("empty"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+	}
+
+	// test last value without line ending
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream();
+			mpt::IO::WriteTextCRLF(outputstream, "[Test]");
+			mpt::IO::WriteText(outputstream, mpt::ToCharset(mpt::Charset::UTF8, MPT_UTF8("Foo=bar")));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("Test"), U_("Foo")}, U_("")).as<mpt::ustring>(), U_("bar"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+	}
+
+	// test Unicode in UTF-16LE-BOM mode
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream();
+			auto WriteUTF16LE = [](auto & outputstream, mpt::span<const WCHAR> data) {
+					mpt::IO::WriteRaw(outputstream, reinterpret_cast<const std::byte*>(data.data()), data.size() * 2);
+				};
+			std::vector<WCHAR> utf16lebom = {0xfeff};
+			WriteUTF16LE(outputstream, mpt::as_span(utf16lebom));
+			WriteUTF16LE(outputstream, mpt::as_span(std::wstring(L"[Test]\r\n")));
+			WriteUTF16LE(outputstream, mpt::as_span(mpt::ToWide(MPT_UTF8("Umlauts=\xC3\xA4\r\n"))));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("Test"), U_("Umlauts")}, U_("")).as<mpt::ustring>(), MPT_UTF8("\xC3\xA4"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+	}
+
+#if 0
+	// test Unicode in UTF-8-BOM mode, Wine-only
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream();
+			std::vector<std::byte> utf8bom = {mpt::byte_cast<std::byte>(static_cast<uint8>(0xEF)), mpt::byte_cast<std::byte>(static_cast<uint8>(0xBB)), mpt::byte_cast<std::byte>(static_cast<uint8>(0xBF))};
+			mpt::IO::WriteRaw(outputstream, mpt::as_span(utf8bom));
+			mpt::IO::WriteTextCRLF(outputstream, "[Test]");
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::UTF8, MPT_UTF8("Umlauts=\xC3\xA4")));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("Test"), U_("Umlauts")}, U_("")).as<mpt::ustring>(), MPT_UTF8("\xC3\xA4"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+	}
+#endif
 
 #endif // MODPLUG_TRACKER
 
@@ -2758,14 +2885,10 @@ static void TestLoadXMFile(const CSoundFile &sndFile)
 	// Channels
 	VERIFY_EQUAL_NONCONT(sndFile.GetNumChannels(), 2);
 	VERIFY_EQUAL_NONCONT((sndFile.ChnSettings[0].szName == "First Channel"), true);
-#ifndef NO_PLUGINS
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[0].nMixPlugin, 0);
-#endif // NO_PLUGINS
 
 	VERIFY_EQUAL_NONCONT((sndFile.ChnSettings[1].szName == "Second Channel"), true);
-#ifndef NO_PLUGINS
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[1].nMixPlugin, 1);
-#endif // NO_PLUGINS
 
 	// Samples
 	VERIFY_EQUAL_NONCONT(sndFile.GetNumSamples(), 3);
@@ -2920,13 +3043,11 @@ static void TestLoadXMFile(const CSoundFile &sndFile)
 	}
 
 	// Plugins
-#ifndef NO_PLUGINS
 	const SNDMIXPLUGIN &plug = sndFile.m_MixPlugins[0];
 	VERIFY_EQUAL_NONCONT(plug.GetName(), U_("First Plugin"));
 	VERIFY_EQUAL_NONCONT(plug.fDryRatio, 0.26f);
 	VERIFY_EQUAL_NONCONT(plug.IsMasterEffect(), true);
 	VERIFY_EQUAL_NONCONT(plug.GetGain(), 11);
-#endif // NO_PLUGINS
 }
 
 
@@ -3008,25 +3129,19 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[0].nPan, 32);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[0].nVolume, 32);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[0].dwFlags, CHN_MUTE);
-#ifndef NO_PLUGINS
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[0].nMixPlugin, 0);
-#endif // NO_PLUGINS
 
 	VERIFY_EQUAL_NONCONT((sndFile.ChnSettings[1].szName == "Second Channel"), true);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[1].nPan, 128);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[1].nVolume, 16);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[1].dwFlags, CHN_SURROUND);
-#ifndef NO_PLUGINS
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[1].nMixPlugin, 1);
-#endif // NO_PLUGINS
 
 	VERIFY_EQUAL_NONCONT((sndFile.ChnSettings[69].szName == "Last Channel______X"), true);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[69].nPan, 256);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[69].nVolume, 7);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[69].dwFlags, ChannelFlags(0));
-#ifndef NO_PLUGINS
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[69].nMixPlugin, 1);
-#endif // NO_PLUGINS
 	// Samples
 	VERIFY_EQUAL_NONCONT(sndFile.GetNumSamples(), 4);
 	{
@@ -3236,6 +3351,7 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetRowsPerBeat(), 5);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetRowsPerMeasure(), 10);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].HasTempoSwing(), true);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].HasColor(), false);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns.IsPatternEmpty(0), true);
 
 	{
@@ -3255,6 +3371,7 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetRowsPerBeat(), 0);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetRowsPerMeasure(), 0);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].HasTempoSwing(), false);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetColor(), 0xFFC080);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns.IsPatternEmpty(1), false);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 0)->IsPcNote(), true);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 0)->note, NOTE_PC);
@@ -3284,7 +3401,6 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(31, 1)->param, 0xFF);
 
 	// Plugins
-#ifndef NO_PLUGINS
 	const SNDMIXPLUGIN &plug = sndFile.m_MixPlugins[0];
 	VERIFY_EQUAL_NONCONT(plug.GetName(), U_("First Plugin"));
 	VERIFY_EQUAL_NONCONT(plug.fDryRatio, 0.26f);
@@ -3296,7 +3412,6 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 		VERIFY_EQUAL_NONCONT(plug.pMixPlugin->GetParameter(1), 0.5f);
 		VERIFY_EQUAL_NONCONT(plug.pMixPlugin->IsInstrument(), false);
 	}
-#endif // NO_PLUGINS
 
 #ifdef MODPLUG_TRACKER
 	// MIDI Mapping
