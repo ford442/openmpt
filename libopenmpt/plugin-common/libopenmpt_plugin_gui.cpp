@@ -254,22 +254,22 @@ protected:
 
 	void OnOK() override {
 
-		s->samplerate = m_ComboBoxSamplerate.GetItemData( m_ComboBoxSamplerate.GetCurSel() );
+		s->samplerate = static_cast<int>( m_ComboBoxSamplerate.GetItemData( m_ComboBoxSamplerate.GetCurSel() ) );
 
-		s->channels = m_ComboBoxChannels.GetItemData( m_ComboBoxChannels.GetCurSel() );
+		s->channels = static_cast<int>( m_ComboBoxChannels.GetItemData( m_ComboBoxChannels.GetCurSel() ) );
 
 		s->mastergain_millibel = m_SliderCtrlGain.GetPos();
 
-		s->interpolationfilterlength = m_ComboBoxInterpolation.GetItemData( m_ComboBoxInterpolation.GetCurSel() );
+		s->interpolationfilterlength = static_cast<int>( m_ComboBoxInterpolation.GetItemData( m_ComboBoxInterpolation.GetCurSel() ) );
 
 		s->use_amiga_resampler = ( m_CheckBoxAmigaResampler.GetCheck() != BST_UNCHECKED ) ? 1 : 0;
-		s->amiga_filter_type = m_ComboBoxAmigaFilter.GetItemData( m_ComboBoxAmigaFilter.GetCurSel() );
+		s->amiga_filter_type = static_cast<int>( m_ComboBoxAmigaFilter.GetItemData( m_ComboBoxAmigaFilter.GetCurSel() ) );
 
-		s->repeatcount = m_ComboBoxRepeat.GetItemData( m_ComboBoxRepeat.GetCurSel() );
+		s->repeatcount = static_cast<int>( m_ComboBoxRepeat.GetItemData( m_ComboBoxRepeat.GetCurSel() ) );
 
 		s->stereoseparation = m_SliderCtrlStereoSeparation.GetPos();
 
-		s->ramping = m_ComboBoxRamping.GetItemData( m_ComboBoxRamping.GetCurSel() );
+		s->ramping = static_cast<int>( m_ComboBoxRamping.GetItemData( m_ComboBoxRamping.GetCurSel() ) );
 
 		s->changed();
 
@@ -310,10 +310,17 @@ protected:
 
 };
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-local-typedef"
+#endif
 BEGIN_MESSAGE_MAP(CSettingsDialog, CDialog)
 	ON_NOTIFY_EX_RANGE(TTN_NEEDTEXT, 0, 0xFFFF, &CSettingsDialog::OnToolTipText)
 	ON_COMMAND( IDC_CHECK_AMIGA_RESAMPLER, &CSettingsDialog::OnAmigaResamplerChanged )
 END_MESSAGE_MAP()
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 
 
@@ -366,14 +373,14 @@ protected:
 #if defined(MPT_WITH_MFC)
 
 
-void gui_edit_settings( libopenmpt_settings * s, HWND parent, std::wstring title ) {
+void gui_edit_settings( libopenmpt_settings * s, HWND parent, std::basic_string<TCHAR> title ) {
 	AFX_MANAGE_STATE( AfxGetStaticModuleState() );
 	CSettingsDialog dlg( s, title.c_str(), parent ? CWnd::FromHandle( parent ) : nullptr );
 	dlg.DoModal();
 }
 
 
-void gui_show_file_info( HWND parent, std::wstring title, std::wstring info ) {
+void gui_show_file_info( HWND parent, std::basic_string<TCHAR> title, std::basic_string<TCHAR> info ) {
 	AFX_MANAGE_STATE( AfxGetStaticModuleState() );
 	CInfoDialog dlg( title.c_str(), info.c_str(), parent ? CWnd::FromHandle( parent ) : nullptr );
 	dlg.DoModal();

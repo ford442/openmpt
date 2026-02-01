@@ -68,22 +68,22 @@ mpt::ustring FileHistory::AsISO8601(mpt::Date::LogicalTimezone internalTimezone)
 		mpt::Date::AnyGregorian tmpLoadDate = loadDate;
 		if (internalTimezone == mpt::Date::LogicalTimezone::UTC)
 		{
-			int64 loadDateSinceEpoch = mpt::Date::UnixAsSeconds(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(tmpLoadDate)));
+			int64 loadDateSinceEpoch = mpt::chrono::default_system_clock::to_unix_seconds(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(tmpLoadDate)));
 			int64 saveDateSinceEpoch = loadDateSinceEpoch + mpt::saturate_round<int64>(openSeconds);
-			return mpt::Date::ToShortenedISO8601(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(saveDateSinceEpoch)));
+			return mpt::Date::ToShortenedISO8601(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(saveDateSinceEpoch)));
 #ifdef MODPLUG_TRACKER
 		} else if(internalTimezone == mpt::Date::LogicalTimezone::Local)
 		{
-			int64 loadDateSinceEpoch = mpt::Date::UnixAsSeconds(mpt::Date::UnixFromLocal(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::Local>(tmpLoadDate)));
+			int64 loadDateSinceEpoch = mpt::chrono::default_system_clock::to_unix_seconds(mpt::Date::default_from_local(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::Local>(tmpLoadDate)));
 			int64 saveDateSinceEpoch = loadDateSinceEpoch + mpt::saturate_round<int64>(openSeconds);
-			return mpt::Date::ToShortenedISO8601(mpt::Date::UnixAsLocal(mpt::Date::UnixFromSeconds(saveDateSinceEpoch)));
+			return mpt::Date::ToShortenedISO8601(mpt::Date::local_from_default(mpt::chrono::default_system_clock::from_unix_seconds(saveDateSinceEpoch)));
 #endif // MODPLUG_TRACKER
 		} else
 		{
 			// assume UTC for unspecified timezone when calculating
-			int64 loadDateSinceEpoch = mpt::Date::UnixAsSeconds(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(tmpLoadDate)));
+			int64 loadDateSinceEpoch = mpt::chrono::default_system_clock::to_unix_seconds(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(tmpLoadDate)));
 			int64 saveDateSinceEpoch = loadDateSinceEpoch + mpt::saturate_round<int64>(openSeconds);
-			return mpt::Date::ToShortenedISO8601(mpt::Date::forget_timezone(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(saveDateSinceEpoch))));
+			return mpt::Date::ToShortenedISO8601(mpt::Date::forget_timezone(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(saveDateSinceEpoch))));
 		}
 	} else
 	{
@@ -434,9 +434,7 @@ bool CSoundFile::Create(FileReader file, ModLoadingFlags loadFlags, CModDoc *pMo
 #endif  // MODPLUG_TRACKER
 
 	Clear(m_szNames);
-#ifndef NO_PLUGINS
 	std::fill(std::begin(m_MixPlugins), std::end(m_MixPlugins), SNDMIXPLUGIN());
-#endif  // NO_PLUGINS
 
 	if(CreateInternal(file, loadFlags))
 		return true;
@@ -726,7 +724,6 @@ bool CSoundFile::CreateInternal(FileReader file, ModLoadingFlags loadFlags)
 		UpgradeModule();
 	}
 
-#ifndef NO_PLUGINS
 	// Load plugins
 #ifdef MODPLUG_TRACKER
 	mpt::ustring notFoundText;
@@ -813,7 +810,6 @@ bool CSoundFile::CreateInternal(FileReader file, ModLoadingFlags loadFlags)
 		}
 	}
 #endif // MODPLUG_TRACKER
-#endif // NO_PLUGINS
 
 	return true;
 }
@@ -849,12 +845,10 @@ bool CSoundFile::Destroy()
 		delete ins;
 		ins = nullptr;
 	}
-#ifndef NO_PLUGINS
 	for(auto &plug : m_MixPlugins)
 	{
 		plug.Destroy();
 	}
-#endif // NO_PLUGINS
 
 	m_nType = MOD_TYPE_NONE;
 	m_ContainerType = ModContainerType::None;
@@ -930,6 +924,7 @@ void CSoundFile::ResetPlayPos()
 	m_PlayState.m_nNextRow = 0;
 	m_PlayState.m_nTickCount = TICKS_ROW_FINISHED;
 	m_PlayState.m_nBufferCount = 0;
+	m_PlayState.m_dBufferDiff = 0;
 	m_PlayState.m_nPatternDelay = 0;
 	m_PlayState.m_nFrameDelay = 0;
 	m_PlayState.m_nextPatStartRow = 0;
@@ -966,10 +961,8 @@ void CSoundFile::SetCurrentOrder(ORDERINDEX nOrder)
 		chn.nTremorCount = 0;
 	}
 
-#ifndef NO_PLUGINS
 	// Stop hanging notes from VST instruments as well
 	StopAllVsti();
-#endif // NO_PLUGINS
 
 	if (!nOrder)
 	{
@@ -981,6 +974,7 @@ void CSoundFile::SetCurrentOrder(ORDERINDEX nOrder)
 		m_PlayState.m_nPattern = 0;
 		m_PlayState.m_nTickCount = TICKS_ROW_FINISHED;
 		m_PlayState.m_nBufferCount = 0;
+		m_PlayState.m_dBufferDiff = 0;
 		m_PlayState.m_nPatternDelay = 0;
 		m_PlayState.m_nFrameDelay = 0;
 		m_PlayState.m_nextPatStartRow = 0;
@@ -992,7 +986,6 @@ void CSoundFile::SetCurrentOrder(ORDERINDEX nOrder)
 
 void CSoundFile::SuspendPlugins()
 {
-#ifndef NO_PLUGINS
 	for(auto &plug : m_MixPlugins)
 	{
 		IMixPlugin *pPlugin = plug.pMixPlugin;
@@ -1003,12 +996,10 @@ void CSoundFile::SuspendPlugins()
 			pPlugin->Suspend();
 		}
 	}
-#endif // NO_PLUGINS
 }
 
 void CSoundFile::ResumePlugins()
 {
-#ifndef NO_PLUGINS
 	for(auto &plugin : m_MixPlugins)
 	{
 		IMixPlugin *pPlugin = plugin.pMixPlugin;
@@ -1018,13 +1009,11 @@ void CSoundFile::ResumePlugins()
 			pPlugin->Resume();
 		}
 	}
-#endif // NO_PLUGINS
 }
 
 
 void CSoundFile::UpdatePluginPositions()
 {
-#ifndef NO_PLUGINS
 	for(auto &plugin : m_MixPlugins)
 	{
 		IMixPlugin *pPlugin = plugin.pMixPlugin;
@@ -1033,13 +1022,11 @@ void CSoundFile::UpdatePluginPositions()
 			pPlugin->PositionChanged();
 		}
 	}
-#endif  // NO_PLUGINS
 }
 
 
 void CSoundFile::StopAllVsti()
 {
-#ifndef NO_PLUGINS
 	for(auto &plugin : m_MixPlugins)
 	{
 		IMixPlugin *pPlugin = plugin.pMixPlugin;
@@ -1048,7 +1035,6 @@ void CSoundFile::StopAllVsti()
 			pPlugin->HardAllNotesOff();
 		}
 	}
-#endif // NO_PLUGINS
 }
 
 
@@ -1062,13 +1048,11 @@ void CSoundFile::SetMixLevels(MixLevels levels)
 
 void CSoundFile::RecalculateGainForAllPlugs()
 {
-#ifndef NO_PLUGINS
 	for(auto &plugin : m_MixPlugins)
 	{
 		if(plugin.pMixPlugin != nullptr)
 			plugin.pMixPlugin->RecalculateGain();
 	}
-#endif // NO_PLUGINS
 }
 
 
@@ -1079,8 +1063,10 @@ void CSoundFile::ResetChannels()
 	for(CHANNELINDEX channel = 0; channel < m_PlayState.Chn.size(); channel++)
 	{
 		ModChannel &chn = m_PlayState.Chn[channel];
+		chn.dwFlags.set(CHN_NOTEFADE);
 		chn.nROfs = chn.nLOfs = 0;
 		chn.nLength = 0;
+		chn.nFadeOutVol = 0;
 		if(chn.dwFlags[CHN_ADLIB] && m_opl)
 			m_opl->NoteCut(channel);
 	}
@@ -1225,6 +1211,9 @@ PlayBehaviourSet CSoundFile::GetSupportedPlaybackBehaviour(MODTYPE type)
 		playBehaviour.set(kITOffsetWithInstrNumber);
 		playBehaviour.set(kITDoublePortamentoSlides);
 		playBehaviour.set(kITCarryAfterNoteOff);
+		playBehaviour.set(kITNoteCutWithPorta);
+		playBehaviour.set(kITVolColNoSlidePropagation);
+		playBehaviour.set(kITStoppedFilterEnvAtStart);
 		break;
 
 	case MOD_TYPE_XM:

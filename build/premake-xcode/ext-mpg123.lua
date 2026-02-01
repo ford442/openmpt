@@ -17,7 +17,7 @@
   }
   files {
    "../../include/mpg123/src/libmpg123/dct64.c",
-   --"../../include/mpg123/src/libmpg123/dither.c",
+   "../../include/mpg123/src/libmpg123/dither.c",
    "../../include/mpg123/src/libmpg123/equalizer.c",
    "../../include/mpg123/src/libmpg123/feature.c",
    "../../include/mpg123/src/libmpg123/format.c",
@@ -42,4 +42,3 @@
    "../../include/mpg123/src/libmpg123/synth_s32.c",
    "../../include/mpg123/src/libmpg123/tabinit.c",
   }
-  defines { "OPT_GENERIC" }

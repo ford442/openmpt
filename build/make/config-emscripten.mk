@@ -128,8 +128,8 @@ LDFLAGS += -s ALLOW_MEMORY_GROWTH=1
 
 
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new2)
-LINK_SIMD_FLAGS = --enable-simd -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128 -mavx2 -mrelaxed-simd
-SIMD_FLAGS = -DSIMD=AVX -msse4.2 -msimd128 -mavx2 -mrelaxed-simd
+LINK_SIMD_FLAGS = --enable-simd -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128 -mavx2 -mrelaxed-simd -fopenmp-simd
+SIMD_FLAGS = -DSIMD=AVX -msse4.2 -msimd128 -mavx2 -mrelaxed-simd -fopenmp-simd
 CPPFLAGS += -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants
 CXXFLAGS += -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants
 CFLAGS   += -fno-fast-math -ffp-contract=off -ffp-model=strict -fno-math-errno -mextended-const -mbulk-memory -matomics -mmutable-globals -msign-ext -fmerge-all-constants
@@ -138,14 +138,14 @@ LDFLAGS  += -DNDEBUG=1 \
 -ffp-contract=off -ffp-model=strict -stdlib=libc++ -sALLOW_UNIMPLEMENTED_SYSCALLS=1 \
 -fno-fast-math -mextended-const -mbulk-memory --typed-function-references --enable-reference-types \
 -matomics -mmutable-globals -msign-ext -fmerge-all-constants -fno-math-errno \
--sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=384mb \
+-sWASM=0 -sFORCE_FILESYSTEM=1 -sALLOW_MEMORY_GROWTH=0 -sINITIAL_HEAP=512mb \
 -rtlib=compiler-rt -sENVIRONMENT=web -sASYNCIFY=0 -sMALLOC='emmalloc' \
---output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0
+--output_eol linux --use-preload-plugins --closure 0 --closureFriendly -sSTRICT_JS=0 -sASSERTIONS=0
 
 
 else ifeq ($(EMSCRIPTEN_TARGET),1it1-new)
-LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128
-SIMD_FLAGS = -DSIMD=AVX -msimd128 -mavx
+LINK_SIMD_FLAGS = -msse -msse2 -msse3 -mssse3 -msse4 -msse4.1 -msse4.2 -mavx -msimd128 -openmp-simd
+SIMD_FLAGS = -DSIMD=AVX -msimd128 -mavx -openmp-simd
 CPPFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
 CXXFLAGS += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 
 CFLAGS   += -fno-fast-math -ffp-contract=off -fexcess-precision=standard 

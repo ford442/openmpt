@@ -709,7 +709,7 @@ void CViewGlobals::OnEditColor(const CHANNELINDEX chnMod4)
 	auto *modDoc = GetDocument();
 	auto &sndFile = modDoc->GetSoundFile();
 	const CHANNELINDEX chn = static_cast<CHANNELINDEX>(m_nActiveTab * CHANNELS_IN_TAB) + chnMod4;
-	if(auto color = m_channelColor[chnMod4].PickColor(sndFile, chn); color.has_value())
+	if(auto color = m_channelColor[chnMod4].PickChannelColor(sndFile, chn); color.has_value())
 	{
 		PrepareUndo(chnMod4);
 		sndFile.ChnSettings[chn].color = *color;
@@ -826,7 +826,7 @@ void CViewGlobals::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 		const CHANNELINDEX nLoopLimit = std::min(static_cast<CHANNELINDEX>(CHANNELS_IN_TAB), static_cast<CHANNELINDEX>(pModDoc->GetSoundFile().GetNumChannels() - nChn));
 		for (CHANNELINDEX iCh = 0; iCh < nLoopLimit; iCh++)
 		{
-			if(pScrollBar == (CScrollBar *) &m_sbVolume[iCh])
+			if(static_cast<CWnd*>(pScrollBar) == &m_sbVolume[iCh])
 			{
 				// Volume sliders
 				pos = (short int)m_sbVolume[iCh].GetPos();
@@ -839,7 +839,7 @@ void CViewGlobals::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 						bUpdate = TRUE;
 					}
 				}
-			} else if(pScrollBar == (CScrollBar *) &m_sbPan[iCh])
+			} else if(static_cast<CWnd*>(pScrollBar) == &m_sbPan[iCh])
 			{
 				// Pan sliders
 				pos = (short int)m_sbPan[iCh].GetPos();
@@ -1058,7 +1058,6 @@ void CViewGlobals::OnPluginChanged()
 
 void CViewGlobals::OnSelectPlugin()
 {
-#ifndef NO_PLUGINS
 	CModDoc *pModDoc = GetDocument();
 
 	if ((pModDoc) && (m_nCurrentPlugin < MAX_MIXPLUGINS))
@@ -1072,13 +1071,11 @@ void CViewGlobals::OnSelectPlugin()
 		OnPluginChanged();
 		OnParamChanged();
 	}
-#endif // NO_PLUGINS
 }
 
 
 void CViewGlobals::OnRemovePlugin()
 {
-#ifndef NO_PLUGINS
 	CModDoc *pModDoc = GetDocument();
 
 	if(pModDoc && m_nCurrentPlugin < MAX_MIXPLUGINS && Reporting::Confirm(MPT_UFORMAT("Remove plugin FX{}: {}?")(m_nCurrentPlugin + 1, pModDoc->GetSoundFile().m_MixPlugins[m_nCurrentPlugin].GetName()), false, true) == cnfYes)
@@ -1089,7 +1086,6 @@ void CViewGlobals::OnRemovePlugin()
 			OnParamChanged();
 		}
 	}
-#endif  // NO_PLUGINS
 }
 
 

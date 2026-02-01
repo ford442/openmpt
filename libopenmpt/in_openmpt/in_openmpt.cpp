@@ -36,24 +36,44 @@ static const char * in_openmpt_string = "in_openmpt " OPENMPT_API_VERSION_STRING
 
 #include <windows.h>
 
-#ifdef UNICODE
+#if defined(MPT_BUILD_IN_OPENMPT_WINAMP5)
+#ifndef UNICODE_INPUT_PLUGIN
 #define UNICODE_INPUT_PLUGIN
 #endif
-#ifndef _MSC_VER
-#define _MSC_VER 1300
+#elif defined(MPT_BUILD_IN_OPENMPT_WINAMP2)
+#ifdef UNICODE_INPUT_PLUGIN
+#undef UNICODE_INPUT_PLUGIN
 #endif
-#include "winamp/Winamp/IN2.H"
-#include "winamp/Winamp/wa_ipc.h"
+#endif
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <sstream>
 
 #include <cstring>
 
 #include <tchar.h>
+
+// Include Winamp headers last because they require _MSC_VER defined which
+// confuses other headers.
+// Also include headers included by Winamp headers first.
+#include <windows.h>
+#include <stddef.h>
+#ifndef _MSC_VER
+#define _MSC_VER 1300
+#endif
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnonportable-include-path"
+#endif
+#include "winamp/Winamp/IN2.H"
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+#include "winamp/Winamp/wa_ipc.h"
 
 #define BPS 16
 
@@ -64,7 +84,56 @@ static const char * in_openmpt_string = "in_openmpt " OPENMPT_API_VERSION_STRING
 
 #define SHORT_TITLE "in_openmpt"
 
+#if defined(__GNUC__) && !defined(__clang__)
+#if (__GNUC__ < 9)
+#define MPT_IN_OPENMPT_FSTREAM_NO_WCHAR
+#endif
+#endif
+
+// Saturate the value of src to the domain of Tdst
+template <typename Tdst, typename Tsrc>
+static constexpr Tdst saturate_cast(Tsrc src) noexcept {
+	// This code tries not only to obviously avoid overflows but also to avoid signed/unsigned comparison warnings and type truncation warnings (which in fact would be safe here) by explicit casting.
+	static_assert(std::numeric_limits<Tdst>::is_integer);
+	static_assert(std::numeric_limits<Tsrc>::is_integer);
+	if constexpr (std::numeric_limits<Tdst>::is_signed && std::numeric_limits<Tsrc>::is_signed) {
+		if constexpr (sizeof(Tdst) >= sizeof(Tsrc)) {
+			return static_cast<Tdst>(src);
+		} else {
+			return static_cast<Tdst>(std::max(static_cast<Tsrc>(std::numeric_limits<Tdst>::min()), std::min(src, static_cast<Tsrc>(std::numeric_limits<Tdst>::max()))));
+		}
+	} else if constexpr (!std::numeric_limits<Tdst>::is_signed && !std::numeric_limits<Tsrc>::is_signed) {
+		if constexpr (sizeof(Tdst) >= sizeof(Tsrc)) {
+			return static_cast<Tdst>(src);
+		} else {
+			return static_cast<Tdst>(std::min(src, static_cast<Tsrc>(std::numeric_limits<Tdst>::max())));
+		}
+	} else if constexpr (std::numeric_limits<Tdst>::is_signed && !std::numeric_limits<Tsrc>::is_signed) {
+		if constexpr (sizeof(Tdst) > sizeof(Tsrc)) {
+			return static_cast<Tdst>(src);
+		} else if constexpr (sizeof(Tdst) == sizeof(Tsrc)) {
+			return static_cast<Tdst>(std::min(src, static_cast<Tsrc>(std::numeric_limits<Tdst>::max())));
+		} else {
+			return static_cast<Tdst>(std::min(src, static_cast<Tsrc>(std::numeric_limits<Tdst>::max())));
+		}
+	} else { // Tdst unsigned, Tsrc signed
+		if constexpr (sizeof(Tdst) >= sizeof(Tsrc)) {
+			return static_cast<Tdst>(std::max(static_cast<Tsrc>(0), src));
+		} else {
+			return static_cast<Tdst>(std::max(static_cast<Tsrc>(0), std::min(src, static_cast<Tsrc>(std::numeric_limits<Tdst>::max()))));
+		}
+	}
+}
+
 static void apply_options();
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
 
 static std::string StringEncode( const std::wstring &src, UINT codepage )
 {
@@ -74,7 +143,7 @@ static std::string StringEncode( const std::wstring &src, UINT codepage )
 		return std::string();
 	}
 	std::vector<CHAR> encoded_string( required_size );
-	WideCharToMultiByte( codepage, 0, src.c_str(), -1, encoded_string.data(), encoded_string.size(), NULL, NULL );
+	WideCharToMultiByte( codepage, 0, src.c_str(), -1, encoded_string.data(), saturate_cast<int>( encoded_string.size() ), NULL, NULL );
 	return encoded_string.data();
 }
 
@@ -86,13 +155,18 @@ static std::wstring StringDecode( const std::string & src, UINT codepage )
 		return std::wstring();
 	}
 	std::vector<WCHAR> decoded_string( required_size );
-	MultiByteToWideChar( codepage, 0, src.c_str(), -1, decoded_string.data(), decoded_string.size() );
+	MultiByteToWideChar( codepage, 0, src.c_str(), -1, decoded_string.data(), saturate_cast<int>( decoded_string.size() ) );
 	return decoded_string.data();
 }
 
 #if defined(UNICODE)
 
 static std::wstring StringToWINAPI( const std::wstring & src )
+{
+	return src;
+}
+
+static std::wstring StringFromWINAPI( const std::wstring & src )
 {
 	return src;
 }
@@ -104,6 +178,43 @@ static std::string StringToWINAPI( const std::wstring & src )
 	return StringEncode( src, CP_ACP );
 }
 
+static std::wstring StringFromWINAPI( const std::string & src )
+{
+	return StringDecode( src, CP_ACP );
+}
+
+#endif
+
+#if defined(UNICODE_INPUT_PLUGIN)
+
+static std::wstring StringToWinamp( const std::wstring & src )
+{
+	return src;
+}
+
+static std::wstring StringFromWinamp( const std::wstring & src )
+{
+	return src;
+}
+
+#else
+
+static std::string StringToWinamp( const std::wstring & src )
+{
+	return StringEncode( src, CP_ACP );
+}
+
+static std::wstring StringFromWinamp( const std::string & src )
+{
+	return StringDecode( src, CP_ACP );
+}
+
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
 #endif
 
 template <typename Tstring, typename Tstring2, typename Tstring3>
@@ -142,7 +253,7 @@ struct self_winamp_t {
 		for ( std::vector<std::string>::iterator ext = extensions.begin(); ext != extensions.end(); ++ext ) {
 			std::copy( (*ext).begin(), (*ext).end(), std::back_inserter( filetypes_string ) );
 			filetypes_string.push_back('\0');
-			std::copy( SHORT_TITLE, SHORT_TITLE + std::strlen(SHORT_TITLE), std::back_inserter( filetypes_string ) );
+			std::copy( SHORT_TITLE, &(SHORT_TITLE[std::strlen(SHORT_TITLE)]), std::back_inserter( filetypes_string ) );
 			filetypes_string.push_back('\0');
 		}
 		filetypes_string.push_back('\0');
@@ -252,10 +363,14 @@ static int play( const in_char * fn ) {
 		return -1;
 	}
 	try {
+#if defined(UNICODE_INPUT_PLUGIN) && defined(MPT_IN_OPENMPT_FSTREAM_NO_WCHAR)
+		std::ifstream s( StringEncode( StringFromWinamp( fn ), CP_ACP ).c_str(), std::ios::binary );
+#else
 		std::ifstream s( fn, std::ios::binary );
+#endif
 		std::map< std::string, std::string > ctls;
 		self->mod = new openmpt::module( s, std::clog, ctls );
-		self->cached_filename = fn;
+		self->cached_filename = StringToWINAPI( StringFromWinamp( fn ) );
 		self->cached_title = StringToWINAPI( StringDecode( self->mod->get_metadata( "title" ), CP_UTF8 ) );
 		self->cached_length = static_cast<int>( self->mod->get_duration_seconds() * 1000.0 );
 		self->cached_infotext = generate_infotext( self->cached_filename, *self->mod );
@@ -331,12 +446,16 @@ static void setpan( int pan ) {
 }
 
 static int infobox( const in_char * fn, HWND hWndParent ) {
-	if ( fn && fn[0] != '\0' && self->cached_filename != std::basic_string<TCHAR>(fn) ) {
+	if ( fn && fn[0] != '\0' && self->cached_filename != StringToWINAPI( StringFromWinamp( fn ) ) ) {
 		try {
+#if defined(UNICODE_INPUT_PLUGIN) && defined(MPT_IN_OPENMPT_FSTREAM_NO_WCHAR)
+			std::ifstream s( StringEncode( StringFromWinamp( fn ), CP_ACP ).c_str(), std::ios::binary );
+#else
 			std::ifstream s( fn, std::ios::binary );
+#endif
 			openmpt::module mod( s );
 #if 1
-			libopenmpt::plugin::gui_show_file_info( hWndParent, TEXT(SHORT_TITLE), StringReplace( generate_infotext( fn, mod ), TEXT("\n"), TEXT("\r\n") ) );
+			libopenmpt::plugin::gui_show_file_info( hWndParent, TEXT(SHORT_TITLE), StringReplace( generate_infotext( StringToWINAPI( StringFromWinamp( fn ) ), mod ), TEXT("\n"), TEXT("\r\n") ) );
 #else
 			MessageBox( hWndParent, StringReplace( generate_infotext( fn, mod ), TEXT("\n"), TEXT("\r\n") ).c_str(), TEXT(SHORT_TITLE), MB_OK );
 #endif
@@ -359,25 +478,39 @@ static void getfileinfo( const in_char * filename, in_char * title, int * length
 			*length_in_ms = self->cached_length;
 		}
 		if ( title ) {
-			std::basic_string<TCHAR> truncated_title = self->cached_title;
+			std::basic_string<in_char> truncated_title = StringToWinamp( StringFromWINAPI( self->cached_title ) );
 			if ( truncated_title.length() >= GETFILEINFO_TITLE_LENGTH ) {
 				truncated_title.resize( GETFILEINFO_TITLE_LENGTH - 1 );
 			}
-			_tcscpy( title, truncated_title.c_str() );
+			//_tcscpy( title, truncated_title.c_str() );
+#if defined(UNICODE_INPUT_PLUGIN)
+			wcscpy( title, truncated_title.c_str() );
+#else
+			strcpy( title, truncated_title.c_str() );
+#endif
 		}
 	} else {
 		try {
+#if defined(UNICODE_INPUT_PLUGIN) && defined(MPT_IN_OPENMPT_FSTREAM_NO_WCHAR)
+			std::ifstream s( StringEncode( StringFromWinamp( filename ), CP_ACP ).c_str(), std::ios::binary );
+#else
 			std::ifstream s( filename, std::ios::binary );
+#endif
 			openmpt::module mod( s );
 			if ( length_in_ms ) {
 				*length_in_ms = static_cast<int>( mod.get_duration_seconds() * 1000.0 );
 			}
 			if ( title ) {
-				std::basic_string<TCHAR> truncated_title = StringToWINAPI( StringDecode( mod.get_metadata("title"), CP_UTF8 ) );
+				std::basic_string<in_char> truncated_title = StringToWinamp( StringDecode( mod.get_metadata("title"), CP_UTF8 ) );
 				if ( truncated_title.length() >= GETFILEINFO_TITLE_LENGTH ) {
 					truncated_title.resize( GETFILEINFO_TITLE_LENGTH - 1 );
 				}
-				_tcscpy( title, truncated_title.c_str() );
+			//_tcscpy( title, truncated_title.c_str() );
+#if defined(UNICODE_INPUT_PLUGIN)
+			wcscpy( title, truncated_title.c_str() );
+#else
+			strcpy( title, truncated_title.c_str() );
+#endif
 			}
 		} catch ( ... ) {
 		}
@@ -420,20 +553,20 @@ static DWORD WINAPI DecodeThread( LPVOID ) {
 				int frames = 0;
 				switch ( self->channels ) {
 				case 1:
-					frames = self->mod->read( self->samplerate, WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 0*WINAMP_BUFFER_SIZE_FRAMES );
+					frames = static_cast<int>( self->mod->read( self->samplerate, WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 0*WINAMP_BUFFER_SIZE_FRAMES ) );
 					for ( int frame = 0; frame < frames; frame++ ) {
 						self->interleaved_buffer[frame*1+0] = self->buffer[0*WINAMP_BUFFER_SIZE_FRAMES+frame];
 					}
 					break;
 				case 2:
-					frames = self->mod->read( self->samplerate, WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 0*WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 1*WINAMP_BUFFER_SIZE_FRAMES );
+					frames = static_cast<int>( self->mod->read( self->samplerate, WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 0*WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 1*WINAMP_BUFFER_SIZE_FRAMES ) );
 					for ( int frame = 0; frame < frames; frame++ ) {
 						self->interleaved_buffer[frame*2+0] = self->buffer[0*WINAMP_BUFFER_SIZE_FRAMES+frame];
 						self->interleaved_buffer[frame*2+1] = self->buffer[1*WINAMP_BUFFER_SIZE_FRAMES+frame];
 					}
 					break;
 				case 4:
-					frames = self->mod->read( self->samplerate, WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 0*WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 1*WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 2*WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 3*WINAMP_BUFFER_SIZE_FRAMES );
+					frames = static_cast<int>( self->mod->read( self->samplerate, WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 0*WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 1*WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 2*WINAMP_BUFFER_SIZE_FRAMES, self->buffer.data() + 3*WINAMP_BUFFER_SIZE_FRAMES ) );
 					for ( int frame = 0; frame < frames; frame++ ) {
 						self->interleaved_buffer[frame*4+0] = self->buffer[0*WINAMP_BUFFER_SIZE_FRAMES+frame];
 						self->interleaved_buffer[frame*4+1] = self->buffer[1*WINAMP_BUFFER_SIZE_FRAMES+frame];

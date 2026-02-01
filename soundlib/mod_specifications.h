@@ -33,7 +33,8 @@ struct CModSpecifications
 	bool HasCommand(ModCommand::COMMAND cmd) const;
 	// Return corresponding effect letter for this format
 	char GetEffectLetter(ModCommand::COMMAND cmd) const;
-	char GetVolEffectLetter(ModCommand::VOLCMD cmd) const;
+	char GetVolEffectLetter(ModCommand::VOLCMD volcmd) const;
+	static char GetGenericVolEffectLetter(ModCommand::VOLCMD volcmd);
 
 	// NOTE: If changing order, update all initializations in .cpp file.
 	MODTYPE internalType;       // Internal MODTYPE value
@@ -82,8 +83,8 @@ struct CModSpecifications
 	bool hasFractionalTempo;         // Are fractional tempos allowed?
 	const char *commands;            // An array holding all commands this format supports; commands that are not supported are marked with "?"
 	const char *volcommands;         // Ditto, but for volume column
-	MPT_CONSTEXPRINLINE TEMPO GetTempoMin() const { return TEMPO(tempoMinInt, 0); }
-	MPT_CONSTEXPRINLINE TEMPO GetTempoMax() const { return TEMPO(tempoMaxInt, 0); }
+	MPT_ATTR_ALWAYSINLINE MPT_INLINE_FORCE constexpr TEMPO GetTempoMin() const { return TEMPO(tempoMinInt, 0); }
+	MPT_ATTR_ALWAYSINLINE MPT_INLINE_FORCE constexpr TEMPO GetTempoMax() const { return TEMPO(tempoMaxInt, 0); }
 };
 
 

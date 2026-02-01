@@ -75,11 +75,11 @@ BEGIN_MESSAGE_MAP(CWaveConvert, DialogBase)
 END_MESSAGE_MAP()
 
 
-CWaveConvert::CWaveConvert(CWnd *parent, ORDERINDEX minOrder, ORDERINDEX maxOrder, ORDERINDEX numOrders, CSoundFile &sndFile, const std::vector<EncoderFactoryBase*> &encFactories)
+CWaveConvert::CWaveConvert(CWnd *parent, ORDERINDEX minOrder, ORDERINDEX maxOrder, ORDERINDEX numOrders, CModDoc &modDoc, const std::vector<EncoderFactoryBase*> &encFactories)
 	: DialogBase(IDD_WAVECONVERT, parent)
 	, m_Settings(theApp.GetSettings(), encFactories)
-	, m_SndFile(sndFile)
-	, m_subSongs{sndFile.GetAllSubSongs()}
+	, m_SndFile(modDoc.GetSoundFile())
+	, m_subSongs{ modDoc.GetSoundFile().GetAllSubSongs()}
 	, m_nNumOrders{numOrders}
 {
 	MPT_ASSERT(!encFactories.empty());
@@ -90,6 +90,7 @@ CWaveConvert::CWaveConvert(CWnd *parent, ORDERINDEX minOrder, ORDERINDEX maxOrde
 		m_Settings.minOrder = minOrder;
 		m_Settings.maxOrder = maxOrder;
 	}
+	m_selectedSong = modDoc.GetSubsongForCurrentEditPos(m_subSongs);
 }
 
 
@@ -132,9 +133,10 @@ BOOL CWaveConvert::OnInitDialog()
 
 	// Export limits
 	const bool selection = (m_Settings.minOrder != ORDERINDEX_INVALID && m_Settings.maxOrder != ORDERINDEX_INVALID);
-	CheckRadioButton(IDC_RADIO1, IDC_RADIO3, selection ? IDC_RADIO2 : IDC_RADIO3);
+	int selectedRadio = (m_subSongs.size() <= 1) ? IDC_RADIO3 : IDC_RADIO1;
 	if(selection)
 	{
+		selectedRadio = IDC_RADIO2;
 		SetDlgItemInt(IDC_EDIT3, m_Settings.minOrder);
 		SetDlgItemInt(IDC_EDIT4, m_Settings.maxOrder);
 	}
@@ -151,6 +153,7 @@ BOOL CWaveConvert::OnInitDialog()
 		GetDlgItem(IDC_RADIO3)->SetWindowText(_T("&Entire Song"));
 		GetDlgItem(IDC_RADIO1)->EnableWindow(FALSE);
 	}
+	CheckRadioButton(IDC_RADIO1, IDC_RADIO3, selectedRadio);
 	UpdateSubsongName();
 
 	FillFileTypes();
@@ -175,7 +178,6 @@ BOOL CWaveConvert::OnInitDialog()
 	// Plugin quirk options are only available if there are any plugins loaded.
 	GetDlgItem(IDC_GIVEPLUGSIDLETIME)->EnableWindow(FALSE);
 	GetDlgItem(IDC_RENDERSILENCE)->EnableWindow(FALSE);
-#ifndef NO_PLUGINS
 	for(const auto &plug : m_SndFile.m_MixPlugins)
 	{
 		if(plug.pMixPlugin != nullptr)
@@ -186,7 +188,6 @@ BOOL CWaveConvert::OnInitDialog()
 			break;
 		}
 	}
-#endif // NO_PLUGINS
 
 	// Fill list of sample slots to render into
 	if(m_SndFile.GetNextFreeSample() != SAMPLEINDEX_INVALID)
@@ -206,6 +207,7 @@ BOOL CWaveConvert::OnInitDialog()
 
 	UpdateDialog();
 	
+	m_locked = false;
 	return TRUE;
 }
 
@@ -448,19 +450,19 @@ void CWaveConvert::FillFormats()
 			switch(format.encoding)
 			{
 			case Encoder::Format::Encoding::Float:
-				description = MPT_UFORMAT("{} Bit Floating Point")(format.bits);
+				description = MPT_UFORMAT("{} Bit Floating Point PCM")(format.bits);
 				break;
 			case Encoder::Format::Encoding::Integer:
-				description = MPT_UFORMAT("{} Bit")(format.bits);
+				description = MPT_UFORMAT("{} Bit linear PCM")(format.bits);
 				break;
 			case Encoder::Format::Encoding::Alaw:
-				description = U_("A-law");
+				description = U_("A-law PCM");
 				break;
 			case Encoder::Format::Encoding::ulaw:
-				description = MPT_UTF8("\xce\xbc-law");
+				description = MPT_UTF8("\xce\xbc-law PCM");
 				break;
 			case Encoder::Format::Encoding::Unsigned:
-				description = MPT_UFORMAT("{} Bit (unsigned)")(format.bits);
+				description = MPT_UFORMAT("unsigned {} Bit linear PCM")(format.bits);
 				break;
 			}
 			if(showEndian && format.bits != 8 && format.encoding != Encoder::Format::Encoding::Alaw && format.encoding != Encoder::Format::Encoding::ulaw)
@@ -570,6 +572,9 @@ void CWaveConvert::OnFormatChanged()
 
 void CWaveConvert::OnSubsongChanged()
 {
+	if(m_locked)
+		return;
+	CheckRadioButton(IDC_RADIO1, IDC_RADIO3, IDC_RADIO1);
 	BOOL ok = FALSE;
 	const auto newSubSong = std::clamp(static_cast<size_t>(GetDlgItemInt(IDC_EDIT12, &ok, FALSE)), size_t(1), m_subSongs.size()) - 1;
 	if(m_selectedSong == newSubSong || !ok)
@@ -584,7 +589,7 @@ void CWaveConvert::UpdateSubsongName()
 	const auto subsongText = GetDlgItem(IDC_SUBSONG);
 	if(subsongText == nullptr || m_selectedSong >= m_subSongs.size())
 		return;
-	subsongText->SetWindowText(m_SndFile.GetpModDoc()->FormatSubsongName(m_subSongs[m_selectedSong]).c_str());
+	subsongText->SetWindowText(m_SndFile.GetpModDoc()->FormatSubsongName(m_subSongs, m_selectedSong).c_str());
 }
 
 
@@ -600,9 +605,6 @@ void CWaveConvert::UpdateDialog()
 	GetDlgItem(IDC_EDIT4)->EnableWindow(sel == IDC_RADIO2);
 	m_SpinMinOrder.EnableWindow(sel == IDC_RADIO2);
 	m_SpinMaxOrder.EnableWindow(sel == IDC_RADIO2);
-
-	GetDlgItem(IDC_EDIT12)->EnableWindow(sel == IDC_RADIO1);
-	m_SpinSubsongIndex.EnableWindow(sel == IDC_RADIO1);
 
 	// No free slots => Cannot do instrument- or channel-based export to sample
 	BOOL canDoMultiExport = (IsDlgButtonChecked(IDC_RADIO4) != BST_UNCHECKED /* normal export */ || m_CbnSampleSlot.GetItemData(0) == 0 /* "free slot" is in list */) ? TRUE : FALSE;
@@ -954,7 +956,6 @@ void CDoWaveConvert::Run()
 	ASSERT(m_Settings.GetEncoderFactory() && m_Settings.GetEncoderFactory()->IsAvailable());
 
 	// Silence mix buffer of plugins, for plugins that don't clear their reverb buffers and similar stuff when they are reset
-#ifndef NO_PLUGINS
 	if(m_Settings.silencePlugBuffers)
 	{
 		SetText(_T("Clearing plugin buffers"));
@@ -981,7 +982,6 @@ void CDoWaveConvert::Run()
 			}
 		}
 	}
-#endif // NO_PLUGINS
 
 	MixerSettings mixersettings = TrackerSettings::Instance().GetMixerSettings();
 	mixersettings.m_nMaxMixChannels = MAX_CHANNELS; // always use max mixing channels when rendering

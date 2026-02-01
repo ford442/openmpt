@@ -249,7 +249,7 @@ public:
 	void OnUpdate(CModDoc *pModDoc, UpdateHint hint, CObject *pHint);
 	bool CanDrop(HTREEITEM hItem, bool bDoDrop);
 	void UpdatePlayPos(CModDoc &modDoc, Notification *pNotify);
-	bool IsItemExpanded(HTREEITEM hItem);
+	bool IsItemExpanded(HTREEITEM hItem) const;
 	void DeleteChildren(HTREEITEM hItem);
 	HTREEITEM GetNthChildItem(HTREEITEM hItem, int index) const;
 	HTREEITEM GetParentRootItem(HTREEITEM hItem) const;
@@ -285,6 +285,7 @@ protected:
 	CDLSBank *GetDLSBankFromItem(HTREEITEM hItem) const;
 
 	void InsertOrDupItem(bool insert);
+	void MoveTreeItem(HTREEITEM hItem, bool moveUp);
 	void OnItemRightClick(HTREEITEM hItem, CPoint pt);
 
 	static bool HasEffectPlugins(const CSoundFile &sndFile);

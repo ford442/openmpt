@@ -1,4 +1,9 @@
- 
+
+include_dependency "ext-mpg123.lua"
+include_dependency "ext-ogg.lua"
+include_dependency "ext-vorbis.lua"
+include_dependency "ext-zlib.lua"
+
  project "libopenmpt"
   uuid "9C5101EF-3E20-4558-809B-277FDD50E878"
   language "C++"
@@ -46,14 +51,20 @@
 	excludes {
 		"../../src/mpt/crypto/**.cpp",
 		"../../src/mpt/crypto/**.hpp",
+		"../../src/mpt/filemode/**.cpp",
+		"../../src/mpt/filemode/**.hpp",
 		"../../src/mpt/fs/**.cpp",
 		"../../src/mpt/fs/**.hpp",
+		"../../src/mpt/io_file_atomic/*.cpp",
+		"../../src/mpt/io_file_atomic/*.hpp",
 		"../../src/mpt/json/**.cpp",
 		"../../src/mpt/json/**.hpp",
 		"../../src/mpt/library/**.cpp",
 		"../../src/mpt/library/**.hpp",
 		"../../src/mpt/main/**.cpp",
 		"../../src/mpt/main/**.hpp",
+		"../../src/mpt/terminal/**.cpp",
+		"../../src/mpt/terminal/**.hpp",
 		"../../src/mpt/test/**.cpp",
 		"../../src/mpt/test/**.hpp",
 		"../../src/mpt/uuid_namespace/**.cpp",
@@ -85,7 +96,7 @@
 		resdefines { "MPT_BUILD_VER_EXE" }
 	filter {}
 
-	if _OPTIONS["charset"] ~= "Unicode" then
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 	end
 
@@ -99,18 +110,17 @@
 
 function mpt_use_libopenmpt ()
 	filter {}
-	filter { "action:vs*" }
-		includedirs {
-			"../..",
-		}
-	filter { "not action:vs*" }
-		externalincludedirs {
-			"../..",
-		}
+	dependencyincludedirs {
+		"../..",
+	}
 	filter {}
-	filter { "configurations:*Shared" }
-		defines { "LIBOPENMPT_USE_DLL" }
-	filter { "not configurations:*Shared" }
+	if MPT_OS_WINDOWS then
+		filter {}
+		filter { "configurations:*Shared" }
+			defines { "LIBOPENMPT_USE_DLL" }
+		filter { "not configurations:*Shared" }
+		filter {}
+	end
 	filter {}
 	links {
 		"libopenmpt",

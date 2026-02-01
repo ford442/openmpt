@@ -18,6 +18,7 @@ Premake defines the following list of actions out of the box; projects may also 
 
 | Action      | Description                                       |
 |-------------|---------------------------------------------------|
+| vs2026      | Generate Visual Studio 2026 project files         |
 | vs2022      | Generate Visual Studio 2022 project files         |
 | vs2019      | Generate Visual Studio 2019 project files         |
 | vs2017      | Generate Visual Studio 2017 project files         |
@@ -27,8 +28,8 @@ Premake defines the following list of actions out of the box; projects may also 
 | vs2010      | Generate Visual Studio 2010 project files         |
 | vs2008      | Generate Visual Studio 2008 project files         |
 | vs2005      | Generate Visual Studio 2005 project files         |
-| gmake       | Generate GNU Makefiles (This generator is deprecated by gmake2) |
-| gmake2      | Generate GNU Makefiles (including [Cygwin][1] and [MinGW][2]) |
+| gmake       | Generate GNU Makefiles (including [Cygwin][1] and [MinGW][2]) |
+| gmakelegacy | Generate GNU Makefiles (deprecated exporter) |
 | xcode4      | XCode projects |
 | codelite    | CodeLite projects |
 

@@ -1,4 +1,9 @@
 
+include_dependency "ext-mpg123.lua"
+include_dependency "ext-ogg.lua"
+include_dependency "ext-vorbis.lua"
+include_dependency "ext-zlib.lua"
+
  project "libopenmpt_test"
   uuid "0A313F63-131E-46A0-931D-23C3A3D488F2"
   language "C++"
@@ -44,9 +49,6 @@
    "../../sounddsp/*.h",
    "../../test/*.cpp",
    "../../test/*.h",
-   "../../unarchiver/archive.h",
-   "../../unarchiver/ungzip.cpp",
-   "../../unarchiver/ungzip.h",
    "../../libopenmpt/libopenmpt.h",
    "../../libopenmpt/libopenmpt.hpp",
    "../../libopenmpt/libopenmpt_config.h",
@@ -72,12 +74,18 @@
 	excludes {
 		"../../src/mpt/crypto/**.cpp",
 		"../../src/mpt/crypto/**.hpp",
+		"../../src/mpt/filemode/**.cpp",
+		"../../src/mpt/filemode/**.hpp",
 		"../../src/mpt/fs/**.cpp",
 		"../../src/mpt/fs/**.hpp",
+		"../../src/mpt/io_file_atomic/*.cpp",
+		"../../src/mpt/io_file_atomic/*.hpp",
 		"../../src/mpt/json/**.cpp",
 		"../../src/mpt/json/**.hpp",
 		"../../src/mpt/library/**.cpp",
 		"../../src/mpt/library/**.hpp",
+		"../../src/mpt/terminal/**.cpp",
+		"../../src/mpt/terminal/**.hpp",
 		"../../src/mpt/uuid_namespace/**.cpp",
 		"../../src/mpt/uuid_namespace/**.hpp",
 		"../../test/mpt_tests_crypto.cpp",
@@ -88,7 +96,31 @@
 		"../../src/openmpt/streamencoder/**.hpp",
 	}
 
-	if _OPTIONS["charset"] ~= "Unicode" then
+	filter {}
+	filter { "action:vs*", "kind:SharedLib or ConsoleApp or WindowedApp" }
+		resdefines {
+			"MPT_BUILD_VER_FILENAME=\"" .. "libopenmpt_test" .. ".exe\"",
+			"MPT_BUILD_VER_FILEDESC=\"" .. "libopenmpt_test" .. "\"",
+		}
+	filter {}
+	filter { "action:vs*", "kind:SharedLib or ConsoleApp or WindowedApp" }
+		resincludedirs {
+			"$(IntDir)/svn_version",
+			"../../build/svn_version",
+			"$(ProjDir)/../../build/svn_version",
+		}
+		files {
+			"../../libopenmpt/libopenmpt_version.rc",
+		}
+	filter {}
+	filter { "action:vs*", "kind:SharedLib" }
+		resdefines { "MPT_BUILD_VER_DLL" }
+	filter {}
+	filter { "action:vs*", "kind:ConsoleApp or WindowedApp" }
+		resdefines { "MPT_BUILD_VER_EXE" }
+	filter {}
+
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 	end
 

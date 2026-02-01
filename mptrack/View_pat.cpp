@@ -286,7 +286,7 @@ ROWINDEX CViewPattern::SetCurrentRow(ROWINDEX row, WrapMode wrapMode, bool updat
 	if(wrapMode == WrapMode::WrapAround && numRows)
 	{
 		const auto &order = Order();
-		if(static_cast<int>(row) < 0)
+		if(static_cast<int32>(row) < 0)
 		{
 			if(patternSetup[PatternSetup::ContinuousScrolling])
 			{
@@ -359,7 +359,7 @@ ROWINDEX CViewPattern::SetCurrentRow(ROWINDEX row, WrapMode wrapMode, bool updat
 		}
 	} else if(wrapMode == WrapMode::LimitAtPatternEnd)
 	{
-		if(static_cast<int>(row) < 0)
+		if(static_cast<int32>(row) < 0)
 			row = 0;
 		if(row >= numRows)
 			row = numRows - 1;
@@ -1515,8 +1515,7 @@ void CViewPattern::OnRButtonUp(UINT flags, CPoint pt)
 		CInputHandler *ih = CMainFrame::GetInputHandler();
 
 		//------ Plugin Header Menu --------- :
-		if(m_Status[psShowPluginNames] &&
-			inChannelHeader && (pt.y > m_szHeader.cy - m_szPluginHeader.cy))
+		if(m_Status[psShowPluginNames] && inChannelHeader && (pt.y > m_szHeader.cy - m_szPluginHeader.cy))
 		{
 			BuildPluginCtxMenu(hMenu, nChn, sndFile);
 		}
@@ -2881,7 +2880,12 @@ bool CViewPattern::TransposeSelection(int transp)
 		}
 	});
 	SetModified(false);
-	InvalidateSelection();
+	// If the selection doesn't contain the volume column of the last channel, extend it.
+	// When displaying default volumes, it may change due to a different sample being played inside the instrument.
+	PatternRect sel = m_Selection;
+	if(sel.GetEndColumn() < PatternCursor::volumeColumn)
+		sel = {sel.GetUpperLeft(), sel.GetLowerRight().SetColumn(PatternCursor::volumeColumn)};
+	InvalidateArea(sel);
 
 	if(m_Selection.GetNumChannels() == 1 && m_Selection.GetNumRows() == 1 && (TrackerSettings::Instance().patternSetup & PatternSetup::PreviewNoteTransposition))
 	{
@@ -3446,7 +3450,7 @@ void CViewPattern::UndoRedo(bool undo)
 
 
 // Apply amplification and fade function to volume
-static void AmplifyFade(int &vol, int amp, ROWINDEX row, ROWINDEX numRows, int fadeIn, int fadeOut, Fade::Func &fadeFunc)
+static void AmplifyFade(int &vol, double amp, ROWINDEX row, ROWINDEX numRows, double fadeIn, double fadeOut, Fade::Func &fadeFunc)
 {
 	const bool doFadeIn = fadeIn != amp, doFadeOut = fadeOut != amp;
 	const double fadeStart = fadeIn / 100.0, fadeStartDiff = (amp - fadeIn) / 100.0;
@@ -3477,7 +3481,7 @@ static void AmplifyFade(int &vol, int amp, ROWINDEX row, ROWINDEX numRows, int f
 
 void CViewPattern::OnPatternAmplify()
 {
-	static CAmpDlg::AmpSettings settings{Fade::kLinear, 0, 0, 100, false, false};
+	static CAmpDlg::AmpSettings settings{ Fade::kLinear, CAmpDlg::AmpUnit::Percent, 0.0, 0.0, 100.0, false, false };
 
 	CAmpDlg dlg(this, settings, 0);
 	if(dlg.DoModal() != IDOK)
@@ -3498,7 +3502,7 @@ void CViewPattern::OnPatternAmplify()
 	const CHANNELINDEX firstChannel = m_Selection.GetStartChannel(), lastChannel = m_Selection.GetEndChannel();
 	const ROWINDEX firstRow = m_Selection.GetStartRow(), lastRow = m_Selection.GetEndRow();
 
-	// For partically selected start and end channels, we check if the start and end columns contain the relevant columns.
+	// For partially selected start and end channels, we check if the start and end columns contain the relevant columns.
 	bool firstChannelValid, lastChannelValid;
 	if(useVolCol)
 	{
@@ -4364,7 +4368,15 @@ void CViewPattern::CursorJump(int distance, bool snap)
 		row = (((row + (upwards ? -1 : 0)) / distanceAbs) + (upwards ? 0 : 1)) * distanceAbs;
 	else
 		row += distance;
-	row = SetCurrentRow(row, (m_Status[psMouseDragSelect] || IsSelectionPressed()) ? WrapMode::LimitAtPatternEnd : WrapMode::WrapAround);
+
+	WrapMode wrap = WrapMode::WrapAround;
+	if(m_Status[psMouseDragSelect]
+	   || IsSelectionPressed()
+	   || !(TrackerSettings::Instance().patternSetup & (PatternSetup::ContinuousScrolling | PatternSetup::CursorWrap)))
+	{
+		wrap = WrapMode::LimitAtPatternEnd;
+	}
+	row = SetCurrentRow(row, wrap);
 
 	if(IsLiveRecord() && !m_Status[psDragActive])
 	{
@@ -4502,6 +4514,8 @@ LRESULT CViewPattern::OnCustomKeyMsg(WPARAM wParam, LPARAM lParam)
 		case kcPatternVisualizeEffect:   OnVisualizeEffect(); return wParam;
 		case kcPatternGrowSelection:     OnGrowSelection(); return wParam;
 		case kcPatternShrinkSelection:   OnShrinkSelection(); return wParam;
+		case kcPatternExpand:            OnModViewMsg(VIEWMSG_EXPANDPATTERN, 0); return wParam;
+		case kcPatternShrink:            OnModViewMsg(VIEWMSG_SHRINKPATTERN, 0); return wParam;
 
 		case kcPatternScrollLeft:
 		case kcPatternScrollRight:
@@ -6512,8 +6526,7 @@ void CViewPattern::OnSelectPCNoteParam(UINT nID)
 
 	uint16 paramNdx = static_cast<uint16>(nID - ID_CHANGE_PCNOTE_PARAM);
 	bool modified = false;
-	ApplyToSelection([paramNdx, &modified] (ModCommand &m, ROWINDEX, CHANNELINDEX)
-	{
+	ApplyToSelection([paramNdx, &modified](ModCommand &m, ROWINDEX, CHANNELINDEX) {
 		if(m.IsPcNote() && (m.GetValueVolCol() != paramNdx))
 		{
 			m.SetValueVolCol(paramNdx);
@@ -6937,8 +6950,10 @@ bool CViewPattern::BuildSetInstCtxMenu(HMENU hMenu, CInputHandler *ih) const
 			} else
 			{
 				CString s;
-				for(SAMPLEINDEX i = 1; i <= sndFile->GetNumSamples(); i++) if (sndFile->GetSample(i).HasSampleData())
+				for(SAMPLEINDEX i = 1; i <= sndFile->GetNumSamples(); i++)
 				{
+					if(!sndFile->GetSample(i).HasSampleData())
+						continue;
 					s.Format(_T("%02d: "), i);
 					s += mpt::ToCString(sndFile->GetCharsetInternal(), sndFile->GetSampleName(i));
 					AppendMenu(instrumentChangeMenu, MF_STRING, ID_CHANGE_INSTRUMENT + i, s);

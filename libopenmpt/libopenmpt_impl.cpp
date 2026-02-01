@@ -88,7 +88,7 @@ MPT_WARNING("Warning: MinGW with GCC earlier than 9.1 detected. Standard library
 
 #if defined(MPT_ASSERT_HANDLER_NEEDED) && !defined(ENABLE_TESTS)
 
-MPT_NOINLINE void AssertHandler(const mpt::source_location &loc, const char *expr, const char *msg) {
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE void AssertHandler(const mpt::source_location &loc, const char *expr, const char *msg) {
 	if(msg) {
 		mpt::log::GlobalLogger().SendLogMessage(loc, LogError, "ASSERT",
 			MPT_USTRING("ASSERTION FAILED: ") + mpt::transcode<mpt::ustring>(mpt::source_encoding, msg) + MPT_USTRING(" (") + mpt::transcode<mpt::ustring>(mpt::source_encoding, expr) + MPT_USTRING(")")
@@ -1344,6 +1344,9 @@ std::int32_t module_impl::get_current_tempo() const {
 double module_impl::get_current_tempo2() const {
 	return m_sndFile->m_PlayState.m_nMusicTempo.ToDouble();
 }
+std::int32_t module_impl::get_current_sequence() const {
+	return m_sndFile->Order.GetCurrentSequenceIndex();
+}
 std::int32_t module_impl::get_current_order() const {
 	return m_sndFile->GetCurrentOrder();
 }
@@ -1615,7 +1618,7 @@ std::pair< std::string, std::string > module_impl::format_and_highlight_pattern_
 			break;
 		case module::command_volumeffect:
 			return std::make_pair(
-					cell.IsPcNote() ? std::string(" ") : cell.volcmd != OpenMPT::VOLCMD_NONE ? std::string( 1, m_sndFile->GetModSpecifications().GetVolEffectLetter( cell.volcmd ) ) : std::string(" ")
+					cell.IsPcNote() ? std::string(" ") : std::string( 1, OpenMPT::CModSpecifications::GetGenericVolEffectLetter( cell.volcmd ) )
 				,
 					cell.IsPcNote() ? std::string(" ") : cell.volcmd != OpenMPT::VOLCMD_NONE ? std::string("u") : std::string(" ")
 				);
@@ -1681,7 +1684,7 @@ std::pair< std::string, std::string > module_impl::format_and_highlight_pattern_
 		high += cell.instr ? std::string("ii") : std::string("..");
 	}
 	if ( ( width == 0 ) || ( width >= 9 ) ) {
-		text += cell.IsPcNote() ? std::string(" ") + OpenMPT::mpt::afmt::HEX0<2>( cell.GetValueVolCol() & 0xff ) : cell.volcmd != OpenMPT::VOLCMD_NONE ? std::string( 1, m_sndFile->GetModSpecifications().GetVolEffectLetter( cell.volcmd ) ) + OpenMPT::mpt::afmt::HEX0<2>( cell.vol ) : std::string(" ..");
+		text += cell.IsPcNote() ? std::string(" ") + OpenMPT::mpt::afmt::HEX0<2>( cell.GetValueVolCol() & 0xff ) : cell.volcmd != OpenMPT::VOLCMD_NONE ? std::string( 1, OpenMPT::CModSpecifications::GetGenericVolEffectLetter( cell.volcmd ) ) + OpenMPT::mpt::afmt::HEX0<2>( cell.vol ) : std::string(" ..");
 		high += cell.IsPcNote() ? std::string(" vv") : cell.volcmd != OpenMPT::VOLCMD_NONE ? std::string("uvv") : std::string(" ..");
 	}
 	if ( ( width == 0 ) || ( width >= 13 ) ) {
