@@ -56,7 +56,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>updatesigntool</RootNamespace>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
-    <WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -189,85 +189,85 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\bin\debug\vs2019-win7-static\x86\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86\Debug\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\debug\vs2019-win7-static\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86\Debug\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\bin\debug\vs2019-win7-static\amd64\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86_64\Debug\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\debug\vs2019-win7-static\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86_64\Debug\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\release\vs2019-win7-static\x86\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86\Release\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\release\vs2019-win7-static\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86\Release\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\release\vs2019-win7-static\amd64\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86_64\Release\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\release\vs2019-win7-static\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86_64\Release\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\checked\vs2019-win7-static\x86\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86\Checked\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\checked\vs2019-win7-static\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86\Checked\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\checked\vs2019-win7-static\amd64\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86_64\Checked\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\checked\vs2019-win7-static\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86_64\Checked\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\bin\debug\vs2019-win7-shared\x86\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86\DebugShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\debug\vs2019-win7-shared\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86\DebugShared\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\bin\debug\vs2019-win7-shared\amd64\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86_64\DebugShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\debug\vs2019-win7-shared\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86_64\DebugShared\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\release\vs2019-win7-shared\x86\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86\ReleaseShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\release\vs2019-win7-shared\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86\ReleaseShared\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\release\vs2019-win7-shared\amd64\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86_64\ReleaseShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\release\vs2019-win7-shared\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86_64\ReleaseShared\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\checked\vs2019-win7-shared\x86\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86\CheckedShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\checked\vs2019-win7-shared\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86\CheckedShared\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\bin\checked\vs2019-win7-shared\amd64\</OutDir>
-    <IntDir>..\obj\vs2019win7\updatesigntool\x86_64\CheckedShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\bin\checked\vs2019-win7-shared\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\obj\vs2019win7\updatesigntool\x86_64\CheckedShared\</IntDir>
     <TargetName>updatesigntool</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
@@ -281,10 +281,12 @@
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -314,6 +316,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -347,6 +350,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -354,6 +358,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <Manifest>
@@ -380,6 +385,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -387,6 +393,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <Manifest>
@@ -415,6 +422,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -449,6 +457,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -475,10 +484,12 @@
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -507,6 +518,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -539,6 +551,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -546,6 +559,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <Manifest>
@@ -572,6 +586,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -579,6 +594,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
     <Manifest>
@@ -607,6 +623,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -641,6 +658,7 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
     </ClCompile>
     <Link>
@@ -663,7 +681,6 @@
     <ClInclude Include="..\..\common\ComponentManager.h" />
     <ClInclude Include="..\..\common\FileReader.h" />
     <ClInclude Include="..\..\common\FileReaderFwd.h" />
-    <ClInclude Include="..\..\common\GzipWriter.h" />
     <ClInclude Include="..\..\common\Logging.h" />
     <ClInclude Include="..\..\common\Profiler.h" />
     <ClInclude Include="..\..\common\misc_util.h" />
@@ -685,6 +702,7 @@
     <ClInclude Include="..\..\common\stdafx.h" />
     <ClInclude Include="..\..\common\version.h" />
     <ClInclude Include="..\..\common\versionNumber.h" />
+    <ClInclude Include="..\..\common\zlib_helper.h" />
     <ClInclude Include="..\..\include\nlohmann-json\include\nlohmann\adl_serializer.hpp" />
     <ClInclude Include="..\..\include\nlohmann-json\include\nlohmann\byte_container_with_subtype.hpp" />
     <ClInclude Include="..\..\include\nlohmann-json\include\nlohmann\detail\abi_macros.hpp" />
@@ -731,6 +749,7 @@
     <ClInclude Include="..\..\include\nlohmann-json\include\nlohmann\ordered_map.hpp" />
     <ClInclude Include="..\..\include\nlohmann-json\include\nlohmann\thirdparty\hedley\hedley.hpp" />
     <ClInclude Include="..\..\include\nlohmann-json\include\nlohmann\thirdparty\hedley\hedley_undef.hpp" />
+    <ClInclude Include="..\..\misc\GzipWriter.h" />
     <ClInclude Include="..\..\misc\WriteMemoryDump.h" />
     <ClInclude Include="..\..\misc\mptClock.h" />
     <ClInclude Include="..\..\misc\mptColor.h" />
@@ -741,6 +760,7 @@
     <ClInclude Include="..\..\misc\mptOSException.h" />
     <ClInclude Include="..\..\misc\mptWine.h" />
     <ClInclude Include="..\..\src\mpt\arch\arch.hpp" />
+    <ClInclude Include="..\..\src\mpt\arch\feature_fence.hpp" />
     <ClInclude Include="..\..\src\mpt\arch\feature_flags.hpp" />
     <ClInclude Include="..\..\src\mpt\arch\x86_amd64.hpp" />
     <ClInclude Include="..\..\src\mpt\audio\sample.hpp" />
@@ -799,6 +819,8 @@
     <ClInclude Include="..\..\src\mpt\check\libcxx.hpp" />
     <ClInclude Include="..\..\src\mpt\check\mfc.hpp" />
     <ClInclude Include="..\..\src\mpt\check\windows.hpp" />
+    <ClInclude Include="..\..\src\mpt\chrono\system_clock.hpp" />
+    <ClInclude Include="..\..\src\mpt\chrono\unix_clock.hpp" />
     <ClInclude Include="..\..\src\mpt\crc\crc.hpp" />
     <ClInclude Include="..\..\src\mpt\crc\tests\tests_crc.hpp" />
     <ClInclude Include="..\..\src\mpt\crypto\config.hpp" />
@@ -850,6 +872,7 @@
     <ClInclude Include="..\..\src\mpt\io_file\inputfile.hpp" />
     <ClInclude Include="..\..\src\mpt\io_file\outputfile.hpp" />
     <ClInclude Include="..\..\src\mpt\io_file_adapter\fileadapter.hpp" />
+    <ClInclude Include="..\..\src\mpt\io_file_atomic\atomic_file.hpp" />
     <ClInclude Include="..\..\src\mpt\io_file_read\inputfile_filecursor.hpp" />
     <ClInclude Include="..\..\src\mpt\io_file_unique\unique_basename.hpp" />
     <ClInclude Include="..\..\src\mpt\io_file_unique\unique_tempfilename.hpp" />
@@ -915,6 +938,7 @@
     <ClInclude Include="..\..\src\mpt\uuid_namespace\tests\tests_uuid_namespace.hpp" />
     <ClInclude Include="..\..\src\mpt\uuid_namespace\uuid_namespace.hpp" />
     <ClInclude Include="..\..\src\openmpt\all\BuildSettings.hpp" />
+    <ClInclude Include="..\..\src\openmpt\all\BuildSettingsCompiler.hpp" />
     <ClInclude Include="..\..\src\openmpt\all\PlatformFixes.hpp" />
     <ClInclude Include="..\..\src\openmpt\base\Endian.hpp" />
     <ClInclude Include="..\..\src\openmpt\base\FlagSet.hpp" />

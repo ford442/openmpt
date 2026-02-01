@@ -524,9 +524,11 @@ static std::pair<EffectCommand, ModCommand::PARAM> ConvertMEDEffect(ModCommand &
 			case 0xF9:  // Turn filter on
 				m.SetEffectCommand(CMD_MODCMDEX, 0xF9 - param);
 				break;
+			case 0xFD:  // Set pitch
+				m.SetEffectCommand(CMD_TONEPORTA_DURATION, 0);
+				break;
 			case 0xFA:  // MIDI pedal on
 			case 0xFB:  // MIDI pedal off
-			case 0xFD:  // Set pitch
 			case 0xFE:  // End of song
 				break;
 			case 0xFF:  // Turn note off
@@ -963,9 +965,7 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 	m_nMinPeriod = hardwareMixSamples ? (113 * 4) : (55 * 4);
 
 	bool needInstruments = false;
-#ifndef NO_PLUGINS
 	PLUGINDEX numPlugins = 0;
-#endif  // !NO_PLUGINS
 	for(SAMPLEINDEX ins = 1, smp = 1; ins <= m_nInstruments; ins++)
 	{
 		if(!AllocateInstrument(ins, smp))
@@ -1399,7 +1399,6 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 				SetupMODPanning(true);
 			}
 
-#ifndef NO_PLUGINS
 			if((header.mixEchoType == 1 || header.mixEchoType == 2) && numPlugins < MAX_MIXPLUGINS)
 			{
 				// Emulating MED echo using the DMO echo requires to compensate for the differences in initial feedback in the latter.
@@ -1426,7 +1425,6 @@ bool CSoundFile::ReadMED(FileReader &file, ModLoadingFlags loadFlags)
 				mixPlug.pluginData.resize(sizeof(params));
 				memcpy(mixPlug.pluginData.data(), params.data(), sizeof(params));
 			}
-#endif
 
 			std::vector<uint16be> sections;
 			if(!file.Seek(header.sectionTableOffset)

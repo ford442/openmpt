@@ -1,11 +1,20 @@
 
+if MPT_MSVC_AT_LEAST(2019) then
+include_dependency "ext-asiomodern.lua"
+end
+include_dependency "ext-nlohmann-json.lua"
+include_dependency "ext-portaudio.lua"
+include_dependency "ext-rtaudio.lua"
+
  project "OpenMPT-NativeSupport"
   uuid "563a631d-fe07-47bc-a98f-9fe5b3ebabfa"
   language "C++"
   vpaths { ["*"] = "../../" }
   mpt_kind "shared"
 	
-	if _OPTIONS["windows-version"] ~= "winxp" and not _OPTIONS["clang"] then
+	if MPT_MSVC_AT_LEAST(2019) then
+		-- disabled for VS2017 because of multiple initialization of inline variables
+		-- https://developercommunity.visualstudio.com/t/static-inline-variable-gets-destroyed-multiple-tim/297876
 		mpt_use_asiomodern()
 		defines { "MPT_WITH_ASIO" }
 	end
@@ -35,8 +44,12 @@
   }
   excludes {
    "../../mptrack/wine/WineWrapper.cpp",
+		"../../src/mpt/filemode/**.cpp",
+		"../../src/mpt/filemode/**.hpp",
 		"../../src/mpt/main/**.cpp",
 		"../../src/mpt/main/**.hpp",
+		"../../src/mpt/terminal/**.cpp",
+		"../../src/mpt/terminal/**.hpp",
 		"../../src/openmpt/fileformat_base/**.cpp",
 		"../../src/openmpt/fileformat_base/**.hpp",
 		"../../src/openmpt/soundfile_data/**.cpp",
@@ -47,7 +60,7 @@
 		"../../src/openmpt/streamencoder/**.hpp",
   }
   defines { "MODPLUG_TRACKER", "MPT_BUILD_WINESUPPORT" }
-	if _OPTIONS["charset"] ~= "Unicode" then
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 	end
   warnings "Extra"

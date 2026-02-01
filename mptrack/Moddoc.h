@@ -130,7 +130,7 @@ protected:
 	CSampleUndo m_SampleUndo;
 	CInstrumentUndo m_InstrumentUndo;
 	SplitKeyboardSettings m_SplitKeyboardSettings;	// this is maybe not the best place to keep them, but it should do the job
-	mpt::Date::Unix m_creationTime;
+	mpt::chrono::default_system_clock::time_point m_creationTime;
 
 	std::atomic<bool> m_modifiedAutosave = false; // Modified since last autosave?
 
@@ -220,7 +220,7 @@ public:
 	CInstrumentUndo &GetInstrumentUndo() { return m_InstrumentUndo; }
 	SplitKeyboardSettings &GetSplitKeyboardSettings() { return m_SplitKeyboardSettings; }
 
-	mpt::Date::Unix GetCreationTime() const { return m_creationTime; }
+	mpt::chrono::default_system_clock::time_point GetCreationTime() const { return m_creationTime; }
 
 // operations
 public:
@@ -336,7 +336,7 @@ public:
 	// [in] bIncludeIndex: True to include instrument index in front of the instrument name, false otherwise.
 	CString GetPatternViewInstrumentName(INSTRUMENTINDEX nInstr, bool bEmptyInsteadOfNoName = false, bool bIncludeIndex = true) const;
 
-	mpt::tstring FormatSubsongName(const SubSong &song);
+	mpt::tstring FormatSubsongName(const std::vector<SubSong> &songs, size_t subSong);
 
 	// Check if a given channel contains data.
 	bool IsChannelUnused(CHANNELINDEX nChn) const;
@@ -407,12 +407,32 @@ public:
 	ModCommand::NOTE GetNoteWithBaseOctave(int noteOffset, INSTRUMENTINDEX instr) const;
 	INSTRUMENTINDEX GetParentInstrumentWithSameName(SAMPLEINDEX smp) const;
 
+	size_t GetSubsongForCurrentEditPos(const std::vector<SubSong> &subsongs) const;
+
 	// Convert a linear volume property to decibels, and format the value as a readable string
 	static CString LinearToDecibelsString(double value, double valueAtZeroDB);
+	inline static CString LinearToDecibelsString(float value, float valueAtZeroDB)
+	{
+		return LinearToDecibelsString(static_cast<double>(value), static_cast<double>(valueAtZeroDB));
+	}
 	// Convert a linear volume property to decibels
 	static double LinearToDecibels(double value, double valueAtZeroDB);
+	inline static float LinearToDecibels(float value, float valueAtZeroDB)
+	{
+		return static_cast<float>(LinearToDecibels(static_cast<double>(value), static_cast<double>(valueAtZeroDB)));
+	}
+	// Convert a decibels value to linear volume
+	static double DecibelsToLinear(double value, double valueAtZeroDB);
+	inline static float DecibelsToLinear(float value, float valueAtZeroDB)
+	{
+		return static_cast<float>(DecibelsToLinear(static_cast<double>(value), static_cast<double>(valueAtZeroDB)));
+	}
 	// Format a decibel value as a readable string
 	static CString DecibelsToStrings(double dB);
+	inline static CString DecibelsToStrings(float dB)
+	{
+		return DecibelsToStrings(static_cast<double>(dB));
+	}
 	// Convert a panning value to a more readable string
 	static CString PanningToString(int32 value, int32 valueAtCenter);
 

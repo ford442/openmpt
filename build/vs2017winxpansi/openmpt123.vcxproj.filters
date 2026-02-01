@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="libopenmpt">
@@ -16,11 +16,17 @@
     <Filter Include="src\mpt\base">
       <UniqueIdentifier>{D7D6CF03-C339-5FA8-6CBF-975E58012B2B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\mpt\chrono">
+      <UniqueIdentifier>{8569F439-7137-E83F-5ACB-58664638C4A4}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\mpt\detect">
       <UniqueIdentifier>{7535143C-6103-0842-4A97-78683604E4A6}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\mpt\exception">
       <UniqueIdentifier>{2B7E92B2-9794-9048-E00B-1C6A4C6161D0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mpt\filemode">
+      <UniqueIdentifier>{4132C08B-2D2B-DFDD-565D-C46242B5BEE9}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\mpt\format">
       <UniqueIdentifier>{C5847241-B152-6647-9AE6-D66D865342AC}</UniqueIdentifier>
@@ -33,6 +39,9 @@
     </Filter>
     <Filter Include="src\mpt\main">
       <UniqueIdentifier>{C1DDD503-AD40-65A8-56C6-9D5E4208312B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mpt\out_of_memory">
+      <UniqueIdentifier>{208F8479-8CFB-3F74-55EF-D7D1C11A62DC}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\mpt\parse">
       <UniqueIdentifier>{B706C87E-23C7-43B5-EC01-8D3258818891}</UniqueIdentifier>
@@ -48,6 +57,9 @@
     </Filter>
     <Filter Include="src\mpt\string_transcode">
       <UniqueIdentifier>{F5FA629F-E11F-B21F-0A6B-97AFF6EEB03D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\mpt\terminal">
+      <UniqueIdentifier>{3865FE51-245E-1DA4-4D90-022939E8FCAF}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -82,9 +94,6 @@
       <Filter>openmpt123</Filter>
     </ClInclude>
     <ClInclude Include="..\..\openmpt123\openmpt123_sndfile.hpp">
-      <Filter>openmpt123</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\openmpt123\openmpt123_stdio.hpp">
       <Filter>openmpt123</Filter>
     </ClInclude>
     <ClInclude Include="..\..\openmpt123\openmpt123_stdout.hpp">
@@ -210,6 +219,12 @@
     <ClInclude Include="..\..\src\mpt\base\wrapping_divide.hpp">
       <Filter>src\mpt\base</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\chrono\system_clock.hpp">
+      <Filter>src\mpt\chrono</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\chrono\unix_clock.hpp">
+      <Filter>src\mpt\chrono</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\detect\dl.hpp">
       <Filter>src\mpt\detect</Filter>
     </ClInclude>
@@ -233,6 +248,21 @@
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\exception\runtime_error.hpp">
       <Filter>src\mpt\exception</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\filemode\fd.hpp">
+      <Filter>src\mpt\filemode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\filemode\filemode.hpp">
+      <Filter>src\mpt\filemode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\filemode\iostream.hpp">
+      <Filter>src\mpt\filemode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\filemode\stdfile.hpp">
+      <Filter>src\mpt\filemode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\filemode\stdio.hpp">
+      <Filter>src\mpt\filemode</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\format\concat.hpp">
       <Filter>src\mpt\format</Filter>
@@ -303,6 +333,12 @@
     <ClInclude Include="..\..\src\mpt\main\main.hpp">
       <Filter>src\mpt\main</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\mpt\main\stdio_tokens.hpp">
+      <Filter>src\mpt\main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\out_of_memory\out_of_memory.hpp">
+      <Filter>src\mpt\out_of_memory</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\mpt\parse\parse.hpp">
       <Filter>src\mpt\parse</Filter>
     </ClInclude>
@@ -362,6 +398,27 @@
     </ClInclude>
     <ClInclude Include="..\..\src\mpt\string_transcode\transcode.hpp">
       <Filter>src\mpt\string_transcode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\terminal\base.hpp">
+      <Filter>src\mpt\terminal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\terminal\input.hpp">
+      <Filter>src\mpt\terminal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\terminal\is_terminal.hpp">
+      <Filter>src\mpt\terminal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\terminal\output.hpp">
+      <Filter>src\mpt\terminal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\terminal\size.hpp">
+      <Filter>src\mpt\terminal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\terminal\stdio_manager.hpp">
+      <Filter>src\mpt\terminal</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mpt\terminal\transliterate.hpp">
+      <Filter>src\mpt\terminal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

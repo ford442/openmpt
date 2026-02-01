@@ -13,11 +13,8 @@ If no toolset is specified for a configuration, the system or IDE default will b
 | **Toolset identifier**   |  **Description**                                |
 |------------|---------------------------------------------------------------|
 | `clang`    | [Clang](http://clang.llvm.org)                                |
-| `dmd`      | [Reference D Compiler](https://dlang.org/dmd-windows.html)    |
 | `dotnet`   | The system's default C# compiler                              |
 | `gcc`      | [GNU Compiler Collection](https://gcc.gnu.org)                |
-| `gdc`      | [GNU Compiler Collection D Compiler](https://gdcproject.org/) |
-| `ldc`      | [LLVM D Compiler](https://wiki.dlang.org/LDC)                 |
 | `msc`      | Microsoft C/C++ compiler                                      |
 
 If a specific toolset version is desired, it may be specified as part of the identifer, separated by a dash. See the examples below.
@@ -41,7 +38,8 @@ toolset "v100"    -- for those more familiar with Visual Studio's way
 
 Use [Clang/C2](http://llvm.org/builds/) with Visual Studio
 ```lua
-toolset "msc-llvm-vs2014"
+toolset "msc-llvm-vs2014" -- pre VS 2019
+toolset "clang" -- VS 2019 and newer
 ```
 
 Use the toolset for Windows XP

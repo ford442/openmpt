@@ -27,7 +27,7 @@ Dependencies
      *  **MinGW-W64 13.1 (mcfgthread threading model)**  or higher
      *  **MinGW-W64 7.1 (win32 threading model)** up to
         **MinGW-W64 13.0 (win32 threading model)** 
-     *  **emscripten 3.1.1** or higher
+     *  **emscripten 3.1.51** or higher
      *  **DJGPP GCC 7.1** or higher
      *  any other **C++23, C++20, or C++17 compliant** compiler
         
@@ -100,7 +100,7 @@ Optional dependencies
 ### openmpt123
 
  *  Rendering to PCM files can use:
-     *  **FLAC 1.2** or higher
+     *  **FLAC 1.3** or higher
      *  **libsndfile**
      *  **Win32** for WAVE
      *  raw PCM has no external dependencies

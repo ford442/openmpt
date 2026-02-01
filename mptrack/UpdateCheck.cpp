@@ -503,10 +503,10 @@ void CUpdateCheck::StartUpdateCheckAsync(bool isAutoUpdate)
 			return;
 		}
 		// Do we actually need to run the update check right now?
-		const mpt::Date::Unix now = mpt::Date::UnixNow();
-		const mpt::Date::Unix lastCheck = TrackerSettings::Instance().UpdateLastUpdateCheck.Get();
+		const mpt::chrono::default_system_clock::time_point now = mpt::chrono::default_system_clock::now();
+		const mpt::chrono::default_system_clock::time_point lastCheck = TrackerSettings::Instance().UpdateLastUpdateCheck.Get();
 		// Check update interval. Note that we always check for updates when the system time had gone backwards (i.e. when the last update check supposedly happened in the future).
-		const int64 secsSinceLastCheck = mpt::Date::UnixAsSeconds(now) - mpt::Date::UnixAsSeconds(lastCheck);
+		const int64 secsSinceLastCheck = mpt::chrono::default_system_clock::to_unix_seconds(now) - mpt::chrono::default_system_clock::to_unix_seconds(lastCheck);
 		if(secsSinceLastCheck > 0 && secsSinceLastCheck < updateCheckPeriod * 86400)
 		{
 			loadPersisted = true;
@@ -579,7 +579,8 @@ void CUpdateCheck::StartUpdateCheckAsync(bool isAutoUpdate)
 
 
 CUpdateCheck::Settings::Settings()
-	: periodDays(TrackerSettings::Instance().UpdateIntervalDays)
+	: previousVersion(TrackerSettings::Instance().PreviousSettingsVersion)
+	, periodDays(TrackerSettings::Instance().UpdateIntervalDays)
 	, channel(static_cast<UpdateChannel>(TrackerSettings::Instance().UpdateChannel.Get()))
 	, persistencePath(theApp.GetConfigPath())
 	, apiURL(TrackerSettings::Instance().UpdateAPIURL)
@@ -608,6 +609,7 @@ std::string CUpdateCheck::GetStatisticsDataV3(const Settings &settings)
 {
 	nlohmann::json j;
 	j["OpenMPT"]["Version"] = mpt::ufmt::val(Version::Current());
+	j["OpenMPT"]["InstallationMode"] = theApp.GetInstallationMode();
 	j["OpenMPT"]["BuildVariant"] = mpt::ToUnicode(mpt::Charset::ASCII, OPENMPT_BUILD_VARIANT);
 	j["OpenMPT"]["Architecture"] = mpt::OS::Windows::Name(mpt::OS::Windows::GetProcessArchitecture());
 	j["Update"]["PeriodDays"] = settings.periodDays;
@@ -620,7 +622,7 @@ std::string CUpdateCheck::GetStatisticsDataV3(const Settings &settings)
 	j["System"]["Windows"]["Build"] = mpt::osinfo::windows::Version::Current().GetBuild();
 	j["System"]["Windows"]["Architecture"] = mpt::OS::Windows::Name(mpt::OS::Windows::GetHostArchitecture());
 	j["System"]["Windows"]["IsWine"] = mpt::OS::Windows::IsWine();
-	j["System"]["Windows"]["TypeRaw"] = MPT_AFORMAT("0x{}")(mpt::afmt::HEX0<8>(mpt::osinfo::windows::Version::Current().GetTypeId()));
+	j["System"]["Windows"]["TypeRaw"] = MPT_UFORMAT("0x{}")(mpt::ufmt::HEX0<8>(mpt::osinfo::windows::Version::Current().GetTypeId()));
 	std::vector<mpt::OS::Windows::Architecture> architectures = mpt::OS::Windows::GetSupportedProcessArchitectures(mpt::OS::Windows::GetHostArchitecture());
 	for(const auto & arch : architectures)
 	{
@@ -631,14 +633,14 @@ std::string CUpdateCheck::GetStatisticsDataV3(const Settings &settings)
 	if(mpt::OS::Windows::IsWine())
 	{
 		mpt::OS::Wine::VersionContext v;
-		j["System"]["Windows"]["Wine"]["Version"]["Raw"] = v.RawVersion();
+		j["System"]["Windows"]["Wine"]["Version"]["Raw"] = mpt::ToUnicode(mpt::Charset::UTF8, v.RawVersion());
 		if(v.Version().IsValid())
 		{
 			j["System"]["Windows"]["Wine"]["Version"]["Major"] = v.Version().GetMajor();
 			j["System"]["Windows"]["Wine"]["Version"]["Minor"] = v.Version().GetMinor();
 			j["System"]["Windows"]["Wine"]["Version"]["Update"] = v.Version().GetUpdate();
 		}
-		j["System"]["Windows"]["Wine"]["HostSysName"] = v.RawHostSysName();
+		j["System"]["Windows"]["Wine"]["HostSysName"] = mpt::ToUnicode(mpt::Charset::UTF8, v.RawHostSysName());
 	}
 	const SoundDevice::Identifier deviceIdentifier = TrackerSettings::Instance().GetSoundDeviceIdentifier();
 	const SoundDevice::Info deviceInfo = theApp.GetSoundDevicesManager()->FindDeviceInfo(deviceIdentifier);
@@ -656,9 +658,9 @@ std::string CUpdateCheck::GetStatisticsDataV3(const Settings &settings)
 	#ifdef MPT_ENABLE_ARCH_INTRINSICS
 		#if MPT_ARCH_X86 || MPT_ARCH_AMD64
 			const mpt::arch::current::cpu_info CPUInfo = mpt::arch::get_cpu_info();
-			j["System"]["Processor"]["Vendor"] = CPUInfo.get_vendor_string();
-			j["System"]["Processor"]["Brand"] = CPUInfo.get_brand_string();
-			j["System"]["Processor"]["CpuidRaw"] = mpt::afmt::hex0<8>(CPUInfo.get_cpuid());
+			j["System"]["Processor"]["Vendor"] = mpt::ToUnicode(mpt::Charset::ASCII, CPUInfo.get_vendor_string());
+			j["System"]["Processor"]["Brand"] = mpt::ToUnicode(mpt::Charset::ASCII, CPUInfo.get_brand_string());
+			j["System"]["Processor"]["CpuidRaw"] = mpt::ufmt::hex0<8>(CPUInfo.get_cpuid());
 			j["System"]["Processor"]["Id"]["Family"] = CPUInfo.get_family();
 			j["System"]["Processor"]["Id"]["Model"] = CPUInfo.get_model();
 			j["System"]["Processor"]["Id"]["Stepping"] = CPUInfo.get_stepping();
@@ -703,7 +705,7 @@ UpdateCheckResult CUpdateCheck::SearchUpdate(const CUpdateCheck::Context &contex
 				{
 					std::vector<std::byte> data = GetFileReader(f).ReadRawDataAsByteVector();
 					nlohmann::json::parse(mpt::buffer_cast<std::string>(data)).get<Update::versions>();
-					result.CheckTime = mpt::Date::Unix{};
+					result.CheckTime = mpt::chrono::default_system_clock::time_point{};
 					result.json = data;
 					loaded = true;
 				}
@@ -769,18 +771,26 @@ mpt::PathString CUpdateCheck::GetUpdateTempDirectory(bool portable)
 	if(portable)
 	{
 		return theApp.GetInstallPath().WithTrailingSlash() + P_("Temp") + mpt::PathString::FromNative(mpt::RawPathString(1, mpt::PathString::GetDefaultPathSeparator()));
+	} else
+	{
+		return mpt::common_directories::get_temp_directory();
 	}
-	return mpt::common_directories::get_temp_directory();
 }
 
 
-void CUpdateCheck::CleanOldUpdates(const CUpdateCheck::Settings & /* settings */ , const CUpdateCheck::Context & /* context */ )
+void CUpdateCheck::CleanOldUpdates(const CUpdateCheck::Settings & settings, const CUpdateCheck::Context & /* context */ )
 {
 	if(theApp.IsPortableMode())
 	{
 		CleanOldUpdates(GetUpdateTempDirectory(true));
+		if(settings.previousVersion < MPT_V("1.31.02.02"))
+		{
+			CleanOldUpdates(GetUpdateTempDirectory(false));
+		}
+	} else
+	{
+		CleanOldUpdates(GetUpdateTempDirectory(false));
 	}
-	CleanOldUpdates(GetUpdateTempDirectory(false));
 }
 
 
@@ -823,9 +833,9 @@ void CUpdateCheck::SendStatistics(HTTP::InternetSession &internet, const CUpdate
 		std::string jsondata = statistics;
 		MPT_LOG_GLOBAL(LogInformation, "Update", mpt::ToUnicode(mpt::Charset::UTF8, jsondata));
 		requestStatistics.data = mpt::byte_cast<mpt::const_byte_span>(mpt::as_span(jsondata));
-#if defined(MPT_BUILD_RETRO)
+#if MPT_WIN_BEFORE(MPT_WIN_VISTA)
 		requestStatistics.InsecureTLSDowngradeWindowsXP();
-#endif // MPT_BUILD_RETRO
+#endif // < MPT_WIN_VISTA
 		internet(requestStatistics);
 	}
 }
@@ -840,9 +850,9 @@ UpdateCheckResult CUpdateCheck::SearchUpdateModern(HTTP::InternetSession &intern
 	request.acceptMimeTypes = HTTP::MimeTypes::JSON();
 	request.flags = HTTP::NoCache;
 
-#if defined(MPT_BUILD_RETRO)
+#if MPT_WIN_BEFORE(MPT_WIN_VISTA)
 	request.InsecureTLSDowngradeWindowsXP();
-#endif // MPT_BUILD_RETRO
+#endif // < MPT_WIN_VISTA
 	HTTP::Result resultHTTP = internet(request);
 
 	// Retrieve HTTP status code.
@@ -853,7 +863,7 @@ UpdateCheckResult CUpdateCheck::SearchUpdateModern(HTTP::InternetSession &intern
 
 	// Now, evaluate the downloaded data.
 	UpdateCheckResult result;
-	result.CheckTime = mpt::Date::UnixNow();
+	result.CheckTime = mpt::chrono::default_system_clock::now();
 	try
 	{
 		nlohmann::json::parse(mpt::buffer_cast<std::string>(resultHTTP.Data)).get<Update::versions>();
@@ -927,7 +937,7 @@ const CUpdateCheck::Error &CUpdateCheck::MessageAsError(WPARAM /* wparam */ , LP
 
 
 
-static const char updateScript[] = R"vbs(
+static const char updateScript_vbs[] = R"vbs(
 
 Wscript.Echo
 Wscript.Echo "OpenMPT portable Update"
@@ -1006,6 +1016,58 @@ WScript.Quit
 )vbs";
 
 
+static const char updateScript_ps1[] = R"ps1(
+
+param(
+	[String]$zip="",
+	[String]$subfolder="",
+	[String]$dst="",
+	[String]$restartbinary="")
+
+Write-Output ""
+Write-Output "OpenMPT portable Update"
+Write-Output "======================="
+
+Write-Output "[  0%] Waiting for OpenMPT to close..."
+Start-Sleep -Seconds 2
+
+Write-Output "[ 10%] Changing to temporary directory..."
+Set-Location -Path (Split-Path -Parent $MyInvocation.MyCommand.Definition)
+
+Write-Output "[ 20%] Decompressing update..."
+Expand-Archive -Path $zip -DestinationPath (Join-Path -Path (Resolve-Path -Path ".") -ChildPath "tmp") -Force
+
+Write-Output "[ 40%] Installing update..."
+if (($subfolder -eq "") -or ($subfolder -eq ".")) {
+	Copy-Item -Path (Join-Path -Path (Join-Path -Path (Resolve-Path -Path ".") -ChildPath "tmp") -ChildPath "*") -Destination $dst -Recurse -Force
+} else {
+	Copy-Item -Path (Join-Path -Path (Join-Path -Path (Join-Path -Path (Resolve-Path -Path ".") -ChildPath "tmp") -ChildPath $subfolder) -ChildPath "*") -Destination $dst -Recurse -Force
+}
+
+Write-Output "[ 60%] Deleting temporary directory..."
+Remove-Item -Path (Join-Path -Path (Resolve-Path -Path ".") -ChildPath "tmp") -Recurse -Force
+
+Write-Output "[ 80%] Restarting OpenMPT..."
+Start-Process -FilePath (Join-Path -Path (Resolve-Path -Path $dst) -ChildPath $restartbinary)  -WorkingDirectory $dst
+
+Write-Output "[100%] Update successful!"
+Write-Output ""
+Start-Sleep -Seconds 1
+
+Write-Output "Closing update window in 5 seconds..."
+Start-Sleep -Seconds 1
+Write-Output "Closing update window in 4 seconds..."
+Start-Sleep -Seconds 1
+Write-Output "Closing update window in 3 seconds..."
+Start-Sleep -Seconds 1
+Write-Output "Closing update window in 2 seconds..."
+Start-Sleep -Seconds 1
+Write-Output "Closing update window in 1 seconds..."
+Start-Sleep -Seconds 1
+Write-Output "Closing update window..."
+
+)ps1";
+
 
 class CDoUpdate: public CProgressDialog
 {
@@ -1072,9 +1134,9 @@ public:
 					request.SetURI(ParseURI(download.url));
 					request.method = HTTP::Method::Get;
 					request.acceptMimeTypes = HTTP::MimeTypes::JSON();
-#if defined(MPT_BUILD_RETRO)
+#if MPT_WIN_BEFORE(MPT_WIN_VISTA)
 					request.InsecureTLSDowngradeWindowsXP();
-#endif // MPT_BUILD_RETRO
+#endif // < MPT_WIN_VISTA
 					HTTP::Result resultHTTP = internet(request);
 					if(resultHTTP.Status != 200)
 					{
@@ -1092,9 +1154,9 @@ public:
 						request.SetURI(ParseURI(download.url + U_(".jws.json")));
 						request.method = HTTP::Method::Get;
 						request.acceptMimeTypes = HTTP::MimeTypes::JSON();
-#if defined(MPT_BUILD_RETRO)
+#if MPT_WIN_BEFORE(MPT_WIN_VISTA)
 						request.InsecureTLSDowngradeWindowsXP();
-#endif // MPT_BUILD_RETRO
+#endif // < MPT_WIN_VISTA
 						HTTP::Result resultHTTP = internet(request);
 						if(resultHTTP.Status != 200)
 						{
@@ -1119,9 +1181,9 @@ public:
 							request.acceptMimeTypes = HTTP::MimeTypes::JSON();
 							try
 							{
-#if defined(MPT_BUILD_RETRO)
+#if MPT_WIN_BEFORE(MPT_WIN_VISTA)
 								request.InsecureTLSDowngradeWindowsXP();
-#endif // MPT_BUILD_RETRO
+#endif // < MPT_WIN_VISTA
 								HTTP::Result resultHTTP = internet(request);
 								resultHTTP.CheckStatus(200);
 								mpt::append(keys, mpt::crypto::asymmetric::rsassa_pss<>::parse_jwk_set(mpt::ToUnicode(mpt::Charset::UTF8, mpt::buffer_cast<std::string>(resultHTTP.Data))));
@@ -1223,9 +1285,9 @@ public:
 							throw HTTP::Abort();
 						}
 					};
-#if defined(MPT_BUILD_RETRO)
+#if MPT_WIN_BEFORE(MPT_WIN_VISTA)
 					request.InsecureTLSDowngradeWindowsXP();
-#endif // MPT_BUILD_RETRO
+#endif // < MPT_WIN_VISTA
 					HTTP::Result resultHTTP = internet(request);
 					if(resultHTTP.Status != 200)
 					{
@@ -1296,33 +1358,82 @@ public:
 					}
 				} else if(download.type == U_("archive") && downloadinfo.autoupdate_archive)
 				{
-					try
+					bool usePowerShell = mpt::osinfo::windows::Version::Current().IsAtLeast(mpt::osinfo::windows::Version::Win10, 22000);
+					switch(TrackerSettings::Instance().UpdatePortableBackend)
 					{
-						mpt::IO::SafeOutputFile file(dirTempOpenMPTUpdates + P_("update.vbs"), std::ios::binary);
-						file.stream().imbue(std::locale::classic());
-						file.stream().exceptions(std::ios::failbit | std::ios::badbit);
-						mpt::IO::WriteRaw(file.stream(), mpt::as_span(std::string(updateScript)));
-					} catch(...)
-					{
-						throw Error(U_("Error creating update script."));
+						case 1:
+							usePowerShell = false;
+							break;
+						case 2:
+							usePowerShell = true;
+							break;
+						default:
+							// nothing
+							break;
 					}
-					std::vector<mpt::ustring> arguments;
-					arguments.push_back(U_("\"") + (dirTempOpenMPTUpdates + P_("update.vbs")).ToUnicode() + U_("\""));
-					arguments.push_back(U_("\"") + updateFilename.ToUnicode() + U_("\""));
-					arguments.push_back(U_("\"") + (downloadinfo.autoupdate_archive->subfolder.empty() ? U_(".") : downloadinfo.autoupdate_archive->subfolder) + U_("\""));
-					arguments.push_back(U_("\"") + theApp.GetInstallPath().WithoutTrailingSlash().ToUnicode() + U_("\""));
-					arguments.push_back(U_("\"") + downloadinfo.autoupdate_archive->restartbinary + U_("\""));
-					if(theApp.IsSourceTreeMode())
+					if(usePowerShell)
 					{
-						throw Warning(MPT_UFORMAT("Refusing to launch update '{} {}' when running from source tree.")(P_("cscript.exe"), mpt::join_format(arguments, U_(" "))));
-					}
-					if(reinterpret_cast<INT_PTR>(ShellExecute(NULL, NULL,
-						P_("cscript.exe").AsNative().c_str(),
-						mpt::ToWin(mpt::join_format(arguments, U_(" "))).c_str(),
-						dirTempOpenMPTUpdates.AsNative().c_str(),
-						SW_SHOWDEFAULT)) < 32)
+						try
+						{
+							mpt::IO::SafeOutputFile file(dirTempOpenMPTUpdates + P_("update.ps1"), std::ios::binary);
+							file.stream().imbue(std::locale::classic());
+							file.stream().exceptions(std::ios::failbit | std::ios::badbit);
+							mpt::IO::WriteRaw(file.stream(), mpt::as_span(std::string(updateScript_ps1)));
+						} catch(...)
+						{
+							throw Error(U_("Error creating update script."));
+						}
+						std::vector<mpt::ustring> arguments = {
+							U_("-NoLogo"),
+							U_("-ExecutionPolicy"), U_("Unrestricted"),
+							U_("\"") + (dirTempOpenMPTUpdates + P_("update.ps1")).ToUnicode() + U_("\""),
+							U_("-zip"), U_("\"") + updateFilename.ToUnicode() + U_("\""),
+							U_("-subfolder"), U_("\"") + (downloadinfo.autoupdate_archive->subfolder.empty() ? U_(".") : downloadinfo.autoupdate_archive->subfolder) + U_("\""),
+							U_("-dst"), U_("\"") + theApp.GetInstallPath().WithoutTrailingSlash().ToUnicode() + U_("\""),
+							U_("-restartbinary"), U_("\"") + downloadinfo.autoupdate_archive->restartbinary + U_("\"")
+						};
+						if(theApp.IsSourceTreeMode())
+						{
+							throw Warning(MPT_UFORMAT("Refusing to launch update '{} {}' when running from source tree.")(P_("cscript.exe"), mpt::join_format(arguments, U_(" "))));
+						}
+						if(reinterpret_cast<INT_PTR>(ShellExecute(NULL, NULL,
+							P_("PowerShell.exe").AsNative().c_str(),
+							mpt::ToWin(mpt::join_format(arguments, U_(" "))).c_str(),
+							dirTempOpenMPTUpdates.AsNative().c_str(),
+							SW_SHOWDEFAULT)) < 32)
+						{
+							throw Error(U_("Error launching update."));
+						}
+					} else
 					{
-						throw Error(U_("Error launching update."));
+						try
+						{
+							mpt::IO::SafeOutputFile file(dirTempOpenMPTUpdates + P_("update.vbs"), std::ios::binary);
+							file.stream().imbue(std::locale::classic());
+							file.stream().exceptions(std::ios::failbit | std::ios::badbit);
+							mpt::IO::WriteRaw(file.stream(), mpt::as_span(std::string(updateScript_vbs)));
+						} catch(...)
+						{
+							throw Error(U_("Error creating update script."));
+						}
+						std::vector<mpt::ustring> arguments;
+						arguments.push_back(U_("\"") + (dirTempOpenMPTUpdates + P_("update.vbs")).ToUnicode() + U_("\""));
+						arguments.push_back(U_("\"") + updateFilename.ToUnicode() + U_("\""));
+						arguments.push_back(U_("\"") + (downloadinfo.autoupdate_archive->subfolder.empty() ? U_(".") : downloadinfo.autoupdate_archive->subfolder) + U_("\""));
+						arguments.push_back(U_("\"") + theApp.GetInstallPath().WithoutTrailingSlash().ToUnicode() + U_("\""));
+						arguments.push_back(U_("\"") + downloadinfo.autoupdate_archive->restartbinary + U_("\""));
+						if(theApp.IsSourceTreeMode())
+						{
+							throw Warning(MPT_UFORMAT("Refusing to launch update '{} {}' when running from source tree.")(P_("cscript.exe"), mpt::join_format(arguments, U_(" "))));
+						}
+						if(reinterpret_cast<INT_PTR>(ShellExecute(NULL, NULL,
+							P_("cscript.exe").AsNative().c_str(),
+							mpt::ToWin(mpt::join_format(arguments, U_(" "))).c_str(),
+							dirTempOpenMPTUpdates.AsNative().c_str(),
+							SW_SHOWDEFAULT)) < 32)
+						{
+							throw Error(U_("Error launching update."));
+						}
 					}
 					wantClose = true;
 				} else
@@ -1685,10 +1796,10 @@ void CUpdateSetupDlg::SettingChanged(const SettingPath &changedPath)
 	if(changedPath == TrackerSettings::Instance().UpdateLastUpdateCheck.GetPath())
 	{
 		CString updateText;
-		const mpt::Date::Unix t = TrackerSettings::Instance().UpdateLastUpdateCheck.Get();
-		if(t != mpt::Date::Unix{})
+		const mpt::chrono::default_system_clock::time_point t = TrackerSettings::Instance().UpdateLastUpdateCheck.Get();
+		if(t != mpt::chrono::default_system_clock::time_point{})
 		{
-			updateText += CTime(mpt::Date::UnixAsSeconds(t)).Format(_T("The last successful update check was run on %F, %R."));
+			updateText += CTime(mpt::chrono::default_system_clock::to_unix_seconds(t)).Format(_T("The last successful update check was run on %F, %R."));
 		}
 		updateText += _T("\r\n");
 		SetDlgItemText(IDC_LASTUPDATE, updateText);

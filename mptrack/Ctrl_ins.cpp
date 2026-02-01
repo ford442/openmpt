@@ -1819,7 +1819,6 @@ CString CCtrlInstruments::GetToolTipText(UINT uId, HWND) const
 				s = _T("Only available in IT / MPTM format");
 			break;
 
-#ifndef NO_PLUGINS
 		case IDC_EDIT10:
 		case IDC_EDIT11:
 			// Show plugin program name when hovering program or bank edits
@@ -1834,7 +1833,6 @@ CString CCtrlInstruments::GetToolTipText(UINT uId, HWND) const
 				}
 			}
 			break;
-#endif // NO_PLUGINS
 
 		case IDC_PLUGIN_VELOCITYSTYLE:
 		case IDC_PLUGIN_VOLUMESTYLE:
@@ -1973,7 +1971,7 @@ void CCtrlInstruments::OnNextInstrument()
 void CCtrlInstruments::OnInstrumentNew()
 {
 	InsertInstrument(m_sndFile.GetNumInstruments() > 0 && CInputHandler::ShiftPressed());
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2038,7 +2036,7 @@ void CCtrlInstruments::OnInstrumentOpen()
 	}
 
 	m_parent.InstrumentChanged(m_nInstrument);
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2052,7 +2050,7 @@ void CCtrlInstruments::SaveInstrument(bool doBatchSave)
 {
 	if(!doBatchSave && m_sndFile.Instruments[m_nInstrument] == nullptr)
 	{
-		SwitchToView();
+		SwitchToViewIfMouse();
 		return;
 	}
 
@@ -2167,7 +2165,7 @@ void CCtrlInstruments::SaveInstrument(bool doBatchSave)
 		ErrorBox(IDS_ERR_SAVEINS, this);
 	else
 		TrackerSettings::Instance().PathInstruments.SetWorkingDir(dlg.GetWorkingDirectory());
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2180,7 +2178,7 @@ void CCtrlInstruments::OnInstrumentPlay()
 	{
 		m_modDoc.PlayNote(PlayNoteParam(NOTE_MIDDLEC).Instrument(m_nInstrument));
 	}
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2509,7 +2507,6 @@ void CCtrlInstruments::OnMixPlugChanged()
 			velocityStyle.SetCheck(pIns->pluginVelocityHandling == PLUGIN_VELOCITYHANDLING_CHANNEL ? BST_CHECKED : BST_UNCHECKED);
 			m_CbnPluginVolumeHandling.SetCurSel(pIns->pluginVolumeHandling);
 
-#ifndef NO_PLUGINS
 			if(pIns->nMixPlug)
 			{
 				// we have selected a plugin that's not "no plugin"
@@ -2569,7 +2566,6 @@ void CCtrlInstruments::OnMixPlugChanged()
 					return;
 				}
 			}
-#endif // NO_PLUGINS
 		}
 
 	}
@@ -2653,7 +2649,7 @@ void CCtrlInstruments::OnEnableCutOff()
 	}
 	UpdateFilterText();
 	SetModified(InstrumentHint().Info(), false);
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2670,7 +2666,7 @@ void CCtrlInstruments::OnEnableResonance()
 	}
 	UpdateFilterText();
 	SetModified(InstrumentHint().Info(), false);
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 void CCtrlInstruments::OnFilterModeChanged()
@@ -2698,7 +2694,7 @@ void CCtrlInstruments::OnVScroll(UINT nCode, UINT nPos, CScrollBar *pSB)
 {
 	// Give focus back to envelope editor when stopping to scroll spin buttons (for instrument preview keyboard focus)
 	CModControlDlg::OnVScroll(nCode, nPos, pSB);
-	if (nCode == SB_ENDSCROLL) SwitchToView();
+	if (nCode == SB_ENDSCROLL) SwitchToViewIfMouse();
 }
 
 
@@ -2819,7 +2815,7 @@ void CCtrlInstruments::OnHScroll(UINT nCode, UINT nPos, CScrollBar *pSB)
 	}
 	if ((nCode == SB_ENDSCROLL) || (nCode == SB_THUMBPOSITION))
 	{
-		SwitchToView();
+		SwitchToViewIfMouse();
 	}
 
 }

@@ -164,7 +164,7 @@ bool SettingsContainer::IsDefaultSetting(const SettingPath &path) const
 	return entry->second.IsDefault();
 }
 
-void SettingsContainer::WriteSetting(const SettingPath &path, const SettingValue &val, SettingFlushMode flushMode)
+void SettingsContainer::WriteSetting(const SettingPath &path, const SettingValue &val)
 {
 	ASSERT(theApp.InGuiThread());
 	ASSERT(!CMainFrame::GetMainFrame() || (CMainFrame::GetMainFrame() && !CMainFrame::GetMainFrame()->InNotifyHandler())); // This is a slow path, use CachedSetting for stuff that is accessed in notify handler.
@@ -178,11 +178,6 @@ void SettingsContainer::WriteSetting(const SettingPath &path, const SettingValue
 		entry->second = val;
 	}
 	NotifyListeners(path);
-	if(immediateFlush || flushMode == SettingWriteThrough)
-	{
-		BackendsWriteSetting(path, val);
-		entry->second.Clean();
-	}
 }
 
 void SettingsContainer::ForgetSetting(const SettingPath &path)
@@ -257,15 +252,6 @@ void SettingsContainer::Flush()
 	ASSERT(theApp.InGuiThread());
 	ASSERT(!CMainFrame::GetMainFrame() || (CMainFrame::GetMainFrame() && !CMainFrame::GetMainFrame()->InNotifyHandler())); // This is a slow path, use CachedSetting for stuff that is accessed in notify handler.
 	WriteSettings();
-}
-
-void SettingsContainer::SetImmediateFlush(bool newImmediateFlush)
-{
-	if(newImmediateFlush)
-	{
-		Flush();
-	}
-	immediateFlush = newImmediateFlush;
 }
 
 void SettingsContainer::Register(ISettingChanged *listener, const SettingPath &path)
@@ -389,7 +375,7 @@ void IniFileSettingsBackend::RemoveSettingRaw(const SettingPath &path)
 
 void IniFileSettingsBackend::RemoveSectionRaw(const mpt::ustring &section)
 {
-	::WritePrivateProfileSection(mpt::ToWin(section).c_str(), _T("\0"), filename.AsNative().c_str());
+	::WritePrivateProfileString(mpt::ToWin(section).c_str(), NULL, NULL, filename.AsNative().c_str());
 }
 
 
@@ -419,12 +405,11 @@ static std::vector<char> ReadFile(const mpt::PathString &filename)
 {
 	mpt::IO::ifstream s(filename, std::ios::binary);
 	std::vector<char> result;
+	std::vector<char> buf(mpt::IO::BUFFERSIZE_NORMAL);
 	while(s)
 	{
-		char buf[4096];
-		s.read(buf, 4096);
-		std::streamsize count = s.gcount();
-		result.insert(result.end(), buf, buf + count);
+		s.read(buf.data(), buf.size());
+		result.insert(result.end(), buf.data(), buf.data() + s.gcount());
 	}
 	return result;
 }
@@ -433,7 +418,7 @@ static void WriteFileUTF16LE(const mpt::PathString &filename, const std::wstring
 {
 	static_assert(sizeof(wchar_t) == 2);
 	mpt::IO::SafeOutputFile sinifile(filename, std::ios::binary, mpt::IO::FlushMode::Full);
-	mpt::IO::ofstream& inifile = sinifile;
+	mpt::IO::ofstream &inifile = sinifile;
 	const uint8 UTF16LE_BOM[] = { 0xff, 0xfe };
 	inifile.write(reinterpret_cast<const char*>(UTF16LE_BOM), 2);
 	inifile.write(reinterpret_cast<const char*>(str.c_str()), str.length() * sizeof(std::wstring::value_type));
@@ -446,6 +431,14 @@ void IniFileSettingsBackend::ConvertToUnicode(const mpt::ustring &backupTag)
 	// and thus support storing unicode strings uncorrupted.
 	// This is backwards compatible because even ANSI WINAPI behaves the
 	// same way in this case.
+	// Do not convert when not runing a UNICODE build.
+	// Do not convert when running on Windows 2000 or earlier
+	// because of missing Unicode support on Win9x,
+#if defined(UNICODE)
+	if(mpt::osinfo::windows::Version::Current().IsBefore(mpt::osinfo::windows::Version::WinXP))
+	{
+		return;
+	}
 	const std::vector<char> data = ReadFile(filename);
 	if(!data.empty() && IsTextUnicode(data.data(), mpt::saturate_cast<int>(data.size()), NULL))
 	{
@@ -454,10 +447,14 @@ void IniFileSettingsBackend::ConvertToUnicode(const mpt::ustring &backupTag)
 	const mpt::PathString backupFilename = filename + mpt::PathString::FromUnicode(backupTag.empty() ? U_(".ansi.bak") : U_(".ansi.") + backupTag + U_(".bak"));
 	CopyFile(filename.AsNative().c_str(), backupFilename.AsNative().c_str(), FALSE);
 	WriteFileUTF16LE(filename, mpt::ToWide(mpt::Charset::Locale, mpt::buffer_cast<std::string>(data)));
+#else
+	MPT_UNUSED(backupTag);
+#endif
 }
 
 SettingValue IniFileSettingsBackend::ReadSetting(const SettingPath &path, const SettingValue &def) const
 {
+	OPENMPT_PROFILE_FUNCTION(Profiler::Settings);
 	switch(def.GetType())
 	{
 	case SettingTypeBool: return SettingValue(ReadSettingRaw(path, def.as<bool>()), def.GetTypeTag()); break;
@@ -471,6 +468,7 @@ SettingValue IniFileSettingsBackend::ReadSetting(const SettingPath &path, const 
 
 void IniFileSettingsBackend::WriteSetting(const SettingPath &path, const SettingValue &val)
 {
+	OPENMPT_PROFILE_FUNCTION(Profiler::Settings);
 	ASSERT(val.GetType() != SettingTypeNone);
 	switch(val.GetType())
 	{
@@ -485,11 +483,13 @@ void IniFileSettingsBackend::WriteSetting(const SettingPath &path, const Setting
 
 void IniFileSettingsBackend::RemoveSetting(const SettingPath &path)
 {
+	OPENMPT_PROFILE_FUNCTION(Profiler::Settings);
 	RemoveSettingRaw(path);
 }
 
 void IniFileSettingsBackend::RemoveSection(const mpt::ustring &section)
 {
+	OPENMPT_PROFILE_FUNCTION(Profiler::Settings);
 	RemoveSectionRaw(section);
 }
 

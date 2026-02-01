@@ -80,7 +80,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>pugixml</RootNamespace>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
-    <WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -280,119 +280,119 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>..\..\lib\vs2022win8\x86\Debug\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86\Debug\</IntDir>
+    <OutDir>$(ProjectDir)..\..\lib\vs2022win8\x86\Debug\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86\Debug\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>..\..\lib\vs2022win8\x86_64\Debug\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86_64\Debug\</IntDir>
+    <OutDir>$(ProjectDir)..\..\lib\vs2022win8\x86_64\Debug\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86_64\Debug\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
-    <OutDir>..\..\lib\vs2022win8\ARM\Debug\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\arm\Debug\</IntDir>
+    <OutDir>$(ProjectDir)..\..\lib\vs2022win8\ARM\Debug\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\arm\Debug\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>..\..\lib\vs2022win8\x86\Release\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86\Release\</IntDir>
+    <OutDir>$(ProjectDir)..\..\lib\vs2022win8\x86\Release\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86\Release\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>..\..\lib\vs2022win8\x86_64\Release\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86_64\Release\</IntDir>
+    <OutDir>$(ProjectDir)..\..\lib\vs2022win8\x86_64\Release\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86_64\Release\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
-    <OutDir>..\..\lib\vs2022win8\ARM\Release\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\arm\Release\</IntDir>
+    <OutDir>$(ProjectDir)..\..\lib\vs2022win8\ARM\Release\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\arm\Release\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|Win32'">
-    <OutDir>..\..\lib\vs2022win8\x86\Checked\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86\Checked\</IntDir>
+    <OutDir>$(ProjectDir)..\..\lib\vs2022win8\x86\Checked\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86\Checked\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|x64'">
-    <OutDir>..\..\lib\vs2022win8\x86_64\Checked\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86_64\Checked\</IntDir>
+    <OutDir>$(ProjectDir)..\..\lib\vs2022win8\x86_64\Checked\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86_64\Checked\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Checked|ARM'">
-    <OutDir>..\..\lib\vs2022win8\ARM\Checked\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\arm\Checked\</IntDir>
+    <OutDir>$(ProjectDir)..\..\lib\vs2022win8\ARM\Checked\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\arm\Checked\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\..\bin\debug\vs2022-win8-shared\x86\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86\DebugShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\..\bin\debug\vs2022-win8-shared\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86\DebugShared\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\..\bin\debug\vs2022-win8-shared\amd64\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86_64\DebugShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\..\bin\debug\vs2022-win8-shared\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86_64\DebugShared\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugShared|ARM'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\..\..\bin\debug\vs2022-win8-shared\arm\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\arm\DebugShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\..\bin\debug\vs2022-win8-shared\arm\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\arm\DebugShared\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\bin\release\vs2022-win8-shared\x86\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86\ReleaseShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\..\bin\release\vs2022-win8-shared\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86\ReleaseShared\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\bin\release\vs2022-win8-shared\amd64\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86_64\ReleaseShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\..\bin\release\vs2022-win8-shared\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86_64\ReleaseShared\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseShared|ARM'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\bin\release\vs2022-win8-shared\arm\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\arm\ReleaseShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\..\bin\release\vs2022-win8-shared\arm\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\arm\ReleaseShared\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\bin\checked\vs2022-win8-shared\x86\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86\CheckedShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\..\bin\checked\vs2022-win8-shared\x86\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86\CheckedShared\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\bin\checked\vs2022-win8-shared\amd64\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\x86_64\CheckedShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\..\bin\checked\vs2022-win8-shared\amd64\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\x86_64\CheckedShared\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='CheckedShared|ARM'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\..\..\bin\checked\vs2022-win8-shared\arm\</OutDir>
-    <IntDir>..\..\obj\vs2022win8\pugixml\arm\CheckedShared\</IntDir>
+    <OutDir>$(ProjectDir)..\..\..\bin\checked\vs2022-win8-shared\arm\</OutDir>
+    <IntDir>$(ProjectDir)..\..\obj\vs2022win8\pugixml\arm\CheckedShared\</IntDir>
     <TargetName>openmpt-pugixml</TargetName>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
@@ -405,6 +405,7 @@
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/wd6054 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -490,6 +491,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -517,6 +519,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -544,6 +547,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Checked|Win32'">
@@ -640,6 +644,7 @@
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/wd6054 /wd28182 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
@@ -729,6 +734,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <ImportLibrary>..\..\..\bin\release\vs2022-win8-shared\x86\openmpt-pugixml.lib</ImportLibrary>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -758,6 +764,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <ImportLibrary>..\..\..\bin\release\vs2022-win8-shared\amd64\openmpt-pugixml.lib</ImportLibrary>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -787,6 +794,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <ImportLibrary>..\..\..\bin\release\vs2022-win8-shared\arm\openmpt-pugixml.lib</ImportLibrary>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
