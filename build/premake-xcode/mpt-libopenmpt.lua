@@ -43,8 +43,12 @@
 	excludes {
 		"../../src/mpt/crypto/**.cpp",
 		"../../src/mpt/crypto/**.hpp",
+		"../../src/mpt/filemode/**.cpp",
+		"../../src/mpt/filemode/**.hpp",
 		"../../src/mpt/fs/**.cpp",
 		"../../src/mpt/fs/**.hpp",
+		"../../src/mpt/io_file_atomic/**.cpp",
+		"../../src/mpt/io_file_atomic/**.hpp",
 		"../../src/mpt/json/**.cpp",
 		"../../src/mpt/json/**.hpp",
 		"../../src/mpt/library/**.cpp",

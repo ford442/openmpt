@@ -108,7 +108,7 @@
 			filter {}
 		end
 	filter {}
-	if _OPTIONS["clang"] then
+	if MPT_COMPILER_CLANGCL or MPT_COMPILER_CLANG then
 		filter { "architecture:x86" }
 			defines {
 				"OPUS_HAVE_RTCD=1",
@@ -154,7 +154,7 @@
 			}
 		filter {}
 	else
-		if _OPTIONS["windows-version"] == "winxp" then
+		if MPT_WIN_BEFORE(MPT_WIN["7"]) then
 			filter { "architecture:x86" }
 				defines {
 					"OPUS_HAVE_RTCD=1",
@@ -174,25 +174,7 @@
 				"OPUS_X86_MAY_HAVE_SSE4_1=1",
 			}
 			filter {}
-			filter { "architecture:x86", "configurations:Checked" }
-				defines {
-					"OPUS_X86_PRESUME_SSE",
-					"OPUS_X86_PRESUME_SSE2",
-				}
-			filter {}
-			filter { "architecture:x86", "configurations:CheckedShared" }
-				defines {
-					"OPUS_X86_PRESUME_SSE",
-					"OPUS_X86_PRESUME_SSE2",
-				}
-			filter {}
-			filter { "architecture:x86", "configurations:Release" }
-				defines {
-					"OPUS_X86_PRESUME_SSE",
-					"OPUS_X86_PRESUME_SSE2",
-				}
-			filter {}
-			filter { "architecture:x86", "configurations:ReleaseShared" }
+			filter { "architecture:x86" }
 				defines {
 					"OPUS_X86_PRESUME_SSE",
 					"OPUS_X86_PRESUME_SSE2",
@@ -251,44 +233,63 @@
 				--"OPUS_ARM_PRESUME_NEON_INTR=1",
 			}
 		filter {}
+		filter { "architecture:arm64ec" }
+			excludes {
+				"../../include/opus/celt/arm/celt_fft_ne10.c",
+				"../../include/opus/celt/arm/celt_mdct_ne10.c",
+				"../../include/opus/celt/arm/celt_neon_intr.c",
+				"../../include/opus/celt/arm/pitch_neon_intr.c",
+				"../../include/opus/dnn/arm/nnet_dotprod.c",
+				"../../include/opus/dnn/arm/nnet_neon.c",
+			}
+			defines {
+				--"OPUS_HAVE_RTCD=1",
+				--"CPU_INFO_BY_C=1",
+				--"OPUS_ARM_MAY_HAVE_DOTPROD=1",
+				--"OPUS_ARM_MAY_HAVE_EDSP=1",
+				--"OPUS_ARM_MAY_HAVE_MEDIA=1",
+				--"OPUS_ARM_MAY_HAVE_NEON=1",
+				--"OPUS_ARM_MAY_HAVE_NEON_INTR=1",
+				--"OPUS_ARM_PRESUME_NEON_INTR=1",
+			}
+		filter {}
 	end
-	links { }
-	filter { "action:vs*" }
+	filter {}
+	if MPT_COMPILER_MSVC or MPT_COMPILER_CLANGCL then
 		buildoptions {
 			"/wd4244",
 			"/wd4305",
 		}
-	filter {}
-	filter { "action:vs*" }
 		buildoptions { -- analyze
 			"/wd6255",
 			"/wd6297",
 		}
+	end
 	filter {}
-		if _OPTIONS["clang"] then
-			buildoptions {
-				"-Wno-excess-initializers",
-				"-Wno-macro-redefined",
-			}
-		end
+	if MPT_COMPILER_CLANGCL or MPT_COMPILER_CLANG then
+		buildoptions {
+			"-Wno-excess-initializers",
+			"-Wno-macro-redefined",
+		}
+	end
 	filter {}
-	filter { "kind:SharedLib" }
-		defines { "DLL_EXPORT" }
+	if MPT_OS_WINDOWS then
+		filter {}
+		filter { "kind:SharedLib" }
+			defines { "DLL_EXPORT" }
+		filter {}
+	end
 	filter {}
-		if _OPTIONS["clang"] then
-			defines { "FLOAT_APPROX" }
-		end
+	if MPT_COMPILER_CLANGCL or MPT_COMPILER_CLANG then
+		defines { "FLOAT_APPROX" }
+	end
+	filter {}
 
 function mpt_use_opus ()
 	filter {}
-	filter { "action:vs*" }
-		includedirs {
-			"../../include/opus/include",
-		}
-	filter { "not action:vs*" }
-		externalincludedirs {
-			"../../include/opus/include",
-		}
+	dependencyincludedirs {
+		"../../include/opus/include",
+	}
 	filter {}
 	links {
 		"opus",

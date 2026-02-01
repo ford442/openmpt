@@ -381,6 +381,7 @@
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
@@ -629,6 +630,7 @@
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <ConformanceMode>true</ConformanceMode>
@@ -928,7 +930,6 @@
     <ClInclude Include="..\..\common\ComponentManager.h" />
     <ClInclude Include="..\..\common\FileReader.h" />
     <ClInclude Include="..\..\common\FileReaderFwd.h" />
-    <ClInclude Include="..\..\common\GzipWriter.h" />
     <ClInclude Include="..\..\common\Logging.h" />
     <ClInclude Include="..\..\common\Profiler.h" />
     <ClInclude Include="..\..\common\misc_util.h" />
@@ -950,6 +951,7 @@
     <ClInclude Include="..\..\common\stdafx.h" />
     <ClInclude Include="..\..\common\version.h" />
     <ClInclude Include="..\..\common\versionNumber.h" />
+    <ClInclude Include="..\..\common\zlib_helper.h" />
     <ClInclude Include="..\..\libopenmpt\libopenmpt.h" />
     <ClInclude Include="..\..\libopenmpt\libopenmpt.hpp" />
     <ClInclude Include="..\..\libopenmpt\libopenmpt_config.h" />
@@ -1046,6 +1048,7 @@
     <ClInclude Include="..\..\soundlib\tuningbase.h" />
     <ClInclude Include="..\..\soundlib\tuningcollection.h" />
     <ClInclude Include="..\..\src\mpt\arch\arch.hpp" />
+    <ClInclude Include="..\..\src\mpt\arch\feature_fence.hpp" />
     <ClInclude Include="..\..\src\mpt\arch\feature_flags.hpp" />
     <ClInclude Include="..\..\src\mpt\arch\x86_amd64.hpp" />
     <ClInclude Include="..\..\src\mpt\audio\sample.hpp" />
@@ -1104,6 +1107,8 @@
     <ClInclude Include="..\..\src\mpt\check\libcxx.hpp" />
     <ClInclude Include="..\..\src\mpt\check\mfc.hpp" />
     <ClInclude Include="..\..\src\mpt\check\windows.hpp" />
+    <ClInclude Include="..\..\src\mpt\chrono\system_clock.hpp" />
+    <ClInclude Include="..\..\src\mpt\chrono\unix_clock.hpp" />
     <ClInclude Include="..\..\src\mpt\crc\crc.hpp" />
     <ClInclude Include="..\..\src\mpt\crc\tests\tests_crc.hpp" />
     <ClInclude Include="..\..\src\mpt\detect\dl.hpp" />
@@ -1207,6 +1212,7 @@
     <ClInclude Include="..\..\src\mpt\uuid\tests\tests_uuid.hpp" />
     <ClInclude Include="..\..\src\mpt\uuid\uuid.hpp" />
     <ClInclude Include="..\..\src\openmpt\all\BuildSettings.hpp" />
+    <ClInclude Include="..\..\src\openmpt\all\BuildSettingsCompiler.hpp" />
     <ClInclude Include="..\..\src\openmpt\all\PlatformFixes.hpp" />
     <ClInclude Include="..\..\src\openmpt\base\Endian.hpp" />
     <ClInclude Include="..\..\src\openmpt\base\FlagSet.hpp" />

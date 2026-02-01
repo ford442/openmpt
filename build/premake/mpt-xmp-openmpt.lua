@@ -1,4 +1,9 @@
 
+include_dependency "sys-mfc.lua"
+include_dependency "ext-pugixml.lua"
+include_dependency "ext-xmplay.lua"
+include_dependency "mpt-libopenmpt.lua"
+
  project "xmp-openmpt"
   uuid "AEA14F53-ADB0-45E5-9823-81F4F36886C2"
   language "C++"
@@ -48,9 +53,9 @@
 		resdefines { "MPT_BUILD_VER_EXE" }
 	filter {}
 
-	mpt_use_mfc()
+	mpt_use_mfc(_OPTIONS["windows-charset"])
 	defines { "MPT_WITH_MFC" }
-	if _OPTIONS["charset"] ~= "Unicode" then
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "NO_WARN_MBCS_MFC_DEPRECATION" }
 	end
 

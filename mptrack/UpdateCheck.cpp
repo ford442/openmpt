@@ -503,10 +503,10 @@ void CUpdateCheck::StartUpdateCheckAsync(bool isAutoUpdate)
 			return;
 		}
 		// Do we actually need to run the update check right now?
-		const mpt::Date::Unix now = mpt::Date::UnixNow();
-		const mpt::Date::Unix lastCheck = TrackerSettings::Instance().UpdateLastUpdateCheck.Get();
+		const mpt::chrono::default_system_clock::time_point now = mpt::chrono::default_system_clock::now();
+		const mpt::chrono::default_system_clock::time_point lastCheck = TrackerSettings::Instance().UpdateLastUpdateCheck.Get();
 		// Check update interval. Note that we always check for updates when the system time had gone backwards (i.e. when the last update check supposedly happened in the future).
-		const int64 secsSinceLastCheck = mpt::Date::UnixAsSeconds(now) - mpt::Date::UnixAsSeconds(lastCheck);
+		const int64 secsSinceLastCheck = mpt::chrono::default_system_clock::to_unix_seconds(now) - mpt::chrono::default_system_clock::to_unix_seconds(lastCheck);
 		if(secsSinceLastCheck > 0 && secsSinceLastCheck < updateCheckPeriod * 86400)
 		{
 			loadPersisted = true;
@@ -622,7 +622,7 @@ std::string CUpdateCheck::GetStatisticsDataV3(const Settings &settings)
 	j["System"]["Windows"]["Build"] = mpt::osinfo::windows::Version::Current().GetBuild();
 	j["System"]["Windows"]["Architecture"] = mpt::OS::Windows::Name(mpt::OS::Windows::GetHostArchitecture());
 	j["System"]["Windows"]["IsWine"] = mpt::OS::Windows::IsWine();
-	j["System"]["Windows"]["TypeRaw"] = MPT_AFORMAT("0x{}")(mpt::afmt::HEX0<8>(mpt::osinfo::windows::Version::Current().GetTypeId()));
+	j["System"]["Windows"]["TypeRaw"] = MPT_UFORMAT("0x{}")(mpt::ufmt::HEX0<8>(mpt::osinfo::windows::Version::Current().GetTypeId()));
 	std::vector<mpt::OS::Windows::Architecture> architectures = mpt::OS::Windows::GetSupportedProcessArchitectures(mpt::OS::Windows::GetHostArchitecture());
 	for(const auto & arch : architectures)
 	{
@@ -633,14 +633,14 @@ std::string CUpdateCheck::GetStatisticsDataV3(const Settings &settings)
 	if(mpt::OS::Windows::IsWine())
 	{
 		mpt::OS::Wine::VersionContext v;
-		j["System"]["Windows"]["Wine"]["Version"]["Raw"] = v.RawVersion();
+		j["System"]["Windows"]["Wine"]["Version"]["Raw"] = mpt::ToUnicode(mpt::Charset::UTF8, v.RawVersion());
 		if(v.Version().IsValid())
 		{
 			j["System"]["Windows"]["Wine"]["Version"]["Major"] = v.Version().GetMajor();
 			j["System"]["Windows"]["Wine"]["Version"]["Minor"] = v.Version().GetMinor();
 			j["System"]["Windows"]["Wine"]["Version"]["Update"] = v.Version().GetUpdate();
 		}
-		j["System"]["Windows"]["Wine"]["HostSysName"] = v.RawHostSysName();
+		j["System"]["Windows"]["Wine"]["HostSysName"] = mpt::ToUnicode(mpt::Charset::UTF8, v.RawHostSysName());
 	}
 	const SoundDevice::Identifier deviceIdentifier = TrackerSettings::Instance().GetSoundDeviceIdentifier();
 	const SoundDevice::Info deviceInfo = theApp.GetSoundDevicesManager()->FindDeviceInfo(deviceIdentifier);
@@ -658,9 +658,9 @@ std::string CUpdateCheck::GetStatisticsDataV3(const Settings &settings)
 	#ifdef MPT_ENABLE_ARCH_INTRINSICS
 		#if MPT_ARCH_X86 || MPT_ARCH_AMD64
 			const mpt::arch::current::cpu_info CPUInfo = mpt::arch::get_cpu_info();
-			j["System"]["Processor"]["Vendor"] = CPUInfo.get_vendor_string();
-			j["System"]["Processor"]["Brand"] = CPUInfo.get_brand_string();
-			j["System"]["Processor"]["CpuidRaw"] = mpt::afmt::hex0<8>(CPUInfo.get_cpuid());
+			j["System"]["Processor"]["Vendor"] = mpt::ToUnicode(mpt::Charset::ASCII, CPUInfo.get_vendor_string());
+			j["System"]["Processor"]["Brand"] = mpt::ToUnicode(mpt::Charset::ASCII, CPUInfo.get_brand_string());
+			j["System"]["Processor"]["CpuidRaw"] = mpt::ufmt::hex0<8>(CPUInfo.get_cpuid());
 			j["System"]["Processor"]["Id"]["Family"] = CPUInfo.get_family();
 			j["System"]["Processor"]["Id"]["Model"] = CPUInfo.get_model();
 			j["System"]["Processor"]["Id"]["Stepping"] = CPUInfo.get_stepping();
@@ -705,7 +705,7 @@ UpdateCheckResult CUpdateCheck::SearchUpdate(const CUpdateCheck::Context &contex
 				{
 					std::vector<std::byte> data = GetFileReader(f).ReadRawDataAsByteVector();
 					nlohmann::json::parse(mpt::buffer_cast<std::string>(data)).get<Update::versions>();
-					result.CheckTime = mpt::Date::Unix{};
+					result.CheckTime = mpt::chrono::default_system_clock::time_point{};
 					result.json = data;
 					loaded = true;
 				}
@@ -863,7 +863,7 @@ UpdateCheckResult CUpdateCheck::SearchUpdateModern(HTTP::InternetSession &intern
 
 	// Now, evaluate the downloaded data.
 	UpdateCheckResult result;
-	result.CheckTime = mpt::Date::UnixNow();
+	result.CheckTime = mpt::chrono::default_system_clock::now();
 	try
 	{
 		nlohmann::json::parse(mpt::buffer_cast<std::string>(resultHTTP.Data)).get<Update::versions>();
@@ -1796,10 +1796,10 @@ void CUpdateSetupDlg::SettingChanged(const SettingPath &changedPath)
 	if(changedPath == TrackerSettings::Instance().UpdateLastUpdateCheck.GetPath())
 	{
 		CString updateText;
-		const mpt::Date::Unix t = TrackerSettings::Instance().UpdateLastUpdateCheck.Get();
-		if(t != mpt::Date::Unix{})
+		const mpt::chrono::default_system_clock::time_point t = TrackerSettings::Instance().UpdateLastUpdateCheck.Get();
+		if(t != mpt::chrono::default_system_clock::time_point{})
 		{
-			updateText += CTime(mpt::Date::UnixAsSeconds(t)).Format(_T("The last successful update check was run on %F, %R."));
+			updateText += CTime(mpt::chrono::default_system_clock::to_unix_seconds(t)).Format(_T("The last successful update check was run on %F, %R."));
 		}
 		updateText += _T("\r\n");
 		SetDlgItemText(IDC_LASTUPDATE, updateText);

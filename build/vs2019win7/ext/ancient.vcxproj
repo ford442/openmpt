@@ -56,7 +56,7 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ancient</RootNamespace>
     <PreferredToolArchitecture>x64</PreferredToolArchitecture>
-    <WindowsTargetPlatformVersion>10.0.20348.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -275,6 +275,7 @@
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/wd4251 /wd4275 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -441,6 +442,7 @@
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/wd4251 /wd4275 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -508,7 +510,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <ImportLibrary>..\..\..\bin\release\vs2019-win7-shared\x86\openmpt-ancient.lib</ImportLibrary>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -539,7 +541,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <ImportLibrary>..\..\..\bin\release\vs2019-win7-shared\amd64\openmpt-ancient.lib</ImportLibrary>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -614,6 +616,7 @@
     <ClInclude Include="..\..\..\include\ancient\src\BLZWDecompressor.hpp" />
     <ClInclude Include="..\..\..\include\ancient\src\BZIP2Decompressor.hpp" />
     <ClInclude Include="..\..\..\include\ancient\src\BZIP2Table.hpp" />
+    <ClInclude Include="..\..\..\include\ancient\src\ByteKillerDecompressor.hpp" />
     <ClInclude Include="..\..\..\include\ancient\src\CBR0Decompressor.hpp" />
     <ClInclude Include="..\..\..\include\ancient\src\CRMDecompressor.hpp" />
     <ClInclude Include="..\..\..\include\ancient\src\CYB2Decoder.hpp" />
@@ -636,8 +639,8 @@
     <ClInclude Include="..\..\..\include\ancient\src\IMPDecompressor.hpp" />
     <ClInclude Include="..\..\..\include\ancient\src\IceDecompressor.hpp" />
     <ClInclude Include="..\..\..\include\ancient\src\InputStream.hpp" />
+    <ClInclude Include="..\..\..\include\ancient\src\JAMPackerDecompressor.hpp" />
     <ClInclude Include="..\..\..\include\ancient\src\LHDecompressor.hpp" />
-    <ClInclude Include="..\..\..\include\ancient\src\LHLBDecompressor.hpp" />
     <ClInclude Include="..\..\..\include\ancient\src\LIN1Decompressor.hpp" />
     <ClInclude Include="..\..\..\include\ancient\src\LIN2Decompressor.hpp" />
     <ClInclude Include="..\..\..\include\ancient\src\LOBDecompressor.hpp" />
@@ -694,6 +697,7 @@
     <ClCompile Include="..\..\..\include\ancient\src\ARTMDecompressor.cpp" />
     <ClCompile Include="..\..\..\include\ancient\src\BLZWDecompressor.cpp" />
     <ClCompile Include="..\..\..\include\ancient\src\BZIP2Decompressor.cpp" />
+    <ClCompile Include="..\..\..\include\ancient\src\ByteKillerDecompressor.cpp" />
     <ClCompile Include="..\..\..\include\ancient\src\CBR0Decompressor.cpp" />
     <ClCompile Include="..\..\..\include\ancient\src\CRMDecompressor.cpp" />
     <ClCompile Include="..\..\..\include\ancient\src\CYB2Decoder.cpp" />
@@ -713,8 +717,8 @@
     <ClCompile Include="..\..\..\include\ancient\src\IMPDecompressor.cpp" />
     <ClCompile Include="..\..\..\include\ancient\src\IceDecompressor.cpp" />
     <ClCompile Include="..\..\..\include\ancient\src\InputStream.cpp" />
+    <ClCompile Include="..\..\..\include\ancient\src\JAMPackerDecompressor.cpp" />
     <ClCompile Include="..\..\..\include\ancient\src\LHDecompressor.cpp" />
-    <ClCompile Include="..\..\..\include\ancient\src\LHLBDecompressor.cpp" />
     <ClCompile Include="..\..\..\include\ancient\src\LIN1Decompressor.cpp" />
     <ClCompile Include="..\..\..\include\ancient\src\LIN2Decompressor.cpp" />
     <ClCompile Include="..\..\..\include\ancient\src\LOBDecompressor.cpp" />

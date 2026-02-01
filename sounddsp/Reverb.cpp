@@ -42,20 +42,20 @@ OPENMPT_NAMESPACE_BEGIN
 
 #if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
 #if defined(MPT_ARCH_QUIRK_SSE2_NO_UNALIGNED_LOAD_STORE)
-static MPT_FORCEINLINE __m128i mpt_mm_loadu_si64(void const *mem_addr) {
+MPT_ATTR_ALWAYSINLINE MPT_INLINE_FORCE static __m128i mpt_mm_loadu_si64(void const *mem_addr) {
 	__m128i tmp;
 	std::memset(&tmp, 0, sizeof(__m128i));
 	std::memcpy(&tmp, mem_addr, 8);
 	return _mm_loadl_epi64(&tmp);
 }
-static MPT_FORCEINLINE void mpt_mm_storeu_si64(void *mem_addr, __m128i a) {
+MPT_ATTR_ALWAYSINLINE MPT_INLINE_FORCE static void mpt_mm_storeu_si64(void *mem_addr, __m128i a) {
 	std::memcpy(mem_addr, &a, 8);
 }
 #else
-static MPT_FORCEINLINE __m128i mpt_mm_loadu_si64(void const *mem_addr) {
+MPT_ATTR_ALWAYSINLINE MPT_INLINE_FORCE static __m128i mpt_mm_loadu_si64(void const *mem_addr) {
 	return _mm_loadu_si64(mem_addr);
 }
-static MPT_FORCEINLINE void mpt_mm_storeu_si64(void *mem_addr, __m128i a) {
+MPT_ATTR_ALWAYSINLINE MPT_INLINE_FORCE static void mpt_mm_storeu_si64(void *mem_addr, __m128i a) {
 	_mm_storeu_si64(mem_addr, a);
 }
 #endif
@@ -157,7 +157,7 @@ struct REFLECTIONPRESET
 	int16 sGainLL, sGainRR, sGainLR, sGainRL;
 };
 
-const REFLECTIONPRESET gReflectionsPreset[ENVIRONMENT_NUMREFLECTIONS] =
+static const REFLECTIONPRESET gReflectionsPreset[ENVIRONMENT_NUMREFLECTIONS] =
 {
 	// %Delay, ll,    rr,   lr,    rl
 	{0,    9830,   6554,	  0,     0},
@@ -174,8 +174,6 @@ const REFLECTIONPRESET gReflectionsPreset[ENVIRONMENT_NUMREFLECTIONS] =
 //
 // Implementation
 //
-
-MPT_FORCEINLINE int32 ftol(float f) { return static_cast<int32>(f); }
 
 static void I3dl2_to_Generic(
 				const SNDMIX_REVERB_PROPERTIES *pReverb,
@@ -205,20 +203,20 @@ static void I3dl2_to_Generic(
 	}
 
 	// Pre-Diffusion factor (for both reflections and late reverb)
-	lDensity = 8192 + ftol(79.31f * pReverb->flDensity);
+	lDensity = 8192 + static_cast<int32>(79.31f * pReverb->flDensity);
 	pRvb->PreDiffusion = lDensity;
 
 	// Late reverb diffusion
-	lTailDiffusion = ftol((0.15f + pReverb->flDiffusion * (0.36f*0.01f)) * 32767.0f);
+	lTailDiffusion = static_cast<int32>((0.15f + pReverb->flDiffusion * (0.36f*0.01f)) * 32767.0f);
 	if (lTailDiffusion > 0x7f00) lTailDiffusion = 0x7f00;
 	pRvb->TankDiffusion = lTailDiffusion;
 
 	// Verify reflections and reverb delay parameters
 	float flRefDelay = pReverb->flReflectionsDelay;
 	if (flRefDelay > 0.100f) flRefDelay = 0.100f;
-	int32 lReverbDelay = ftol(pReverb->flReverbDelay * flOutputFreq);
-	int32 lReflectionsDelay = ftol(flRefDelay * flOutputFreq);
-	int32 lReverbDecayTime = ftol(pReverb->flDecayTime * flOutputFreq);
+	int32 lReverbDelay = static_cast<int32>(pReverb->flReverbDelay * flOutputFreq);
+	int32 lReflectionsDelay = static_cast<int32>(flRefDelay * flOutputFreq);
+	int32 lReverbDecayTime = static_cast<int32>(pReverb->flDecayTime * flOutputFreq);
 	if (lReflectionsDelay < lMinRefDelay)
 	{
 		lReverbDelay -= (lMinRefDelay - lReflectionsDelay);
@@ -256,7 +254,7 @@ static void I3dl2_to_Generic(
 	// Late reverb decay time
 	if (lTankLength < 10) lTankLength = 10;
 	flDelayFactor = (lReverbDecayTime <= lTankLength) ? 1.0f : ((float)lTankLength / (float)lReverbDecayTime);
-	pRvb->ReverbDecay = ftol(std::pow(0.001f, flDelayFactor) * 32768.0f);
+	pRvb->ReverbDecay = static_cast<int32>(std::pow(0.001f, flDelayFactor) * 32768.0f);
 
 	// Late Reverb Decay HF
 	flDecayTimeHF = (float)lReverbDecayTime * pReverb->flDecayHFRatio;
@@ -611,8 +609,9 @@ void CReverb::ReverbProcessPostFiltering2x(const int32 * MPT_RESTRICT pRvb, int3
 void CReverb::ReverbProcessPostFiltering1x(const int32 * MPT_RESTRICT pRvb, int32 * MPT_RESTRICT pDry, uint32 nSamples)
 {
 #if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
-	if(CPU::HasFeatureSet(CPU::feature::sse2) && CPU::HasModesEnabled(CPU::mode::xmm128sse))
+	if(CPU::HasFeatureSetAndModesEnabled(CPU::feature::sse2, CPU::mode::xmm128sse))
 	{
+		mpt::arch::feature_fence_guard arch_feature_guard;
 		__m128i nDCRRvb_Y1 = mpt_mm_loadu_si64(gnDCRRvb_Y1);
 		__m128i nDCRRvb_X1 = mpt_mm_loadu_si64(gnDCRRvb_X1);
 		__m128i in = _mm_set1_epi32(0);
@@ -673,8 +672,9 @@ void CReverb::ReverbProcessPostFiltering1x(const int32 * MPT_RESTRICT pRvb, int3
 void CReverb::ReverbDCRemoval(int32 * MPT_RESTRICT pBuffer, uint32 nSamples)
 {
 #if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
-	if(CPU::HasFeatureSet(CPU::feature::sse2) && CPU::HasModesEnabled(CPU::mode::xmm128sse))
+	if(CPU::HasFeatureSetAndModesEnabled(CPU::feature::sse2, CPU::mode::xmm128sse))
 	{
+		mpt::arch::feature_fence_guard arch_feature_guard;
 		__m128i nDCRRvb_Y1 = mpt_mm_loadu_si64(gnDCRRvb_Y1);
 		__m128i nDCRRvb_X1 = mpt_mm_loadu_si64(gnDCRRvb_X1);
 		while(nSamples--)
@@ -731,15 +731,16 @@ void CReverb::ReverbDCRemoval(int32 * MPT_RESTRICT pBuffer, uint32 nSamples)
 //
 
 // Save some typing
-static MPT_FORCEINLINE int32 Clamp16(int32 x) { return Clamp(x, std::numeric_limits<int16>::min(), std::numeric_limits<int16>::max()); }
+MPT_ATTR_ALWAYSINLINE MPT_INLINE_FORCE static int32 Clamp16(int32 x) { return Clamp(x, std::numeric_limits<int16>::min(), std::numeric_limits<int16>::max()); }
 
 void CReverb::ProcessPreDelay(SWRvbRefDelay * MPT_RESTRICT pPreDelay, const int32 * MPT_RESTRICT pIn, uint32 nSamples)
 {
 	uint32 preDifPos = pPreDelay->nPreDifPos;
 	uint32 delayPos = pPreDelay->nDelayPos - 1;
 #if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
-	if(CPU::HasFeatureSet(CPU::feature::sse2) && CPU::HasModesEnabled(CPU::mode::xmm128sse))
+	if(CPU::HasFeatureSetAndModesEnabled(CPU::feature::sse2, CPU::mode::xmm128sse))
 	{
+		mpt::arch::feature_fence_guard arch_feature_guard;
 		__m128i coeffs = _mm_cvtsi32_si128(pPreDelay->nCoeffs.lr);
 		__m128i history = _mm_cvtsi32_si128(pPreDelay->History.lr);
 		__m128i preDifCoeffs = _mm_cvtsi32_si128(pPreDelay->nPreDifCoeffs.lr);
@@ -810,8 +811,9 @@ void CReverb::ProcessPreDelay(SWRvbRefDelay * MPT_RESTRICT pPreDelay, const int3
 void CReverb::ProcessReflections(SWRvbRefDelay * MPT_RESTRICT pPreDelay, LR16 * MPT_RESTRICT pRefOut, int32 * MPT_RESTRICT pOut, uint32 nSamples)
 {
 #if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
-	if(CPU::HasFeatureSet(CPU::feature::sse2) && CPU::HasModesEnabled(CPU::mode::xmm128sse))
+	if(CPU::HasFeatureSetAndModesEnabled(CPU::feature::sse2, CPU::mode::xmm128sse))
 	{
+		mpt::arch::feature_fence_guard arch_feature_guard;
 		union
 		{
 			__m128i xmm;
@@ -905,8 +907,9 @@ void CReverb::ProcessLateReverb(SWLateReverb * MPT_RESTRICT pReverb, LR16 * MPT_
 	#define DELAY_OFFSET(x) ((delayPos - (x)) & RVBDLY_MASK)
 
 #if defined(MPT_WANT_ARCH_INTRINSICS_X86_SSE2) && defined(MPT_ARCH_INTRINSICS_X86_SSE2)
-	if(CPU::HasFeatureSet(CPU::feature::sse2) && CPU::HasModesEnabled(CPU::mode::xmm128sse))
+	if(CPU::HasFeatureSetAndModesEnabled(CPU::feature::sse2, CPU::mode::xmm128sse))
 	{
+		mpt::arch::feature_fence_guard arch_feature_guard;
 		int delayPos = pReverb->nDelayPos & RVBDLY_MASK;
 		__m128i rvbOutGains = mpt_mm_loadu_si64(pReverb->RvbOutGains);
 		__m128i difCoeffs = mpt_mm_loadu_si64(pReverb->nDifCoeffs);

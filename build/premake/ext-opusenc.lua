@@ -1,4 +1,7 @@
-  
+
+include_dependency "ext-ogg.lua"
+include_dependency "ext-opus.lua"
+
  project "opusenc"
   uuid "290bbf89-2572-4291-9d9c-ff021d4fd313"
   language "C"
@@ -25,8 +28,9 @@
   }
 	defines { "HAVE_CONFIG_H" }
 	defines { "OUTSIDE_SPEEX", "RANDOM_PREFIX=libopusenc" }
-  filter { "action:vs*" }
-    buildoptions {
+	filter {}
+	if MPT_COMPILER_MSVC or MPT_COMPILER_CLANGCL then
+		buildoptions {
 			"/wd4018",
 			"/wd4100",
 			"/wd4101",
@@ -36,28 +40,26 @@
 			"/wd4456",
 			"/wd4706",
 		}
-  filter {}
-	filter { "action:vs*" }
 		buildoptions {
 			"/wd6262",
 		} -- analyze
+	end
 	filter {}
-  filter { "kind:StaticLib" }
-   defines { }
-  filter { "kind:SharedLib" }
-   defines { "DLL_EXPORT" }
-  filter {}
+	if MPT_OS_WINDOWS then
+		filter {}
+		filter { "kind:StaticLib" }
+			defines { }
+		filter { "kind:SharedLib" }
+			defines { "DLL_EXPORT" }
+		filter {}
+	end
+	filter {}
 
 function mpt_use_opusenc ()
 	filter {}
-	filter { "action:vs*" }
-		includedirs {
-			"../../include/opusenc/include",
-		}
-	filter { "not action:vs*" }
-		externalincludedirs {
-			"../../include/opusenc/include",
-		}
+	dependencyincludedirs {
+		"../../include/opusenc/include",
+	}
 	filter {}
 	links {
 		"opusenc",

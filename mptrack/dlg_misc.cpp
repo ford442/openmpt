@@ -157,8 +157,8 @@ void CModTypeDlg::UpdateChannelCBox()
 	CHANNELINDEX currChanSel = static_cast<CHANNELINDEX>(m_ChannelsBox.GetItemData(m_ChannelsBox.GetCurSel()));
 	const CHANNELINDEX minChans = CSoundFile::GetModSpecifications(type).channelsMin;
 	const CHANNELINDEX maxChans = CSoundFile::GetModSpecifications(type).channelsMax;
-	
-	if(m_ChannelsBox.GetCount() < 1 
+
+	if(m_ChannelsBox.GetCount() < 1
 		|| m_ChannelsBox.GetItemData(0) != minChans
 		|| m_ChannelsBox.GetItemData(m_ChannelsBox.GetCount() - 1) != maxChans)
 	{
@@ -261,7 +261,7 @@ void CModTypeDlg::UpdateDialog()
 	// Mixmode Box
 	GetDlgItem(IDC_TEXT_MIXMODE)->EnableWindow(XMorITorMPT);
 	m_PlugMixBox.EnableWindow(XMorITorMPT);
-	
+
 	// Tempo mode box
 	m_TempoModeBox.EnableWindow(XMorITorMPT);
 	GetDlgItem(IDC_ROWSPERBEAT)->EnableWindow(XMorITorMPT);
@@ -432,7 +432,7 @@ void CModTypeDlg::OnOK()
 	{
 		m_nChannels = static_cast<CHANNELINDEX>(m_ChannelsBox.GetItemData(sel));
 	}
-	
+
 	sndFile.m_nDefaultRowsPerBeat    = std::min(static_cast<ROWINDEX>(GetDlgItemInt(IDC_ROWSPERBEAT)), MAX_ROWS_PER_BEAT);
 	sndFile.m_nDefaultRowsPerMeasure = std::min(static_cast<ROWINDEX>(GetDlgItemInt(IDC_ROWSPERMEASURE)), MAX_ROWS_PER_BEAT);
 	sndFile.m_PlayState.UpdateTimeSignature(sndFile);
@@ -755,6 +755,8 @@ void CLegacyPlaybackSettingsDlg::OnFilterStringChanged()
 		case kITCarryAfterNoteOff: desc = _T("Note-Off status does not influence Envelope Carry behaviour"); break;
 		case kFT2OffsetMemoryRequiresNote: desc = _T("Offset effect memory is only updated when the command is next to a note"); break;
 		case kITNoteCutWithPorta: desc = _T("Note Cut (SCx) resets note pitch and interacts with tone portamento + row delay"); break;
+		case kITVolColNoSlidePropagation: desc = _T("Do not propagate volume column volume slide memory to regular effect column"); break;
+		case kITStoppedFilterEnvAtStart: desc = _T("Stopped filter envelope is still applied even if its first tick has not been processed yet"); break;
 
 		default: MPT_ASSERT_NOTREACHED();
 		}
@@ -822,7 +824,7 @@ BOOL CRemoveChannelsDlg::OnInitDialog()
 		s = MPT_CFORMAT("Select {} channel{} to remove:")(m_nRemove, (m_nRemove != 1) ? CString(_T("s")) : CString(_T("")));
 	else
 		s = MPT_CFORMAT("Select channels to remove (the minimum number of remaining channels is {})")(sndFile.GetModSpecifications().channelsMin);
-	
+
 	SetDlgItemText(IDC_QUESTION1, s);
 	if(GetDlgItem(IDCANCEL)) GetDlgItem(IDCANCEL)->ShowWindow(m_ShowCancel);
 
@@ -913,6 +915,8 @@ static constexpr uint8 whitetab[7] = {0,2,4,5,7,9,11};
 static constexpr uint8 blacktab[7] = {0xff,1,3,0xff,6,8,10};
 
 BEGIN_MESSAGE_MAP(CKeyboardControl, CWnd)
+	ON_MESSAGE(WM_DPICHANGED, &CKeyboardControl::OnDPIChanged)
+
 	ON_WM_DESTROY()
 	ON_WM_PAINT()
 	ON_WM_MOUSEMOVE()
@@ -926,12 +930,19 @@ void CKeyboardControl::Init(CWnd *parent, int octaves, bool cursorNotify)
 	m_parent = parent;
 	m_nOctaves = std::max(1, octaves);
 	m_cursorNotify = cursorNotify;
-	MemsetZero(KeyFlags);
-	MemsetZero(m_sampleNum);
-	
+	KeyFlags.fill(KeyFlag::Normal);
+	m_sampleNum.fill(0);
+	OnDPIChanged(0, 0);
+}
+
+
+LRESULT CKeyboardControl::OnDPIChanged(WPARAM, LPARAM)
+{
 	// Point size to pixels
 	int fontSize = -MulDiv(60, HighDPISupport::GetDpiForWindow(m_hWnd), 720);
+	m_font.DeleteObject();
 	m_font.CreateFont(fontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_RASTER_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, FIXED_PITCH | FF_DONTCARE, _T("MS Shell Dlg"));
+	return 0;
 }
 
 
@@ -952,21 +963,21 @@ void CKeyboardControl::DrawKey(CPaintDC &dc, const CRect rect, int key, bool bla
 	dc.SetDCBrushColor(color);
 	dc.Rectangle(&rect);
 
-	if(static_cast<size_t>(key) < std::size(KeyFlags) && KeyFlags[key] != KEYFLAG_NORMAL)
+	if(static_cast<size_t>(key) < std::size(KeyFlags) && KeyFlags[key] != KeyFlag::Normal)
 	{
 		const int margin = black ? 0 : 2;
 		CRect ellipseRect(rect.left + margin, rect.bottom - rect.Width() + margin, rect.right - margin, rect.bottom - margin);
-		dc.SetDCBrushColor((KeyFlags[key] & KEYFLAG_BRIGHTDOT) ? RGB(255, 192, 192) : RGB(255, 0, 0));
+		dc.SetDCBrushColor((KeyFlags[key] & KeyFlag::BrightDot) ? RGB(255, 192, 192) : RGB(255, 0, 0));
 		dc.Ellipse(ellipseRect);
 		if(m_sampleNum[key] != 0)
 		{
-			dc.SetTextColor((KeyFlags[key] & KEYFLAG_BRIGHTDOT) ? RGB(0, 0, 0) : RGB(255, 255, 255));
+			dc.SetTextColor((KeyFlags[key] & KeyFlag::BrightDot) ? RGB(0, 0, 0) : RGB(255, 255, 255));
 			TCHAR s[16];
 			wsprintf(s, _T("%u"), m_sampleNum[key]);
 			dc.DrawText(s, -1, ellipseRect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 		}
 
-		if(KeyFlags[key] == (KEYFLAG_REDDOT | KEYFLAG_BRIGHTDOT))
+		if(KeyFlags[key] == (KeyFlag::RedDot | KeyFlag::BrightDot))
 		{
 			// Both flags set: Draw second dot
 			ellipseRect.MoveToY(ellipseRect.top - ellipseRect.Height() - 2);
@@ -999,7 +1010,7 @@ void CKeyboardControl::OnPaint()
 		int val = (note / 7) * 12 + whitetab[note % 7];
 
 		DrawKey(dc, rect, val, false);
-		
+
 		rect.left = rect.right - 1;
 	}
 
@@ -1154,52 +1165,77 @@ void CKeyboardControl::OnLButtonUp(UINT, CPoint)
 // Sample Map
 //
 
-BEGIN_MESSAGE_MAP(CSampleMapDlg, DialogBase)
-	ON_MESSAGE(WM_MOD_KBDNOTIFY,	&CSampleMapDlg::OnKeyboardNotify)
+BEGIN_MESSAGE_MAP(CSampleMapDlg, ResizableDialog)
+	ON_MESSAGE(WM_MOD_KBDNOTIFY, &CSampleMapDlg::OnKeyboardNotify)
 	ON_WM_HSCROLL()
-	ON_COMMAND(IDC_CHECK1,			&CSampleMapDlg::OnUpdateSamples)
-	ON_CBN_SELCHANGE(IDC_COMBO1,	&CSampleMapDlg::OnUpdateKeyboard)
+	ON_COMMAND(IDC_CHECK1,       &CSampleMapDlg::OnUpdateSamples)
+	ON_CBN_SELCHANGE(IDC_COMBO1, &CSampleMapDlg::OnSampleChanged)
+	ON_CBN_SELCHANGE(IDC_COMBO2, &CSampleMapDlg::UpdateRegionStartEndSelection)
+	ON_CBN_SELCHANGE(IDC_COMBO3, &CSampleMapDlg::OnRegionBoundaryChanged)
+	ON_CBN_SELCHANGE(IDC_COMBO4, &CSampleMapDlg::OnRegionBoundaryChanged)
 END_MESSAGE_MAP()
 
 void CSampleMapDlg::DoDataExchange(CDataExchange* pDX)
 {
-	DialogBase::DoDataExchange(pDX);
+	ResizableDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CSampleMapDlg)
-	DDX_Control(pDX, IDC_KEYBOARD1,		m_Keyboard);
-	DDX_Control(pDX, IDC_COMBO1,		m_CbnSample);
-	DDX_Control(pDX, IDC_SLIDER1,		m_SbOctave);
+	DDX_Control(pDX, IDC_KEYBOARD1, m_Keyboard);
+	DDX_Control(pDX, IDC_COMBO1,    m_CbnSample);
+	DDX_Control(pDX, IDC_COMBO2,    m_CbnRegion);
+	DDX_Control(pDX, IDC_COMBO3,    m_CbnRegionStart);
+	DDX_Control(pDX, IDC_COMBO4,    m_CbnRegionEnd);
+	DDX_Control(pDX, IDC_SLIDER1,   m_SbOctave);
 	//}}AFX_DATA_MAP
 }
 
 
-CSampleMapDlg::CSampleMapDlg(CSoundFile &sf, INSTRUMENTINDEX nInstr, CWnd *parent)
-	: DialogBase{IDD_EDITSAMPLEMAP, parent}
-	, sndFile{sf}
-	, m_nInstrument{nInstr}
+CSampleMapDlg::CSampleMapDlg(CSoundFile &sf, INSTRUMENTINDEX instr, CWnd *parent)
+	: ResizableDialog{IDD_EDITSAMPLEMAP, parent}
+	, m_sndFile{sf}
+	, m_nInstrument{instr}
+	, m_minNote{static_cast<ModCommand::NOTE>((sf.GetType() == MOD_TYPE_XM) ? NOTE_MIN + 12 : NOTE_MIN)}
+	, m_maxNote{static_cast<ModCommand::NOTE>((sf.GetType() == MOD_TYPE_XM) ? NOTE_MIN + 107 : (NOTE_MIN + 119))}
 {
+	ModInstrument *pIns = m_sndFile.Instruments[m_nInstrument];
+	if(pIns)
+		KeyboardMap = pIns->Keyboard;
 }
 
 
 BOOL CSampleMapDlg::OnInitDialog()
 {
-	DialogBase::OnInitDialog();
-	ModInstrument *pIns = sndFile.Instruments[m_nInstrument];
-	if(pIns)
-		KeyboardMap = pIns->Keyboard;
-	m_Keyboard.Init(this, 3, TRUE);
-	m_SbOctave.SetRange(0, 7);
+	ResizableDialog::OnInitDialog();
+	m_Keyboard.Init(this, 3, true);
+	m_SbOctave.SetRange((m_minNote - NOTE_MIN) / 12, (m_maxNote - NOTE_MIN) / 12 - 2);
 	m_SbOctave.SetPos(4);
+	AppendNotesToControlEx(m_CbnRegionStart, m_sndFile, m_nInstrument, m_minNote, m_maxNote);
+	AppendNotesToControlEx(m_CbnRegionEnd, m_sndFile, m_nInstrument, m_minNote, m_maxNote);
 	OnUpdateSamples();
 	OnUpdateOctave();
+	UpdateRegionControls();
 	return TRUE;
+}
+
+
+void CSampleMapDlg::OnDPIChanged()
+{
+	ResizableDialog::OnDPIChanged();
+	m_Keyboard.SendMessage(WM_DPICHANGED);
 }
 
 
 void CSampleMapDlg::OnHScroll(UINT nCode, UINT nPos, CScrollBar *pBar)
 {
-	DialogBase::OnHScroll(nCode, nPos, pBar);
+	ResizableDialog::OnHScroll(nCode, nPos, pBar);
 	OnUpdateKeyboard();
 	OnUpdateOctave();
+}
+
+
+void CSampleMapDlg::OnSampleChanged()
+{
+	UpdateRegionControls();
+	OnUpdateKeyboard();
 }
 
 
@@ -1219,13 +1255,13 @@ void CSampleMapDlg::OnUpdateSamples()
 	UINT insertPos = m_CbnSample.AddString(_T("0: No sample"));
 	m_CbnSample.SetItemData(insertPos, 0);
 
-	for(SAMPLEINDEX i = 1; i <= sndFile.GetNumSamples(); i++)
+	for(SAMPLEINDEX i = 1; i <= m_sndFile.GetNumSamples(); i++)
 	{
 		bool isUsed = showAll || mpt::contains(KeyboardMap, i);
 		if(isUsed)
 		{
 			CString sampleName;
-			sampleName.Format(_T("%d: %s"), i, mpt::ToCString(sndFile.GetCharsetInternal(), sndFile.GetSampleName(i)).GetString());
+			sampleName.Format(_T("%d: %s"), i, mpt::ToCString(m_sndFile.GetCharsetInternal(), m_sndFile.GetSampleName(i)).GetString());
 			insertPos = m_CbnSample.AddString(sampleName);
 
 			m_CbnSample.SetItemData(insertPos, i);
@@ -1248,7 +1284,6 @@ void CSampleMapDlg::OnUpdateOctave()
 }
 
 
-
 void CSampleMapDlg::OnUpdateKeyboard()
 {
 	SAMPLEINDEX nSample = static_cast<SAMPLEINDEX>(m_CbnSample.GetItemData(m_CbnSample.GetCurSel()));
@@ -1256,14 +1291,14 @@ void CSampleMapDlg::OnUpdateKeyboard()
 	bool redraw = false;
 	for(UINT iNote = 0; iNote < 3 * 12; iNote++)
 	{
-		uint8 oldFlags = m_Keyboard.GetFlags(iNote);
-		SAMPLEINDEX oldSmp = m_Keyboard.GetSample(iNote);
+		const auto oldFlags = m_Keyboard.GetFlags(iNote);
+		const SAMPLEINDEX oldSmp = m_Keyboard.GetSample(iNote);
 		UINT ndx = baseOctave * 12 + iNote;
-		uint8 newFlags = CKeyboardControl::KEYFLAG_NORMAL;
+		FlagSet<CKeyboardControl::KeyFlag> newFlags = CKeyboardControl::KeyFlag::Normal;
 		if(KeyboardMap[ndx] == nSample)
-			newFlags = CKeyboardControl::KEYFLAG_REDDOT;
+			newFlags = CKeyboardControl::KeyFlag::RedDot;
 		else if(KeyboardMap[ndx] != 0)
-			newFlags = CKeyboardControl::KEYFLAG_BRIGHTDOT;
+			newFlags = CKeyboardControl::KeyFlag::BrightDot;
 		if(newFlags != oldFlags || oldSmp != KeyboardMap[ndx])
 		{
 			m_Keyboard.SetFlags(iNote, newFlags);
@@ -1278,35 +1313,29 @@ void CSampleMapDlg::OnUpdateKeyboard()
 
 LRESULT CSampleMapDlg::OnKeyboardNotify(WPARAM wParam, LPARAM lParam)
 {
-	TCHAR s[32] = _T("--");
-
+	CString s;
 	if((lParam >= 0) && (lParam < 3 * 12))
 	{
 		const SAMPLEINDEX sample = static_cast<SAMPLEINDEX>(m_CbnSample.GetItemData(m_CbnSample.GetCurSel()));
 		const uint32 baseOctave = m_SbOctave.GetPos() & 7;
 
-		const CString temp = mpt::ToCString(sndFile.GetNoteName(static_cast<ModCommand::NOTE>(lParam + 1 + 12 * baseOctave), m_nInstrument));
-		if(temp.GetLength() >= mpt::saturate_cast<int>(std::size(s)))
-			wsprintf(s, _T("%s"), _T("..."));
-		else
-			wsprintf(s, _T("%s"), temp.GetString());
-
-		ModInstrument *pIns = sndFile.Instruments[m_nInstrument];
-		if((wParam == KBDNOTIFY_LBUTTONDOWN) && (sample < MAX_SAMPLES) && (pIns))
+		s = mpt::ToCString(m_sndFile.GetNoteName(static_cast<ModCommand::NOTE>(lParam + 1 + 12 * baseOctave), m_nInstrument));
+		ModInstrument *pIns = m_sndFile.Instruments[m_nInstrument];
+		if((wParam == KBDNOTIFY_LBUTTONDOWN) && (sample < MAX_SAMPLES) && pIns)
 		{
 			const uint32 note = static_cast<uint32>(baseOctave * 12 + lParam);
 
-			if(mouseAction == MouseAction::Unknown)
+			if(m_mouseAction == MouseAction::Unknown)
 			{
 				// Mouse down -> decide if we are going to set or remove notes
-				mouseAction = MouseAction::Set;
+				m_mouseAction = MouseAction::Set;
 				if(KeyboardMap[note] == sample)
 				{
-					mouseAction = (KeyboardMap[note] == pIns->Keyboard[note]) ? MouseAction::Zero : MouseAction::Unset;
+					m_mouseAction = (KeyboardMap[note] == pIns->Keyboard[note]) ? MouseAction::Zero : MouseAction::Unset;
 				}
 			}
 
-			switch(mouseAction)
+			switch(m_mouseAction)
 			{
 			case MouseAction::Unknown:
 			case MouseAction::Set:
@@ -1321,24 +1350,158 @@ LRESULT CSampleMapDlg::OnKeyboardNotify(WPARAM wParam, LPARAM lParam)
 				break;
 			}
 			OnUpdateKeyboard();
+			UpdateRegionControls(static_cast<ModCommand::NOTE>(baseOctave * 12 + lParam + 1));
 		}
+	} else
+	{
+		s = _T("--");
 	}
-	
+
 	if(wParam == KBDNOTIFY_LBUTTONUP)
-		mouseAction = MouseAction::Unknown;
-	
+		m_mouseAction = MouseAction::Unknown;
+
 	SetDlgItemText(IDC_TEXT2, s);
 	return 0;
 }
 
 
+void CSampleMapDlg::RecalcSampleRegions()
+{
+	m_regions.clear();
+	const SAMPLEINDEX selectedSample = static_cast<SAMPLEINDEX>(m_CbnSample.GetItemData(m_CbnSample.GetCurSel()));
+	ModCommand::NOTE regionStart = NOTE_NONE;
+	for(ModCommand::NOTE note = m_minNote; note <= m_maxNote; note++)
+	{
+		const SAMPLEINDEX currentSample = KeyboardMap[note - NOTE_MIN];
+		if(currentSample == selectedSample)
+		{
+			if(regionStart == NOTE_NONE)
+				regionStart = note;
+		} else if(regionStart != NOTE_NONE)
+		{
+			m_regions.push_back({regionStart, static_cast<ModCommand::NOTE>(note - 1)});
+			regionStart = NOTE_NONE;
+		}
+	}
+	if(regionStart != NOTE_NONE)
+		m_regions.push_back({regionStart, m_maxNote});
+}
+
+
+void CSampleMapDlg::UpdateRegionControls(ModCommand::NOTE modifiedNote)
+{
+	// Find the currently selected region to keep the selection active
+	SampleRegion lastSelectedRegion{};
+	if(modifiedNote == NOTE_NONE && m_CbnRegion.GetCurSel() >= 0)
+	{
+		const int lastRegionIndex = m_CbnRegion.GetCurSel();
+		if(lastRegionIndex >= 0 && lastRegionIndex < static_cast<int>(m_regions.size()))
+			lastSelectedRegion = m_regions[lastRegionIndex];
+	}
+
+	RecalcSampleRegions();
+
+	m_CbnRegion.SetRedraw(FALSE);
+	m_CbnRegion.ResetContent();
+	int regionToSelect = 0;
+	for(size_t i = 0; i < m_regions.size(); i++)
+	{
+		const auto &region = m_regions[i];
+		const auto startNoteName = m_sndFile.GetNoteName(region.startNote, m_nInstrument);
+		const auto endNoteName = m_sndFile.GetNoteName(region.endNote, m_nInstrument);
+		const int insertPos = m_CbnRegion.AddString(MPT_CFORMAT("Region {} to {} ({} of {})")(startNoteName, endNoteName, i + 1, m_regions.size()));
+		if(mpt::is_in_range(modifiedNote, region.startNote, region.endNote))
+		{
+			// If a specific note was modified, select the region containing that note
+			regionToSelect = insertPos;
+		} else if(modifiedNote == NOTE_NONE && lastSelectedRegion.startNote != NOTE_NONE)
+		{
+			// If no note was modified, fall back to a region intersecting with the last selected region
+			if(region.startNote <= lastSelectedRegion.endNote && region.endNote >= lastSelectedRegion.startNote)
+				regionToSelect = insertPos;
+		}
+	}
+
+	if(m_regions.empty())
+		m_CbnRegion.AddString(_T("No active regions"));
+
+	const BOOL enable = m_regions.empty() ? FALSE : TRUE;
+	m_CbnRegion.EnableWindow(enable);
+	m_CbnRegionStart.EnableWindow(enable);
+	m_CbnRegionEnd.EnableWindow(enable);
+	m_CbnRegion.SetCurSel(regionToSelect);
+	m_CbnRegion.SetRedraw(TRUE);
+	m_CbnRegion.Invalidate(FALSE);
+
+	UpdateRegionStartEndSelection();
+}
+
+
+void CSampleMapDlg::UpdateRegionStartEndSelection()
+{
+	const int regionIndex = m_CbnRegion.GetCurSel();
+	if(regionIndex < 0 || regionIndex >= static_cast<int>(m_regions.size()))
+		return;
+	const auto &region = m_regions[regionIndex];
+	m_CbnRegionStart.SetCurSel(region.startNote - m_minNote);
+	m_CbnRegionEnd.SetCurSel(region.endNote - m_minNote);
+}
+
+
+void CSampleMapDlg::OnRegionBoundaryChanged()
+{
+	const SAMPLEINDEX selectedSample = static_cast<SAMPLEINDEX>(m_CbnSample.GetItemData(m_CbnSample.GetCurSel()));
+	const int regionIndex = m_CbnRegion.GetCurSel();
+	if(regionIndex < 0 || regionIndex >= static_cast<int>(m_regions.size()))
+		return;
+
+	const auto &region = m_regions[regionIndex];
+	const int startSelection = m_CbnRegionStart.GetCurSel();
+	const int endSelection = m_CbnRegionEnd.GetCurSel();
+	if(startSelection < 0 || endSelection < 0)
+		return;
+
+	ModCommand::NOTE newStartNote = static_cast<ModCommand::NOTE>(m_CbnRegionStart.GetItemData(startSelection));
+	ModCommand::NOTE newEndNote = static_cast<ModCommand::NOTE>(m_CbnRegionEnd.GetItemData(endSelection));
+	if(newStartNote > newEndNote)
+		std::swap(newStartNote, newEndNote);
+
+	// Clear notes that are in the old region but not in the new region (extend neighbouring regions)
+	const ModInstrument *pIns = m_sndFile.Instruments[m_nInstrument];
+	for(ModCommand::NOTE note = region.startNote; note <= region.endNote; note++)
+	{
+		if(KeyboardMap[note - NOTE_MIN] == selectedSample)
+		{
+			if(note < newStartNote && region.startNote > m_minNote)
+				KeyboardMap[note - NOTE_MIN] = KeyboardMap[region.startNote - 1 - NOTE_MIN];
+			else if(note > newEndNote && region.endNote < m_maxNote)
+				KeyboardMap[note - NOTE_MIN] = KeyboardMap[region.endNote + 1 - NOTE_MIN];
+			else if(note < newStartNote || note > newEndNote)
+				KeyboardMap[note - NOTE_MIN] = pIns ? pIns->Keyboard[note - NOTE_MIN] : 0;
+		}
+	}
+
+	// Set notes that are in the new region but not in the old region
+	for(ModCommand::NOTE note = newStartNote; note <= newEndNote; note++)
+	{
+		if(note < region.startNote || note > region.endNote)
+			KeyboardMap[note - NOTE_MIN] = selectedSample;
+	}
+
+	OnUpdateKeyboard();
+	UpdateRegionControls(newStartNote);
+	UpdateRegionStartEndSelection();  // In case regions were merged or split due to this change
+	m_Keyboard.Invalidate(FALSE);
+}
+
+
 void CSampleMapDlg::OnOK()
 {
-	ModInstrument *pIns = sndFile.Instruments[m_nInstrument];
+	ModInstrument *pIns = m_sndFile.Instruments[m_nInstrument];
 	if(pIns)
 	{
 		bool modified = false;
-		for(UINT i = 0; i < NOTE_MAX; i++)
+		for(ModCommand::NOTE i = m_minNote - NOTE_MIN; i <= m_maxNote - NOTE_MIN; i++)
 		{
 			if(KeyboardMap[i] != pIns->Keyboard[i])
 			{
@@ -1348,11 +1511,11 @@ void CSampleMapDlg::OnOK()
 		}
 		if(modified)
 		{
-			DialogBase::OnOK();
+			ResizableDialog::OnOK();
 			return;
 		}
 	}
-	DialogBase::OnCancel();
+	ResizableDialog::OnCancel();
 }
 
 
@@ -1387,11 +1550,11 @@ BOOL CEditHistoryDlg::OnInitDialog()
 		CString sDate = CString(_T("<unknown date>"));
 		if(entry.HasValidDate())
 		{
-			const mpt::Date::Unix unixdate = ((m_modDoc.GetSoundFile().GetTimezoneInternal() == mpt::Date::LogicalTimezone::Local) || (m_modDoc.GetSoundFile().GetTimezoneInternal() == mpt::Date::LogicalTimezone::Unspecified))
-				? mpt::Date::UnixFromLocal(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::Local>(entry.loadDate))
-				: mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(entry.loadDate));
+			const mpt::chrono::default_system_clock::time_point unixdate = ((m_modDoc.GetSoundFile().GetTimezoneInternal() == mpt::Date::LogicalTimezone::Local) || (m_modDoc.GetSoundFile().GetTimezoneInternal() == mpt::Date::LogicalTimezone::Unspecified))
+				? mpt::Date::default_from_local(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::Local>(entry.loadDate))
+				: mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(entry.loadDate));
 				;
-			sDate = CTime(mpt::Date::UnixAsSeconds(unixdate)).Format(_T("%d %b %Y, %H:%M:%S"));
+			sDate = CTime(mpt::chrono::default_system_clock::to_unix_seconds(unixdate)).Format(_T("%d %b %Y, %H:%M:%S"));
 		}
 		// Time + stuff
 		uint32 duration = mpt::saturate_round<uint32>(entry.openTime / HISTORY_TIMER_PRECISION);
@@ -1588,8 +1751,10 @@ void MsgBoxHidable(enMsgBoxHidableMessage enMsg)
 	} else
 #endif
 	{
-		Reporting::Information(msg.message, msg.mainTitle ? CString{msg.mainTitle} : CString{});
-		TrackerSettings::Instance().gnMsgBoxVisiblityFlags &= ~msg.mask;
+		if(Reporting::Confirm(msg.message + CString(_T("\n\nShow this message again?")), msg.mainTitle ? CString{msg.mainTitle} : CString{}, msg.defaultDontShowAgainStatus) == cnfNo)
+			TrackerSettings::Instance().gnMsgBoxVisiblityFlags &= ~msg.mask;
+		else
+			TrackerSettings::Instance().gnMsgBoxVisiblityFlags |= msg.mask;
 	}
 }
 

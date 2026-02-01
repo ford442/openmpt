@@ -63,7 +63,7 @@
 
 #ifdef MPT_ENABLE_PLAYBACK_TEST_MENU
 #include "../unarchiver/ungzip.h"
-#include "../common/GzipWriter.h"
+#include "../misc/GzipWriter.h"
 #endif
 
 #include <HtmlHelp.h>
@@ -136,12 +136,18 @@ BEGIN_MESSAGE_MAP(CMainFrame, CMDIFrameWnd)
 #endif // MPT_ENABLE_UPDATE
 	ON_COMMAND(ID_HELP_SHOWSETTINGSFOLDER,   &CMainFrame::OnShowSettingsFolder)
 	ON_COMMAND(ID_HELPSHOW,                  &CMainFrame::OnHelp)
+
 	ON_COMMAND(ID_MAINBAR_SHOW_OCTAVE,       &CMainFrame::OnToggleMainBarShowOctave)
 	ON_COMMAND(ID_MAINBAR_SHOW_TEMPO,        &CMainFrame::OnToggleMainBarShowTempo)
 	ON_COMMAND(ID_MAINBAR_SHOW_SPEED,        &CMainFrame::OnToggleMainBarShowSpeed)
 	ON_COMMAND(ID_MAINBAR_SHOW_ROWSPERBEAT,  &CMainFrame::OnToggleMainBarShowRowsPerBeat)
 	ON_COMMAND(ID_MAINBAR_SHOW_GLOBALVOLUME, &CMainFrame::OnToggleMainBarShowGlobalVolume)
 	ON_COMMAND(ID_MAINBAR_SHOW_VUMETER,      &CMainFrame::OnToggleMainBarShowVUMeter)
+	ON_COMMAND(ID_MAINBAR_SHOW_FILE_ICONS,   &CMainFrame::OnToggleMainBarShowFileIcons)
+	ON_COMMAND(ID_MAINBAR_SHOW_EDIT_ICONS,   &CMainFrame::OnToggleMainBarShowEditIcons)
+	ON_COMMAND(ID_MAINBAR_SHOW_PLAY_ICONS,   &CMainFrame::OnToggleMainBarShowPlayIcons)
+	ON_COMMAND(ID_MAINBAR_SHOW_MISC_ICONS,   &CMainFrame::OnToggleMainBarShowMiscIcons)
+
 	ON_COMMAND(ID_TREEVIEW_ON_LEFT,          &CMainFrame::OnToggleTreeViewOnLeft)
 
 #ifdef MPT_ENABLE_PLAYBACK_TEST_MENU
@@ -214,9 +220,7 @@ void CMainFrame::Initialize()
 	//Adding version number to the frame title
 	CString title = GetTitle();
 	title += _T(" ") + mpt::cfmt::val(Version::Current());
-	#if defined(MPT_BUILD_RETRO)
-		title += _T(" RETRO");
-	#endif // MPT_BUILD_RETRO
+	title += mpt::ToCString(mpt::Charset::ASCII, OPENMPT_BUILD_VARIANT_MONIKER);
 	if(Build::IsDebugBuild())
 	{
 		title += _T(" DEBUG");
@@ -226,9 +230,6 @@ void CMainFrame::Initialize()
 	#endif
 	#ifndef MPT_WITH_DMO
 		title += _T(" NO_DMO");
-	#endif
-	#ifdef NO_PLUGINS
-		title += _T(" NO_PLUGINS");
 	#endif
 	SetTitle(title);
 	OnUpdateFrameTitle(false);
@@ -1465,11 +1466,8 @@ void CMainFrame::UnsetPlaybackSoundFile()
 	MPT_ASSERT_ALWAYS(!gpSoundDevice || !gpSoundDevice->IsPlaying());
 	if(m_pSndFile)
 	{
+		CriticalSection cs;
 		m_pSndFile->SuspendPlugins();
-		if(m_pSndFile->GetpModDoc())
-		{
-			m_wndTree.UpdatePlayPos(m_pSndFile->GetpModDoc(), nullptr);
-		}
 		m_pSndFile->m_PlayState.m_flags.reset(SONG_PAUSED);
 		if(m_pSndFile == &m_WaveFile)
 		{
@@ -1486,6 +1484,11 @@ void CMainFrame::UnsetPlaybackSoundFile()
 					chn.position.Set(0);
 				}
 			}
+		}
+		cs.Leave();
+		if(m_pSndFile->GetpModDoc())
+		{
+			m_wndTree.UpdatePlayPos(m_pSndFile->GetpModDoc(), nullptr);
 		}
 	}
 	m_pSndFile = nullptr;
@@ -2144,7 +2147,6 @@ void CMainFrame::OnViewOptions()
 
 void CMainFrame::OnPluginManager()
 {
-#ifndef NO_PLUGINS
 	PLUGINDEX nPlugslot = PLUGINDEX_INVALID;
 	CModDoc* pModDoc = GetActiveDoc();
 
@@ -2172,7 +2174,6 @@ void CMainFrame::OnPluginManager()
 		CChildFrame *pActiveChild = (CChildFrame *)MDIGetActive();
 		pActiveChild->ForceRefresh();
 	}
-#endif // NO_PLUGINS
 }
 
 
@@ -2267,6 +2268,10 @@ void CMainFrame::OnTimerGUI()
 	if(m_SoundCardOptionsDialog)
 	{
 		m_SoundCardOptionsDialog->UpdateStatistics();
+	}
+
+	{
+		mpt::profiler::estimate_all_frequencies();
 	}
 
 #ifdef USE_PROFILER
@@ -2629,11 +2634,16 @@ void CMainFrame::AddToolBarMenuEntries(CMenu &menu) const
 
 	CMenu subMenu;
 	VERIFY(subMenu.CreatePopupMenu());
+
+	subMenu.AppendMenu(MF_STRING | (visibleItems[MainToolBarItem::IconsFile] ? MF_CHECKED : 0), ID_MAINBAR_SHOW_FILE_ICONS, _T("&File Icons"));
+	subMenu.AppendMenu(MF_STRING | (visibleItems[MainToolBarItem::IconsEdit] ? MF_CHECKED : 0), ID_MAINBAR_SHOW_EDIT_ICONS, _T("&Edit Icons"));
+	subMenu.AppendMenu(MF_STRING | (visibleItems[MainToolBarItem::IconsPlayback] ? MF_CHECKED : 0), ID_MAINBAR_SHOW_PLAY_ICONS, _T("&Play / Record Icons"));
 	subMenu.AppendMenu(MF_STRING | (visibleItems[MainToolBarItem::Octave] ? MF_CHECKED : 0), ID_MAINBAR_SHOW_OCTAVE, _T("Base &Octave"));
 	subMenu.AppendMenu(MF_STRING | (visibleItems[MainToolBarItem::Tempo] ? MF_CHECKED : 0), ID_MAINBAR_SHOW_TEMPO, _T("&Tempo"));
 	subMenu.AppendMenu(MF_STRING | (visibleItems[MainToolBarItem::Speed] ? MF_CHECKED : 0), ID_MAINBAR_SHOW_SPEED, _T("Ticks/&Row"));
 	subMenu.AppendMenu(MF_STRING | (visibleItems[MainToolBarItem::RowsPerBeat] ? MF_CHECKED : 0), ID_MAINBAR_SHOW_ROWSPERBEAT, _T("Rows Per &Beat"));
 	subMenu.AppendMenu(MF_STRING | (visibleItems[MainToolBarItem::GlobalVolume] ? MF_CHECKED : 0), ID_MAINBAR_SHOW_GLOBALVOLUME, _T("&Global Volume"));
+	subMenu.AppendMenu(MF_STRING | (visibleItems[MainToolBarItem::IconsMisc] ? MF_CHECKED : 0), ID_MAINBAR_SHOW_MISC_ICONS, _T("&Misc Icons"));
 	subMenu.AppendMenu(MF_STRING | (visibleItems[MainToolBarItem::VUMeter] ? MF_CHECKED : 0), ID_MAINBAR_SHOW_VUMETER, _T("&VU Meters"));
 	menu.AppendMenu(MF_POPUP, reinterpret_cast<UINT_PTR>(subMenu.Detach()), _T("Main Toolbar &Items"));
 }
@@ -2645,6 +2655,10 @@ void CMainFrame::OnToggleMainBarShowSpeed() { OnToggleMainBarItem(MainToolBarIte
 void CMainFrame::OnToggleMainBarShowRowsPerBeat() { OnToggleMainBarItem(MainToolBarItem::RowsPerBeat, ID_MAINBAR_SHOW_ROWSPERBEAT); }
 void CMainFrame::OnToggleMainBarShowGlobalVolume() { OnToggleMainBarItem(MainToolBarItem::GlobalVolume, ID_MAINBAR_SHOW_GLOBALVOLUME); }
 void CMainFrame::OnToggleMainBarShowVUMeter() { OnToggleMainBarItem(MainToolBarItem::VUMeter, ID_MAINBAR_SHOW_VUMETER); }
+void CMainFrame::OnToggleMainBarShowFileIcons() { OnToggleMainBarItem(MainToolBarItem::IconsFile, ID_MAINBAR_SHOW_FILE_ICONS); }
+void CMainFrame::OnToggleMainBarShowEditIcons() { OnToggleMainBarItem(MainToolBarItem::IconsEdit, ID_MAINBAR_SHOW_EDIT_ICONS); }
+void CMainFrame::OnToggleMainBarShowPlayIcons() { OnToggleMainBarItem(MainToolBarItem::IconsPlayback, ID_MAINBAR_SHOW_PLAY_ICONS); }
+void CMainFrame::OnToggleMainBarShowMiscIcons() { OnToggleMainBarItem(MainToolBarItem::IconsMisc, ID_MAINBAR_SHOW_MISC_ICONS); }
 
 void CMainFrame::OnToggleMainBarItem(MainToolBarItem item, UINT menuID)
 {
@@ -2916,7 +2930,7 @@ static std::unique_ptr<CUpdateCheckProgressDialog> g_UpdateCheckProgressDialog =
 bool CMainFrame::ShowUpdateIndicator(const UpdateCheckResult &result, const CString &releaseVersion, const CString &infoURL, bool showHighlight)
 {
 	m_updateCheckResult = std::make_unique<UpdateCheckResult>(result);
-	if(m_wndToolBar.IsVisible())
+	if(m_wndToolBar.IsVisible() && (TrackerSettings::Instance().mainToolBarVisibleItems & MainToolBarItem::IconsMisc))
 	{
 		return m_wndToolBar.ShowUpdateInfo(releaseVersion, infoURL, showHighlight);
 	} else
@@ -3056,7 +3070,7 @@ LRESULT CMainFrame::OnUpdateCheckSuccess(WPARAM wparam, LPARAM lparam)
 	const bool isAutoUpdate = CUpdateCheck::IsAutoUpdateFromMessage(wparam, lparam);
 	const UpdateCheckResult &result = CUpdateCheck::MessageAsResult(wparam, lparam);
 	CUpdateCheck::AcknowledgeSuccess(result);
-	if(result.CheckTime != mpt::Date::Unix{})
+	if(result.CheckTime != mpt::chrono::default_system_clock::time_point{})
 	{
 		TrackerSettings::Instance().UpdateLastUpdateCheck = result.CheckTime;
 	}
@@ -3242,8 +3256,8 @@ void CMainFrame::UpdateMetronomeSamples()
 
 void CMainFrame::UpdateMetronomeVolume()
 {
-	const float linear = std::pow(10.0f, TrackerSettings::Instance().metronomeVolume / 20.0f);
-	const uint16 volume = std::clamp(mpt::saturate_round<uint16>(linear * 256.0f), uint16(0), uint16(256));
+	const float linear = CModDoc::DecibelsToLinear(TrackerSettings::Instance().metronomeVolume, 256.0f);
+	const uint16 volume = std::clamp(mpt::saturate_round<uint16>(linear), uint16(0), uint16(256));
 	CriticalSection cs;
 	m_metronomeBeat.nVolume = m_metronomeMeasure.nVolume = volume;
 }

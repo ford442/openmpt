@@ -85,8 +85,8 @@
     <AppContainerApplication>true</AppContainerApplication>
     <ApplicationType>Windows Store</ApplicationType>
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
-    <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.22000.0</WindowsTargetPlatformVersion>
-    <WindowsTargetPlatformMinVersion>10.0.17134.0</WindowsTargetPlatformMinVersion>
+    <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0.26100.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.22631.0</WindowsTargetPlatformMinVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -421,6 +421,7 @@
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -783,6 +784,7 @@
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -911,7 +913,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>ksuser.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -953,7 +955,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>ksuser.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -995,7 +997,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>ksuser.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LargeAddressAware>true</LargeAddressAware>
     </Link>
@@ -1145,7 +1147,6 @@
     <ClInclude Include="..\..\openmpt123\openmpt123_raw.hpp" />
     <ClInclude Include="..\..\openmpt123\openmpt123_sdl2.hpp" />
     <ClInclude Include="..\..\openmpt123\openmpt123_sndfile.hpp" />
-    <ClInclude Include="..\..\openmpt123\openmpt123_stdio.hpp" />
     <ClInclude Include="..\..\openmpt123\openmpt123_stdout.hpp" />
     <ClInclude Include="..\..\openmpt123\openmpt123_terminal.hpp" />
     <ClInclude Include="..\..\openmpt123\openmpt123_waveout.hpp" />
@@ -1187,6 +1188,8 @@
     <ClInclude Include="..\..\src\mpt\base\utility.hpp" />
     <ClInclude Include="..\..\src\mpt\base\version.hpp" />
     <ClInclude Include="..\..\src\mpt\base\wrapping_divide.hpp" />
+    <ClInclude Include="..\..\src\mpt\chrono\system_clock.hpp" />
+    <ClInclude Include="..\..\src\mpt\chrono\unix_clock.hpp" />
     <ClInclude Include="..\..\src\mpt\detect\dl.hpp" />
     <ClInclude Include="..\..\src\mpt\detect\ltdl.hpp" />
     <ClInclude Include="..\..\src\mpt\detect\mfc.hpp" />
@@ -1195,6 +1198,11 @@
     <ClInclude Include="..\..\src\mpt\exception\exception_text.hpp" />
     <ClInclude Include="..\..\src\mpt\exception\logic_error.hpp" />
     <ClInclude Include="..\..\src\mpt\exception\runtime_error.hpp" />
+    <ClInclude Include="..\..\src\mpt\filemode\fd.hpp" />
+    <ClInclude Include="..\..\src\mpt\filemode\filemode.hpp" />
+    <ClInclude Include="..\..\src\mpt\filemode\iostream.hpp" />
+    <ClInclude Include="..\..\src\mpt\filemode\stdfile.hpp" />
+    <ClInclude Include="..\..\src\mpt\filemode\stdio.hpp" />
     <ClInclude Include="..\..\src\mpt\format\concat.hpp" />
     <ClInclude Include="..\..\src\mpt\format\default_floatingpoint.hpp" />
     <ClInclude Include="..\..\src\mpt\format\default_formatter.hpp" />
@@ -1218,6 +1226,8 @@
     <ClInclude Include="..\..\src\mpt\io_file\inputfile.hpp" />
     <ClInclude Include="..\..\src\mpt\io_file\outputfile.hpp" />
     <ClInclude Include="..\..\src\mpt\main\main.hpp" />
+    <ClInclude Include="..\..\src\mpt\main\stdio_tokens.hpp" />
+    <ClInclude Include="..\..\src\mpt\out_of_memory\out_of_memory.hpp" />
     <ClInclude Include="..\..\src\mpt\parse\parse.hpp" />
     <ClInclude Include="..\..\src\mpt\parse\split.hpp" />
     <ClInclude Include="..\..\src\mpt\path\basic_path.hpp" />
@@ -1238,6 +1248,13 @@
     <ClInclude Include="..\..\src\mpt\string\utility.hpp" />
     <ClInclude Include="..\..\src\mpt\string_transcode\macros.hpp" />
     <ClInclude Include="..\..\src\mpt\string_transcode\transcode.hpp" />
+    <ClInclude Include="..\..\src\mpt\terminal\base.hpp" />
+    <ClInclude Include="..\..\src\mpt\terminal\input.hpp" />
+    <ClInclude Include="..\..\src\mpt\terminal\is_terminal.hpp" />
+    <ClInclude Include="..\..\src\mpt\terminal\output.hpp" />
+    <ClInclude Include="..\..\src\mpt\terminal\size.hpp" />
+    <ClInclude Include="..\..\src\mpt\terminal\stdio_manager.hpp" />
+    <ClInclude Include="..\..\src\mpt\terminal\transliterate.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\openmpt123\openmpt123.cpp" />

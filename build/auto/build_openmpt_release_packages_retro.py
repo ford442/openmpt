@@ -84,6 +84,7 @@ def copy_binaries(from_path, to_path):
 	copy_file(from_path, to_path, "OpenMPT.exe")
 	copy_file(from_path, to_path, "openmpt-lame.dll")
 	copy_file(from_path, to_path, "openmpt-mpg123.dll")
+	copy_file(from_path, to_path, "openmpt-pthread-win32.dll")
 	copy_file(from_path, to_path, "openmpt-wine-support.zip")
 
 def copy_pluginbridge(from_path, arch, to_path):
@@ -95,6 +96,7 @@ def copy_symbols(from_path, to_path):
 	copy_file(from_path, to_path, "OpenMPT.pdb")
 	copy_file(from_path, to_path, "openmpt-lame.pdb")
 	copy_file(from_path, to_path, "openmpt-mpg123.pdb")
+	copy_file(from_path, to_path, "openmpt-pthread-win32.pdb")
 
 def copy_symbols_pluginbridge(from_path, to_path, arch):
 	copy_file(from_path, to_path, "PluginBridge-" + arch + ".pdb")
@@ -139,7 +141,8 @@ if singleThreaded:
 		raise Exception("Something went wrong during manual creation!")
 
 
-sourcePathModern = "bin/release/vs2017-winxp-static/"
+sourcePathx86 = "bin/release/vs2017-winxp-static/"
+sourcePathamd64 = "bin/release/vs2017-winxpx64-static/"
 
 signToolCmdLine = ["signtool", "sign", "/fd", "sha256", "/a", "/tr", "http://time.certum.pl", "/td", "sha256"]
 
@@ -153,7 +156,7 @@ def list_binaries(path):
 if(signBinaries):
 	print("Signing binaries...")
 
-	signDirs = [sourcePathModern + "x86/", sourcePathModern + "amd64/"]
+	signDirs = [sourcePathx86 + "x86/", sourcePathamd64 + "amd64/"]
 	signFiles = []
 	for dir in signDirs:
 		signFiles = signFiles + list_binaries(dir)
@@ -165,24 +168,24 @@ if(signBinaries):
 
 print("Copying x86 binaries...")
 shutil.rmtree(openmpt_zip_x86_basepath, ignore_errors=True)
-copy_binaries(sourcePathModern + "x86/", openmpt_zip_x86_path)
-copy_pluginbridge(sourcePathModern, "x86", openmpt_zip_x86_path)
-copy_pluginbridge(sourcePathModern, "amd64", openmpt_zip_x86_path)
+copy_binaries(sourcePathx86 + "x86/", openmpt_zip_x86_path)
+copy_pluginbridge(sourcePathx86, "x86", openmpt_zip_x86_path)
+copy_pluginbridge(sourcePathamd64, "amd64", openmpt_zip_x86_path)
 Path(openmpt_zip_x86_path + "OpenMPT.portable").touch()
 
 print("Copying amd64 binaries...")
 shutil.rmtree(openmpt_zip_amd64_basepath, ignore_errors=True)
-copy_binaries(sourcePathModern + "amd64/", openmpt_zip_amd64_path)
-copy_pluginbridge(sourcePathModern, "x86", openmpt_zip_amd64_path)
-copy_pluginbridge(sourcePathModern, "amd64", openmpt_zip_amd64_path)
+copy_binaries(sourcePathamd64 + "amd64/", openmpt_zip_amd64_path)
+copy_pluginbridge(sourcePathx86, "x86", openmpt_zip_amd64_path)
+copy_pluginbridge(sourcePathamd64, "amd64", openmpt_zip_amd64_path)
 Path(openmpt_zip_amd64_path + "OpenMPT.portable").touch()
 
 print("Copying symbols...")
 shutil.rmtree(openmpt_zip_symbols_basepath, ignore_errors=True)
-copy_symbols(sourcePathModern + "x86/", openmpt_zip_symbols_path  + "x86/")
-copy_symbols(sourcePathModern + "amd64/", openmpt_zip_symbols_path  + "amd64/")
-copy_symbols_pluginbridge(sourcePathModern + "x86/", openmpt_zip_symbols_path  + "x86/", "x86")
-copy_symbols_pluginbridge(sourcePathModern + "amd64/", openmpt_zip_symbols_path  + "amd64/", "amd64")
+copy_symbols(sourcePathx86 + "x86/", openmpt_zip_symbols_path  + "x86/")
+copy_symbols(sourcePathamd64 + "amd64/", openmpt_zip_symbols_path  + "amd64/")
+copy_symbols_pluginbridge(sourcePathx86 + "x86/", openmpt_zip_symbols_path  + "x86/", "x86")
+copy_symbols_pluginbridge(sourcePathamd64 + "amd64/", openmpt_zip_symbols_path  + "amd64/", "amd64")
 
 if not singleThreaded:
 	pManual.communicate()

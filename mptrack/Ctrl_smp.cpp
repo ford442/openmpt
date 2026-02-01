@@ -289,6 +289,15 @@ BOOL CCtrlSamples::OnInitDialog()
 			str = _T("+") + mpt::tfmt::dec(i);
 		m_ComboPitch.SetItemData(m_ComboPitch.AddString(str.c_str()), i + 12);
 	}
+
+	COMBOBOXINFO cbi{};
+	cbi.cbSize = sizeof(cbi);
+	GetComboBoxInfo(m_ComboPitch, &cbi);
+	(m_EditPitch.SubclassWindow)(cbi.hwndItem);
+	m_EditPitch.ModifyStyle(0, ES_NUMBER);
+	m_EditPitch.AllowNegative(true);
+	m_EditPitch.AllowFractions(true);
+
 	m_ComboPitch.SetRedraw(TRUE);
 	// Set "unchanged" as default pitch
 	m_ComboPitch.SetCurSel(12);
@@ -558,7 +567,7 @@ static CString EffectiveOPLVolume(double value, double effectiveFactor, const CS
 	if(!playConfig.getDisplayDBValues())
 		return s;
 
-	s += _T(" (") + CModDoc::DecibelsToStrings(dB + effectiveDB + CModDoc::LinearToDecibels(sndFile.m_nVSTiVolume, playConfig.getNormalVSTiVol())) + _T(" effectively)");
+	s += _T(" (") + CModDoc::DecibelsToStrings(dB + effectiveDB + CModDoc::LinearToDecibels(static_cast<float>(sndFile.m_nVSTiVolume), playConfig.getNormalVSTiVol())) + _T(" effectively)");
 	return s;
 }
 
@@ -725,7 +734,17 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 	if(!hintType[HINT_SMPNAMES | HINT_SAMPLEINFO | HINT_MODTYPE]) return;
 
 	const SAMPLEINDEX updateSmp = sampleHint.GetSample();
-	if(updateSmp != m_nSample && updateSmp != 0 && !hintType[HINT_MODTYPE]) return;
+	if(updateSmp != m_nSample && updateSmp != 0 && !hintType[HINT_MODTYPE])
+	{
+		int lower = 0, upper = 0;
+		m_SpinSample.GetRange(lower, upper);
+		if(upper != m_sndFile.GetNumSamples())
+		{
+			m_SpinSample.SetRange(1, m_sndFile.GetNumSamples());
+			m_SpinSample.Invalidate(FALSE);  // In case the spin button was previously disabled
+		}
+		return;
+	}
 
 	const CModSpecifications &specs = m_sndFile.GetModSpecifications();
 	const bool isOPL = IsOPLInstrument();
@@ -825,7 +844,7 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 		DWORD d;
 
 		m_SpinSample.SetRange(1, m_sndFile.GetNumSamples());
-		m_SpinSample.Invalidate(FALSE);	// In case the spin button was previously disabled
+		m_SpinSample.Invalidate(FALSE);  // In case the spin button was previously disabled
 
 		// Length / Type
 		if(isOPL)
@@ -852,6 +871,8 @@ void CCtrlSamples::UpdateView(UpdateHint hint, CObject *pObj)
 			SetDlgItemInt(IDC_EDIT9, sample.nPan / 4u);	//displayed panning with anything but XM is 0-64 so we divide by 4
 		// FineTune / C-4 Speed / BaseNote
 		int transp = 0;
+		m_EditFineTune.AllowNegative(m_sndFile.UseFinetuneAndTranspose());
+		m_EditFineTune.AllowFractions(false);
 		if (!m_sndFile.UseFinetuneAndTranspose())
 		{
 			s = mpt::cfmt::val(sample.nC5Speed);
@@ -1163,7 +1184,7 @@ void CCtrlSamples::OnSampleChanged()
 void CCtrlSamples::OnZoomChanged()
 {
 	if (!IsLocked()) SetCurrentSample(m_nSample);
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -1205,7 +1226,7 @@ void CCtrlSamples::OnTbnDropDownToolBar(NMHDR *pNMHDR, LRESULT *pResult)
 void CCtrlSamples::OnSampleNew()
 {
 	InsertSample(CInputHandler::ShiftPressed());
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -1262,7 +1283,7 @@ void CCtrlSamples::OnSampleOpen()
 	TrackerSettings::Instance().PathSamples.SetWorkingDir(dlg.GetWorkingDirectory());
 
 	OpenSamples(dlg.GetFilenames(), OpenSampleKnown | OpenSampleRaw);
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -1318,7 +1339,7 @@ void CCtrlSamples::OpenSamples(const std::vector<mpt::PathString> &files, FlagSe
 		else
 			ErrorBox(IDS_ERR_FILEOPEN, this);
 	}
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -1340,7 +1361,7 @@ void CCtrlSamples::SaveSample(bool doBatchSave)
 		const ModSample &sample = m_sndFile.GetSample(m_nSample);
 		if((!m_nSample) || (!sample.HasSampleData()))
 		{
-			SwitchToView();
+			SwitchToViewIfMouse();
 			return;
 		}
 		if(m_sndFile.SampleHasPath(m_nSample))
@@ -1513,7 +1534,7 @@ void CCtrlSamples::SaveSample(bool doBatchSave)
 	{
 		TrackerSettings::Instance().PathSamples.SetWorkingDir(dlg.GetWorkingDirectory());
 	}
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -1526,7 +1547,7 @@ void CCtrlSamples::OnSamplePlay()
 	{
 		m_modDoc.PlayNote(PlayNoteParam(NOTE_MIDDLEC).Sample(m_nSample));
 	}
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -1586,7 +1607,7 @@ void CCtrlSamples::Normalize(bool allSamples)
 	}
 
 	EndWaitCursor();
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -1646,7 +1667,7 @@ void CCtrlSamples::RemoveDCOffset(bool allSamples)
 	}
 
 	EndWaitCursor();
-	SwitchToView();
+	SwitchToViewIfMouse();
 
 	// fill the statusbar with some nice information
 
@@ -1707,13 +1728,13 @@ void CCtrlSamples::ApplyAmplify(const double amp, const double fadeInStart, cons
 	sample.PrecomputeLoops(m_sndFile, false);
 	SetModified(SampleHint().Data(), false, true);
 	EndWaitCursor();
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
 void CCtrlSamples::OnAmplify()
 {
-	static CAmpDlg::AmpSettings settings { Fade::kLinear, 0, 0, 100, false, false };
+	static CAmpDlg::AmpSettings settings { Fade::kLinear, CAmpDlg::AmpUnit::Percent, 0.0, 0.0, 100.0, false, false };
 
 	CAmpDlg dlg(this, settings);
 	if (dlg.DoModal() != IDOK) return;
@@ -1831,7 +1852,7 @@ void CCtrlSamples::ApplyResample(SAMPLEINDEX smp, uint32 newRate, ResamplingMode
 	}
 
 	EndWaitCursor();
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -1921,20 +1942,19 @@ void CCtrlSamples::OnPitchShiftTimeStretch()
 	if(!sample.HasSampleData())
 		return;
 	
-	CString text;
-	GetDlgItem(IDC_COMBO4)->GetWindowText(text);
-	const float semitones = mpt::parse<float>(text);
-	const float pitch = std::pow(2.0f, semitones / 12.0f);
+	double semitones = 0.0f;
+	m_EditPitch.GetDecimalValue(semitones);
+	const double pitch = std::pow(2.0, semitones / 12.0);
 
 	double ratio = 100.0;
 	m_EditTimeStretchRatio.GetDecimalValue(ratio);
 
 	const auto grainSize = static_cast<int>(GetDlgItemInt(IDC_COMBO5));
 
-	if(pitch != 1.0f || ratio != 100.0)
+	if(pitch != 1.0 || ratio != 100.0)
 	{
 		auto selection = GetSelectionPoints();
-		DoPitchShiftTimeStretch timeStretch(*this, m_modDoc, m_nSample, selection.nStart, selection.nEnd, pitch, static_cast<float>(ratio / 100.0), grainSize, IsDlgButtonChecked(IDC_CHECK3) != BST_UNCHECKED);
+		DoPitchShiftTimeStretch timeStretch(*this, m_modDoc, m_nSample, selection.nStart, selection.nEnd, static_cast<float>(pitch), static_cast<float>(ratio / 100.0), grainSize, IsDlgButtonChecked(IDC_CHECK3) != BST_UNCHECKED);
 		timeStretch.DoModal();
 		errorCode = timeStretch.m_result;
 		if(selection.selectionActive)
@@ -1946,7 +1966,7 @@ void CCtrlSamples::OnPitchShiftTimeStretch()
 	{
 		// Update sample view
 		SetModified(SampleHint().Info().Data(), true, true);
-		SwitchToView();
+		SwitchToViewIfMouse();
 		return;
 	}
 
@@ -1976,7 +1996,7 @@ void CCtrlSamples::OnPitchShiftTimeStretch()
 			break;
 		}
 		Reporting::Error(str);
-		SwitchToView();
+		SwitchToViewIfMouse();
 	}
 }
 
@@ -1996,7 +2016,7 @@ void CCtrlSamples::OnReverse()
 		m_modDoc.GetSampleUndo().RemoveLastUndoStep(m_nSample);
 	}
 	EndWaitCursor();
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2015,7 +2035,7 @@ void CCtrlSamples::OnInvert()
 		m_modDoc.GetSampleUndo().RemoveLastUndoStep(m_nSample);
 	}
 	EndWaitCursor();
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2036,7 +2056,7 @@ void CCtrlSamples::OnSignUnSign()
 		m_modDoc.GetSampleUndo().RemoveLastUndoStep(m_nSample);
 	}
 	EndWaitCursor();
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2059,7 +2079,7 @@ void CCtrlSamples::OnSilence()
 	}
 
 	EndWaitCursor();
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2576,7 +2596,7 @@ void CCtrlSamples::OnVScroll(UINT nCode, UINT, CScrollBar *scrollBar)
 		m_SpinFineTune.SetPos(0);
 	}
 	if(nCode == SB_ENDSCROLL)
-		SwitchToView();
+		SwitchToViewIfMouse();
 	if(redraw)
 	{
 		SetModified(SampleHint().Info().Data(), false, false);
@@ -2652,6 +2672,21 @@ LRESULT CCtrlSamples::OnCustomKeyMsg(WPARAM wParam, LPARAM /*lParam*/)
 	case kcSampleSave:		OnSampleSaveOne(); return wParam;
 	case kcSampleNew:		InsertSample(false); return wParam;
 	case kcSampleDuplicate:	InsertSample(true); return wParam;
+
+	case kcSampleToggleNormalLoop:
+		if(m_ComboLoopType.IsWindowEnabled())
+		{
+			m_ComboLoopType.SetCurSel((m_ComboLoopType.GetCurSel() + 1) % m_ComboLoopType.GetCount());
+			OnLoopTypeChanged();
+		}
+		return wParam;
+	case kcSampleToggleSustainLoop:
+		if(m_ComboSustainType.IsWindowEnabled())
+		{
+			m_ComboSustainType.SetCurSel((m_ComboSustainType.GetCurSel() + 1) % m_ComboSustainType.GetCount());
+			OnSustainTypeChanged();
+		}
+		return wParam;
 
 	case kcSampleTransposeUp: transpose = 1; break;
 	case kcSampleTransposeDown: transpose = -1; break;
@@ -2746,7 +2781,7 @@ void CCtrlSamples::OnXFade()
 	if(!sample.HasSampleData())
 	{
 		MessageBeep(MB_ICONWARNING);
-		SwitchToView();
+		SwitchToViewIfMouse();
 		return;
 	}
 	bool resetLoopOnCancel = false;
@@ -2761,14 +2796,14 @@ void CCtrlSamples::OnXFade()
 		} else
 		{
 			Reporting::Error("Crossfade requires a sample loop to work.", this);
-			SwitchToView();
+			SwitchToViewIfMouse();
 			return;
 		}
 	}
 	if(sample.nLoopStart == 0 && sample.nSustainStart == 0)
 	{
 		Reporting::Error("Crossfade requires the sample to have data before the loop start.", this);
-		SwitchToView();
+		SwitchToViewIfMouse();
 		return;
 	}
 
@@ -2796,7 +2831,7 @@ void CCtrlSamples::OnXFade()
 	{
 		sample.SetLoop(0, 0, false, false, m_sndFile);
 	}
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2809,7 +2844,7 @@ void CCtrlSamples::OnStereoSeparation()
 		|| sample.uFlags[CHN_ADLIB])
 	{
 		MessageBeep(MB_ICONWARNING);
-		SwitchToView();
+		SwitchToViewIfMouse();
 		return;
 	}
 
@@ -2831,7 +2866,7 @@ void CCtrlSamples::OnStereoSeparation()
 			m_modDoc.GetSampleUndo().RemoveLastUndoStep(m_nSample);
 		}
 	}
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2868,7 +2903,7 @@ void CCtrlSamples::OnAutotune()
 			EndWaitCursor();
 		}
 	}
-	SwitchToView();
+	SwitchToViewIfMouse();
 }
 
 
@@ -2948,7 +2983,7 @@ void CCtrlSamples::OnInitOPLInstrument()
 		// Initialize with instant attack, release and enabled sustain for carrier and instant attack for modulator
 		sample.SetAdlib(true, { 0x00, 0x20, 0x00, 0x00, 0xF0, 0xF0, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00 });
 		SetModified(SampleHint().Info().Data().Names(), true, true);
-		SwitchToView();
+		SwitchToViewIfMouse();
 	}
 }
 

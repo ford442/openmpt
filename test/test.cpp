@@ -15,6 +15,7 @@
 #ifdef ENABLE_TESTS
 
 #ifdef LIBOPENMPT_BUILD
+#include "mpt/arch/arch.hpp"
 #include "mpt/arch/x86_amd64.hpp"
 #endif
 #include "mpt/base/check_platform.hpp"
@@ -86,9 +87,7 @@
 #ifdef LIBOPENMPT_BUILD
 #include "../libopenmpt/libopenmpt_version.h"
 #endif // LIBOPENMPT_BUILD
-#ifndef NO_PLUGINS
 #include "../soundlib/plugins/PlugInterface.h"
-#endif
 #include <sstream>
 #include <limits>
 #ifdef LIBOPENMPT_BUILD
@@ -100,6 +99,7 @@
 #include <stdexcept>
 #ifdef LIBOPENMPT_BUILD
 #include <cfenv>
+#include <cfloat>
 #endif // LIBOPENMPT_BUILD
 #if MPT_COMPILER_MSVC
 #include <tchar.h>
@@ -111,7 +111,24 @@
 #include <zlib.h>
 #elif defined(MPT_WITH_MINIZ)
 #define MINIZ_NO_ZLIB_COMPATIBLE_NAMES
+#if MPT_COMPILER_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4505) // unreferenced function with internal linkage has been removed
+#elif MPT_COMPILER_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#elif MPT_COMPILER_CLANG
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+#endif
 #include <miniz/miniz.h>
+#if MPT_COMPILER_MSVC
+//#pragma warning(pop)
+#elif MPT_COMPILER_GCC
+#pragma GCC diagnostic pop
+#elif MPT_COMPILER_CLANG
+#pragma clang diagnostic pop
+#endif
 #endif
 
 #define MPT_TEST_HAS_FILESYSTEM 1
@@ -136,24 +153,24 @@ namespace Test {
 
 
 
-static MPT_NOINLINE void TestVersion();
-static MPT_NOINLINE void TestTypes();
-static MPT_NOINLINE void TestMisc1();
-static MPT_NOINLINE void TestMisc2();
-static MPT_NOINLINE void TestRandom();
-static MPT_NOINLINE void TestCharsets();
-static MPT_NOINLINE void TestPathNative();
-static MPT_NOINLINE void TestPathForeign();
-static MPT_NOINLINE void TestStringFormatting();
-static MPT_NOINLINE void TestSettings();
-static MPT_NOINLINE void TestStringIO();
-static MPT_NOINLINE void TestMIDIEvents();
-static MPT_NOINLINE void TestSampleConversion();
-static MPT_NOINLINE void TestITCompression();
-static MPT_NOINLINE void TestPCnoteSerialization();
-static MPT_NOINLINE void TestLoadSaveFile();
-static MPT_NOINLINE void TestEditing();
-static MPT_NOINLINE void TestMIDIMacroParser();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestVersion();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestTypes();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMisc1();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMisc2();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestRandom();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestCharsets();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathNative();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeign();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringFormatting();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSettings();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringIO();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMIDIEvents();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSampleConversion();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestITCompression();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPCnoteSerialization();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestLoadSaveFile();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestEditing();
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMIDIMacroParser();
 
 
 
@@ -237,12 +254,23 @@ void DoTests()
 					}
 					return result;
 				};
-				std::cout << "Rounding mode: " << format_rounding(std::fegetround()) << std::endl;
+				auto get_rounding_mode = []() {
+					#ifdef MPT_COMPILER_QUIRK_WANT_PRAGMA_STDC_FENV_ACCESS
+					#pragma STDC FENV_ACCESS ON
+					#endif
+					return std::fegetround();
+				};
+				std::cout << "Rounding mode: " << format_rounding(get_rounding_mode()) << std::endl;
 			}
 		#endif // !MPT_LIBC_QUIRK_NO_FENV
 		#if MPT_ARCH_X86 || MPT_ARCH_AMD64
 			{
-				const mpt::arch::x86::floating_point::control_state fpstate = mpt::arch::x86::floating_point::get_state();
+				const mpt::arch::x86::floating_point::control_state fpstate =
+					#if MPT_ARCH_X86
+						mpt::arch::x86::floating_point::get_state(mpt::arch::get_cpu_info());
+					#else
+						mpt::arch::x86::floating_point::get_state();
+					#endif
 				if(fpstate.x87_level)
 				{
 					auto format_rounding = [](uint16 fcw) {
@@ -512,7 +540,7 @@ static void RemoveFile(const mpt::PathString &filename)
 
 
 // Test if functions related to program version data work
-static MPT_NOINLINE void TestVersion()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestVersion()
 {
 	//Verify that macros and functions work.
 	{
@@ -666,7 +694,7 @@ static MPT_NOINLINE void TestVersion()
 
 
 // Test if data types are interpreted correctly
-static MPT_NOINLINE void TestTypes()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestTypes()
 {
 
 	static_assert(sizeof(std::uintptr_t) == sizeof(void*));
@@ -784,7 +812,7 @@ static void TestFloatFormats(Tfloat x)
 
 
 
-static MPT_NOINLINE void TestStringFormatting()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringFormatting()
 {
 	VERIFY_EQUAL(mpt::afmt::val(1.5f), "1.5");
 	VERIFY_EQUAL(mpt::afmt::val(true), "1");
@@ -1044,7 +1072,7 @@ static MPT_NOINLINE void TestStringFormatting()
 
 
 static int64 TestDate1(int s, int m, int h, unsigned int D, unsigned int M, int Y) {
-	return mpt::Date::UnixAsSeconds(mpt::Date::UnixFromUTC(mpt::Date::UTC{Y,M,D,h,m,s}));
+	return mpt::chrono::default_system_clock::to_unix_seconds(mpt::Date::default_from_UTC(mpt::Date::UTC{Y,M,D,h,m,s}));
 }
 
 static mpt::Date::UTC TestDate2(int s, int m, int h, unsigned int D, unsigned int M, int Y) {
@@ -1052,7 +1080,7 @@ static mpt::Date::UTC TestDate2(int s, int m, int h, unsigned int D, unsigned in
 }
 
 
-static MPT_NOINLINE void TestMisc1()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMisc1()
 {
 
 	VERIFY_EQUAL(ModCommand::IsPcNote(NOTE_MAX), false);
@@ -1173,7 +1201,7 @@ static MPT_NOINLINE void TestMisc1()
 }
 
 
-static MPT_NOINLINE void TestMisc2()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMisc2()
 {
 
 	// Check for completeness of supported effect list in mod specifications
@@ -1317,30 +1345,30 @@ static MPT_NOINLINE void TestMisc2()
 	VERIFY_EQUAL(    1413064016, TestDate1( 56, 46, 21, 11, 10, 2014 ));
 	VERIFY_EQUAL(    1413064100, TestDate1( 20, 48, 21, 11, 10, 2014 ));
 
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(             0)), TestDate2(  0,  0,  0,  1,  1, 1970 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(          3600)), TestDate2(  0,  0,  1,  1,  1, 1970 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(         86400)), TestDate2(  0,  0,  0,  2,  1, 1970 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(      31536000)), TestDate2(  0,  0,  0,  1,  1, 1971 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(     100000000)), TestDate2( 40, 46,  9,  3,  3, 1973 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(     951782400)), TestDate2(  0,  0,  0, 29,  2, 2000 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1000000000)), TestDate2( 40, 46,  1,  9,  9, 2001 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1044057600)), TestDate2(  0,  0,  0,  1,  2, 2003 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1044144000)), TestDate2(  0,  0,  0,  2,  2, 2003 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1046476800)), TestDate2(  0,  0,  0,  1,  3, 2003 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1064966400)), TestDate2(  0,  0,  0,  1, 10, 2003 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1077926399)), TestDate2( 59, 59, 23, 27,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1077926400)), TestDate2(  0,  0,  0, 28,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1077926410)), TestDate2( 10,  0,  0, 28,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078012799)), TestDate2( 59, 59, 23, 28,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078012800)), TestDate2(  0,  0,  0, 29,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078012820)), TestDate2( 20,  0,  0, 29,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078099199)), TestDate2( 59, 59, 23, 29,  2, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078099200)), TestDate2(  0,  0,  0,  1,  3, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078099230)), TestDate2( 30,  0,  0,  1,  3, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1078185599)), TestDate2( 59, 59, 23,  1,  3, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1096588800)), TestDate2(  0,  0,  0,  1, 10, 2004 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1413064016)), TestDate2( 56, 46, 21, 11, 10, 2014 ));
-	VERIFY_EQUAL(mpt::Date::UnixAsUTC(mpt::Date::UnixFromSeconds(    1413064100)), TestDate2( 20, 48, 21, 11, 10, 2014 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(             0)), TestDate2(  0,  0,  0,  1,  1, 1970 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(          3600)), TestDate2(  0,  0,  1,  1,  1, 1970 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(         86400)), TestDate2(  0,  0,  0,  2,  1, 1970 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(      31536000)), TestDate2(  0,  0,  0,  1,  1, 1971 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(     100000000)), TestDate2( 40, 46,  9,  3,  3, 1973 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(     951782400)), TestDate2(  0,  0,  0, 29,  2, 2000 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1000000000)), TestDate2( 40, 46,  1,  9,  9, 2001 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1044057600)), TestDate2(  0,  0,  0,  1,  2, 2003 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1044144000)), TestDate2(  0,  0,  0,  2,  2, 2003 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1046476800)), TestDate2(  0,  0,  0,  1,  3, 2003 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1064966400)), TestDate2(  0,  0,  0,  1, 10, 2003 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1077926399)), TestDate2( 59, 59, 23, 27,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1077926400)), TestDate2(  0,  0,  0, 28,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1077926410)), TestDate2( 10,  0,  0, 28,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078012799)), TestDate2( 59, 59, 23, 28,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078012800)), TestDate2(  0,  0,  0, 29,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078012820)), TestDate2( 20,  0,  0, 29,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078099199)), TestDate2( 59, 59, 23, 29,  2, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078099200)), TestDate2(  0,  0,  0,  1,  3, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078099230)), TestDate2( 30,  0,  0,  1,  3, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1078185599)), TestDate2( 59, 59, 23,  1,  3, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1096588800)), TestDate2(  0,  0,  0,  1, 10, 2004 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1413064016)), TestDate2( 56, 46, 21, 11, 10, 2014 ));
+	VERIFY_EQUAL(mpt::Date::UTC_from_default(mpt::chrono::default_system_clock::from_unix_seconds(    1413064100)), TestDate2( 20, 48, 21, 11, 10, 2014 ));
 
 
 #ifdef MODPLUG_TRACKER
@@ -1534,6 +1562,28 @@ static MPT_NOINLINE void TestMisc2()
 		VERIFY_EQUAL(req.host, U_("host"));
 		VERIFY_EQUAL(req.path, U_("/"));
 	}
+	{
+		// https://daniel.haxx.se/blog/2022/09/08/http-http-http-http-http-http-http/
+		URI uri = ParseURI(U_("http://http://http://@http://http://?http://#http://"));
+		// python urllib / RFC 3986
+		VERIFY_EQUAL(uri.scheme, U_("http"));
+		VERIFY_EQUAL(uri.username, U_(""));
+		VERIFY_EQUAL(uri.password, U_(""));
+		VERIFY_EQUAL(uri.host, U_("http"));
+		VERIFY_EQUAL(uri.port, U_(""));
+		VERIFY_EQUAL(uri.path, U_("//http://@http://http://"));
+		VERIFY_EQUAL(uri.query, U_("http://"));
+		VERIFY_EQUAL(uri.fragment, U_("http://"));
+		// curl (broken)
+		//VERIFY_EQUAL(uri.scheme, U_("http"));
+		//VERIFY_EQUAL(uri.username, U_("http"));
+		//VERIFY_EQUAL(uri.password, U_("//http://"));
+		//VERIFY_EQUAL(uri.host, U_("http"));
+		//VERIFY_EQUAL(uri.port, U_(""));
+		//VERIFY_EQUAL(uri.path, U_("//http://"));
+		//VERIFY_EQUAL(uri.query, U_("http://"));
+		//VERIFY_EQUAL(uri.fragment, U_("http://"));
+	}
 
 #endif // MODPLUG_TRACKER
 
@@ -1551,7 +1601,7 @@ static MPT_NOINLINE void TestMisc2()
 }
 
 
-static MPT_NOINLINE void TestRandom()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestRandom()
 {
 
 	#ifdef FLAKY_TESTS
@@ -1604,7 +1654,7 @@ static MPT_NOINLINE void TestRandom()
 }
 
 
-static MPT_NOINLINE void TestPathNative()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathNative()
 {
 
 	// Path splitting
@@ -1865,7 +1915,7 @@ static MPT_NOINLINE void TestPathNative()
 
 #if !defined(MPT_EMSCRIPTEN_TEST_PATH_CRASH)
 
-static MPT_NOINLINE void TestPathForeignWindowsNT()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeignWindowsNT()
 {
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::WindowsNT>>>;
@@ -2028,7 +2078,7 @@ static MPT_NOINLINE void TestPathForeignWindowsNT()
 	}
 }
 
-static MPT_NOINLINE void TestPathForeignWindows9x()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeignWindows9x()
 {
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::Windows9x>>>;
@@ -2175,7 +2225,7 @@ static MPT_NOINLINE void TestPathForeignWindows9x()
 	}
 }
 
-static MPT_NOINLINE void TestPathForeignDOSDJGPP()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeignDOSDJGPP()
 {
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::DOS_DJGPP>>>;
@@ -2282,7 +2332,7 @@ static MPT_NOINLINE void TestPathForeignDOSDJGPP()
 	}
 }
 
-static MPT_NOINLINE void TestPathForeignPOSIX()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeignPOSIX()
 {
 	{
 		using P = mpt::BasicPathString<mpt::PathTraits<std::string, mpt::PathStyleTag<mpt::PathStyle::Posix>>>;
@@ -2343,7 +2393,7 @@ static MPT_NOINLINE void TestPathForeignPOSIX()
 #endif // !MPT_EMSCRIPTEN_TEST_PATH_CRASH
 
 
-static MPT_NOINLINE void TestPathForeign()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPathForeign()
 {
 
 #if !defined(MPT_EMSCRIPTEN_TEST_PATH_CRASH)
@@ -2423,7 +2473,7 @@ static MPT_NOINLINE void TestPathForeign()
 
 
 
-static MPT_NOINLINE void TestCharsets()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestCharsets()
 {
 
 	// Path conversions
@@ -2599,7 +2649,7 @@ namespace Test {
 #endif // MODPLUG_TRACKER
 
 
-static MPT_NOINLINE void TestSettings()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSettings()
 {
 
 #ifdef MODPLUG_TRACKER
@@ -2607,9 +2657,12 @@ static MPT_NOINLINE void TestSettings()
 	VERIFY_EQUAL(SettingPath(U_("a"),U_("b")) < SettingPath(U_("a"),U_("c")), true);
 	VERIFY_EQUAL(!(SettingPath(U_("c"),U_("b")) < SettingPath(U_("a"),U_("c"))), true);
 
-	{
-		DefaultSettingsContainer conf;
+	const mpt::PathString filename = theApp.GetConfigPath() + P_("test.ini");
 
+	DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+
+	{
+		IniFileSettingsContainer conf{filename};
 		int32 foobar = conf.Read(U_("Test"), U_("bar"), 23);
 		conf.Write(U_("Test"), U_("bar"), 64);
 		conf.Write(U_("Test"), U_("bar"), 42);
@@ -2619,59 +2672,133 @@ static MPT_NOINLINE void TestSettings()
 	}
 
 	{
-		DefaultSettingsContainer conf;
-
+		IniFileSettingsContainer conf{filename};
 		int32 foobar = conf.Read(U_("Test"), U_("bar"), 28);
 		VERIFY_EQUAL(foobar, 42);
 		conf.Write(U_("Test"), U_("bar"), 43);
 	}
 
 	{
-		DefaultSettingsContainer conf;
-
+		IniFileSettingsContainer conf{filename};
 		int32 foobar = conf.Read(U_("Test"), U_("bar"), 123);
 		VERIFY_EQUAL(foobar, 43);
 		conf.Write(U_("Test"), U_("bar"), 88);
 	}
 
 	{
-		DefaultSettingsContainer conf;
-
+		IniFileSettingsContainer conf{filename};
 		Setting<int> foo(conf, U_("Test"), U_("bar"), 99);
-
 		VERIFY_EQUAL(foo, 88);
-
 		foo = 7;
-
 	}
 
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		Setting<int> foo(conf, U_("Test"), U_("bar"), 99);
 		VERIFY_EQUAL(foo, 7);
 	}
 
-
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		conf.Read(U_("Test"), U_("struct"), std::string(""));
 		conf.Write(U_("Test"), U_("struct"), std::string(""));
 	}
 
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		CustomSettingsTestType dummy = conf.Read(U_("Test"), U_("struct"), CustomSettingsTestType(1.0f, 1.0f));
 		dummy = CustomSettingsTestType(0.125f, 32.0f);
 		conf.Write(U_("Test"), U_("struct"), dummy);
 	}
 
 	{
-		DefaultSettingsContainer conf;
+		IniFileSettingsContainer conf{filename};
 		Setting<CustomSettingsTestType> dummyVar(conf, U_("Test"), U_("struct"), CustomSettingsTestType(1.0f, 1.0f));
 		CustomSettingsTestType dummy = dummyVar;
 		VERIFY_EQUAL(dummy.x, 0.125f);
 		VERIFY_EQUAL(dummy.y, 32.0f);
 	}
+
+	// test duplicate sections and keys
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream(); 
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("[S1]")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=1")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=2")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("bar1=a")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("[S1]")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=3")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("foo=4")));
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::Locale, U_("bar2=a")));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("S1"), U_("foo")}, 0).as<int>(), 1);
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("S1"), U_("bar1")}, U_("empty")).as<mpt::ustring>(), U_("a"));
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("S1"), U_("bar2")}, U_("empty")).as<mpt::ustring>(), U_("empty"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+	}
+
+	// test last value without line ending
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream();
+			mpt::IO::WriteTextCRLF(outputstream, "[Test]");
+			mpt::IO::WriteText(outputstream, mpt::ToCharset(mpt::Charset::UTF8, MPT_UTF8("Foo=bar")));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("Test"), U_("Foo")}, U_("")).as<mpt::ustring>(), U_("bar"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+	}
+
+	// test Unicode in UTF-16LE-BOM mode
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream();
+			auto WriteUTF16LE = [](auto & outputstream, mpt::span<const WCHAR> data) {
+					mpt::IO::WriteRaw(outputstream, reinterpret_cast<const std::byte*>(data.data()), data.size() * 2);
+				};
+			std::vector<WCHAR> utf16lebom = {0xfeff};
+			WriteUTF16LE(outputstream, mpt::as_span(utf16lebom));
+			WriteUTF16LE(outputstream, mpt::as_span(std::wstring(L"[Test]\r\n")));
+			WriteUTF16LE(outputstream, mpt::as_span(mpt::ToWide(MPT_UTF8("Umlauts=\xC3\xA4\r\n"))));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("Test"), U_("Umlauts")}, U_("")).as<mpt::ustring>(), MPT_UTF8("\xC3\xA4"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+	}
+
+#if 0
+	// test Unicode in UTF-8-BOM mode, Wine-only
+	{
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+		{
+			mpt::IO::SafeOutputFile outputfile{filename, std::ios::binary};
+			mpt::IO::ofstream & outputstream = outputfile.stream();
+			std::vector<std::byte> utf8bom = {mpt::byte_cast<std::byte>(static_cast<uint8>(0xEF)), mpt::byte_cast<std::byte>(static_cast<uint8>(0xBB)), mpt::byte_cast<std::byte>(static_cast<uint8>(0xBF))};
+			mpt::IO::WriteRaw(outputstream, mpt::as_span(utf8bom));
+			mpt::IO::WriteTextCRLF(outputstream, "[Test]");
+			mpt::IO::WriteTextCRLF(outputstream, mpt::ToCharset(mpt::Charset::UTF8, MPT_UTF8("Umlauts=\xC3\xA4")));
+		}
+		{
+			IniFileSettingsBackend inifile{filename};
+			VERIFY_EQUAL(inifile.ReadSetting(SettingPath{U_("Test"), U_("Umlauts")}, U_("")).as<mpt::ustring>(), MPT_UTF8("\xC3\xA4"));
+		}
+		DeleteFile(mpt::support_long_path(filename.AsNative()).c_str());
+	}
+#endif
 
 #endif // MODPLUG_TRACKER
 
@@ -2679,7 +2806,7 @@ static MPT_NOINLINE void TestSettings()
 
 
 // Test MIDI Event generating / reading
-static MPT_NOINLINE void TestMIDIEvents()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestMIDIEvents()
 {
 	uint32 midiEvent;
 
@@ -2758,14 +2885,10 @@ static void TestLoadXMFile(const CSoundFile &sndFile)
 	// Channels
 	VERIFY_EQUAL_NONCONT(sndFile.GetNumChannels(), 2);
 	VERIFY_EQUAL_NONCONT((sndFile.ChnSettings[0].szName == "First Channel"), true);
-#ifndef NO_PLUGINS
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[0].nMixPlugin, 0);
-#endif // NO_PLUGINS
 
 	VERIFY_EQUAL_NONCONT((sndFile.ChnSettings[1].szName == "Second Channel"), true);
-#ifndef NO_PLUGINS
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[1].nMixPlugin, 1);
-#endif // NO_PLUGINS
 
 	// Samples
 	VERIFY_EQUAL_NONCONT(sndFile.GetNumSamples(), 3);
@@ -2920,13 +3043,11 @@ static void TestLoadXMFile(const CSoundFile &sndFile)
 	}
 
 	// Plugins
-#ifndef NO_PLUGINS
 	const SNDMIXPLUGIN &plug = sndFile.m_MixPlugins[0];
 	VERIFY_EQUAL_NONCONT(plug.GetName(), U_("First Plugin"));
 	VERIFY_EQUAL_NONCONT(plug.fDryRatio, 0.26f);
 	VERIFY_EQUAL_NONCONT(plug.IsMasterEffect(), true);
 	VERIFY_EQUAL_NONCONT(plug.GetGain(), 11);
-#endif // NO_PLUGINS
 }
 
 
@@ -2966,24 +3087,24 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 #ifdef MODPLUG_TRACKER
 	if(sndFile.GetTimezoneInternal() == mpt::Date::LogicalTimezone::UTC)
 	{
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).year, 2011);
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).month, 6);
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).day, 14);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).year, 2011);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).month, 6);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).day, 14);
 #if MPT_CXX_AT_LEAST(20) && !defined(MPT_LIBCXX_QUIRK_NO_CHRONO) && !defined(MPT_LIBCXX_QUIRK_NO_CHRONO_DATE)
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
 #else
 #if defined(MPT_FALLBACK_TIMEZONE_WINDOWS_HISTORIC)
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
 #elif defined(MPT_FALLBACK_TIMEZONE_WINDOWS_CURRENT)
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 21);
 #elif defined(MPT_FALLBACK_TIMEZONE_C)
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 22);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 22);
 #else
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 22);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).hours, 22);
 #endif
 #endif
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).minutes, 8);
-		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(mpt::Date::UnixFromUTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).seconds, 32);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).minutes, 8);
+		VERIFY_EQUAL_NONCONT(mpt::Date::forget_timezone(mpt::Date::local_from_default(mpt::Date::default_from_UTC(mpt::Date::interpret_as_timezone<mpt::Date::LogicalTimezone::UTC>(fh.loadDate)))).seconds, 32);
 	} else
 #endif // MODPLUG_TRACKER
 	{
@@ -3008,25 +3129,19 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[0].nPan, 32);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[0].nVolume, 32);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[0].dwFlags, CHN_MUTE);
-#ifndef NO_PLUGINS
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[0].nMixPlugin, 0);
-#endif // NO_PLUGINS
 
 	VERIFY_EQUAL_NONCONT((sndFile.ChnSettings[1].szName == "Second Channel"), true);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[1].nPan, 128);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[1].nVolume, 16);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[1].dwFlags, CHN_SURROUND);
-#ifndef NO_PLUGINS
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[1].nMixPlugin, 1);
-#endif // NO_PLUGINS
 
 	VERIFY_EQUAL_NONCONT((sndFile.ChnSettings[69].szName == "Last Channel______X"), true);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[69].nPan, 256);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[69].nVolume, 7);
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[69].dwFlags, ChannelFlags(0));
-#ifndef NO_PLUGINS
 	VERIFY_EQUAL_NONCONT(sndFile.ChnSettings[69].nMixPlugin, 1);
-#endif // NO_PLUGINS
 	// Samples
 	VERIFY_EQUAL_NONCONT(sndFile.GetNumSamples(), 4);
 	{
@@ -3236,6 +3351,7 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetRowsPerBeat(), 5);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].GetRowsPerMeasure(), 10);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].HasTempoSwing(), true);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[0].HasColor(), false);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns.IsPatternEmpty(0), true);
 
 	{
@@ -3255,6 +3371,7 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetRowsPerBeat(), 0);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetRowsPerMeasure(), 0);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].HasTempoSwing(), false);
+	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetColor(), 0xFFC080);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns.IsPatternEmpty(1), false);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 0)->IsPcNote(), true);
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(0, 0)->note, NOTE_PC);
@@ -3284,7 +3401,6 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 	VERIFY_EQUAL_NONCONT(sndFile.Patterns[1].GetpModCommand(31, 1)->param, 0xFF);
 
 	// Plugins
-#ifndef NO_PLUGINS
 	const SNDMIXPLUGIN &plug = sndFile.m_MixPlugins[0];
 	VERIFY_EQUAL_NONCONT(plug.GetName(), U_("First Plugin"));
 	VERIFY_EQUAL_NONCONT(plug.fDryRatio, 0.26f);
@@ -3296,7 +3412,6 @@ static void TestLoadMPTMFile(const CSoundFile &sndFile)
 		VERIFY_EQUAL_NONCONT(plug.pMixPlugin->GetParameter(1), 0.5f);
 		VERIFY_EQUAL_NONCONT(plug.pMixPlugin->IsInstrument(), false);
 	}
-#endif // NO_PLUGINS
 
 #ifdef MODPLUG_TRACKER
 	// MIDI Mapping
@@ -3690,7 +3805,7 @@ static void SaveMOD(const TSoundFileContainer &sndFile, const mpt::PathString &f
 
 
 // Test file loading and saving
-static MPT_NOINLINE void TestLoadSaveFile()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestLoadSaveFile()
 {
 	if(!ShouldRunTests())
 	{
@@ -3925,7 +4040,7 @@ static MPT_NOINLINE void TestLoadSaveFile()
 
 
 // Test various editing features
-static MPT_NOINLINE void TestEditing()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestEditing()
 {
 #ifdef MODPLUG_TRACKER
 	auto modDoc = static_cast<CModDoc *>(theApp.GetModDocTemplate()->CreateNewDocument());
@@ -4025,7 +4140,7 @@ static void RunITCompressionTest(const std::vector<int8> &sampleData, FlagSet<Ch
 }
 
 
-static MPT_NOINLINE void TestITCompression()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestITCompression()
 {
 	// Test loading / saving of IT-compressed samples
 	constexpr int sampleDataSize = 131072;
@@ -4132,7 +4247,7 @@ static void GenerateCommands(CPattern& pat, const double dProbPcs, const double 
 
 
 // Test PC note serialization
-static MPT_NOINLINE void TestPCnoteSerialization()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestPCnoteSerialization()
 {
 	FileReader file;
 	mpt::heap_value<CSoundFile> pSndFile;
@@ -4195,7 +4310,7 @@ static inline std::size_t strnlen(const char *str, std::size_t n)
 
 // Test String I/O functionality
 
-static MPT_NOINLINE void TestStringIO1()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringIO1()
 {
 
 #if MPT_COMPILER_MSVC
@@ -4453,7 +4568,7 @@ static MPT_NOINLINE void TestStringIO1()
 	}
 }
 
-static MPT_NOINLINE void TestStringIO2()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringIO2()
 {
 	{
 	
@@ -4567,13 +4682,13 @@ static MPT_NOINLINE void TestStringIO2()
 	}
 }
 
-static MPT_NOINLINE void TestStringIO()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestStringIO()
 {
 	TestStringIO1();
 	TestStringIO2();
 }
 
-static MPT_NOINLINE void TestSampleConversion()
+MPT_ATTR_NOINLINE MPT_DECL_NOINLINE static void TestSampleConversion()
 {
 	// Signed 8-Bit Integer PCM
 	// Unsigned 8-Bit Integer PCM

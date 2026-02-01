@@ -62,7 +62,7 @@ std::vector<HKL> GetKeyboardLayouts()
 #endif
 
 #ifdef MPT_COMMANDSET_LOGGING
-#define LOG_COMMANDSET(x) MPT_LOG_GLOBAL(LogDebug, "CommandSet", x)
+#define LOG_COMMANDSET(x) MPT_LOG_GLOBAL(LogDebug, "CommandSet", (x))
 #else
 #define LOG_COMMANDSET(x) do { } while(0)
 #endif
@@ -801,7 +801,7 @@ static constexpr struct
 	{1950, kcOrderlistEditCopyOrders, _T("Copy Orders")},
 	{KeyCommand::Hidden, kcTreeViewStopPreview, _T("Stop sample preview")},
 	{1952, kcSampleDuplicate, _T("Duplicate Sample")},
-	{1953, kcSampleSlice, _T("Slice at cue points")},
+	{1953, kcSampleSliceCuePoints, _T("Slice at cue points")},
 	{1954, kcInstrumentEnvelopeScale, _T("Scale Envelope Points")},
 	{1955, kcInsNoteMapRemove, _T("Remove All Samples")},
 	{1956, kcInstrumentEnvelopeSelectLoopStart, _T("Select Envelope Loop Start")},
@@ -954,6 +954,14 @@ static constexpr struct
 	{2117, kcToggleRecordMIDIPitchBend, _T("Toggle Record MIDI Pitch Bend")},
 	{2118, kcToggleRecordMIDICCs, _T("Toggle Record MIDI CCs")},
 	{2119, kcToggleMetronome, _T("Toggle Metronome")},
+	{2120, kcPatternExpand, _T("Expand Pattern")},
+	{2121, kcPatternShrink, _T("Shrink Pattern")},
+	{2122, kcSampleToggleNormalLoop, _T("Toggle Loop")},
+	{2123, kcSampleToggleSustainLoop, _T("Toggle Sustain Loop")},
+	{2124, kcSampleSendSelectionToNew, _T("Send Selection to New Sample Slot")},
+	{2125, kcTreeViewMoveUp, _T("Move Item Up")},
+	{2126, kcTreeViewMoveDown, _T("Move Item Down")},
+	{2127, kcSampleSliceGrid, _T("Slice at grid") },
 };
 // clang-format on
 

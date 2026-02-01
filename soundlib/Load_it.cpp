@@ -508,7 +508,7 @@ bool CSoundFile::ReadIT(FileReader &file, ModLoadingFlags loadFlags)
 				m_dwLastSavedWithVersion = MPT_V("1.17.00.00");
 			} else if(fileHeader.cwtv == 0x0214 && fileHeader.cmwt == 0x0202 && fileHeader.reserved == 0)
 			{
-				// ModPlug Tracker b3.2 - 1.09, instruments 557 bytes apart
+				// ModPlug Tracker b3.2 - 1.09 build 66 (possibly up to build 77), instruments 557 bytes apart
 				m_dwLastSavedWithVersion = MPT_V("1.09.00.00");
 				madeWithTracker = UL_("ModPlug Tracker b3.2 - 1.09");
 				interpretModPlugMade = true;
@@ -997,7 +997,6 @@ bool CSoundFile::ReadIT(FileReader &file, ModLoadingFlags loadFlags)
 
 	// Load instrument and song extensions.
 	const bool hasExtendedInstrumentProperties = LoadExtendedInstrumentProperties(file);
-	interpretModPlugMade |= hasExtendedInstrumentProperties;
 	if(interpretModPlugMade && !isBeRoTracker)
 	{
 		m_playBehaviour.reset();
@@ -1476,19 +1475,19 @@ static uint32 SaveITEditHistory(const CSoundFile &sndFile, std::ostream *file)
 		} else if(pModDoc != nullptr)
 		{
 			// Current ("new") timestamp
-			const mpt::Date::Unix creationTime = pModDoc->GetCreationTime();
+			const mpt::chrono::default_system_clock::time_point creationTime = pModDoc->GetCreationTime();
 			if(sndFile.GetTimezoneInternal() == mpt::Date::LogicalTimezone::UTC)
 			{
-				mptHistory.loadDate = mpt::Date::forget_timezone(mpt::Date::UnixAsUTC(creationTime));
+				mptHistory.loadDate = mpt::Date::forget_timezone(mpt::Date::UTC_from_default(creationTime));
 			} else if(sndFile.GetTimezoneInternal() == mpt::Date::LogicalTimezone::Local)
 			{
-				mptHistory.loadDate = mpt::Date::forget_timezone(mpt::Date::UnixAsLocal(creationTime));
+				mptHistory.loadDate = mpt::Date::forget_timezone(mpt::Date::local_from_default(creationTime));
 			} else
 			{
 				// assume UTC
-				mptHistory.loadDate = mpt::Date::forget_timezone(mpt::Date::UnixAsUTC(creationTime));
+				mptHistory.loadDate = mpt::Date::forget_timezone(mpt::Date::UTC_from_default(creationTime));
 			}
-			mptHistory.openTime = static_cast<uint32>(mpt::round((mpt::Date::UnixAsSeconds(mpt::Date::UnixNow()) - mpt::Date::UnixAsSeconds(creationTime)) * HISTORY_TIMER_PRECISION));
+			mptHistory.openTime = static_cast<uint32>(mpt::round((mpt::chrono::default_system_clock::to_unix_seconds(mpt::chrono::default_system_clock::now()) - mpt::chrono::default_system_clock::to_unix_seconds(creationTime)) * HISTORY_TIMER_PRECISION));
 #endif // MODPLUG_TRACKER
 		}
 
@@ -2103,7 +2102,6 @@ bool CSoundFile::SaveIT(std::ostream &f, const mpt::PathString &filename, bool c
 
 uint32 CSoundFile::SaveMixPlugins(std::ostream *file, bool updatePlugData)
 {
-#ifndef NO_PLUGINS
 	uint32 totalSize = 0;
 
 	for(PLUGINDEX i = 0; i < MAX_MIXPLUGINS; i++)
@@ -2187,11 +2185,6 @@ uint32 CSoundFile::SaveMixPlugins(std::ostream *file, bool updatePlugData)
 		totalSize += numChInfo * 4 + 8;
 	}
 	return totalSize;
-#else
-	MPT_UNREFERENCED_PARAMETER(file);
-	MPT_UNREFERENCED_PARAMETER(updatePlugData);
-	return 0;
-#endif // NO_PLUGINS
 }
 
 #endif // MODPLUG_NO_FILESAVE
@@ -2228,7 +2221,6 @@ std::pair<bool, bool> CSoundFile::LoadMixPlugins(FileReader &file, bool ignoreCh
 				chn.nMixPlugin = static_cast<PLUGINDEX>(chunk.ReadUint32LE());
 			}
 			hasPluginChunks = true;
-#ifndef NO_PLUGINS
 		}
 		// Plugin Data FX00, ... FX99, F100, ... F255
 #define MPT_ISDIGIT(x) (code[(x)] >= '0' && code[(x)] <= '9')
@@ -2243,7 +2235,6 @@ std::pair<bool, bool> CSoundFile::LoadMixPlugins(FileReader &file, bool ignoreCh
 				ReadMixPluginChunk(chunk, m_MixPlugins[plug]);
 			}
 			hasPluginChunks = true;
-#endif // NO_PLUGINS
 		} else if(!memcmp(code, "MODU", 4))
 		{
 			isBeRoTracker = true;
@@ -2254,7 +2245,6 @@ std::pair<bool, bool> CSoundFile::LoadMixPlugins(FileReader &file, bool ignoreCh
 }
 
 
-#ifndef NO_PLUGINS
 void CSoundFile::ReadMixPluginChunk(FileReader &file, SNDMIXPLUGIN &plugin)
 {
 	// MPT's standard plugin data. Size not specified in file.. grrr..
@@ -2300,7 +2290,6 @@ void CSoundFile::ReadMixPluginChunk(FileReader &file, SNDMIXPLUGIN &plugin)
 		}
 	}
 }
-#endif // NO_PLUGINS
 
 
 #ifndef MODPLUG_NO_FILESAVE

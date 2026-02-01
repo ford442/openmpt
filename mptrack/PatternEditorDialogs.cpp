@@ -12,6 +12,7 @@
 #include "stdafx.h"
 #include "PatternEditorDialogs.h"
 #include "FileDialog.h"
+#include "HighDPISupport.h"
 #include "InputHandler.h"
 #include "Mainfrm.h"
 #include "Moddoc.h"
@@ -132,6 +133,8 @@ BEGIN_MESSAGE_MAP(CPatternPropertiesDlg, DialogBase)
 	ON_COMMAND(IDC_BUTTON_DOUBLE, &CPatternPropertiesDlg::OnDoubleRowNumber)
 	ON_COMMAND(IDC_CHECK1,        &CPatternPropertiesDlg::OnOverrideSignature)
 	ON_COMMAND(IDC_BUTTON1,       &CPatternPropertiesDlg::OnTempoSwing)
+	ON_COMMAND(IDC_BUTTON2,       &CPatternPropertiesDlg::OnChangeColor)
+	ON_COMMAND(IDC_BUTTON3,       &CPatternPropertiesDlg::OnResetColor)
 	ON_EN_CHANGE(IDC_EDIT1,       &CPatternPropertiesDlg::OnPatternChanged)
 END_MESSAGE_MAP()
 
@@ -159,6 +162,11 @@ BOOL CPatternPropertiesDlg::OnInitDialog()
 {
 	DialogBase::OnInitDialog();
 
+	COMBOBOXINFO cbi{};
+	cbi.cbSize = sizeof(cbi);
+	GetComboBoxInfo(m_numRows, &cbi);
+	CWnd::FromHandle(cbi.hwndItem)->ModifyStyle(0, ES_NUMBER);
+
 	const CSoundFile &sndFile = m_modDoc.GetSoundFile();
 	const CModSpecifications &specs = sndFile.GetModSpecifications();
 	m_numRows.SetRedraw(FALSE);
@@ -174,6 +182,8 @@ BOOL CPatternPropertiesDlg::OnInitDialog()
 	SetDlgItemInt(IDC_EDIT1, m_nPattern);
 	CheckRadioButton(IDC_RADIO1, IDC_RADIO2, IDC_RADIO2);
 	static_cast<CEdit *>(GetDlgItem(IDC_EDIT2))->SetLimitText(MAX_PATTERNNAME - 1);
+
+	m_colorBtn.SubclassDlgItem(IDC_BUTTON2, this);
 
 	m_locked = false;
 	SetCurrentPattern(m_nPattern);
@@ -226,6 +236,8 @@ void CPatternPropertiesDlg::SetCurrentPattern(PATTERNINDEX pat)
 		SetDlgItemInt(IDC_ROWSPERBEAT, rpb, FALSE);
 		SetDlgItemInt(IDC_ROWSPERMEASURE, rpm, FALSE);
 		OnOverrideSignature();
+
+		m_colorBtn.SetColor(prop.color);
 	} else
 	{
 		MessageBeep(MB_ICONWARNING);
@@ -356,11 +368,37 @@ CPatternPropertiesDlg::PatternProperties& CPatternPropertiesDlg::GetPatternPrope
 		prop.numRows = pattern.GetNumRows();
 		prop.rowsPerBeat = pattern.GetRowsPerBeat();
 		prop.rowsPerMeasure = pattern.GetRowsPerMeasure();
+		prop.color = pattern.GetColor();
 	}
 	// Take whatever was selected for the previous pattern to be the default for this newly-edited pattern as well
 	prop.resizeAtEnd = IsDlgButtonChecked(IDC_RADIO2) != BST_UNCHECKED;
 	prop.repeatContents = IsDlgButtonChecked(IDC_CHECK2) != BST_UNCHECKED;
 	return m_properties.insert(std::make_pair(pat, std::move(prop))).first->second;
+}
+
+
+void CPatternPropertiesDlg::OnChangeColor()
+{
+	const auto &patterns = m_modDoc.GetSoundFile().Patterns;
+	const PATTERNINDEX numPatterns = patterns.GetNumPatterns();
+	std::vector<COLORREF> colors(numPatterns, CPattern::INVALID_COLOR);
+	for(PATTERNINDEX pat = 0; pat < numPatterns; pat++)
+	{
+		if(auto it = m_properties.find(pat); it != m_properties.end())
+			colors[pat] = it->second.color;
+		else if(patterns.IsValidPat(pat))
+			colors[pat] = patterns[pat].GetColor();
+	}
+
+	if(auto color = m_colorBtn.PickPatternColor(mpt::as_span(colors), m_nPattern); color.has_value())
+		GetPatternProperties().color = *color;
+}
+
+
+void CPatternPropertiesDlg::OnResetColor()
+{
+	GetPatternProperties().color = CPattern::INVALID_COLOR;
+	m_colorBtn.SetColor(CPattern::INVALID_COLOR);
 }
 
 
@@ -494,6 +532,13 @@ void CPatternPropertiesDlg::OnOK()
 		{
 			pattern.SetName(prop.name);
 			updateHint.Names();
+		}
+		if(pattern.GetColor() != prop.color)
+		{
+			pattern.SetColor(prop.color);
+			if(m_modDoc.GetModType() == MOD_TYPE_MPT)
+				modified = true;
+			m_modDoc.UpdateAllViews(nullptr, SequenceHint{SEQUENCEINDEX_INVALID}.Data());
 		}
 
 		if(updateHint.GetType() != HINT_NONE)
@@ -1165,6 +1210,13 @@ BOOL CChordEditor::OnInitDialog()
 }
 
 
+void CChordEditor::OnDPIChanged()
+{
+	ResizableDialog::OnDPIChanged();
+	m_Keyboard.SendMessage(WM_DPICHANGED);
+}
+
+
 void CChordEditor::OnOK()
 {
 	TrackerSettings::GetChords() = m_chords;
@@ -1283,14 +1335,14 @@ void CChordEditor::UpdateKeyboard()
 	const int baseNote = (chord.key == MPTChord::relativeMode) ? 0 : (chord.key % 12);
 	for(int i = CHORD_MIN; i < CHORD_MAX; i++)
 	{
-		uint8 b = CKeyboardControl::KEYFLAG_NORMAL;
+		FlagSet<CKeyboardControl::KeyFlag> b = CKeyboardControl::KeyFlag::Normal;
 		for(const auto note : chord.notes)
 		{
 			if(i == note)
-				b |= CKeyboardControl::KEYFLAG_REDDOT;
+				b.set(CKeyboardControl::KeyFlag::RedDot);
 		}
 		if(i == baseNote)
-			b |= CKeyboardControl::KEYFLAG_BRIGHTDOT;
+			b.set(CKeyboardControl::KeyFlag::BrightDot);
 		m_Keyboard.SetFlags(i - CHORD_MIN, b);
 	}
 	m_Keyboard.InvalidateRect(nullptr, FALSE);
@@ -1554,6 +1606,7 @@ void QuickChannelProperties::Show(CModDoc *modDoc, CHANNELINDEX chn, CPoint posi
 
 void QuickChannelProperties::UpdateDisplay()
 {
+	const CWnd *oldFocusWnd = GetFocus();
 	SetWindowText(MPT_TFORMAT("Settings for Channel {}")(m_channel + 1).c_str());
 
 	// Set up channel properties
@@ -1587,6 +1640,18 @@ void QuickChannelProperties::UpdateDisplay()
 
 	::EnableWindow(::GetDlgItem(m_hWnd, IDC_BUTTON1), isFirst ? FALSE : TRUE);
 	::EnableWindow(::GetDlgItem(m_hWnd, IDC_BUTTON2), isLast ? FALSE : TRUE);
+
+	// Avoid focus trap if we just navigated to the first or last channel
+	const int PrevNextButtons[] = {IDC_BUTTON1, IDC_BUTTON2, IDC_BUTTON5, IDC_BUTTON6};
+	for(int button : PrevNextButtons)
+	{
+		const CWnd *wnd = GetDlgItem(button);
+		if (oldFocusWnd == wnd && !wnd->IsWindowEnabled())
+		{
+			SetFocusToFirstControl();
+			break;
+		}
+	}
 }
 
 void QuickChannelProperties::PrepareUndo()
@@ -1729,7 +1794,7 @@ void QuickChannelProperties::OnNameChanged()
 void QuickChannelProperties::OnChangeColor()
 {
 	m_settingColor = true;
-	if(auto color = m_colorBtn.PickColor(m_document->GetSoundFile(), m_channel); color.has_value())
+	if(auto color = m_colorBtn.PickChannelColor(m_document->GetSoundFile(), m_channel); color.has_value())
 	{
 		PrepareUndo();
 		m_document->GetSoundFile().ChnSettings[m_channel].color = *color;

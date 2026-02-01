@@ -39,27 +39,27 @@
 
 #if defined(MODPLUG_TRACKER)
 
-#if defined(MPT_BUILD_RETRO)
-#define OPENMPT_BUILD_VARIANT "Retro"
-#define OPENMPT_BUILD_VARIANT_MONIKER " RETRO"
-#else
 #if MPT_OS_WINDOWS
 #if MPT_WINNT_AT_LEAST(MPT_WIN_11)
 #define OPENMPT_BUILD_VARIANT "Standard"
 #define OPENMPT_BUILD_VARIANT_MONIKER ""
-#else
+#elif MPT_WINNT_AT_LEAST(MPT_WIN_7)
 #define OPENMPT_BUILD_VARIANT "Legacy"
 #define OPENMPT_BUILD_VARIANT_MONIKER ""
+#else
+#define OPENMPT_BUILD_VARIANT "Retro"
+#define OPENMPT_BUILD_VARIANT_MONIKER " RETRO"
 #endif
 #else
 #define OPENMPT_BUILD_VARIANT "Unknown"
 #define OPENMPT_BUILD_VARIANT_MONIKER ""
 #endif
+
+#if MPT_OS_WINDOWS
+#if MPT_WINNT_AT_LEAST(MPT_WIN_7)
+#define MPT_ENABLE_SYSTEM_SUPPORT_CHECK
 #endif
-
-#define MPT_WITH_DMO
-
-#define MPT_WITH_VST
+#endif
 
 #if MPT_OS_WINDOWS
 #if MPT_WINNT_AT_LEAST(MPT_WIN_7)
@@ -137,9 +137,6 @@
 // Disable the built-in automatic gain control
 //#define NO_AGC
 
-// (HACK) Define to build without any plugin support
-//#define NO_PLUGINS
-
 #endif // MODPLUG_TRACKER
 
 
@@ -187,7 +184,6 @@
 #define NO_DSP
 #define NO_EQ
 #define NO_AGC
-//#define NO_PLUGINS
 
 #endif // LIBOPENMPT_BUILD
 
@@ -281,13 +277,6 @@
 
 #if defined(MPT_EXTERNAL_SAMPLES) && !defined(MPT_ENABLE_FILEIO)
 #define MPT_ENABLE_FILEIO // External samples require disk file io
-#endif
-
-#if defined(NO_PLUGINS)
-// Any plugin type requires NO_PLUGINS to not be defined.
-#if defined(MPT_WITH_VST)
-#undef MPT_WITH_VST
-#endif
 #endif
 
 

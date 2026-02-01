@@ -36,7 +36,8 @@ namespace Windows
 
 static constexpr struct { mpt::osinfo::windows::Version version; const mpt::uchar * name; bool showDetails; } versionMap[] =
 {
-	{ mpt::osinfo::windows::Version{ mpt::osinfo::windows::Version::WinNewer, mpt::osinfo::windows::Version::ServicePack{ 0, 0 }, 26100, 0 }, UL_("Windows 11 (or newer)"), false },
+	{ mpt::osinfo::windows::Version{ mpt::osinfo::windows::Version::WinNewer, mpt::osinfo::windows::Version::ServicePack{ 0, 0 }, 26200, 0 }, UL_("Windows 11 (or newer)"), false },
+	{ mpt::osinfo::windows::Version{ mpt::osinfo::windows::Version::Win10, mpt::osinfo::windows::Version::ServicePack{ 0, 0 }, 26200, 0 }, UL_("Windows 11 25H2"), true },
 	{ mpt::osinfo::windows::Version{ mpt::osinfo::windows::Version::Win10, mpt::osinfo::windows::Version::ServicePack{ 0, 0 }, 26100, 0 }, UL_("Windows 11 24H2"), true },
 	{ mpt::osinfo::windows::Version{ mpt::osinfo::windows::Version::Win10, mpt::osinfo::windows::Version::ServicePack{ 0, 0 }, 22631, 0 }, UL_("Windows 11 23H2"), true },
 	{ mpt::osinfo::windows::Version{ mpt::osinfo::windows::Version::Win10, mpt::osinfo::windows::Version::ServicePack{ 0, 0 }, 22621, 0 }, UL_("Windows 11 22H2"), true },
@@ -135,10 +136,14 @@ mpt::osinfo::windows::Version Version::GetMinimumKernelLevel() noexcept
 {
 	uint64 minimumKernelVersion = 0;
 	#if MPT_OS_WINDOWS && MPT_COMPILER_MSVC
-		#if defined(MPT_BUILD_RETRO)
-			minimumKernelVersion = std::max(minimumKernelVersion, static_cast<uint64>(mpt::osinfo::windows::Version::WinXP));
-		#else
+		#if MPT_MSVC_AT_LEAST(2026, 0)
+			minimumKernelVersion = std::max(minimumKernelVersion, static_cast<uint64>(mpt::osinfo::windows::Version::Win10));
+		#elif MPT_MSVC_AT_LEAST(2022, 0)
+			minimumKernelVersion = std::max(minimumKernelVersion, static_cast<uint64>(mpt::osinfo::windows::Version::Win7));
+		#elif MPT_WINNT_AT_LEAST(MPT_WIN_VISTA)
 			minimumKernelVersion = std::max(minimumKernelVersion, static_cast<uint64>(mpt::osinfo::windows::Version::WinVista));
+		#else
+			minimumKernelVersion = std::max(minimumKernelVersion, static_cast<uint64>(mpt::osinfo::windows::Version::WinXP));
 		#endif
 	#endif
 	return mpt::osinfo::windows::Version(mpt::osinfo::windows::Version::System(minimumKernelVersion), mpt::osinfo::windows::Version::ServicePack(0, 0), 0, 0);
