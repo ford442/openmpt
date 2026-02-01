@@ -131,7 +131,7 @@ BOOL CModCleanupDlg::OnInitDialog()
 
 void CModCleanupDlg::OnOK()
 {
-	ScopedLogCapturer logcapturer(modDoc, _T("cleanup"), this);
+	ScopedLogCapturer logcapturer(modDoc, _T("Cleanup"), this);
 	for(int i = 0; i < kMaxCleanupOptions; i++)
 	{
 		m_CheckBoxes[i] = IsDlgButtonChecked(m_CleanupIDtoDlgID[i]) != BST_UNCHECKED;
@@ -231,7 +231,7 @@ void CModCleanupDlg::OnPresetCleanupSong()
 	CheckDlgButton(IDC_CHK_CLEANUP_PLUGINS, BST_CHECKED);
 	CheckDlgButton(IDC_CHK_REMOVE_PLUGINS, BST_UNCHECKED);
 	// misc
-	CheckDlgButton(IDC_CHK_SAMPLEPACK, BST_UNCHECKED);
+	CheckDlgButton(IDC_CHK_RESET_VARIABLES, BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_UNUSED_CHANNELS, BST_CHECKED);
 }
 
@@ -258,7 +258,7 @@ void CModCleanupDlg::OnPresetCompoCleanup()
 	CheckDlgButton(IDC_CHK_CLEANUP_PLUGINS, BST_UNCHECKED);
 	CheckDlgButton(IDC_CHK_REMOVE_PLUGINS, BST_CHECKED);
 	// misc
-	CheckDlgButton(IDC_CHK_SAMPLEPACK, BST_CHECKED);
+	CheckDlgButton(IDC_CHK_RESET_VARIABLES, BST_CHECKED);
 	CheckDlgButton(IDC_CHK_UNUSED_CHANNELS, BST_CHECKED);
 }
 
@@ -316,7 +316,7 @@ CString CModCleanupDlg::GetToolTipText(UINT id, HWND) const
 		lpszText = _T("Remove all plugins.");
 		break;
 	// misc
-	case IDC_CHK_SAMPLEPACK:
+	case IDC_CHK_RESET_VARIABLES:
 		lpszText = _T("Convert the module to .IT and reset song / sample / instrument variables");
 		break;
 	case IDC_CHK_UNUSED_CHANNELS:

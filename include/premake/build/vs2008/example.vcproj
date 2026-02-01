@@ -43,9 +43,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP /GL /Ox /MT /W4 /EHsc"
+				AdditionalOptions="/MP /GL /Ox /MD /W4 /EHsc"
 				AdditionalIncludeDirectories="..\..\contrib\lua\src;..\..\contrib\luashim"
-				PreprocessorDefinitions="PREMAKE_COMPRESSION;CURL_STATICLIB;PREMAKE_CURL;NDEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="PREMAKE_COMPRESSION;PREMAKE_CURL;CURL_STATICLIB;LUA_STATICLIB;NDEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName=""
 				DebugInformationFormat="0"
@@ -56,7 +56,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="PREMAKE_COMPRESSION;CURL_STATICLIB;PREMAKE_CURL;NDEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="PREMAKE_COMPRESSION;PREMAKE_CURL;CURL_STATICLIB;LUA_STATICLIB;NDEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				AdditionalIncludeDirectories="..\..\contrib\lua\src;..\..\contrib\luashim"
 			/>
 			<Tool
@@ -64,10 +64,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/NOLOGO /INCREMENTAL:NO /LTCG /DLL"
+				AdditionalOptions="/NOLOGO /INCREMENTAL:NO /DLL /LTCG"
 				OutputFile="$(OutDir)\example.dll"
 				LinkIncremental="0"
-				GenerateManifest="false"
 				ProgramDatabaseFile=""
 			/>
 			<Tool
@@ -117,9 +116,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP /GL /Ox /MT /W4 /EHsc"
+				AdditionalOptions="/MP /GL /Ox /MD /W4 /EHsc"
 				AdditionalIncludeDirectories="..\..\contrib\lua\src;..\..\contrib\luashim"
-				PreprocessorDefinitions="PREMAKE_COMPRESSION;CURL_STATICLIB;PREMAKE_CURL;NDEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="PREMAKE_COMPRESSION;PREMAKE_CURL;CURL_STATICLIB;LUA_STATICLIB;NDEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName=""
 				DebugInformationFormat="0"
@@ -130,7 +129,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="PREMAKE_COMPRESSION;CURL_STATICLIB;PREMAKE_CURL;NDEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="PREMAKE_COMPRESSION;PREMAKE_CURL;CURL_STATICLIB;LUA_STATICLIB;NDEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				AdditionalIncludeDirectories="..\..\contrib\lua\src;..\..\contrib\luashim"
 			/>
 			<Tool
@@ -138,10 +137,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="/NOLOGO /INCREMENTAL:NO /LTCG /DLL"
+				AdditionalOptions="/NOLOGO /INCREMENTAL:NO /DLL /LTCG"
 				OutputFile="$(OutDir)\example.dll"
 				LinkIncremental="0"
-				GenerateManifest="false"
 				ProgramDatabaseFile=""
 			/>
 			<Tool
@@ -190,9 +188,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP /MTd /Z7 /W4 /EHsc"
+				AdditionalOptions="/MP /MDd /Z7 /W4 /EHsc"
 				AdditionalIncludeDirectories="..\..\contrib\lua\src;..\..\contrib\luashim"
-				PreprocessorDefinitions="PREMAKE_COMPRESSION;CURL_STATICLIB;PREMAKE_CURL;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="PREMAKE_COMPRESSION;PREMAKE_CURL;CURL_STATICLIB;LUA_STATICLIB;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName=""
 				DebugInformationFormat="0"
@@ -203,7 +201,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="PREMAKE_COMPRESSION;CURL_STATICLIB;PREMAKE_CURL;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="PREMAKE_COMPRESSION;PREMAKE_CURL;CURL_STATICLIB;LUA_STATICLIB;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				AdditionalIncludeDirectories="..\..\contrib\lua\src;..\..\contrib\luashim"
 			/>
 			<Tool
@@ -214,7 +212,6 @@
 				AdditionalOptions="/NOLOGO /DLL /DEBUG"
 				OutputFile="$(OutDir)\example.dll"
 				LinkIncremental="0"
-				GenerateManifest="false"
 				ProgramDatabaseFile=""
 			/>
 			<Tool
@@ -264,9 +261,9 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions="/MP /MTd /Z7 /W4 /EHsc"
+				AdditionalOptions="/MP /MDd /Z7 /W4 /EHsc"
 				AdditionalIncludeDirectories="..\..\contrib\lua\src;..\..\contrib\luashim"
-				PreprocessorDefinitions="PREMAKE_COMPRESSION;CURL_STATICLIB;PREMAKE_CURL;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="PREMAKE_COMPRESSION;PREMAKE_CURL;CURL_STATICLIB;LUA_STATICLIB;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName=""
 				DebugInformationFormat="0"
@@ -277,7 +274,7 @@
 			/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="PREMAKE_COMPRESSION;CURL_STATICLIB;PREMAKE_CURL;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
+				PreprocessorDefinitions="PREMAKE_COMPRESSION;PREMAKE_CURL;CURL_STATICLIB;LUA_STATICLIB;_DEBUG;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_WARNINGS"
 				AdditionalIncludeDirectories="..\..\contrib\lua\src;..\..\contrib\luashim"
 			/>
 			<Tool
@@ -288,7 +285,6 @@
 				AdditionalOptions="/NOLOGO /DLL /DEBUG"
 				OutputFile="$(OutDir)\example.dll"
 				LinkIncremental="0"
-				GenerateManifest="false"
 				ProgramDatabaseFile=""
 			/>
 			<Tool

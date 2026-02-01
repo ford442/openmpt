@@ -16,7 +16,7 @@
    "__WINDOWS_MM__",
    "RTMIDI_DO_NOT_ENSURE_UNIQUE_PORTNAMES"
   }
-	if _OPTIONS["clang"] then
+	if MPT_COMPILER_CLANGCL or MPT_COMPILER_CLANG then
 		filter { "not kind:StaticLib" }
 			links { "winmm" }
 		filter {}
@@ -28,14 +28,9 @@
 
 function mpt_use_rtmidi ()
 	filter {}
-	filter { "action:vs*" }
-		includedirs {
-			"../../include",
-		}
-	filter { "not action:vs*" }
-		externalincludedirs {
-			"../../include",
-		}
+	dependencyincludedirs {
+		"../../include",
+	}
 	filter {}
 	links {
 		"rtmidi",

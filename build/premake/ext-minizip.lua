@@ -1,4 +1,6 @@
 
+include_dependency "ext-zlib.lua"
+
  project "minizip"
   uuid "63AF9025-A6CE-4147-A05D-6E2CCFD3A0D7"
   language "C"
@@ -27,36 +29,28 @@
    "../../include/zlib/contrib/minizip/unzip.h",
    "../../include/zlib/contrib/minizip/zip.h",
   }
-  links {
-   "zlib"
-  }
   filter {}
   filter { "kind:SharedLib" }
    files { "../../build/premake/def/ext-minizip.def" }
-  filter {}
-	filter { "action:vs*" }
+	filter {}
+	if MPT_COMPILER_MSVC or MPT_COMPILER_CLANGCL then
 		buildoptions { "/wd6262" } -- analyze
+	end
 	filter {}
-	filter {}
-		if _OPTIONS["clang"] then
-			buildoptions {
-				"-Wno-deprecated-non-prototype",
-				"-Wno-unused-but-set-variable",
-				"-Wno-unused-variable",
-			}
-		end
+	if MPT_COMPILER_CLANGCL or MPT_COMPILER_CLANG then
+		buildoptions {
+			"-Wno-deprecated-non-prototype",
+			"-Wno-unused-but-set-variable",
+			"-Wno-unused-variable",
+		}
+	end
 	filter {}
 
 function mpt_use_minizip ()
 	filter {}
-	filter { "action:vs*" }
-		includedirs {
-			"../../include/zlib",
-		}
-	filter { "not action:vs*" }
-		externalincludedirs {
-			"../../include/zlib",
-		}
+	dependencyincludedirs {
+		"../../include/zlib",
+	}
 	filter {}
 	links {
 		"minizip",

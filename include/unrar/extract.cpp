@@ -68,7 +68,7 @@ void CmdExtract::DoExtract()
   }
 
   Cmd->ArcNames.Rewind();
-  while (Cmd->GetArcName(ArcName))
+  for (uint ArcCount=0;Cmd->GetArcName(ArcName);ArcCount++)
   {
     if (Cmd->ManualPassword)
       Cmd->Password.Clean(); // Clean user entered password before processing next archive.
@@ -77,6 +77,12 @@ void CmdExtract::DoExtract()
     UseExactVolName=false; // Must be reset here, not in ExtractArchiveInit().
     while (true)
     {
+      // 2025.05.11: Add the empty line between tested archives here instead
+      // of printing two leading "\n" in "\n\nExtracting from", which caused
+      // the extra empty line after the copyright message.
+      if (ArcCount>0)
+        mprintf(L"\n");
+
       EXTRACT_ARC_CODE Code=ExtractArchive();
       if (Code!=EXTRACT_ARC_REPEAT)
         break;
@@ -706,6 +712,7 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
           if (!CheckWinLimit(Arc,ArcFileName))
             return false;
 
+          // 2025.09.03: OpenIndiana info is likely outdated, see https://www.illumos.org/issues/2000
           // Read+write mode is required to set "Compressed" attribute.
           // Other than that prefer the write only mode to avoid
           // OpenIndiana NAS problem with SetFileTime and read+write files.
@@ -841,6 +848,7 @@ bool CmdExtract::ExtractCurrentFile(Archive &Arc,size_t HeaderSize,bool &Repeat)
           // processed correctly.
           SlashToNative(Arc.FileHead.RedirName,RedirName);
 
+          // Ensure that target is inside of destination folder.
           ConvertPath(&RedirName,&RedirName);
 
           std::wstring NameExisting;
@@ -1617,8 +1625,10 @@ void CmdExtract::AnalyzeArchive(const std::wstring &ArcName,bool Volume,bool New
 
         if (!Arc.FileHead.SplitBefore)
         {
-          if (!MatchFound && !Arc.FileHead.Solid) // Can start extraction from here.
+          if (!MatchFound && !Arc.FileHead.Solid && !Arc.FileHead.Dir &&
+              Arc.FileHead.RedirType==FSREDIR_NONE && Arc.FileHead.Method!=0)
           {
+            // Can start extraction from here.
             // We would gain nothing and unnecessarily complicate extraction
             // if we set StartName for first volume or StartPos for first
             // archived file.

@@ -4,6 +4,8 @@
 
 
 #define BuildFolder "release\vs2017-winxp-static"
+#define BuildFolderx86 "release\vs2017-winxp-static"
+#define BuildFolderamd64 "release\vs2017-winxpx64-static"
 
 #define DefaultArchName "x86"
 
@@ -79,17 +81,19 @@ Name: en; MessagesFile: compiler:Default.isl
 ; note: packageTemplate\ contains files specific for the "install package".
 ; for files that are common with the "zip package", use ..\packageTemplate\
 
-Source: ..\bin\{#BuildFolder}\x86\OpenMPT.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
-Source: ..\bin\{#BuildFolder}\x86\PluginBridge-x86.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
-Source: ..\bin\{#BuildFolder}\x86\PluginBridgeLegacy-x86.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
-Source: ..\bin\{#BuildFolder}\x86\openmpt-lame.dll; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
-Source: ..\bin\{#BuildFolder}\x86\openmpt-mpg123.dll; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
+Source: ..\bin\{#BuildFolderx86}\x86\OpenMPT.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
+Source: ..\bin\{#BuildFolderx86}\x86\PluginBridge-x86.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
+Source: ..\bin\{#BuildFolderx86}\x86\PluginBridgeLegacy-x86.exe; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
+Source: ..\bin\{#BuildFolderx86}\x86\openmpt-lame.dll; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
+Source: ..\bin\{#BuildFolderx86}\x86\openmpt-mpg123.dll; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
+Source: ..\bin\{#BuildFolderx86}\x86\openmpt-pthread-win32.dll; DestDir: {app}\bin\x86; Flags: ignoreversion; Components: archx86; MinVersion: 5.1sp3
 
-Source: ..\bin\{#BuildFolder}\amd64\OpenMPT.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
-Source: ..\bin\{#BuildFolder}\amd64\PluginBridge-amd64.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
-Source: ..\bin\{#BuildFolder}\amd64\PluginBridgeLegacy-amd64.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
-Source: ..\bin\{#BuildFolder}\amd64\openmpt-lame.dll; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
-Source: ..\bin\{#BuildFolder}\amd64\openmpt-mpg123.dll; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolderamd64}\amd64\OpenMPT.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolderamd64}\amd64\PluginBridge-amd64.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolderamd64}\amd64\PluginBridgeLegacy-amd64.exe; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolderamd64}\amd64\openmpt-lame.dll; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolderamd64}\amd64\openmpt-mpg123.dll; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
+Source: ..\bin\{#BuildFolderamd64}\amd64\openmpt-pthread-win32.dll; DestDir: {app}\bin\amd64; Flags: ignoreversion; Components: archamd64; MinVersion: 5.2sp2; Check: CheckDefaultArch('amd64')
 
 Source: "..\mptrack\res\MPTRACK.ICO"; DestName: "OpenMPT App Icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\packageTemplate\OpenMPT File Icon.ico"; DestName: "OpenMPT File Icon.ico"; DestDir: "{app}"; Flags: ignoreversion
@@ -103,7 +107,7 @@ Source: packageTemplate\readme.txt; DestDir: {app}; Flags: ignoreversion
 Source: ..\packageTemplate\History.txt; DestDir: {app}; Flags: ignoreversion
 Source: ..\packageTemplate\OpenMPT Manual.chm; DestDir: {app}; Flags: ignoreversion
 
-Source: ..\packageTemplate\ReleaseNotesImages\*.*; DestDir: {app}\ReleaseNotesImages\; Flags: ignoreversion
+Source: ..\packageTemplate\ReleaseNotesImages\*.*; DestDir: {app}\ReleaseNotesImages\; Flags: ignoreversion recursesubdirs
 Source: ..\packageTemplate\Release Notes.html; DestDir: {app}; Flags: ignoreversion
 
 Source: ..\packageTemplate\OpenMPT Support and Community Forum.url; DestDir: {app}; Flags: ignoreversion
@@ -156,6 +160,7 @@ Type: files; Name: {app}\bin\x86\PluginBridge-x86.exe
 Type: files; Name: {app}\bin\x86\PluginBridgeLegacy-x86.exe
 Type: files; Name: {app}\bin\x86\openmpt-lame.dll
 Type: files; Name: {app}\bin\x86\openmpt-mpg123.dll
+Type: files; Name: {app}\bin\x86\openmpt-pthread-win32.dll
 Type: files; Name: {app}\bin\x86\openmpt-soundtouch.dll
 
 Type: files; Name: {app}\bin\amd64\OpenMPT.exe
@@ -163,6 +168,7 @@ Type: files; Name: {app}\bin\amd64\PluginBridge-amd64.exe
 Type: files; Name: {app}\bin\amd64\PluginBridgeLegacy-amd64.exe
 Type: files; Name: {app}\bin\amd64\openmpt-lame.dll
 Type: files; Name: {app}\bin\amd64\openmpt-mpg123.dll
+Type: files; Name: {app}\bin\amd64\openmpt-pthread-win32.dll
 Type: files; Name: {app}\bin\amd64\openmpt-soundtouch.dll
 
 Type: files; Name: {app}\bin\arm\OpenMPT.exe
@@ -170,6 +176,7 @@ Type: files; Name: {app}\bin\arm\PluginBridge-arm.exe
 Type: files; Name: {app}\bin\arm\PluginBridgeLegacy-arm.exe
 Type: files; Name: {app}\bin\arm\openmpt-lame.dll
 Type: files; Name: {app}\bin\arm\openmpt-mpg123.dll
+Type: files; Name: {app}\bin\arm\openmpt-pthread-win32.dll
 Type: files; Name: {app}\bin\arm\openmpt-soundtouch.dll
 
 Type: files; Name: {app}\bin\arm64\OpenMPT.exe
@@ -177,7 +184,16 @@ Type: files; Name: {app}\bin\arm64\PluginBridge-arm64.exe
 Type: files; Name: {app}\bin\arm64\PluginBridgeLegacy-arm64.exe
 Type: files; Name: {app}\bin\arm64\openmpt-lame.dll
 Type: files; Name: {app}\bin\arm64\openmpt-mpg123.dll
+Type: files; Name: {app}\bin\arm64\openmpt-pthread-win32.dll
 Type: files; Name: {app}\bin\arm64\openmpt-soundtouch.dll
+
+Type: files; Name: {app}\bin\arm64ec\OpenMPT.exe
+Type: files; Name: {app}\bin\arm64ec\PluginBridge-arm64ec.exe
+Type: files; Name: {app}\bin\arm64ec\PluginBridgeLegacy-arm64ec.exe
+Type: files; Name: {app}\bin\arm64ec\openmpt-lame.dll
+Type: files; Name: {app}\bin\arm64ec\openmpt-mpg123.dll
+Type: files; Name: {app}\bin\arm64ec\openmpt-pthread-win32.dll
+Type: files; Name: {app}\bin\arm64ec\openmpt-soundtouch.dll
 
 
 
@@ -201,7 +217,14 @@ begin
 			end;
 		paX64:
 			begin
-				Result := 'amd64';
+				if (GetWindowsVersion >= $05020ECE) then
+				begin
+					Result := 'amd64';
+				end
+				else
+				begin
+					Result := 'x86';
+				end;
 			end;
 		paIA64:
 			begin

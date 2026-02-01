@@ -17,7 +17,7 @@
 #include "Reporting.h"
 #include "resource.h"
 #include "TrackerSettings.h"
-#include "../common/GzipWriter.h"
+#include "../misc/GzipWriter.h"
 #include "../soundlib/OPL.h"
 #include "../soundlib/Tagging.h"
 #include "mpt/io_file/outputfile.hpp"
@@ -362,6 +362,7 @@ public:
 		, m_modDoc{modDoc}
 		, m_subSongs{modDoc.GetSoundFile().GetAllSubSongs()}
 	{
+		m_selectedSong = m_modDoc.GetSubsongForCurrentEditPos(m_subSongs);
 	}
 
 	BOOL OnInitDialog() override
@@ -369,7 +370,7 @@ public:
 		CProgressDialog::OnInitDialog();
 
 		CheckRadioButton(IDC_RADIO1, IDC_RADIO3, static_cast<int>(s_format));
-		CheckRadioButton(IDC_RADIO4, IDC_RADIO5, IDC_RADIO4);
+		CheckRadioButton(IDC_RADIO4, IDC_RADIO5, m_subSongs.size() <= 1 ? IDC_RADIO4 : IDC_RADIO5);
 
 		static_cast<CSpinButtonCtrl *>(GetDlgItem(IDC_SPIN1))->SetRange32(1, static_cast<int>(m_subSongs.size()));
 		SetDlgItemInt(IDC_EDIT1, static_cast<UINT>(m_selectedSong + 1), FALSE);
@@ -454,7 +455,7 @@ public:
 		const auto subsongText = GetDlgItem(IDC_SUBSONG);
 		if(subsongText == nullptr || m_selectedSong >= m_subSongs.size())
 			return;
-		subsongText->SetWindowText(m_modDoc.FormatSubsongName(m_subSongs[m_selectedSong]).c_str());
+		subsongText->SetWindowText(m_modDoc.FormatSubsongName(m_subSongs, m_selectedSong).c_str());
 	}
 
 	void DoConversion(const mpt::PathString &fileName)

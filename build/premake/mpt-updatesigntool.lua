@@ -1,4 +1,6 @@
- 
+
+include_dependency "ext-nlohmann-json.lua"
+
  project "updatesigntool"
   uuid "89b3630f-5728-4902-8258-d4dbc532e185"
   language "C++"
@@ -24,8 +26,12 @@
    "../../installer/updatesigntool/*.h",
   }
 	excludes {
+		"../../src/mpt/filemode/**.cpp",
+		"../../src/mpt/filemode/**.hpp",
 		"../../src/mpt/main/**.cpp",
 		"../../src/mpt/main/**.hpp",
+		"../../src/mpt/terminal/**.cpp",
+		"../../src/mpt/terminal/**.hpp",
 		"../../src/openmpt/fileformat_base/**.cpp",
 		"../../src/openmpt/fileformat_base/**.hpp",
 		"../../src/openmpt/soundbase/**.cpp",
@@ -40,7 +46,7 @@
 		"../../src/openmpt/streamencoder/**.hpp",
 	}
   defines { "MODPLUG_TRACKER", "MPT_BUILD_UPDATESIGNTOOL" }
-	if _OPTIONS["charset"] ~= "Unicode" then
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 	end
   warnings "Extra"

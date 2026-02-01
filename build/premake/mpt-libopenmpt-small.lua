@@ -1,4 +1,8 @@
- 
+
+include_dependency "ext-minimp3.lua"
+include_dependency "ext-miniz.lua"
+include_dependency "ext-stb_vorbis.lua"
+
  project "libopenmpt-small"
   uuid "25560abd-41fc-444c-9e71-f8502bc7ee96"
   language "C++"
@@ -60,14 +64,20 @@
 	excludes {
 		"../../src/mpt/crypto/**.cpp",
 		"../../src/mpt/crypto/**.hpp",
+		"../../src/mpt/filemode/**.cpp",
+		"../../src/mpt/filemode/**.hpp",
 		"../../src/mpt/fs/**.cpp",
 		"../../src/mpt/fs/**.hpp",
+		"../../src/mpt/io_file_atomic/*.cpp",
+		"../../src/mpt/io_file_atomic/*.hpp",
 		"../../src/mpt/json/**.cpp",
 		"../../src/mpt/json/**.hpp",
 		"../../src/mpt/library/**.cpp",
 		"../../src/mpt/library/**.hpp",
 		"../../src/mpt/main/**.cpp",
 		"../../src/mpt/main/**.hpp",
+		"../../src/mpt/terminal/**.cpp",
+		"../../src/mpt/terminal/**.hpp",
 		"../../src/mpt/test/**.cpp",
 		"../../src/mpt/test/**.hpp",
 		"../../src/mpt/uuid_namespace/**.cpp",
@@ -103,7 +113,7 @@
 		resdefines { "MPT_BUILD_VER_EXE" }
 	filter {}
 
-	if _OPTIONS["charset"] ~= "Unicode" then
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "MPT_CHECK_WINDOWS_IGNORE_WARNING_NO_UNICODE" }
 	end
 
@@ -117,18 +127,17 @@
 
 function mpt_use_libopenmpt_small ()
 	filter {}
-	filter { "action:vs*" }
-		includedirs {
-			"../..",
-		}
-	filter { "not action:vs*" }
-		externalincludedirs {
-			"../..",
-		}
+	dependencyincludedirs {
+		"../..",
+	}
 	filter {}
-	filter { "configurations:*Shared" }
-		defines { "LIBOPENMPT_USE_DLL" }
-	filter { "not configurations:*Shared" }
+	if MPT_OS_WINDOWS then
+		filter {}
+		filter { "configurations:*Shared" }
+			defines { "LIBOPENMPT_USE_DLL" }
+		filter { "not configurations:*Shared" }
+		filter {}
+	end
 	filter {}
 	links {
 		"libopenmpt-small",

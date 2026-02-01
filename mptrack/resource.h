@@ -559,6 +559,9 @@
 #define IDC_PROGRESS1                   1901
 #define IDC_PROGRESS2                   1902
 #define IDC_SPIN_VSTIVOL                1921
+#define IDC_UNIT1                       1922
+#define IDC_UNIT2                       1923
+#define IDC_UNIT3                       1924
 #define IDC_TABCTRL1                    1951
 #define IDC_SCROLLBAR1                  1998
 #define IDC_QUESTION1                   1999
@@ -865,7 +868,6 @@
 #define IDC_CHK_REARRANGE_PATTERNS      2396
 #define IDC_CHK_REARRANGE_SAMPLES       2397
 #define IDC_CHK_REMOVE_INSTRUMENTS      2398
-#define IDC_CHK_SAMPLEPACK              2399
 #define IDC_CHK_RESET_VARIABLES         2399
 #define IDC_BTN_CLEANUP_SONG            2400
 #define IDC_BTN_COMPO_CLEANUP           2401
@@ -1124,7 +1126,8 @@
 #define ID_PRESET_LOAD                  32915
 #define ID_PRESET_SAVE                  32916
 #define ID_PRESET_RANDOM                32917
-#define ID_PRESET_LIST                  32919
+#define ID_PRESET_LIST                  32918
+#define ID_SAMPLE_SLICE_GRID            32819
 #define ID_INFO                         32920
 #define ID_VIEWPLUGNAMES                32921
 #define ID_EQSLIDER_BASE                32922
@@ -1185,10 +1188,15 @@
 #define ID_MAINBAR_SHOW_ROWSPERBEAT     36040
 #define ID_MAINBAR_SHOW_GLOBALVOLUME    36041
 #define ID_MAINBAR_SHOW_VUMETER         36042
-#define ID_TREEVIEW_ON_LEFT             36043
-#define ID_KEYPRESET_MPT                36044
-#define ID_KEYPRESET_IT                 36045
-#define ID_KEYPRESET_FT2                36046
+#define ID_MAINBAR_SHOW_FILE_ICONS      36043
+#define ID_MAINBAR_SHOW_EDIT_ICONS      36044
+#define ID_MAINBAR_SHOW_PLAY_ICONS      36045
+#define ID_MAINBAR_SHOW_MISC_ICONS      36046
+#define ID_TREEVIEW_ON_LEFT             36047
+#define ID_KEYPRESET_MPT                36048
+#define ID_KEYPRESET_IT                 36049
+#define ID_KEYPRESET_FT2                36050
+#define ID_SAMPLE_SEND_TO_NEW_SLOT      36051
 #define ID_SELECTINST                   36100
 // From here: Command range [ID_SELECTINST, ID_SELECTINST + MAX_INSTRUMENTS]
 #define ID_PLUG_RECORDAUTOMATION        37003

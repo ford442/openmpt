@@ -1,4 +1,9 @@
 
+include_dependency "sys-mfc.lua"
+include_dependency "ext-pugixml.lua"
+include_dependency "ext-xmplay.lua"
+include_dependency "mpt-libopenmpt.lua"
+
  project "xmp-openmpt"
   uuid "AEA14F53-ADB0-45E5-9823-81F4F36886C2"
   language "C++"
@@ -24,11 +29,13 @@
    "../../libopenmpt/plugin-common/resource.h",
   }
 
+	filter {}
 	filter { "action:vs*", "kind:SharedLib or ConsoleApp or WindowedApp" }
 		resdefines {
 			"MPT_BUILD_VER_FILENAME=\"" .. "xmp-openmpt" .. ".dll\"",
 			"MPT_BUILD_VER_FILEDESC=\"" .. "xmp-openmpt" .. "\"",
 		}
+	filter {}
 	filter { "action:vs*", "kind:SharedLib or ConsoleApp or WindowedApp" }
 		resincludedirs {
 			"$(IntDir)/svn_version",
@@ -38,15 +45,17 @@
 		files {
 			"../../libopenmpt/libopenmpt_version.rc",
 		}
+	filter {}
 	filter { "action:vs*", "kind:SharedLib" }
 		resdefines { "MPT_BUILD_VER_DLL" }
+	filter {}
 	filter { "action:vs*", "kind:ConsoleApp or WindowedApp" }
 		resdefines { "MPT_BUILD_VER_EXE" }
 	filter {}
 
-	mpt_use_mfc()
+	mpt_use_mfc(_OPTIONS["windows-charset"])
 	defines { "MPT_WITH_MFC" }
-	if _OPTIONS["charset"] ~= "Unicode" then
+	if _OPTIONS["windows-charset"] ~= "Unicode" then
 		defines { "NO_WARN_MBCS_MFC_DEPRECATION" }
 	end
 

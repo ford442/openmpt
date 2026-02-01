@@ -7,7 +7,22 @@ is just a high-level summary.
 
 ### libopenmpt 0.9.0-pre
 
-### libopenmpt 0.8.0-pre
+ *  [**New**] libopenmpt: New APIs for retrieving the sequence (order list) to
+    which the currently playing subsong belongs:
+    `openmpt::module::get_current sequence()` (C++) and
+    `openmpt_module_get_current_sequence()` (C).
+
+ *  [**Change**] in_openmpt: We now provide a separate `in_openmpt_wa2.dll`
+    which is compatible with Winamp 2 for all build variants in the `Winamp2/`
+    folder. The folder for the modern `in_openmpt.dll` which requires Winamp 5
+    is renamed to `Winamp5/`.
+
+ *  libopenmpt now always uses architecture-specific SIMD intrinsics when
+    available. This currently only enables the SSE2 implementation for Reverb.
+ *  openmpt123: Bigger than 80x25 text modes are now supported on DOS.
+ *  openmpt123: openmpt123.exe now has an application icon.
+
+### libopenmpt 0.8.0 (2025-05-31)
 
  *  [**New**] Can now read PumaTracker (`PUMA`) modules.
  *  [**New**] Can now read Face The Music (`FTM`) modules.
@@ -70,6 +85,8 @@ is just a high-level summary.
  *  [**Regression**] Using `EMSCRIPTEN_PORTS=1` with Emscripten older than
     3.1.54 now requires additionally specifying `ANCIENT=1`.
 
+ *  When formatting pattern data, effect letters in the volume column are now
+    always formatted correctly, regardless of the module format.
  *  IT: Various playback fixes.
  *  IT: When using tone portamento to another sample after the previous sample's
     sustain loop has been released, the new sample should also not play its
@@ -85,7 +102,6 @@ is just a high-level summary.
     down when no tone portamento has been set up before, sometimes causing the
     target note to be reached immediately, or sliding the note down very subtly.
  *  IT: Envelope Carry should not be influenced by a previous note-off.
-
  *  XM: When a key-off is encountered before auto-vibrato reaches full depth,
     the depth is reset.
  *  S3M: Combined slides (Kxy / Lxy) are no longer run on the first tick of a
@@ -103,6 +119,20 @@ is just a high-level summary.
  *  openmpt123: Multi-threaded encoding is enabled with libFLAC 1.5.0 or newer.
 
  *  xmp-openmpt: Memory consumption during file loading has been reduced.
+
+ *  zlib: v1.3.1 (2024-01-22).
+ *  mpg123: v1.32.10 (2024-12-14).
+ *  ogg: v1.3.5 (2021-06-04).
+ *  vorbis: v1.3.7 (2020-07-04).
+ *  miniz: v2.2.0 (2021-06-27).
+ *  minimp3: fork
+    <https://github.com/manxorist/minimp3/releases/tag/openmpt-2024-08-15-v4>
+    commit 2116754771b79347ad2f39127abace2a093c383e (2024-08-15).
+ *  stb_vorbis: v1.22 commit 5a0bb8b1c1b1ca3f4e2485f4114c1c8ea021b781
+    (2021-07-12).
+ *  pugixml: v1.15 (2025-01-10).
+ *  flac: v1.5.0 (2025-02-11).
+ *  portaudio: v19.7.0 (2021-04-06).
 
 ### libopenmpt 0.7.0 (2023-04-30)
 
